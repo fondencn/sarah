@@ -21,7 +21,6 @@
     "@angular/platform-browser": "^17.3.12",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.12",
-    "@rollup/rollup-win32-x64-msvc": "^4.21.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "jest-editor-support": "*",
