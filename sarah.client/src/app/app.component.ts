@@ -1,37 +1,51 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { UiService } from './services/ui.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
-  public forecasts: WeatherForecast[] = [];
+export class AppComponent implements OnInit, OnDestroy {
+  showMenu = false;
+  darkModeActive: boolean = false;
 
-  constructor(private http: HttpClient) {}
+  userEmail = '';
+
+  constructor(public ui: UiService, public router: Router) {
+  }
+
+  loggedIn = false;
+  sub1: any;
 
   ngOnInit() {
-    this.getForecasts();
+    this.sub1 = this.ui.darkModeState.subscribe((value: any) => {
+      this.darkModeActive = value;
+    });
+
+    //this.fb.auth.userData().subscribe((user) => {
+    //  this.userEmail = user.email;
+    //});
+
   }
 
-  getForecasts() {
-    this.http.get<WeatherForecast[]>('/weatherforecast').subscribe(
-      (result) => {
-        this.forecasts = result;
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
   }
 
-  title = 'sarah.client';
+  modeToggleSwitch() {
+    this.ui.darkModeState.next(!this.darkModeActive);
+  }
+
+  ngOnDestroy() {
+    this.sub1.unsubscribe();
+  }
+
+  logout() {
+    this.toggleMenu();
+    this.router.navigateByUrl('/login');
+   // this.fb.auth.signout();
+  }
+
 }
