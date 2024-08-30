@@ -1,6 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { UiService } from './services/ui.service';
 import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
+
 
 @Component({
   selector: 'app-root',
@@ -10,23 +12,27 @@ import { Router } from '@angular/router';
 export class AppComponent implements OnInit, OnDestroy {
   showMenu = false;
   darkModeActive: boolean = false;
-
-  userEmail = '';
-
-  constructor(public ui: UiService, public router: Router) {
-  }
-
   loggedIn = false;
   sub1: any;
+  username: string;
+  email: string;
+
+  constructor(
+    public ui: UiService, 
+    public router: Router, 
+    private authService: AuthService
+  ) 
+  {
+    this.authService.init();
+    this.username = this.authService.currentUserName;
+    this.email = this.authService.currentUserEmail;
+  }
+
 
   ngOnInit() {
     this.sub1 = this.ui.darkModeState.subscribe((value: any) => {
       this.darkModeActive = value;
     });
-
-    //this.fb.auth.userData().subscribe((user) => {
-    //  this.userEmail = user.email;
-    //});
 
   }
 
@@ -44,8 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   logout() {
     this.toggleMenu();
-    this.router.navigateByUrl('/login');
-   // this.fb.auth.signout();
+    this.authService.logout();
   }
 
 }

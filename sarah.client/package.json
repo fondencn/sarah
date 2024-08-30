@@ -23,6 +23,8 @@
     "@angular/router": "^18.2.1",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "angular-oauth2-oidc": "^17.0.2",
+    "bootstrap": "^5.3.3",
     "jest-editor-support": "*",
     "run-script-os": "*",
     "rxjs": "~7.8.1",
