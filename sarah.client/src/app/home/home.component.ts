@@ -7,8 +7,17 @@ import { AuthService } from '../services/auth.service';
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements OnInit {
-  message: string = "Init";
 
+  username: string = '';
+  password: string = '';
+
+  btnLogin_Click(e: Event) : void {
+    // Implement your login logic here
+    console.log('Username:', this.username);
+    console.log('Password:', this.password);
+    // Add authentication logic and navigate to the next page upon successful login
+    this.authService.login(this.username, this.password);
+  }
 
 
   constructor(private authService: AuthService) {
@@ -19,11 +28,5 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     var isLoggedIn = this.authService.isLoggedIn();
 
-    if(isLoggedIn) 
-    {
-      this.message = "Someone is loggedin";
-    } else {
-      this.message = "No user is loggedin";
-    }
   }
 }

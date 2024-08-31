@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { WeatherComponent } from './weather/weather.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({ declarations: [
@@ -24,7 +25,8 @@ import { OAuthModule } from 'angular-oauth2-oidc';
                     sendAccessToken: true,
                     allowedUrls: ['http://localhost', 'http://pi']
                 }
-            })
+            }), 
+        FormsModule
     ], 
     providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }

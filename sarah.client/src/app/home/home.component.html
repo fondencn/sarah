@@ -1,9 +1,30 @@
 <div class="container">
     <div class="row">
       <div class="col-md-6">
-        <h1 class="text-primary">Welcome to Bootstrap with Angular 18</h1>
-        <p class="lead">This is a simple example of using Bootstrap in an Angular application.</p>
-        <p class="lead">{{ message }}</p>
+        <h1 class="text-primary">Sarah UI</h1>
       </div>
     </div>
-  </div>
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Bitte melden Sie sich am System an.</h3>
+        <form>
+          <div class="form-group mt-3">
+            <label for="inputUsername">Benutzername:</label>
+            <input class="form-control" id="inputUsername" aria-describedby="usernameHelp" placeholder="Benutzername"  
+              [(ngModel)]="username" name="username" required>
+            <small id="usernameHelp" class="form-text text-muted">Der interne Benutzername für die Anmeldung</small>
+          </div>
+          <div class="form-group mt-3">
+            <label for="inputPassword">Kennwort:</label>
+            <input type="password" class="form-control" id="inputPassword" placeholder="Kennwort"
+              [(ngModel)]="password" name="password" required>
+          </div>
+          <div class="form-check mt-3" >
+            <input type="checkbox" class="form-check-input" id="inputKeepLoggedIn">
+            <label class="form-check-label" for="inputKeepLoggedIn">Angemeldet bleiben</label>
+          </div>
+          <button type="submit" (click)="btnLogin_Click($event)" class="btn btn-primary  mt-3">Anmelden</button>
+        </form>
+      </div>
+    </div>
+</div>

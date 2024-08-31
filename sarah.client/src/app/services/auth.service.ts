@@ -105,7 +105,8 @@ export class AuthService {
    * 
    * Logins auth service
    */
-  public login(): void {
+  public login(username: string, password: string): void {
+    console.log("now calling initLoginFlow...");
     this.oauthService.initLoginFlow();
   }
 
