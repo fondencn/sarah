@@ -14,18 +14,12 @@ export class AppComponent implements OnInit, OnDestroy {
   darkModeActive: boolean = false;
   loggedIn = false;
   sub1: any;
-  username: string;
-  email: string;
-
   constructor(
     public ui: UiService, 
     public router: Router, 
     private authService: AuthService
   ) 
   {
-    this.authService.init();
-    this.username = this.authService.currentUserName;
-    this.email = this.authService.currentUserEmail;
   }
 
 

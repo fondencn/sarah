@@ -1,32 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
+  constructor(public authService: AuthService) {}
 
-  username: string = '';
-  password: string = '';
-
-  btnLogin_Click(e: Event) : void {
-    // Implement your login logic here
-    console.log('Username:', this.username);
-    console.log('Password:', this.password);
-    // Add authentication logic and navigate to the next page upon successful login
-    this.authService.login(this.username, this.password);
+  login(): void {
+    this.authService.login();
   }
 
-
-  constructor(private authService: AuthService) {
-
-  }
-
-
-  ngOnInit() {
-    var isLoggedIn = this.authService.isLoggedIn();
-
+  logout(): void {
+    this.authService.logout();
   }
 }
