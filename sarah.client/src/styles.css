@@ -1,0 +1,13 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+    background-image: url('assets/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  .root__container {
+    height: 100%;
+  }

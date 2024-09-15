@@ -1,0 +1,6 @@
+@Sarah.Server_HostAddress = https://localhost:32771
+
+GET {{Sarah.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
