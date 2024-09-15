@@ -10,10 +10,6 @@ import { AuthService } from './services/auth.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, OnDestroy {
-  showMenu = false;
-  darkModeActive: boolean = false;
-  loggedIn = false;
-  sub1: any;
   constructor(
     public ui: UiService, 
     public router: Router, 
@@ -24,27 +20,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   ngOnInit() {
-    this.sub1 = this.ui.darkModeState.subscribe((value: any) => {
-      this.darkModeActive = value;
-    });
 
   }
 
-  toggleMenu() {
-    this.showMenu = !this.showMenu;
-  }
-
-  modeToggleSwitch() {
-    this.ui.darkModeState.next(!this.darkModeActive);
-  }
 
   ngOnDestroy() {
-    this.sub1.unsubscribe();
   }
 
-  logout() {
-    this.toggleMenu();
-    this.authService.logout();
-  }
 
 }
