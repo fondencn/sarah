@@ -1,13 +1,42 @@
 /* You can add global styles to this file, and also import other style files */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-    background-image: url('assets/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 100vh;
-    margin: 0;
-  }
-  
-  .root__container {
-    height: 100%;
-  }
+  background-image: url('assets/background.jpg'); 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+}
+
+.root__container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main__container {
+  flex: 1 0 auto; /* Allow main content to grow and shrink as needed */
+  overflow: auto;
+}
+
+.main__footer {
+  flex: 0 0 auto; /* Ensure footer does not shrink or grow */
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.4); /* Optional: Add a semi-transparent background to the footer */
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+header {
+  flex: 0 0 auto; /* Ensure header does not shrink or grow */
+}

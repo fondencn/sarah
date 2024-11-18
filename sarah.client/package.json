@@ -26,6 +26,8 @@
     "angular-oauth2-oidc": "^17.0.2",
     "bootstrap": "^5.3.3",
     "jest-editor-support": "*",
+    "jquery": "^3.7.1",
+    "popper.js": "^1.16.1",
     "run-script-os": "*",
     "rxjs": "~7.8.1",
     "tslib": "^2.7.0",

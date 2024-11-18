@@ -7,12 +7,14 @@ import { HomeComponent } from './home/home.component';
 import { WeatherComponent } from './weather/weather.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
+import { NavComponent } from './nav/nav.component';
 
 
 @NgModule({ declarations: [
         AppComponent,
         HomeComponent,
-        WeatherComponent
+        WeatherComponent,
+        NavComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
