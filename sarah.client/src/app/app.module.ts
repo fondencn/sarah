@@ -4,17 +4,19 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
-import { WeatherComponent } from './weather/weather.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
 import { NavComponent } from './nav/nav.component';
+import { DevicesComponent } from './devices/devices.component';
+import { AdminComponent } from './admin/admin.component';
 
 
 @NgModule({ declarations: [
         AppComponent,
         HomeComponent,
-        WeatherComponent,
-        NavComponent
+        NavComponent,
+        DevicesComponent,
+        AdminComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

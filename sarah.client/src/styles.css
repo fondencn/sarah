@@ -3,6 +3,11 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  color: white; /* Set default text color to white */
+}
+
+.content {
+  color: white; /* Set default text color to white */
 }
 
 body {
@@ -22,9 +27,15 @@ body {
   width: 100%;
 }
 
+header {
+  flex: 0 0 auto; /* Ensure header does not shrink or grow */
+}
+
 .main__container {
   flex: 1 0 auto; /* Allow main content to grow and shrink as needed */
   overflow: auto;
+  padding-top: 60px; /* Adjust this value based on the height of your navbar */
+  padding-bottom: 60px; /* Adjust this value based on the height of your footer */
 }
 
 .main__footer {
@@ -35,8 +46,4 @@ body {
   position: fixed;
   bottom: 0;
   width: 100%;
-}
-
-header {
-  flex: 0 0 auto; /* Ensure header does not shrink or grow */
 }
