@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using System.Threading.Tasks;
 using ZWave;
 using ZWave.CommandClasses;
@@ -12,7 +13,7 @@ namespace Sarah.DeviceService.Model
         {
         }
 
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
             ReportEvent(new NetworkEvent<string>(this.NodeID, "Controller gestartet"));
             return Task.CompletedTask;

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ZWave;
 using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService.Model.Extensions
 {
@@ -15,9 +16,9 @@ namespace Sarah.DeviceService.Model.Extensions
         /// Entfernt den Knoten aus dem Netzwerk wenn er defekt ist
         /// </summary>
         /// <returns>Task</returns>
-        public static async Task RemoveFailedNode(this NetworkElement el)
+        public static async Task RemoveFailedNode(this NetworkElement el, IDeviceService deviceService)
         {
-            Node n = InteLukNetwork.Instance.GetNodeInternal(el.NodeID);
+            Node n = deviceService.GetNode(el.NodeID) as Node;
             if (n != null)
             {
                 await n.RemoveFailedNode();
@@ -30,9 +31,9 @@ namespace Sarah.DeviceService.Model.Extensions
         /// Aktualisiert die benachbarte Knoten Liste für diesen Knoten
         /// </summary>
         /// <returns>Task</returns>
-        public static async Task<string> UpdateNeighbors(this NetworkElement el)
+        public static async Task<string> UpdateNeighbors(this NetworkElement el, IDeviceService deviceService)
         {
-            Node n = InteLukNetwork.Instance.GetNodeInternal(el.NodeID);
+            Node n = deviceService.GetNode(el.NodeID) as Node;
             if (n != null)
             {
                 NeighborUpdateStatus res = await n.RequestNeighborUpdate();
@@ -49,9 +50,9 @@ namespace Sarah.DeviceService.Model.Extensions
         /// "Heilung", genaue Funktion unbekannt
         /// </summary>
         /// <returns>Task</returns>
-        public static async Task<string> HealNodeNetwork(this NetworkElement el)
+        public static async Task<string> HealNodeNetwork(this NetworkElement el, IDeviceService deviceService)
         {
-            Node n = InteLukNetwork.Instance.GetNodeInternal(el.NodeID);
+            Node n = deviceService.GetNode(el.NodeID) as Node;
             if (n != null)
             {
                 HealNetworkStatus res = await n.HealNodeNetwork();
@@ -68,9 +69,9 @@ namespace Sarah.DeviceService.Model.Extensions
         /// Ermittelt alle Nachbarknoten zu diesem Knoten
         /// </summary>
         /// <returns>Knotenids der Nachabrknoten </returns>
-        public static async Task<byte[]> GetNeighbors(this NetworkElement el)
+        public static async Task<byte[]> GetNeighbors(this NetworkElement el, IDeviceService deviceService)
         {
-            Node n = InteLukNetwork.Instance.GetNodeInternal(el.NodeID);
+            Node n = deviceService.GetNode(el.NodeID) as Node;
             if (n != null)
             {
                 Node[] neighbors = await n.GetNeighbours();

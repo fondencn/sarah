@@ -1,6 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,8 @@ namespace Sarah.DeviceService.Model
 
         private Task UpdateTask { get; set; }
         private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
+
+        private IDeviceService _deviceService;
 
 
         public override string ClassDescription => "Heizung";
@@ -138,12 +141,13 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override async Task InitializeAsync()
+        public override async Task InitializeAsync(IDeviceService deviceService)
         {
             try
             {
                 Logger.Instance.LogDebug("Initializing new Thermo for node " + this.NodeID + " ...");
-                Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                this._deviceService = deviceService;
+                Node n = deviceService.GetNode(this.NodeID) as Node;
 
 
                 if (n != null)
@@ -218,7 +222,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node n = this._deviceService.GetNode(this.NodeID) as Node;
 
                 /* Heizung Sollwerte */
                 ThermostatSetpoint temperature = n.GetCommandClass<ThermostatSetpoint>();
@@ -253,7 +257,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node node = this._deviceService.GetNode(this.NodeID) as Node;
                 var setpointCmd = node.GetCommandClass<ThermostatSetpoint>();
                 await setpointCmd.Set(ThermostatSetpointType.Heating, temperature);
                 await Task.Delay(5000);
@@ -278,7 +282,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node node = this._deviceService.GetNode(this.NodeID) as Node;
                 var basicCmd = node.GetCommandClass<Basic>();
                 await basicCmd.Set(level);
                 this.SetBasicValue(level); //Fibaro meldet Basic nicht per FLIRS zurück

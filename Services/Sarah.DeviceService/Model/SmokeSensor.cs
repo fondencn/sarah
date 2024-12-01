@@ -9,6 +9,7 @@ using System.Threading;
 using ZWave.CommandClasses;
 using ZWave;
 using Sarah.Logging;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService.Model
 {
@@ -59,9 +60,9 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+            Node node = deviceService.GetNode(this.NodeID) as Node;
 
             /* Register for Device events */
             try

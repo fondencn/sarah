@@ -20,5 +20,8 @@
     <ProjectReference Include="..\sarah.client\sarah.client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\Services\Sarah.DeviceService\Sarah.DeviceService.csproj" />
+    <ProjectReference Include="..\Services\Sarah.API\Sarah.API.csproj" />
+    <ProjectReference Include="..\Services\Sarah.Logging\Sarah.Logging.csproj" />
   </ItemGroup>
 </Project>

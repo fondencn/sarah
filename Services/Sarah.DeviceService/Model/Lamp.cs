@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using System;
 using System.Text;
@@ -17,6 +18,7 @@ namespace Sarah.DeviceService.Model
         private byte _brightness;
         private string _color;
         private string _meter;
+        private IDeviceService _deviceService;
 
         public override string ClassDescription => "Lampe";
 
@@ -77,9 +79,10 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung mit dem Zwave Gerät / Network Node
         /// </summary>
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
-            Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+            this._deviceService = deviceService;
+            Node n = deviceService.GetNode(this.NodeID) as Node;
             if (n != null)
             {
                 Basic basic = n.GetCommandClass<Basic>();
@@ -119,7 +122,7 @@ namespace Sarah.DeviceService.Model
             {
                 //if (this.Brightness != value)
                 //{
-                Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node n = this._deviceService.GetNode(this.NodeID) as Node;
                 //Basic basic = n.GetCommandClass<Basic>();
                 //await basic.Set(value);
                 SwitchMultiLevel swl = n.GetCommandClass<SwitchMultiLevel>();
@@ -138,7 +141,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node n = this._deviceService.GetNode(this.NodeID) as Node;
                 if (n != null && this.ColorMode == LampColorModes.RGBWW)
                 {
                     Color c = n.GetCommandClass<Color>();
@@ -175,7 +178,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node n = this._deviceService.GetNode(this.NodeID) as Node;
                 if (n != null && this.ColorMode == LampColorModes.RGBWW)
                 {
                     Color c = n.GetCommandClass<Color>();
@@ -218,7 +221,7 @@ namespace Sarah.DeviceService.Model
             {
                 try
                 {
-                    Node n = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                    Node n = this._deviceService.GetNode(this.NodeID) as Node;
                     if (n != null && !String.Equals(this.Color, color, StringComparison.OrdinalIgnoreCase))
                     {
                         {

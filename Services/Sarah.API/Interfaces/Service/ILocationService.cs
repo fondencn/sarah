@@ -9,7 +9,7 @@ namespace Sarah.API.Interfaces
     public interface ILocationService
     {
         Task<IEnumerable<LocationServiceEntry>> GetLocationTrace(string personName, string apiKey);
-        Task<LocationServiceEntry?> GetLocation(string personName, string apiKey);
+        Task<LocationServiceEntry> GetLocation(string personName, string apiKey);
         Task AddLocation(ProtectedLocationServiceEntry item);
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService.Model
 {
@@ -17,6 +18,7 @@ namespace Sarah.DeviceService.Model
         private static readonly string _StatusUriTemplate = "http://{0}/cm?cmnd=status{1}";
         private Task _updateSensorDataTask;
         private CancellationTokenSource _UpdateSensorDataCancellationTokenSource;
+
 
         public string Hostname { get; }
 
@@ -38,10 +40,11 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
             Logger.Instance.LogInfo("Wifi WallPlug " +
                  this.Hostname + ": start polling status...");
+                
             CancellationTokenSource cts = new CancellationTokenSource();
             this._UpdateSensorDataCancellationTokenSource = cts;
             this._updateSensorDataTask = Task.Run(async () =>

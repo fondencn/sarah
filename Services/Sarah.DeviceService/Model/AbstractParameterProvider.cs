@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using ZWave;
 using ZWave.Channel.Protocol;
@@ -16,12 +17,12 @@ namespace Sarah.DeviceService.Model
         protected abstract IEnumerable<byte> GetKnownParameters();
 
 
-        public async Task<IEnumerable<DeviceParameter>> GetParameters(byte nodeId)
+        public async Task<IEnumerable<DeviceParameter>> GetParameters(byte nodeId, IDeviceService deviceService)
         {
             List<DeviceParameter> parameters = new List<DeviceParameter>();
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(nodeId);
+                Node n = deviceService.GetNode(nodeId) as Node;
                 Configuration configCmd = n.GetCommandClass<Configuration>();
 
                 foreach (byte pId in GetKnownParameters())
@@ -51,11 +52,11 @@ namespace Sarah.DeviceService.Model
             return parameters;
         }
 
-        public async Task SetParameter(byte nodeId, DeviceParameter p)
+        public async Task SetParameter(byte nodeId, DeviceParameter p, IDeviceService deviceService)
         {
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(nodeId);
+                Node n = deviceService.GetNode(nodeId) as Node;
                 Configuration configCmd = n.GetCommandClass<Configuration>();
                 await configCmd.Set(p.Id, Convert.ToByte(p.Value));
             }
@@ -71,12 +72,12 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public async Task<DeviceParameter> GetParameter(byte nodeId, byte paramId)
+        public async Task<DeviceParameter> GetParameter(byte nodeId, byte paramId, IDeviceService deviceService)
         {
             DeviceParameter parameter = null;
             try
             {
-                Node n = InteLukNetwork.Instance.GetNodeInternal(nodeId);
+                Node n = deviceService.GetNode(nodeId) as Node;
                 Configuration configCmd = n.GetCommandClass<Configuration>();
 
                 ConfigurationReport report = await configCmd.Get(paramId);

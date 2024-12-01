@@ -21,34 +21,22 @@ namespace Sarah.DeviceService.Notifications
         /// </summary>
         public const string Speaker3 = "Speaker3";
 
-
-
-        #region singleton pattern
-        private static NotificationEngine _Instance;
-        public static NotificationEngine Instance
+        /// <summary>
+        /// ctor
+        /// </summary>
+        public NotificationEngine(IEmailNotifier email, IVoiceNotifier voice)
         {
-            get
-            {
-                if(_Instance == null)
-                {
-                    _Instance = new NotificationEngine();
-                }
-                return _Instance;
-            }
+            this.Email = email;
+            this.Voice = voice;
         }
 
-        private NotificationEngine()
-        {
-            this.Email = new DieRooterEmailNotifier();
-        }
-        #endregion
-
-        public IEmailNotifier Email { get; set; }
-        public IVoiceNotifier Voice { get; set; }
-
-        public IWeatherProvider Weather { get; set; }
-        public IDeseaseStatsProvider Deseases { get; set; }
-        public IFerienInfoProvider Ferien { get; set; }
-        public IGeoService Geo { get; set; }
+        /// <summary>
+        /// E-Mail Notifier 
+        /// </summary>
+        public IEmailNotifier Email { get; }
+        /// <summary>
+        /// Voice Notifier
+        /// </summary>
+        public IVoiceNotifier Voice { get; }
     }
 }

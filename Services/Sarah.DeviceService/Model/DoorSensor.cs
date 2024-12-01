@@ -1,6 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using System;
 using System.Globalization;
@@ -168,9 +169,9 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node node = deviceService.GetNode(this.NodeID) as Node;
 
             if (node != null)
             {

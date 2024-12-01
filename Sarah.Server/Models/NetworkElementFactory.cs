@@ -1,4 +1,7 @@
 using Sarah.Server.Models.Dtos;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
+using Sarah.Logging;
 
 namespace Sarah.Server.Models;
 
@@ -8,18 +11,18 @@ public static class NetworkElementFactory
     /// Factory
     /// </summary>
     /// <returns></returns>
-    public static IEnumerable<NetworkElementDto> Create(out string StatusMessage)
+    public static IEnumerable<NetworkElementDto> Create(IDeviceService deviceService, out string statusMessage)
     {
-        StatusMessage = null;
+        statusMessage = null;
         List<NetworkElementDto> networkElements = new List<NetworkElementDto>();
         try
         {
-            if (!String.IsNullOrWhiteSpace(InteLukNetworkFactory.InteLukNetwork.StatusMessage))
+            if (!String.IsNullOrWhiteSpace(deviceService.StatusMessage))
             {
-                StatusMessage = InteLukNetworkFactory.InteLukNetwork.StatusMessage;
+                statusMessage = deviceService.StatusMessage;
             }
             /* Alle  Lampen aufzählen */
-            foreach (ILamp lamp in InteLukNetworkFactory.InteLukNetwork.Lamps)
+            foreach (ILamp lamp in deviceService.Lamps)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -33,7 +36,7 @@ public static class NetworkElementFactory
                 networkElements.Add(itemVm);
             }
             /* Alle BinarySensors aufzählen */
-            foreach (IDoorSensor sensor in InteLukNetworkFactory.InteLukNetwork.DoorSensors)
+            foreach (IDoorSensor sensor in deviceService.DoorSensors)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -45,7 +48,7 @@ public static class NetworkElementFactory
                 networkElements.Add(itemVm);
             }
             /* Alle Heizungen aufzählen */
-            foreach (IThermoElement thermo in InteLukNetworkFactory.InteLukNetwork.Heatings)
+            foreach (IThermoElement thermo in deviceService.Heatings)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -57,7 +60,7 @@ public static class NetworkElementFactory
                 networkElements.Add(itemVm);
             }
             /* Alle Controllers aufzählen */
-            foreach (IControllerElement controller in InteLukNetworkFactory.InteLukNetwork.Controllers)
+            foreach (IControllerElement controller in deviceService.Controllers)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -68,7 +71,7 @@ public static class NetworkElementFactory
                 itemVm.Info = "✨✨✨";
                 networkElements.Add(itemVm);
             }
-            foreach (IWallController controller in InteLukNetworkFactory.InteLukNetwork.WallControllers)
+            foreach (IWallController controller in deviceService.WallControllers)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -79,7 +82,7 @@ public static class NetworkElementFactory
                 itemVm.Info = controller.StateInfo;
                 networkElements.Add(itemVm);
             }
-            foreach (IWallPlug wallplug in InteLukNetworkFactory.InteLukNetwork.WallPlugs)
+            foreach (IWallPlug wallplug in deviceService.WallPlugs)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -91,7 +94,7 @@ public static class NetworkElementFactory
                 networkElements.Add(itemVm);
             }
 
-            foreach (IMultiSensor sensor in InteLukNetworkFactory.InteLukNetwork.Sensors)
+            foreach (IMultiSensor sensor in deviceService.Sensors)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {
@@ -103,7 +106,7 @@ public static class NetworkElementFactory
                 networkElements.Add(itemVm);
             }
             /* Alle unbekannten Elemente aufzählen */
-            foreach (IUnknownElement unknown in InteLukNetworkFactory.InteLukNetwork.UnknownElements)
+            foreach (IUnknownElement unknown in deviceService.UnknownElements)
             {
                 NetworkElementDto itemVm = new NetworkElementDto()
                 {

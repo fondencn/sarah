@@ -1,4 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,10 +14,13 @@ namespace Sarah.DeviceService.Model.Animations
     {
         private readonly List<Animation> _runningAnimations = new List<Animation>();
 
+        public RedAlert(IDeviceService deviceService) : base(deviceService)
+        {
+        }
 
         protected override void Start()
         {
-            foreach (Lamp lamp in InteLukNetwork.Instance.Lamps.Where(item => item.NodeID != 3)) //3 ist die versteckte Glühbirne, die nicht nehmen, sonst Timeouts
+            foreach (Lamp lamp in _deviceService.Lamps.Where(item => item.NodeID != 3)) //3 ist die versteckte Glühbirne, die nicht nehmen, sonst Timeouts
             {
                 BlinkAnimation anim = new BlinkAnimation(lamp)
                 {

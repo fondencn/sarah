@@ -14,6 +14,8 @@ using System.Transactions;
 using ZWave.Channel;
 using ZWave;
 using System.Linq;
+using Sarah.API.Interfaces.Services;
+using System.IO;
 
 namespace Sarah.DeviceService.Model
 {
@@ -22,8 +24,8 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class LoraWanGpsTracker : NetworkElement, IDisposable, IGPSTracker, IBatterySensor
     {
-        private const string Ttn_cf_ApiKey = "NNSXS.XG4P2EXYQB7JECFSTQELZU5UVVD6A2FDS24LYXQ.XSUFFEKFFFJVQ7BZYQJYMW4TLWVVQ7AAP54BJQ4SMCYAAH5KSOJQ";
-        private const string TtnApiKey_SarahApiKey = "NNSXS.WWMYF4ZC7DZGOSBQDWPLQKN7DXPWLBAEIENNR6Q.KTIHVUYLXPRBW3S4RZQ46NDCXDGCX5HFVSNTFXXRU4R72AOYSFMQ";
+        private string Ttn_cf_ApiKey {get; set;}
+        private string TtnApiKey_SarahApiKey {get; set; }
         private const string TtnAppName = "sarah-lorawan";
         private const string TtnUserName = "sarah-lorawan@ttn";
         private const string TtnHostname = "eu1.cloud.thethings.network";
@@ -203,9 +205,18 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override async Task InitializeAsync()
+        public override async Task InitializeAsync(IDeviceService deviceService)
         {
+            LoadTtnApiKey();
             await _ttn.Start(TtnHostname, TtnPort, true, TtnUserName, TtnApiKey_SarahApiKey, TimeSpan.FromSeconds(5));
+        }
+
+        private  void LoadTtnApiKey() 
+        {
+            string str = File.ReadAllText("ttn.config");
+            string[] rows = str.Split("\n");
+            Ttn_cf_ApiKey = rows[0].Split("=")[1];
+            TtnApiKey_SarahApiKey = rows[1].Split("=")[1];
         }
 
         public void Dispose()

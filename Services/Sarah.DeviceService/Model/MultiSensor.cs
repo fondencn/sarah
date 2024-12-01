@@ -1,6 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,8 @@ namespace Sarah.DeviceService.Model
         private Task UpdateNoMotionTask { get; set; }
         private Task UpdateDewpointTask { get; set; }
         private CancellationTokenSource CancellationTokenSource { get; set; }
+
+        private IDeviceService _deviceService;
 
         /// <summary>
         /// Temperatur
@@ -205,9 +208,10 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+            this._deviceService = deviceService;
+            Node node = deviceService.GetNode(this.NodeID) as Node;
 
             /* Register for Device events */
             try

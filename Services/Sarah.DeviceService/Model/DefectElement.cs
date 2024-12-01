@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using System.Threading.Tasks;
 using ZWave;
 
@@ -16,9 +17,9 @@ namespace Sarah.DeviceService.Model
 
         }
 
-        public override async Task InitializeAsync()
+        public override async Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+            Node node = deviceService.GetNode(this.NodeID) as Node;
 
             if (node != null)
             {

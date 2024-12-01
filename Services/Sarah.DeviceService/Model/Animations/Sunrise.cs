@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,6 +13,9 @@ namespace Sarah.DeviceService.Model.Animations
     [SceneName("Sonnenaufgang")]
     public class Sunrise : Scene
     {
+        public Sunrise(IDeviceService deviceService) : base(deviceService)
+        {
+        }
 
         protected override void Start()
         {
@@ -19,7 +23,7 @@ namespace Sarah.DeviceService.Model.Animations
             Task.Run(async () =>
             {
                 int waitTimeMs = 10000;
-                Lamp wohnzimmerLampe = InteLukNetwork.Instance.GetNetworkItem(24) as Lamp;
+                Lamp wohnzimmerLampe = _deviceService.GetNetworkItem(24) as Lamp;
                 await wohnzimmerLampe.SetColor("#402200");
                 await wohnzimmerLampe.SetBrightness(255);
                 await Task.Delay(waitTimeMs);

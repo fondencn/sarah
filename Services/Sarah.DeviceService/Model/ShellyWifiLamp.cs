@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.CommandClasses;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService.Model
 {
@@ -45,7 +46,7 @@ namespace Sarah.DeviceService.Model
                 this._UpdateSensorDataCancellationTokenSource.Cancel();
             }
         }
-        public override Task InitializeAsync()
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
             Logger.Instance.LogInfo("Wifi Lamp " +
                  this.Hostname + ": start polling status...");

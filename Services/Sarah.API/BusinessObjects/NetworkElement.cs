@@ -1,6 +1,7 @@
 ﻿using Sarah.API.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.API.BusinessObjects
 {
@@ -37,8 +38,9 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Kann überschrieben werden, um Task-basierten initialisierungscode auszuführen
         /// </summary>
-        /// <returns></returns>
-        public virtual Task InitializeAsync() => Task.CompletedTask;
+        /// <param name="network">Das Netzwerk, in dem das Gerät registriert ist</param>
+        /// <returns>Task</returns>
+        public virtual Task InitializeAsync(IDeviceService network) => Task.CompletedTask;
 
         /// <summary>
         /// ctor
@@ -55,16 +57,22 @@ namespace Sarah.API.BusinessObjects
             NetworkEventAggregator.Instance.Report(e);
         }
 
-        // public virtual Task<IAssociationGroup[]> GetAssociationGroups()
-        // {
-        //     return (InteLukNetworkFactory.InteLukNetwork.GetAssociationGroups(this.NodeID)) ;
+        /// <summary>
+        /// Liefert die Assoziationsgruppen des Geräts
+        /// </summary>
+        public virtual Task<IAssociationGroup[]> GetAssociationGroups(IDeviceService network)
+        {
+            return (network.GetAssociationGroups(this.NodeID)) ;
 
-        // }
+        }
 
-        // public virtual Task SetAssociationGroup(byte groupId, byte[] nodeIds)
-        // {
-        //     return (InteLukNetworkFactory.InteLukNetwork.SetAssociationGroup(this.NodeID, groupId, nodeIds));
+        /// <summary>
+        /// Setzt die Assoziationsgruppe
+        /// </summary>
+        public virtual Task SetAssociationGroup(IDeviceService network, byte groupId, byte[] nodeIds)
+        {
+            return (network.SetAssociationGroup(this.NodeID, groupId, nodeIds));
 
-        // }
+        }
     }
 }

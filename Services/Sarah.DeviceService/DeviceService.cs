@@ -8,12 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave;
 using ZWave.Channel;
 using ZWave.CommandClasses;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService
 {
@@ -226,7 +226,7 @@ namespace Sarah.DeviceService
                         Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
                         networkElements.Add(nodeElement);
                     }
-                    await nodeElement.InitializeAsync();
+                    await nodeElement.InitializeAsync(this);
                 }
             }
 
@@ -243,7 +243,7 @@ namespace Sarah.DeviceService
                 {
                     Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
                     networkElements.Add(nodeElement);
-                    await nodeElement.InitializeAsync();
+                    await nodeElement.InitializeAsync(this);
                 }
             }
 
@@ -476,7 +476,7 @@ namespace Sarah.DeviceService
                 .ToList();
             foreach(NetworkElement el in this.Elements.Where(item => !(item is DefectElement)))
             {
-                byte[] neighborIds = el.GetNeighbors().Result;
+                byte[] neighborIds = el.GetNeighbors(this).Result;
                 adjacentNodesMatrix.Add(el.NodeID, neighborIds);
                 Logger.Instance.LogDebug(el.NodeID + "\t|\t" + String.Join(" | ", neighborIds));
                 Logger.Instance.LogDebug("--------------------------------------------------------");

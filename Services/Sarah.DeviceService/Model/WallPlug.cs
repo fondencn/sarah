@@ -1,6 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 using System;
 using System.Text;
@@ -171,6 +172,7 @@ public class ZWaveWallPlug : WallPlug
     {
         private Task _updateSensorDataTask;
         private CancellationTokenSource _UpdateSensorDataCancellationTokenSource;
+        private IDeviceService _deviceService;
 
 
         /// <summary>
@@ -183,7 +185,7 @@ public class ZWaveWallPlug : WallPlug
 
             try
             {
-                Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node node = _deviceService.GetNode(this.NodeID) as Node;
                 var switchBin = node.GetCommandClass<SwitchBinary>();
                 await switchBin.Set(newState);
                 Logger.Instance.LogDebug("switchBinReport.Value SET To: " + newState);
@@ -212,7 +214,7 @@ public class ZWaveWallPlug : WallPlug
         {
             try
             {
-                Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+                Node node = _deviceService.GetNode(this.NodeID) as Node;
                 var meter = node.GetCommandClass<Meter>();
                 var meterReport = await meter.Get(ElectricMeterScale.kWh);
                 if (meterReport != null)
@@ -310,9 +312,10 @@ public class ZWaveWallPlug : WallPlug
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override async Task InitializeAsync()
+        public override async Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
+            this._deviceService = deviceService;
+            Node node = deviceService.GetNode(this.NodeID) as Node;
             Logger.Instance.LogDebug("Initialize Node " + this.NodeID + " as " + this.Name);
 
             if (node != null)

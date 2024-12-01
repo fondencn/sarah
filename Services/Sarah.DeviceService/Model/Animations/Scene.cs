@@ -1,4 +1,5 @@
-﻿using Sarah.Logging;
+﻿using Sarah.API.Interfaces.Services;
+using Sarah.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,8 +21,16 @@ namespace Sarah.DeviceService.Model.Animations
 
     public abstract class Scene
     {
+        protected readonly IDeviceService _deviceService;
+
         protected abstract void Start();
         protected abstract void Stop();
+
+
+        public Scene(IDeviceService deviceService) 
+        {
+            _deviceService = deviceService;
+        }
 
         private readonly static Dictionary<Type, Scene> _activeScenes = new Dictionary<Type, Scene>();
         public static IEnumerable<Type> KnownScenes { get; } = LoadSceneDefinitions();

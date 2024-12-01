@@ -1,4 +1,5 @@
-﻿using Sarah.API.Interfaces;
+﻿using System.Threading.Tasks;
+using Sarah.API.Interfaces;
 using ZWave;
 
 namespace Sarah.DeviceService.Model
@@ -9,6 +10,12 @@ namespace Sarah.DeviceService.Model
         internal NodeWrapper(Node wrappedItem)
         {
             this._Node = wrappedItem;
+        }
+
+        public async Task<string> GetDeviceTypeName()
+        {
+            var proto = await _Node.GetProtocolInfo();
+            return proto.GenericType.ToString();
         }
     }
 }

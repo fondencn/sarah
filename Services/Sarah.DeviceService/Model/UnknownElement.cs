@@ -1,7 +1,7 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using System.Threading.Tasks;
-using ZWave;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.DeviceService.Model
 {
@@ -15,15 +15,10 @@ namespace Sarah.DeviceService.Model
         {
         }
 
-        public override async Task InitializeAsync()
+        public override async Task InitializeAsync(IDeviceService deviceService)
         {
-            Node node = InteLukNetwork.Instance.GetNodeInternal(this.NodeID);
-
-            if (node != null)
-            {
-                var proto = await node.GetProtocolInfo();
-                this._genericType = proto.GenericType.ToString();
-            }
+            INode node = deviceService.GetNode(this.NodeID);
+            this._genericType = await node?.GetDeviceTypeName();
         }
     }
 }
