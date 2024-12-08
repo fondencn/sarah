@@ -141,7 +141,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override async Task InitializeAsync(IDeviceService deviceService)
+        public override  Task InitializeAsync(IDeviceService deviceService)
         {
             try
             {
@@ -216,6 +216,8 @@ namespace Sarah.DeviceService.Model
             {
                 Logger.Instance.LogException("ThermoElement::InitializeAsync: ", ex);
             }
+
+            return Task.CompletedTask;
         }
 
         private async Task UpdateSensorData()

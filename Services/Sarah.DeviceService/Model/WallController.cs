@@ -46,7 +46,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override async  Task InitializeAsync(IDeviceService deviceService)
+        public override Task InitializeAsync(IDeviceService deviceService)
         {
             Node node = deviceService.GetNode(this.NodeID) as Node;
             Logger.Instance.LogDebug("Initialize Node " + this.NodeID + " as " +  this.Name );
@@ -109,6 +109,7 @@ namespace Sarah.DeviceService.Model
                 //    Logger.Instance.LogDebug(ex.Message);
                 //}
             }
+            return Task.CompletedTask;
         }
 
 
