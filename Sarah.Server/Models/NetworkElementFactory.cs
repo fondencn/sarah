@@ -13,7 +13,7 @@ public static class NetworkElementFactory
     /// <returns></returns>
     public static IEnumerable<NetworkElementDto> Create(IDeviceService deviceService, out string statusMessage)
     {
-        statusMessage = null;
+        statusMessage = "";
         List<NetworkElementDto> networkElements = new List<NetworkElementDto>();
         try
         {

@@ -68,6 +68,11 @@ namespace Sarah.DeviceService.Model
         private bool _isRunning;
 
         /// <summary>
+        /// Gibt an ob de Serialport geöffnet ist
+        /// </summary>
+        public bool IsRunning => _isRunning;
+
+        /// <summary>
         /// ctor
         /// </summary>
         /// <param name="serialPortName">Name des COM Ports</param>

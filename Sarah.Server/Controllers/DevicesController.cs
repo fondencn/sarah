@@ -17,7 +17,7 @@ public class DevicesController : ControllerBase
     }   
 
     [HttpGet]
-    public async Task<ActionResult> GetDevicesAsync()
+    public ActionResult GetDevicesAsync()
     {
         // Get all devices
 
