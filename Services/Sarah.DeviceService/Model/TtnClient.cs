@@ -84,7 +84,7 @@ namespace Sarah.Ttn
 
         private MqttClientOptions GetMqttClientOptions(string server, int port, bool withTls, string username, string apiKey)
         {
-            var tlsOptions = new MqttClientOptionsBuilderTlsParameters
+            var tlsOptions = new MqttClientTlsOptions
             {
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls12 | (SslProtocols)12288, //tls1.3
@@ -98,7 +98,7 @@ namespace Sarah.Ttn
                 .WithTcpServer(server, port)
                 .WithCredentials(username, apiKey)
                 .WithCleanSession();
-            return withTls ? o.WithTls(tlsOptions).Build() : o.Build();
+            return withTls ? o.WithTlsOptions(tlsOptions).Build() : o.Build();
         }
 
 
