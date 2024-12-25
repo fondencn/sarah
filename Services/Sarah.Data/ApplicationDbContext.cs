@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Sqlite;
+using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
 
 namespace Sarah.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<User, Role, string>
+    public class ApplicationDbContext : IdentityDbContext<User, Role, string>, IDBService
     {
         public static string DatabaseFileName => "./InteLuk.db";
 
@@ -20,14 +21,16 @@ namespace Sarah.Data
 
         protected ApplicationDbContext()
         {
+            
         }
 
-        public static ApplicationDbContext CreateDefault()
+        public static IDBService CreateDefault()
         {
             DbContextOptionsBuilder builder = new DbContextOptionsBuilder();
             builder.UseSqlite("Filename=" + DatabaseFileName);
             return new ApplicationDbContext(builder.Options);
         }
+
 
 
         public DbSet<DeviceInfo> Devices => this.Set<DeviceInfo>();

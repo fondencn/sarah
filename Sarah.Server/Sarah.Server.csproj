@@ -23,5 +23,6 @@
     <ProjectReference Include="..\Services\Sarah.DeviceService\Sarah.DeviceService.csproj" />
     <ProjectReference Include="..\Services\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\Services\Sarah.Logging\Sarah.Logging.csproj" />
+    <ProjectReference Include="..\Services\Sarah.Data\Sarah.Data.csproj" />
   </ItemGroup>
 </Project>

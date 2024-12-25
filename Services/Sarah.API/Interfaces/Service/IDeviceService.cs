@@ -9,9 +9,9 @@ namespace Sarah.API.Interfaces.Services
     {
         INode GetNode(byte nodeId);
 
-        Task Start(INodeFactory nodeFactory);
+        // Task Start(INodeFactory nodeFactory);
 
-        Task Start(INodeFactory factory, string serialPortName);
+        // Task Start(INodeFactory factory, string serialPortName);
 
         public IEnumerable<ILamp> Lamps { get; }
 

@@ -14,6 +14,7 @@ using ZWave;
 using ZWave.Channel;
 using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
+using System.IO;
 
 namespace Sarah.DeviceService
 {
@@ -69,6 +70,14 @@ namespace Sarah.DeviceService
         };
 
     
+        /// <summary>
+        /// ctor creates and starts the ZWAve service component
+        /// </summary>  
+        public DeviceService(INodeFactory nodeFactory)
+        {
+            this._serialPortName = ReadConfig();
+            this.Start(nodeFactory).Wait();
+        }
 
         /// <summary>
         /// dtor
@@ -84,22 +93,39 @@ namespace Sarah.DeviceService
 
 
         /// <summary>
-        /// Startet das Netzwerk
+        /// Read ZWAve Hardware settings from config file serialport.cfg. 
+        /// Defaults to COM7 if no config file is present.
         /// </summary>
-        /// <param name="serialPortName">Name des COM Anschlusses</param>
-        /// <returns>Task</returns>
-        public Task Start(INodeFactory nodeFactory, string serialPortName)
+        /// <returns>Serial port name to be used by Zwave hardware</returns>
+        private static string ReadConfig()
         {
-            _serialPortName = serialPortName;
-            return Start(nodeFactory);
+            string portname = null;
+            if(File.Exists("serialport.cfg"))
+            {
+                portname = File.ReadAllText("serialport.cfg");
+            }
 
+
+            string[] availablePorts = System.IO.Ports.SerialPort.GetPortNames();
+
+            if (String.IsNullOrWhiteSpace(portname))
+            {
+                portname = availablePorts?.FirstOrDefault() ?? "COM7"; //Fallback: Windows Development Default
+            }
+
+
+            Logger.Instance.LogDebug("Available Serial Ports: " + String.Join(", ", availablePorts));
+            Logger.Instance.LogDebug("Selected Serial Port:   " + portname);
+
+            return portname;
         }
+
 
         /// <summary>
         /// Startet das Netzwerk  auf dem übergebenen Defaultport
         /// </summary>
         /// <returns></returns>
-        public async Task Start(INodeFactory nodeFactory)
+        private async Task Start(INodeFactory nodeFactory)
         {
             ZWaveController controller = null;
             try
@@ -186,7 +212,7 @@ namespace Sarah.DeviceService
             }
         }
 
-        private void Controller_Error(object sender, ErrorEventArgs e)
+        private void Controller_Error(object sender, ZWave.ErrorEventArgs e)
         {
             Logger.Instance.LogError("Controller_Error: " + e.Error?.Message);
         }

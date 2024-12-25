@@ -1,4 +1,6 @@
 
+using Sarah.Server.Extensions;
+
 namespace Sarah.Server
 {
     public class Program
@@ -8,6 +10,7 @@ namespace Sarah.Server
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddSarahServices();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
