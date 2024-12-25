@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Logging", "Services\S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Services\Sarah.Data\Sarah.Data.csproj", "{4198E1FE-C2F5-41B7-900F-8463ED33EE91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.NodeFactory", "Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,5 +66,6 @@ Global
 		{C815FB6F-496F-4559-9FDC-664EDAE84367} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{967DDEB4-7541-438E-9562-FCBC61B6BEDD} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{1D301283-A854-4624-9AC7-71E7D42F8EFF} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 	EndGlobalSection
 EndGlobal

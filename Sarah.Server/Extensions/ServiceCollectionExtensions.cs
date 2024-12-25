@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
 using Sarah.Data;
@@ -12,6 +13,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton(sp => Logger.Instance);
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));
+        services.AddSingleton<INodeFactory, Sarah.NodeFactory.NodeFactory>();
         services.AddSingleton<IDBService>(sp => ApplicationDbContext.CreateDefault());
         services.AddSingleton<IDeviceService, Sarah.DeviceService.DeviceService>();
     }
