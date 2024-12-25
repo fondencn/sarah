@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.DeviceService", "Services\Sarah.DeviceService\Sarah.DeviceService.csproj", "{967DDEB4-7541-438E-9562-FCBC61B6BEDD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Logging", "Services\Sarah.Logging\Sarah.Logging.csproj", "{1D301283-A854-4624-9AC7-71E7D42F8EFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Services\Sarah.Data\Sarah.Data.csproj", "{4198E1FE-C2F5-41B7-900F-8463ED33EE91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +45,10 @@ Global
 		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
