@@ -1,4 +1,7 @@
-
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Sarah.Server.Extensions;
 
 namespace Sarah.Server
@@ -13,9 +16,35 @@ namespace Sarah.Server
             builder.Services.AddSarahServices();
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Configure OIDC authentication
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddOpenIdConnect(options =>
+            {
+                options.Authority = builder.Configuration["OIDC:Authority"];
+                options.ClientId = builder.Configuration["OIDC:ClientId"];
+                options.ClientSecret = builder.Configuration["OIDC:ClientSecret"];
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.SaveTokens = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = builder.Configuration["OIDC:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = builder.Configuration["OIDC:ClientId"],
+                    ValidateLifetime = true
+                };
+            });
+
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
@@ -27,8 +56,8 @@ namespace Sarah.Server
             app.UseSwaggerUI();
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

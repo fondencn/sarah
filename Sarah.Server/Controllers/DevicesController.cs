@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sarah.API.Interfaces.Services;
 using Sarah.Server.Models;
@@ -7,6 +8,7 @@ namespace Sarah.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize] 
 public class DevicesController : ControllerBase
 {
     private IDeviceService _deviceService;
@@ -20,7 +22,6 @@ public class DevicesController : ControllerBase
     public ActionResult GetDevicesAsync()
     {
         // Get all devices
-
         IEnumerable<NetworkElementDto> dtos = NetworkElementFactory.Create(_deviceService, out string StatusMessage);
         return Ok(dtos);
     }
