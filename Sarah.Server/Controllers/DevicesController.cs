@@ -19,7 +19,7 @@ public class DevicesController : ControllerBase
     }   
 
     [HttpGet]
-    public ActionResult GetDevicesAsync()
+    public ActionResult<IEnumerable<NetworkElementDto>> GetDevicesAsync()
     {
         // Get all devices
         IEnumerable<NetworkElementDto> dtos = NetworkElementFactory.Create(_deviceService, out string StatusMessage);
