@@ -5,7 +5,7 @@ export const authConfig: AuthConfig = {
   issuer: 'https://pi:8443/realms/sarah-realm',
   redirectUri: window.location.origin + '/home',
   clientId: 'sarah-client',
-  dummyClientSecret: 'jdbpg8kuVquqEY4wWVRaUxwhqDXakGCL',
+  dummyClientSecret: '5q3qyM7WdFQWkaiMr3kUBneLtsQJYu0M',
   scope: 'openid profile email offline_access',
   responseType: 'code',
   showDebugInformation: true,

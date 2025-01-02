@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Server.Extensions;
 
@@ -20,31 +21,33 @@ namespace Sarah.Server
             builder.Services.AddSwaggerGen();
 
             // Configure OIDC authentication
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            })
-            .AddCookie()
-            .AddOpenIdConnect(options =>
-            {
-                options.Authority = builder.Configuration["OIDC:Authority"];
-                options.ClientId = builder.Configuration["OIDC:ClientId"];
-                options.ClientSecret = builder.Configuration["OIDC:ClientSecret"];
-                options.ResponseType = OpenIdConnectResponseType.Code;
-                options.SaveTokens = true;
-                options.TokenValidationParameters = new TokenValidationParameters
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
                 {
-                    ValidateIssuer = true,
-                    ValidIssuer = builder.Configuration["OIDC:Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = builder.Configuration["OIDC:ClientId"],
-                    ValidateLifetime = true
-                };
-            });
+                    options.Authority = builder.Configuration["OIDCAuthority"];
+                    options.Audience = "sarah-client";
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true
+                    };
+                });
 
             builder.Services.AddAuthorization();
+            
+            // Add CORS services
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigins",
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:4200", "https://pi:4200")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
+            });
 
             var app = builder.Build();
 
@@ -55,13 +58,15 @@ namespace Sarah.Server
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseHttpsRedirection();
+            
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
 
-            app.MapFallbackToFile("/index.html");
+            app.UseCors("AllowSpecificOrigins"); // Use the CORS policy
 
             app.Run();
         }

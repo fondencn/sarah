@@ -1,1 +1,0 @@
-nswag run nswag.json
