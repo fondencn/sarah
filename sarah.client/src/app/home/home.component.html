@@ -20,7 +20,11 @@
           <div class="card shadow-lg p-3 m-2 flex-grow-1" style="background: rgba(255, 255, 255, 0.8); border-radius: 15px; min-width: 300px;">
             <div class="card-body">
               <h1 class="display-4 text-primary">System Status</h1>
-              <h2 class="lead">{{ statusMessage }}</h2>
+              <span class="lead">{{ statusMessage }}</span><br/>
+              <span class="lead">Hostname: {{ statusDto?.hostname }}</span><br/>
+              <span class="lead">Port: {{ statusDto?.port }}</span><br/>
+              <span class="lead">Authenticated: {{ statusDto?.isAuthenticated }}</span><br/>
+              <span class="lead">Username (Server): {{ statusDto?.username }}</span>
             </div>
           </div>
         </ng-container>

@@ -13,5 +13,6 @@ export interface StatusDto {
     hostname?: string | null;
     port?: number;
     isAuthenticated?: boolean;
+    username?: string | null;
 }
 

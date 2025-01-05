@@ -20,8 +20,12 @@ namespace Sarah.Server.Controllers
             {
                 Hostname = hostname,
                 Port = port,
-                IsAuthenticated = isAuthenticated
+                IsAuthenticated = isAuthenticated,
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                Username = isAuthenticated ? User.Identity.Name : null
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
             };
+
 
             return Ok(status);
         }

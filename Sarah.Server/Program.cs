@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Server.Extensions;
@@ -13,11 +10,13 @@ namespace Sarah.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure logging
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
-            builder.Logging.SetMinimumLevel(LogLevel.Debug);
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Logging.ClearProviders();
+                builder.Logging.AddConsole();
+                builder.Logging.AddDebug();
+                builder.Logging.SetMinimumLevel(LogLevel.Debug);
+            }
 
             // Add services to the container.
             builder.Services.AddSarahServices();
@@ -38,7 +37,8 @@ namespace Sarah.Server
                         ValidIssuer = builder.Configuration["OIDCIssuer"], // Set the valid issuer
                         ValidateAudience = true,
                         ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true
+                        ValidateIssuerSigningKey = true,
+                        NameClaimType = "preferred_username" // Map preferred_username to User.Identity.Name
                     };
                     options.Events = new JwtBearerEvents
                     {
@@ -50,30 +50,35 @@ namespace Sarah.Server
                         },
                         OnTokenValidated = context =>
                         {
-                            Console.WriteLine("Token validated successfully.");
+                            if (builder.Environment.IsDevelopment())
+                            {
+                                Console.WriteLine("Token validated successfully.");
+                            }
                             return Task.CompletedTask;
                         },
                         OnMessageReceived = context =>
                         {
                             // Log the Authorization header
-                            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                            if (builder.Environment.IsDevelopment())
                             {
-                                var token = authHeader.ToString();
-                                Console.WriteLine($"Authorization Header: {token}");
+                                if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                                {
+                                    var token = authHeader.ToString();
+                                    Console.WriteLine($"Authorization Header: {token}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Authorization Header is missing.");
+                                }
+                                Console.WriteLine("Token received: " + context.Token);
                             }
-                            else
-                            {
-                                Console.WriteLine("Authorization Header is missing.");
-                            }
-
-                            Console.WriteLine("Token received: " + context.Token);
                             return Task.CompletedTask;
                         }
                     };
-                }); 
+                });
 
             builder.Services.AddAuthorization();
-            
+
             // Add CORS services
             builder.Services.AddCors(options =>
             {
@@ -102,8 +107,8 @@ namespace Sarah.Server
 
             app.UseCors("AllowSpecificOrigins");
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+            app.UseAuthentication(); // Add authentication middleware
+            app.UseAuthorization();  // Add authorization middleware
 
             app.MapControllers();
 
