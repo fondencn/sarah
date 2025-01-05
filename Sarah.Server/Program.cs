@@ -13,6 +13,12 @@ namespace Sarah.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure logging
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+            builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
             // Add services to the container.
             builder.Services.AddSarahServices();
 
@@ -21,19 +27,50 @@ namespace Sarah.Server
             builder.Services.AddSwaggerGen();
 
             // Configure OIDC authentication
-            builder.Services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
                     options.Authority = builder.Configuration["OIDCAuthority"];
-                    options.Audience = "sarah-client";
-                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    options.Audience = "account";
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
+                        ValidIssuer = builder.Configuration["OIDCIssuer"], // Set the valid issuer
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true
                     };
-                });
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            // Log the error without modifying the response
+                            Console.WriteLine("Authentication failed: " + context.Exception.ToString());
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            Console.WriteLine("Token validated successfully.");
+                            return Task.CompletedTask;
+                        },
+                        OnMessageReceived = context =>
+                        {
+                            // Log the Authorization header
+                            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                            {
+                                var token = authHeader.ToString();
+                                Console.WriteLine($"Authorization Header: {token}");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Authorization Header is missing.");
+                            }
+
+                            Console.WriteLine("Token received: " + context.Token);
+                            return Task.CompletedTask;
+                        }
+                    };
+                }); 
 
             builder.Services.AddAuthorization();
             
@@ -55,18 +92,20 @@ namespace Sarah.Server
             app.UseStaticFiles();
 
             // Configure the HTTP request pipeline.
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             app.UseHttpsRedirection();
-            
-            app.UseCors();
+
+            app.UseCors("AllowSpecificOrigins");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
-            app.UseCors("AllowSpecificOrigins"); // Use the CORS policy
 
             app.Run();
         }
