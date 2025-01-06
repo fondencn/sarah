@@ -35,6 +35,7 @@ public static class NetworkElementFactory
             networkElements.Add(new NetworkElementDto() { Name = "Fehler", Info = ex.Message });
         }
 
-        return networkElements;
+        return networkElements
+            .OrderBy(x => x.ID);
     }
 }

@@ -9,6 +9,7 @@ import { DevicesService, NetworkElementDto } from '../services/api-client'; // I
 export class DevicesComponent implements OnInit {
 
   devices: NetworkElementDto[] = []; // Member variable to store the devices list
+  isLoading: boolean = false; // Member variable to store the loading state
 
   constructor(private devicesService: DevicesService) { }
 
@@ -21,12 +22,20 @@ export class DevicesComponent implements OnInit {
     console.log('DevicesComponent loaded');
 
     // Call the API to load the devices list
+    this.retrieveDevices();
+  }
+
+  public retrieveDevices() {
+    this.isLoading = true; // Set the loading state to true
     this.devicesService.devicesGet().subscribe({
       next: (response: NetworkElementDto[]) => {
         this.devices = response; // Save the devices list in the member variable
       },
       error: (error) => {
         console.error('Error fetching devices:', error);
+      }, 
+      complete: () => {
+        this.isLoading = false; // Set the loading state to false
       }
     });
   }

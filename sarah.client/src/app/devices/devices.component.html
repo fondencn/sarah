@@ -1,6 +1,16 @@
 <div class="devices-container container mt-4">
   <h2 class="mb-4">Devices List</h2>
-  <table *ngIf="devices.length > 0; else noDevices" class="table table-striped table-bordered table-hover">
+  <button (click)="retrieveDevices()" class="btn btn-primary mb-4">Refresh</button>
+
+  <!-- Busy Indicator -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <div class="spinner-border text-primary" role="status">
+    </div>
+    <span class="sr-only">Loading...</span>
+  </div>
+
+  <!-- Devices Table -->
+  <table *ngIf="!isLoading && devices.length > 0; else noDevices" class="table table-striped table-bordered table-hover">
     <thead class="thead-dark">
       <tr>
         <th>Node ID</th>
@@ -19,6 +29,6 @@
     </tbody>
   </table>
   <ng-template #noDevices>
-    <p class="text-muted">No devices found.</p>
+    <p class="text-muted">No devices loaded.</p>
   </ng-template>
 </div>
