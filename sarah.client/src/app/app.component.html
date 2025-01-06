@@ -1,16 +1,18 @@
 <div class="root__container">
   <!-- Header and nav Menü -->
-  <header>
+  <header class="main__header">
     <app-nav></app-nav>
   </header>
   
   <!-- Main Content -->
-  <main class="main__container">
-    <router-outlet></router-outlet>
-  </main>
+  <div class="content__container">
+    <main class="main__container">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 
   <!-- Footer -->
   <footer class="main__footer">
-    <small class="copyright__text">Copyright © 2024 CF</small>
+    <small class="copyright__text">Copyright © {{ currentYear }} CF</small>
   </footer>
 </div>

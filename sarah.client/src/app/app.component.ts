@@ -18,6 +18,7 @@ export class AppComponent implements OnInit, OnDestroy {
   {
   }
 
+  currentYear = new Date().getFullYear();
 
   ngOnInit() {
 
