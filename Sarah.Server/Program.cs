@@ -85,7 +85,7 @@ namespace Sarah.Server
                 options.AddPolicy("AllowSpecificOrigins",
                     builder =>
                     {
-                        builder.WithOrigins("https://localhost:4200", "https://pi:4200")
+                        builder.WithOrigins("http://localhost:4200","https://localhost:4200", "https://pi:4200")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     });

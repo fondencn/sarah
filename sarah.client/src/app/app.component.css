@@ -1,0 +1,39 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.root__container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Ensure the container takes up the full height of the viewport */
+}
+
+.main__header {
+  flex: 0 0 auto;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000; /* Ensure the header is above other content */
+}
+
+.main__container {
+  flex: 1 0 auto;
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding: 1rem;
+  margin-top: 4rem; /* Adjust this value to match the height of the header */
+}
+
+.main__footer {
+  flex: 0 0 auto;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  text-align: center;
+  margin-top: auto; /* Push the footer to the bottom */
+}
+
+.content {
+  color: white; /* Set default text color to white */
+}

@@ -23,7 +23,7 @@ public static class NetworkElementFactory
                 { 
                     Name = device.Name, 
                     Info = (device.GetNetworkItem(deviceService)?.StateInfo) ?? "Unknown state    ", 
-                    TypeName = device.SpecificType.ToString() + "|" + device.GetType().Name, 
+                    TypeName = device.SpecificType.ToString() + "|" + (device.GetNetworkItem(deviceService)?.GetType().Name ?? "Unknown type"), 
                     ID = device.NodeID
                 };
                 networkElements.Add(dto);

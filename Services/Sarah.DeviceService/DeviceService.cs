@@ -127,7 +127,6 @@ namespace Sarah.DeviceService
         /// <returns></returns>
         private async Task Start(INodeFactory nodeFactory)
         {
-            ZWaveController controller = null;
             try
             {
                 if (_serialPortName == null)
@@ -139,26 +138,18 @@ namespace Sarah.DeviceService
                 try
                 {
                     serialPort = SerialPortFactory.Instance.Create(_serialPortName);
-                } catch
-                {
-                    serialPort = null;
-                }
-                this.StatusMessage = null;
-
-                if (serialPort != null)
-                {
-                    controller = new ZWaveController(serialPort);
+                    ZWaveController controller = new ZWaveController(serialPort);
 
                     // open the controller
                     controller.Open();
                     this.Controller = controller;
-
-                    // Register Logging to text file
-                    if (Debugger.IsAttached)
-                    {
-                        this.Controller.Channel.Log = Console.Out;
-                    }
+                } 
+                catch(Exception ex)
+                {
+                    serialPort = null;
+                    this.StatusMessage = ex.Message;
                 }
+
 
                 await UpdateNodeList(nodeFactory);
 
@@ -204,10 +195,6 @@ namespace Sarah.DeviceService
                 this.Nodes = null;
                 Logger.Instance.LogDebug(ex.Message);
                 this.StatusMessage = ex.Message;
-                if (!Debugger.IsAttached)
-                {
-                    throw;
-                }
             }
         }
 

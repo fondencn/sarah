@@ -17,4 +17,9 @@
     <ProjectReference Include="..\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\Sarah.Logging\Sarah.Logging.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="ttn.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
