@@ -8,6 +8,7 @@ import { DevicesService, NetworkElementDto } from '../services/api-client'; // I
 })
 export class DevicesComponent implements OnInit {
 
+
   devices: NetworkElementDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
 
@@ -33,10 +34,23 @@ export class DevicesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching devices:', error);
-      }, 
+      },
       complete: () => {
         this.isLoading = false; // Set the loading state to false
       }
     });
+  }
+
+  public addDevice() {
+    throw new Error('Method not implemented.');
+  }
+
+
+  public editDevice(device: NetworkElementDto) {
+    throw new Error('Method not implemented.');
+  }
+
+  public deleteDevice(device: NetworkElementDto) {
+    throw new Error('Method not implemented.');
   }
 }
