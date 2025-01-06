@@ -7,6 +7,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Server", "Sarah.Serve
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "sarah.client", "sarah.client\sarah.client.esproj", "{E26982DF-DB32-4A60-9D87-5FEEF7871555}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{281BBB2C-AE79-43DB-8D7D-C80A831A4B40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.API", "Services\Sarah.API\Sarah.API.csproj", "{C815FB6F-496F-4559-9FDC-664EDAE84367}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.DeviceService", "Services\Sarah.DeviceService\Sarah.DeviceService.csproj", "{967DDEB4-7541-438E-9562-FCBC61B6BEDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Logging", "Services\Sarah.Logging\Sarah.Logging.csproj", "{1D301283-A854-4624-9AC7-71E7D42F8EFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Services\Sarah.Data\Sarah.Data.csproj", "{4198E1FE-C2F5-41B7-900F-8463ED33EE91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.NodeFactory", "Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,11 +35,37 @@ Global
 		{E26982DF-DB32-4A60-9D87-5FEEF7871555}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E26982DF-DB32-4A60-9D87-5FEEF7871555}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E26982DF-DB32-4A60-9D87-5FEEF7871555}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C815FB6F-496F-4559-9FDC-664EDAE84367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C815FB6F-496F-4559-9FDC-664EDAE84367}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C815FB6F-496F-4559-9FDC-664EDAE84367}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C815FB6F-496F-4559-9FDC-664EDAE84367}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967DDEB4-7541-438E-9562-FCBC61B6BEDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967DDEB4-7541-438E-9562-FCBC61B6BEDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967DDEB4-7541-438E-9562-FCBC61B6BEDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967DDEB4-7541-438E-9562-FCBC61B6BEDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D301283-A854-4624-9AC7-71E7D42F8EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4198E1FE-C2F5-41B7-900F-8463ED33EE91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B8296C09-7EB1-4CE8-9FF5-E182F5BB833A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C815FB6F-496F-4559-9FDC-664EDAE84367} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{967DDEB4-7541-438E-9562-FCBC61B6BEDD} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{1D301283-A854-4624-9AC7-71E7D42F8EFF} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{70EFA4CF-DA48-475C-B30D-D242363ECF0D} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 	EndGlobalSection
 EndGlobal

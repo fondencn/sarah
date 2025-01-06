@@ -2,17 +2,17 @@ import { Injectable } from '@angular/core';
 import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
 
 export const authConfig: AuthConfig = {
-  issuer: 'http://pi:8080/realms/sarah',
+  issuer: 'https://pi:8443/realms/sarah-realm',
   redirectUri: window.location.origin + '/home',
   clientId: 'sarah-client',
-  dummyClientSecret: 'jdbpg8kuVquqEY4wWVRaUxwhqDXakGCL',
+  dummyClientSecret: '5q3qyM7WdFQWkaiMr3kUBneLtsQJYu0M',
   scope: 'openid profile email offline_access',
   responseType: 'code',
   showDebugInformation: true,
   strictDiscoveryDocumentValidation: false,
   useHttpBasicAuth: false,
   disableAtHashCheck: true,
-  requireHttps: false
+  requireHttps: true
 };
 
 @Injectable({

@@ -1,17 +1,44 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { StatusService, StatusDto } from '../services/api-client'; // Import the generated client
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
-  constructor(public authService: AuthService) {}
+export class HomeComponent implements OnInit {
+  constructor(public authService: AuthService, private statusService: StatusService) { }
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
+  statusMessage: string = "";
+  statusDto: StatusDto|null = null;
 
+  ngOnInit(): void {
+    this.onComponentLoad();
+  }
+
+  onComponentLoad(): void {
+    // Add your logic here that should be executed after the component is loaded
+    console.log('HomeComponent loaded');
+    this.statusMessage = "Component has been loaded.";
+    this.statusDto = null;
+
+    // Call the /status endpoint using the generated client
+    this.statusService.statusGet().subscribe({
+      next: (response: StatusDto) => {
+        console.log('Status:', response);
+        this.statusDto = response;
+        this.statusMessage = "Status fetched successfully.";
+      },
+      error: (error) => {
+        console.error('Error fetching status:', error);
+        this.statusMessage = "Error fetching status.";
+        this.statusDto = null;
+      }
+    });
+  }
 
   login(): void {
     this.authService.login();

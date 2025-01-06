@@ -1,0 +1,65 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* Remove the page-wide scrollbar */
+}
+
+.root__container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ensure the container takes up the full height of the viewport */
+}
+
+.main__header {
+  flex: 0 0 auto;
+  background-color: #aaaaaa;
+  padding: 0rem;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000; /* Ensure the header is above other content */
+}
+
+.content__container {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4rem; /* Adjust based on header height */
+  margin-bottom: 4rem; /* Adjust based on footer height */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.main__container {
+  flex: 1 0 auto;
+  padding: 0rem;
+}
+
+.main__footer {
+  flex: 0 0 auto;
+  background-color: #aaaaaa;
+  padding: 1rem;
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 1000; /* Ensure the footer is above other content */
+}
+
+.content {
+  color: white; /* Set default text color to white */
+}
+
+/* Media query for screens with a width less than 992px */
+@media (max-width: 992px) {
+  html, body {
+    font-size: 0.875em; /* Adjust the base font size */
+  }
+
+  .main__header, .main__footer {
+    font-size: 0.875em; /* Adjust the font size for header and footer */
+  }
+
+  .content__container, .main__container {
+    font-size: 0.875em; /* Adjust the font size for content */
+  }
+}

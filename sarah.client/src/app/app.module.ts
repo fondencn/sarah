@@ -1,18 +1,25 @@
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; // Import HttpClientModule
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
-import { WeatherComponent } from './weather/weather.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
-
+import { ApiModule, Configuration } from './services/api-client'; // Import the generated client
+import { NavComponent } from './nav/nav.component';
+import { DevicesComponent } from './devices/devices.component';
+import { AdminComponent } from './admin/admin.component';
+import { environment } from '../environments/environment'; // Import environment configuration
+import { AuthInterceptor } from './interceptors/auth.interceptor'; // Import the interceptor
 
 @NgModule({ declarations: [
         AppComponent,
         HomeComponent,
-        WeatherComponent
+        NavComponent,
+        DevicesComponent,
+        AdminComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
@@ -23,10 +30,14 @@ import { FormsModule } from '@angular/forms';
                 resourceServer: 
                 {
                     sendAccessToken: true,
-                    allowedUrls: ['http://localhost', 'http://pi']
+                    allowedUrls: ['https://localhost', 'https://pi']
                 }
             }), 
-        FormsModule
+        FormsModule,
+        HttpClientModule, 
+        ApiModule.forRoot(() => new Configuration({ basePath: environment.apiBaseUrl })) // Use environment configuration
     ], 
-    providers: [provideHttpClient(withInterceptorsFromDi())] })
+    providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true } // Provide the interceptor
+    ] })
 export class AppModule { }
