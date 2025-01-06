@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -37,5 +38,10 @@ namespace Sarah.Data.Models
         [Display(Name = "Schreibgeschützt")]
         [Column]
         public bool IsReadonly { get; set; }
+
+        public INetworkElement GetNetworkItem(IDeviceService deviceService)
+        {
+            return deviceService.GetNetworkItem(NodeID);
+        }
     }
 }

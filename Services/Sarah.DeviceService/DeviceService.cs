@@ -46,7 +46,7 @@ namespace Sarah.DeviceService
         public IEnumerable<IGPSTracker> GPSTrackers => NetworkElements.OfType<IGPSTracker>();
         public IEnumerable<NetworkElement> Elements => NetworkElements.AsReadOnly();
 
-        public INetworkElement GetNetworkItem(byte nodeID) => this.NetworkElements.FirstOrDefault(item => item.NodeID == nodeID);
+        public INetworkElement GetNetworkItem(byte nodeID) => this.NetworkElements?.FirstOrDefault(item => item.NodeID == nodeID);
 
 
         /// <summary>
@@ -203,8 +203,7 @@ namespace Sarah.DeviceService
                 }
                 this.Nodes = null;
                 Logger.Instance.LogDebug(ex.Message);
-                Logger.Instance.LogDebug(ex.StackTrace);
-                this.StatusMessage = ex.Message + " " + ex.StackTrace;
+                this.StatusMessage = ex.Message;
                 if (!Debugger.IsAttached)
                 {
                     throw;

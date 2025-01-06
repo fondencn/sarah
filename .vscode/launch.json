@@ -23,16 +23,9 @@
         },
         {
             "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "https://localhost:4200",
-            "webRoot": "${workspaceFolder}/sarah.client"
-        },
-        {
-            "type": "chrome",
             "request": "attach",
             "name": "Attach to Chrome",
-            "port": 9222,
+            "url": "https://localhost:4200",
             "webRoot": "${workspaceFolder}/sarah.client"
         }
     ]

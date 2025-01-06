@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Sqlite;
 using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
+using Sarah.Logging;
 
 namespace Sarah.Data
 {
@@ -27,6 +28,7 @@ namespace Sarah.Data
         public static IDBService CreateDefault()
         {
             DbContextOptionsBuilder builder = new DbContextOptionsBuilder();
+            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath( DatabaseFileName));
             builder.UseSqlite("Filename=" + DatabaseFileName);
             return new ApplicationDbContext(builder.Options);
         }

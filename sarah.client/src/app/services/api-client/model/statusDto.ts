@@ -14,5 +14,6 @@ export interface StatusDto {
     port?: number;
     isAuthenticated?: boolean;
     username?: string | null;
+    controllerStatus?: string | null;
 }
 
