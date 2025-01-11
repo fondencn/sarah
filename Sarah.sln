@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Services\Sara
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.NodeFactory", "Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteLuk.LocationServer", "Sarah.LocationServer\InteLuk.LocationServer.csproj", "{1E081096-86EE-418E-8EBA-BF79DFF3C688}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteLuk.LocationServerClient", "Services\Sarah.LocationServerClient\InteLuk.LocationServerClient.csproj", "{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +59,14 @@ Global
 		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70EFA4CF-DA48-475C-B30D-D242363ECF0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +79,6 @@ Global
 		{967DDEB4-7541-438E-9562-FCBC61B6BEDD} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{1D301283-A854-4624-9AC7-71E7D42F8EFF} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{70EFA4CF-DA48-475C-B30D-D242363ECF0D} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 	EndGlobalSection
 EndGlobal
