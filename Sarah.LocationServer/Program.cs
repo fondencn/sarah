@@ -5,11 +5,11 @@ using System.Net;
 // Define the entry point of the application and read config from env vars
 var pfxFilePath = Environment.GetEnvironmentVariable("SARAH_CERTIFICATE_FILE");
 var pfxPassword = Environment.GetEnvironmentVariable("SARAH_CERTIFICATE_PASSWORD");
-var port = Environment.GetEnvironmentVariable("SARAH_CERTIFICATE_PORT");
+var port = Environment.GetEnvironmentVariable("SARAH_PORT");
 
 if(String.IsNullOrWhiteSpace(pfxFilePath) || String.IsNullOrWhiteSpace(pfxPassword) || String.IsNullOrWhiteSpace(port))
 {
-    throw new InvalidOperationException("Please set the environment variables SARAH_CERTIFICATE_FILE, SARAH_CERTIFICATE_PASSWORD and SARAH_CERTIFICATE_PORT");
+    throw new InvalidOperationException("Please set the environment variables SARAH_CERTIFICATE_FILE, SARAH_CERTIFICATE_PASSWORD and SARAH_PORT");
 }
 
 
