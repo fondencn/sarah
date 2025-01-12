@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build sarah server",
             "command": "dotnet",
             "type": "process",
             "args": [
@@ -10,6 +10,24 @@
                 "${workspaceFolder}/Sarah.Server/Sarah.Server.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "docker-build location server",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "build",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build the Docker image for Sarah Location Server"
         }
     ]
 }
