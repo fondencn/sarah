@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InteLuk.API\InteLuk.API.csproj" />
+    <ProjectReference Include="..\Sarah.API\Sarah.API.csproj" />
   </ItemGroup>
 
 </Project>

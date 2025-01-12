@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Services\Sara
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.NodeFactory", "Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteLuk.LocationServer", "Sarah.LocationServer\InteLuk.LocationServer.csproj", "{1E081096-86EE-418E-8EBA-BF79DFF3C688}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServer", "Sarah.LocationServer\Sarah.LocationServer.csproj", "{1E081096-86EE-418E-8EBA-BF79DFF3C688}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteLuk.LocationServerClient", "Services\Sarah.LocationServerClient\InteLuk.LocationServerClient.csproj", "{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServerClient", "Services\Sarah.LocationServerClient\Sarah.LocationServerClient.csproj", "{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
