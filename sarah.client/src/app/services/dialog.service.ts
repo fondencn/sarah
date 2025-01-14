@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, EventEmitter } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +9,8 @@ export class DialogService {
 
   private isDialogOpen: boolean = false;
   private currentDialog : HTMLElement | null = null;
+
+  closed = new EventEmitter<boolean>();
 
   public showDialog(modalId: string): void {
     const modalElement = document.getElementById(modalId);
@@ -22,7 +24,7 @@ export class DialogService {
     }
   }
 
-  public hideDialog(): void {
+  public closeDialog(success: boolean): void {
     const modalElement = this.currentDialog;
     if (modalElement && this.isDialogOpen) {
       const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
@@ -30,5 +32,6 @@ export class DialogService {
     }
     this.isDialogOpen = false;
     this.currentDialog = null;
+    this.closed.emit(success);
   }
 }
