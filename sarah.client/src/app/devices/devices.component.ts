@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
 
+
 @Component({
   selector: 'app-devices',
   templateUrl: './devices.component.html',
   styleUrls: ['./devices.component.css']
 })
 export class DevicesComponent implements OnInit {
+
 
 
   devices: NetworkElementDto[] = []; // Member variable to store the devices list
@@ -42,8 +44,19 @@ export class DevicesComponent implements OnInit {
   }
 
   public addDevice() {
-    throw new Error('Method not implemented.');
+    // Ensure the modal element exists before trying to show it
+    const modalElement = document.getElementById('addDeviceModal');
+    if (modalElement) {
+      // Assuming you are using Bootstrap, you can use the Bootstrap modal method
+      const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
+      bootstrapModal.show();
+    }
   }
+
+  public onDeviceAdded(newDevice: NetworkElementDto) {
+    this.devices.push(newDevice);
+  }
+
 
 
   public editDevice(device: NetworkElementDto) {

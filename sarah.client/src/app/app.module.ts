@@ -12,19 +12,25 @@ import { NavComponent } from './nav/nav.component';
 import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
 import { environment } from '../environments/environment'; // Import environment configuration
-import { AuthInterceptor } from './interceptors/auth.interceptor'; // Import the interceptor
+import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { AddDeviceModalComponent } from './devices/add-device-modal/add-device-modal.component'; // Import the interceptor
+import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @NgModule({ declarations: [
         AppComponent,
         HomeComponent,
         NavComponent,
         DevicesComponent,
-        AdminComponent
+        AdminComponent,
+        AddDeviceModalComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
         BrowserModule,
         AppRoutingModule, 
+        CommonModule,
+        ReactiveFormsModule,
         OAuthModule.forRoot(
             {
                 resourceServer: 
