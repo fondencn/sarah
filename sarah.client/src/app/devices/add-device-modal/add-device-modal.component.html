@@ -3,9 +3,6 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="addDeviceModalLabel">Add a new device</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
       </div>
       <div class="modal-body">
         <form [formGroup]="deviceForm">
@@ -28,7 +25,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary"   (click)="onCancel()" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" data-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" (click)="onOk()" [disabled]="deviceForm.invalid">Add</button>
       </div>
     </div>
