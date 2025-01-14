@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NetworkElementDto } from '../../services/api-client';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-add-device-modal',
@@ -10,10 +11,14 @@ import { NetworkElementDto } from '../../services/api-client';
 
 export class AddDeviceModalComponent {
 
-  @Output() deviceAdded = new EventEmitter<NetworkElementDto>();
+  @Output() closed = new EventEmitter<boolean>();
   deviceForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  public get newElement(): NetworkElementDto | null {
+    return this.deviceForm.valid ? this.deviceForm.value : null;
+  }
+
+  constructor(private fb: FormBuilder, private dialogService : DialogService) {
     this.deviceForm = this.fb.group({
       id: ['', Validators.required],
       name: ['', Validators.required],
@@ -23,24 +28,15 @@ export class AddDeviceModalComponent {
   }
 
   public onCancel() {
-    this.closeDialog();
+    this.dialogService.hideDialog();
+    this.closed.emit(false);
   }
 
 
   public onOk() {
     if (this.deviceForm.valid) {
-      this.deviceAdded.emit(this.deviceForm.value);
-      this.closeDialog();
-    }
-  }
-
-  public closeDialog() {
-    // Ensure the modal element exists before trying to show it
-    const modalElement = document.getElementById('addDeviceModal');
-    if (modalElement) {
-      // Assuming you are using Bootstrap, you can use the Bootstrap modal method
-      const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
-      bootstrapModal.hide();
+      this.dialogService.hideDialog();
+      this.closed.emit(true);
     }
   }
 }

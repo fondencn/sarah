@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
+import { DialogService } from '../services/dialog.service';
 
 
 @Component({
@@ -14,7 +15,7 @@ export class DevicesComponent implements OnInit {
   devices: NetworkElementDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
 
-  constructor(private devicesService: DevicesService) { }
+  constructor(private devicesService: DevicesService, private dialogService : DialogService) { }
 
   ngOnInit(): void {
     this.onLoad();
@@ -44,13 +45,7 @@ export class DevicesComponent implements OnInit {
   }
 
   public addDevice() {
-    // Ensure the modal element exists before trying to show it
-    const modalElement = document.getElementById('addDeviceModal');
-    if (modalElement) {
-      // Assuming you are using Bootstrap, you can use the Bootstrap modal method
-      const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
-      bootstrapModal.show();
-    }
+    this.dialogService.showDialog('addDeviceModal');
   }
 
   public onDeviceAdded(newDevice: NetworkElementDto) {
