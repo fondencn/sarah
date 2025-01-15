@@ -13,7 +13,7 @@ import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
 import { environment } from '../environments/environment'; // Import environment configuration
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-import { AddDeviceModalComponent } from './devices/add-device-modal/add-device-modal.component'; // Import the interceptor
+import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-device-modal.component'; // Import the interceptor
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -23,7 +23,7 @@ import { CommonModule } from '@angular/common';
         NavComponent,
         DevicesComponent,
         AdminComponent,
-        AddDeviceModalComponent
+        EditDeviceModalComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

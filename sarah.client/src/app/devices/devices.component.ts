@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { DeviceDto, DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
 import { DialogService } from '../services/dialog.service';
-import { AddDeviceModalComponent } from './add-device-modal/add-device-modal.component';
+import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 
 
 @Component({
@@ -15,7 +15,7 @@ export class DevicesComponent implements OnInit {
 
   devices: DeviceDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
-  @ViewChild(AddDeviceModalComponent) addDeviceModal!: AddDeviceModalComponent;
+  @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
 
 
   constructor(private devicesService: DevicesService, private dialogService : DialogService) { }
@@ -56,7 +56,7 @@ export class DevicesComponent implements OnInit {
     this.dialogService.closed.unsubscribe();
     if (success) {
 
-      this.devices.push(this.addDeviceModal.newElement as DeviceDto);
+      this.devices.push(this.editDeviceModal.newElement as DeviceDto);
     }
   }
 

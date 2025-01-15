@@ -6,12 +6,12 @@ import { DialogContent } from '../../services/dialogcontent';
 import { CacheService } from '../../services/cache.service';
 
 @Component({
-  selector: 'app-add-device-modal',
-  templateUrl: './add-device-modal.component.html',
-  styleUrls: ['./add-device-modal.component.css']
+  selector: 'edit-device-modal',
+  templateUrl: './edit-device-modal.component.html',
+  styleUrls: ['./edit-device-modal.component.css']
 })
 
-export class AddDeviceModalComponent extends DialogContent {
+export class EditDeviceModalComponent extends DialogContent {
   
   deviceForm: FormGroup;
 
