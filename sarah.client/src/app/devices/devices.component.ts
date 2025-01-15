@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
+import { DeviceDto, DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
 import { DialogService } from '../services/dialog.service';
 import { AddDeviceModalComponent } from './add-device-modal/add-device-modal.component';
 
@@ -13,7 +13,7 @@ export class DevicesComponent implements OnInit {
 
 
 
-  devices: NetworkElementDto[] = []; // Member variable to store the devices list
+  devices: DeviceDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
   @ViewChild(AddDeviceModalComponent) addDeviceModal!: AddDeviceModalComponent;
 
@@ -35,7 +35,7 @@ export class DevicesComponent implements OnInit {
   public retrieveDevices() {
     this.isLoading = true; // Set the loading state to true
     this.devicesService.devicesGet().subscribe({
-      next: (response: NetworkElementDto[]) => {
+      next: (response: DeviceDto[]) => {
         this.devices = response; // Save the devices list in the member variable
       },
       error: (error) => {
@@ -56,17 +56,17 @@ export class DevicesComponent implements OnInit {
     this.dialogService.closed.unsubscribe();
     if (success) {
 
-      this.devices.push(this.addDeviceModal.newElement as NetworkElementDto);
+      this.devices.push(this.addDeviceModal.newElement as DeviceDto);
     }
   }
 
 
 
-  public editDevice(device: NetworkElementDto) {
+  public editDevice(device: DeviceDto) {
     throw new Error('Method not implemented.');
   }
 
-  public deleteDevice(device: NetworkElementDto) {
+  public deleteDevice(device: DeviceDto) {
     throw new Error('Method not implemented.');
   }
 }

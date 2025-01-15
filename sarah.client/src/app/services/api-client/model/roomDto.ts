@@ -9,8 +9,8 @@
  */
 
 
-export interface NetworkElementDto { 
+export interface RoomDto { 
     id?: number;
-    type?: string | null;
+    name?: string | null;
 }
 

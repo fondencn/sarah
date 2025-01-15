@@ -9,8 +9,8 @@
  */
 
 
-export interface NetworkElementDto { 
-    id?: number;
-    type?: string | null;
+export interface EnumDto { 
+    enumKey?: number;
+    enumValue?: string | null;
 }
 
