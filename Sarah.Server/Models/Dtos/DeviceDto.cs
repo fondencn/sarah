@@ -10,7 +10,7 @@ public class DeviceDto
     /// <summary>
     /// Gets the ID of the device.
     /// </summary>
-    public long ID { get; internal set; }
+    public long ID { get; set; }
 
     /// <summary>
     /// Gets or sets the Node ID of the device.
@@ -18,30 +18,35 @@ public class DeviceDto
     /// <value>
     /// The Node ID is a byte value that uniquely identifies the device within a network.
     /// </value>
-    public byte NodeID { get; internal set; }
+    public byte NodeID { get; set; }
 
     /// <summary>
     /// Gets the type name of the device.
     /// </summary>
-    public string? TypeName { get; internal set; }
+    public string? TypeName { get; set; }
 
     /// <summary>
     /// Gets the name of the device.
     /// </summary>
-    public string? Name { get; internal set; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// Gets additional status information about the device.
     /// </summary>
-    public string? Info { get; internal set; }
+    public string? Info { get; set; }
 
     /// <summary>
     /// gets the device type
     /// </summary>
-    public KnownDeviceTypes DeviceType {get; internal set; }
+    public KnownDeviceTypes DeviceType {get; set; }
 
     /// <summary>
     /// gets the room id
     /// </summary>
-    public long? RoomId {get; internal set; }
+    public long? RoomId {get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the device is read-only.
+    /// </summary>
+    public bool IsReadonly { get; set; }
 }

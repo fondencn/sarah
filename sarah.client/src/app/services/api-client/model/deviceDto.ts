@@ -18,6 +18,7 @@ export interface DeviceDto {
     readonly info?: string | null;
     deviceType?: KnownDeviceTypes;
     readonly roomId?: number | null;
+    readonly isReadonly?: boolean;
 }
 export namespace DeviceDto {
 }

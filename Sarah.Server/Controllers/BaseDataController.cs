@@ -25,11 +25,13 @@ namespace Sarah.Server.Controllers
             BaseDataDto result = new BaseDataDto();
             result.DeviceTypeEnumeration = CreateEnumDescription<KnownDeviceTypes>();
             
-            result.Rooms = await database.Rooms
-                .Select(r => new RoomDto { Id = r.Id, Name = (r.Name ?? String.Empty) })
-                .ToArrayAsync();
+            result.Rooms = (await database.Rooms
+                .ToListAsync())
+                .Select(r => r.ToDto())
+                .ToArray();
+
             result.NetworkElements = deviceService.Elements
-                .Select(e => new NetworkElementDto { Id = e.NodeID, Type = e.GetType().Name })
+                .Select(e => e.ToDto())
                 .ToArray();
 
             return result;
@@ -39,7 +41,7 @@ namespace Sarah.Server.Controllers
         {
             return Enum.GetValues(typeof(T))
                 .Cast<T>()
-                .Select(e => new EnumDto { EnumKey = Convert.ToInt32(e), EnumValue = e.ToString() })
+                .Select(e => e.ToDto())
                 .ToArray();
         }
     }

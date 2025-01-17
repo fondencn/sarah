@@ -61,16 +61,10 @@ namespace Sarah.Server
                             // Log the Authorization header
                             if (builder.Environment.IsDevelopment())
                             {
-                                if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
-                                {
-                                    var token = authHeader.ToString();
-                                    Console.WriteLine($"Authorization Header: {token}");
-                                }
-                                else
+                                if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
                                 {
                                     Console.WriteLine("Authorization Header is missing.");
                                 }
-                                Console.WriteLine("Token received: " + context.Token);
                             }
                             return Task.CompletedTask;
                         }

@@ -6,7 +6,7 @@ import { DialogContent } from '../../services/dialogcontent';
 import { CacheService } from '../../services/cache.service';
 
 @Component({
-  selector: 'edit-device-modal',
+  selector: 'editDeviceModal',
   templateUrl: './edit-device-modal.component.html',
   styleUrls: ['./edit-device-modal.component.css']
 })
@@ -14,6 +14,8 @@ import { CacheService } from '../../services/cache.service';
 export class EditDeviceModalComponent extends DialogContent {
   
   deviceForm: FormGroup;
+  private _device: DeviceDto | null = null;
+  okButtonText : string = "Save";
 
   public get allDeviceTypes(): EnumDto[] {
     return this.cacheService.get<EnumDto[]>(CacheService.DEVICE_TYPES_KEY) ?? [];
@@ -27,19 +29,34 @@ export class EditDeviceModalComponent extends DialogContent {
     return this.cacheService.get<NetworkElementDto[]>(CacheService.NETWORK_ELEMENTS_KEY) ?? [];
   }
 
-  public get newElement(): DeviceDto | null {
-    return this.deviceForm.valid ? this.deviceForm.value : null;
+  public get dataContext(): DeviceDto | null {
+    this._device = this.deviceForm.valid ? this.deviceForm.value : null;
+    return this._device;
+  }
+
+  public set dataContext(device: DeviceDto | null) {
+    this._device = device;
+    if (device) {
+      this.deviceForm.patchValue({
+        nodeID: device.nodeID,
+        name: device.name,
+        deviceType: device.deviceType,
+        roomId: device.roomId,
+      });
+    }
   }
 
   
 
   constructor(private fb: FormBuilder, dialogService: DialogService, public cacheService: CacheService) {
     super(dialogService);
+
     this.deviceForm = this.fb.group({
-      nodeID: ['', Validators.required],
+      nodeId: ['', Validators.required],
       name: ['', Validators.required],
       deviceType: ['', Validators.required], 
       roomId: ['', Validators.required], 
+      isReadonly: [''], 
     });
   }
 
