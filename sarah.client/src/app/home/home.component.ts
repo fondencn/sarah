@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService } from '../services/api-client'; // Import the generated client
 
 @Component({
   selector: 'app-home',
@@ -8,12 +8,13 @@ import { StatusService, StatusDto } from '../services/api-client'; // Import the
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-  constructor(public authService: AuthService, private statusService: StatusService) { }
+  constructor(public authService: AuthService, private statusService: StatusService, private dashboardService : DashboardService) { }
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
+  dashboardItems: DashboardItemDto[] = [];
 
   ngOnInit(): void {
     this.onComponentLoad();
@@ -22,6 +23,24 @@ export class HomeComponent implements OnInit {
   onComponentLoad(): void {
     // Add your logic here that should be executed after the component is loaded
     console.log('HomeComponent loaded');
+    this.loadStatus();
+    this.loadDashboardItems();
+  }
+
+
+  private loadDashboardItems() {
+    this.dashboardService.apiDashboardGet().subscribe({
+      next: (items: DashboardItemDto[]) => {
+        console.log('Dashboard items:', items);
+        this.dashboardItems = items;
+      },
+      error: (error) => {
+        console.error('Error fetching dashboard items:', error);
+      }
+    });
+  }
+
+  private loadStatus() {
     this.statusMessage = "Component has been loaded.";
     this.statusDto = null;
 

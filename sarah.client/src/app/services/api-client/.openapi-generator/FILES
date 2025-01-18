@@ -3,6 +3,7 @@ README.md
 api.module.ts
 api/api.ts
 api/baseData.service.ts
+api/dashboard.service.ts
 api/devices.service.ts
 api/status.service.ts
 configuration.ts
@@ -10,6 +11,8 @@ encoder.ts
 git_push.sh
 index.ts
 model/baseDataDto.ts
+model/dashboardItemDto.ts
+model/dashboardItemType.ts
 model/deviceDto.ts
 model/enumDto.ts
 model/knownDeviceTypes.ts

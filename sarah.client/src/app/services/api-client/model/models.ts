@@ -1,4 +1,6 @@
 export * from './baseDataDto';
+export * from './dashboardItemDto';
+export * from './dashboardItemType';
 export * from './deviceDto';
 export * from './enumDto';
 export * from './knownDeviceTypes';
