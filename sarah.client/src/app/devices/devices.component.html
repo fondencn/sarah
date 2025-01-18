@@ -24,8 +24,8 @@
     </thead>
     <tbody>
       <tr *ngFor="let device of devices">
-        <td>{{ device.id }}</td>
-        <td>{{ device.nodeID }}</td>
+        <td>{{ device.id }}</td> 
+        <td>{{ device.nodeId }}</td>
         <td>{{ device.name }}</td>
         <td>{{ device.typeName }}</td>
         <td [innerHTML]="device.info"></td>

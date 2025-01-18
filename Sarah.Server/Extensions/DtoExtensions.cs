@@ -17,8 +17,8 @@ public static class DtoExtensions {
     /// <returns></returns>
     public static DeviceDto ToDto(this DeviceInfo device, IDeviceService deviceService) {
         return new DeviceDto {
-            ID = device.Id,
-            NodeID = device.NodeID,
+            Id = device.Id,
+            NodeId = device.NodeID,
             TypeName = device.SpecificType.ToString() + "|" + (device.GetNetworkItem(deviceService)?.GetType().Name ?? "Unknown type"),
             Name = device.Name,
             Info = (device.GetNetworkItem(deviceService)?.StateInfo) ?? "Unknown state",
@@ -33,8 +33,8 @@ public static class DtoExtensions {
     /// </summary>
     public static DeviceInfo ToEntity(this DeviceDto dto) {
         return new DeviceInfo {
-            Id = dto.ID,
-            NodeID = dto.NodeID,
+            Id = dto.Id,
+            NodeID = dto.NodeId,
             SpecificType = dto.DeviceType,
             Name = dto.Name,
             Id_Room = dto.RoomId, 
@@ -58,7 +58,8 @@ public static class DtoExtensions {
             throw new ArgumentNullException(nameof(dto));
         }
 
-        device.NodeID = dto.NodeID;
+        device.Id = dto.Id;
+        device.NodeID = dto.NodeId;
         device.SpecificType = dto.DeviceType;
         device.Name = dto.Name;
         device.Id_Room = dto.RoomId;

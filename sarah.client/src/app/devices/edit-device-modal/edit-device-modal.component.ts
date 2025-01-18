@@ -16,6 +16,15 @@ export class EditDeviceModalComponent extends DialogContent {
   deviceForm: FormGroup;
   private _device: DeviceDto | null = null;
   okButtonText : string = "Save";
+  private _isNewDevice: boolean = false;
+
+  public get isNewDevice(): boolean {
+    return this._isNewDevice;
+  }
+
+  public set isNewDevice(value: boolean) {
+    this._isNewDevice = value;
+  }
 
   public get allDeviceTypes(): EnumDto[] {
     return this.cacheService.get<EnumDto[]>(CacheService.DEVICE_TYPES_KEY) ?? [];
@@ -38,10 +47,12 @@ export class EditDeviceModalComponent extends DialogContent {
     this._device = device;
     if (device) {
       this.deviceForm.patchValue({
-        nodeID: device.nodeID,
+        nodeID: device.nodeId,
         name: device.name,
         deviceType: device.deviceType,
         roomId: device.roomId,
+        isReadonly: device.isReadonly,
+        id : device.id
       });
     }
   }
@@ -52,11 +63,12 @@ export class EditDeviceModalComponent extends DialogContent {
     super(dialogService);
 
     this.deviceForm = this.fb.group({
-      nodeId: ['', Validators.required],
+      nodeId: [0, Validators.required],
       name: ['', Validators.required],
-      deviceType: ['', Validators.required], 
-      roomId: ['', Validators.required], 
-      isReadonly: [''], 
+      deviceType: [0, Validators.required], 
+      roomId: [0, Validators.required], 
+      isReadonly: [false], 
+      id: [0]
     });
   }
 

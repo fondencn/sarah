@@ -11,14 +11,14 @@ import { KnownDeviceTypes } from './knownDeviceTypes';
 
 
 export interface DeviceDto { 
-    readonly id?: number;
-    readonly nodeID?: number;
-    readonly typeName?: string | null;
-    readonly name?: string | null;
-    readonly info?: string | null;
+    id?: number;
+    nodeId?: number;
+    typeName?: string | null;
+    name?: string | null;
+    info?: string | null;
     deviceType?: KnownDeviceTypes;
-    readonly roomId?: number | null;
-    readonly isReadonly?: boolean;
+    roomId?: number | null;
+    isReadonly?: boolean;
 }
 export namespace DeviceDto {
 }

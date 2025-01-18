@@ -25,7 +25,7 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
             IEnumerable<DeviceDto> dtos = (await _databaseService.Devices
                 .ToListAsync())
                 .Select(item => item.ToDto(_deviceService))
-                .OrderBy(x => x.NodeID);
+                .OrderBy(x => x.NodeId);
             return Ok(dtos);
         }
         catch (Exception ex)
@@ -60,7 +60,7 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
             return BadRequest("Device cannot be null");
         }
         
-        DeviceInfo? entity = _databaseService.Devices.Find(device.ID);
+        DeviceInfo? entity = _databaseService.Devices.Find(device.Id);
         if (entity == null)
         {
             return NotFound("Device not found");

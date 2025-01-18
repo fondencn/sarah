@@ -11,7 +11,7 @@ export class DialogService {
   private isDialogOpen: boolean = false;
   private currentDialog : any | null = null;
 
-  public dialogClosed = new EventEmitter<boolean>();
+  public dialogClosed : EventEmitter<DialogClosedEventArgs> = new EventEmitter<DialogClosedEventArgs>();
 
   public showDialog(modalId: string): void {
     const modalElement = document.getElementById(modalId);
@@ -31,11 +31,12 @@ export class DialogService {
 
   public closeDialog(success: boolean): void {
     if(this.currentDialog != null) {
-      console.log("Closing Dialog: " + this.currentDialog.id);
+      var dialogId = this.currentDialog._element.id;
+      console.log("Closing Dialog: " + dialogId);
       this.currentDialog.hide();
       this.isDialogOpen = false;
       this.currentDialog = null;
-      this.dialogClosed.emit(success);
+      this.dialogClosed.emit(new DialogClosedEventArgs(dialogId, success));
     }
   }
 
@@ -91,4 +92,9 @@ export class DialogService {
       bootstrapModal.show();
     });
   }
+}
+
+export class DialogClosedEventArgs {
+  constructor(public dialogId: string, public success: boolean) 
+  { }
 }

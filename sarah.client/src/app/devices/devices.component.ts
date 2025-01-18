@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { DeviceDto, DevicesService, NetworkElementDto } from '../services/api-client'; // Import the generated client
-import { DialogService } from '../services/dialog.service';
+import { DeviceDto, DevicesService, KnownDeviceTypes, NetworkElementDto } from '../services/api-client'; // Import the generated client
+import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 import { Subscription } from 'rxjs';
 
@@ -19,7 +19,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
-  constructor(private devicesService: DevicesService, private dialogService : DialogService) { }
+  constructor(private devicesService: DevicesService, private dialogService: DialogService) { }
 
   ngOnInit(): void {
     this.onLoad();
@@ -29,6 +29,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.dialogClosedSubscription) {
       this.dialogClosedSubscription.unsubscribe();
+      this.dialogClosedSubscription = null;
     }
   }
 
@@ -41,7 +42,24 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
     // Call the API to load the devices list
     this.retrieveDevices();
+
+
+    this.dialogClosedSubscription = this.dialogService.dialogClosed.subscribe((e : DialogClosedEventArgs) => {
+      this.onDialogClosed(e);
+    });
   }
+
+
+  private onDialogClosed(e : DialogClosedEventArgs) {
+    if (e.success && e.dialogId === 'editDeviceModal') {
+      if (this.editDeviceModal.isNewDevice) {
+        this.onDeviceAdded(e.success);
+      } else {
+        this.onDeviceEdited(e.success);
+      }
+    }
+  }
+
 
   /**
    * Retrieves the devices list
@@ -65,12 +83,19 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * Adds a device
    */
   public addDevice() {
-    this.dialogService.showDialog('editDeviceModal');
-    this.editDeviceModal.dataContext = {} as DeviceDto;
+    var newDevice = {} as DeviceDto;
+    newDevice.nodeId = 0;
+    newDevice.name = '';
+    newDevice.info = '';
+    newDevice.deviceType = KnownDeviceTypes.NUMBER_0;
+    newDevice.isReadonly = false;
+    newDevice.id = 0;
+
+    this.editDeviceModal.dataContext = newDevice;
+    this.editDeviceModal.isNewDevice = true;
     this.editDeviceModal.okButtonText = 'Add device';
-    this.dialogClosedSubscription = this.dialogService.dialogClosed.subscribe((success: boolean) => {
-      this.onDeviceAdded(success);
-    });
+
+    this.dialogService.showDialog('editDeviceModal');
   }
 
   /**
@@ -79,11 +104,8 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * @param success is true if the dialog was closed with OK, false if it was closed with Cancel
    */
   public onDeviceAdded(success: boolean) {
-    if (this.dialogClosedSubscription) {
-      this.dialogClosedSubscription.unsubscribe();
-    }
     if (success) {
-      var addedDevice : DeviceDto = this.editDeviceModal.dataContext as DeviceDto;
+      let addedDevice: DeviceDto = this.editDeviceModal.dataContext as DeviceDto;
       this.devicesService.devicesPut(addedDevice).subscribe({
         next: (response: DeviceDto) => {
           this.devices.push(response);
@@ -103,12 +125,10 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * @param device The device to edit
    */
   public editDevice(device: DeviceDto) {
-    this.dialogService.showDialog('editDeviceModal');
     this.editDeviceModal.dataContext = device;
+    this.editDeviceModal.isNewDevice = false;
     this.editDeviceModal.okButtonText = 'Save changes';
-    this.dialogClosedSubscription = this.dialogService.dialogClosed.subscribe((success: boolean) => {
-      this.onDeviceEdited(success);
-    });
+    this.dialogService.showDialog('editDeviceModal');
   }
 
   /**
@@ -117,13 +137,10 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * @param success is true if the dialog was closed with OK, false if it was closed with Cancel
    */
   public onDeviceEdited(success: boolean) {
-    if (this.dialogClosedSubscription) {
-      this.dialogClosedSubscription.unsubscribe();
-    }
     if (success) {
-      this.devicesService.devicesPut(this.editDeviceModal.dataContext as DeviceDto).subscribe({
+      this.devicesService.devicesPost(this.editDeviceModal.dataContext as DeviceDto).subscribe({
         next: (response: DeviceDto) => {
-          const index = this.devices.findIndex(d => d.nodeID === response.nodeID);
+          const index = this.devices.findIndex(d => d.nodeId === response.nodeId);
           this.devices[index] = response;
         },
         error: (error) => {
@@ -144,7 +161,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
         if (result) {
           this.devicesService.devicesIdDelete(device.id as number).subscribe({
             next: () => {
-              this.devices = this.devices.filter(d => d.nodeID !== device.nodeID);
+              this.devices = this.devices.filter(d => d.nodeId !== device.nodeId);
             },
             error: (error) => {
               console.error('Error deleting device:', error);

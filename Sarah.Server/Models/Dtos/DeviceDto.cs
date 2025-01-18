@@ -10,7 +10,7 @@ public class DeviceDto
     /// <summary>
     /// Gets the ID of the device.
     /// </summary>
-    public long ID { get; set; }
+    public long Id { get; set; }
 
     /// <summary>
     /// Gets or sets the Node ID of the device.
@@ -18,7 +18,7 @@ public class DeviceDto
     /// <value>
     /// The Node ID is a byte value that uniquely identifies the device within a network.
     /// </value>
-    public byte NodeID { get; set; }
+    public byte NodeId { get; set; }
 
     /// <summary>
     /// Gets the type name of the device.
