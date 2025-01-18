@@ -1,9 +1,18 @@
-namespace Sarah.Server.Models.Dtos;
-
-public class NetworkElementDto
+namespace Sarah.Server.Models.Dtos
 {
-    public byte ID { get; internal set; }
-    public string? TypeName { get; internal set; }
-    public string? Name { get; internal set; }
-    public string? Info { get; internal set; }
+    /// <summary>
+    /// Represents a Data Transfer Object (DTO) for a network element.
+    /// </summary>
+    public class NetworkElementDto
+    {
+        /// <summary>
+        /// Gets or sets the unique identifier for the network element.
+        /// </summary>
+        public byte Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the network element.
+        /// </summary>
+        public string Type { get; set; } = "";
+    }
 }

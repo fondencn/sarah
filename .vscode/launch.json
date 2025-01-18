@@ -5,7 +5,7 @@
             "name": "Launch .NET Core (Sarah Server)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build sarah server",
             "program": "${workspaceFolder}/Sarah.Server/bin/Debug/net8.0/Sarah.Server.dll", // Adjust the path if necessary
             "args": [],
             "cwd": "${workspaceFolder}/Sarah.Server",

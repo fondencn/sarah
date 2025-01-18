@@ -10,9 +10,7 @@
 
 
 export interface NetworkElementDto { 
-    readonly id?: number;
-    readonly typeName?: string | null;
-    readonly name?: string | null;
-    readonly info?: string | null;
+    id?: number;
+    type?: string | null;
 }
 

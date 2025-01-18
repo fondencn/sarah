@@ -1,6 +1,7 @@
 <div class="devices-container container mt-4">
   <h2 class="mb-4">Devices List</h2>
-  <button (click)="retrieveDevices()" class="btn btn-primary mb-4">Refresh</button>
+  <button (click)="retrieveDevices()" class="btn btn-primary m-4">🔁 Refresh</button>
+  <button (click)="addDevice()" class="btn btn-secondary m-4">➕ Add</button>
 
   <!-- Busy Indicator -->
   <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
@@ -13,18 +14,25 @@
   <table *ngIf="!isLoading && devices.length > 0; else noDevices" class="table table-striped table-bordered table-hover">
     <thead class="thead-dark">
       <tr>
+        <th>ID</th>
         <th>Node ID</th>
         <th>Name</th>
         <th>Type</th>
         <th>Info</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let device of devices">
-        <td>{{ device.id }}</td>
+        <td>{{ device.id }}</td> 
+        <td>{{ device.nodeId }}</td>
         <td>{{ device.name }}</td>
         <td>{{ device.typeName }}</td>
         <td [innerHTML]="device.info"></td>
+        <td>
+          <button (click)="editDevice(device)" class="btn btn-secondary btn-sm">✏️</button>
+          <button (click)="deleteDevice(device)" class="btn btn-danger btn-sm">🗑️</button>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -32,3 +40,7 @@
     <p class="text-muted">No devices loaded.</p>
   </ng-template>
 </div>
+
+
+<!-- Add Device Modal Component (element id ist set inside component!) -->
+<editDeviceModal></editDeviceModal>
