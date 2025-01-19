@@ -45,6 +45,7 @@ namespace Sarah.Data
         public DbSet<DeseaseKpi> DeseaseStats => this.Set<DeseaseKpi>();
         public DbSet<RuleInfo> RuleInfo => this.Set<RuleInfo>();
         public DbSet<AlarmSchedule> AlarmSchedule => this.Set<AlarmSchedule>();
+        public DbSet<UserFavourite> UserFavourites => this.Set<UserFavourite>();
 
 
     }

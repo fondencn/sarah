@@ -50,6 +50,11 @@ namespace Sarah.API.Interfaces.Service
         DbSet<AlarmSchedule> AlarmSchedule { get; }
 
         /// <summary>
+        /// Gets the DbSet of UserFavourites entities.
+        /// </summary>
+        DbSet<UserFavourite> UserFavourites { get; }
+
+        /// <summary>
         /// Saves all changes made in this context to the database.
         /// </summary>
         /// <returns>The number of state entries written to the database.</returns>

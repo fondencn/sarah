@@ -14,9 +14,11 @@ namespace Sarah.Data.Models
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column]
         public long Id { get; set; }
 
         [Display(Name = "Raumbezeichnung")]
+        [Column]
         public string? Name { get; set; }
     }
 }
