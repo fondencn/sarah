@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemType } from '../services/api-client'; // Import the generated client
 
 @Component({
   selector: 'app-home',
@@ -15,6 +15,11 @@ export class HomeComponent implements OnInit {
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemDto[] = [];
+
+  ITEM_TYPE_DEVICE : DashboardItemType = DashboardItemType.NUMBER_0;
+  ITEM_TYPE_SCENE  : DashboardItemType = DashboardItemType.NUMBER_1;
+  ITEM_TYPE_ROOM   : DashboardItemType = DashboardItemType.NUMBER_2;
+  ITEM_TYPE_PERSON : DashboardItemType = DashboardItemType.NUMBER_3;
 
   ngOnInit(): void {
     this.onComponentLoad();

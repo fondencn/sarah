@@ -3,7 +3,7 @@
     <div class="col-md-4 m-3 p-2">
       <div class="card shadow-lg h-100 ">
         <div class="card-body">
-          <ng-container *ngIf="isLoggedIn()">
+          <ng-container *ngIf="isLoggedIn() else loginTemplate">
             <h5 class="card-title">Welcome, {{ currentUserDisplayName }}</h5>
             <p class="card-text">You are logged in.</p>
             <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
@@ -26,9 +26,6 @@
               {{ statusMessage }}<br />
               Hostname: {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
               Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
-              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
-              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
-              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
               Controller: {{ statusDto?.controllerStatus }}
             </p>
           </div>
@@ -39,18 +36,83 @@
 </div>
 
 
+<!-- New Row with all dynamic dashboard items -->
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
     <div class="row overflow-auto">
-      <!-- New Row with all dashboard items -->
       <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems">
-        <div class="card shadow-lg h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ item.title }}</h5>
-            <p class="card-text">{{ item.description }}</p>
-            <!-- Add more content here as needed -->
-          </div>
-        </div>
+
+        <ng-container [ngSwitch]="item.itemType">
+          <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
+            <div class="card shadow-lg h-100 card-device">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.description }}</p>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="icon" style="font-size: 32pt;">⚙️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_SCENE">
+            <div class="card shadow-lg h-100 card-scene">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.description }}</p>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="icon" style="font-size: 32pt;">⏯️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_ROOM">
+            <div class="card shadow-lg h-100 card-room">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.description }}</p>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="icon" style="font-size: 32pt;">🟨</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_PERSON">
+            <div class="card shadow-lg h-100 card-person">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.description }}</p>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="icon" style="font-size: 32pt;">👤</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchDefault>
+            <div class="card shadow-lg h-100">
+              <div class="card-body">
+                <h5 class="card-title">{{ item.title }}</h5>
+                <p class="card-text">{{ item.description }}</p>
+                <!-- Add more content here as needed -->
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
       </div>
     </div>
   </div>

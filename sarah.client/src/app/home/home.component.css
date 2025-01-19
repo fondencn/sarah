@@ -1,0 +1,12 @@
+.card-device {
+    background-color: #ffecb3; /* Brighter version of Bootstrap warning color */
+}
+.card-scene {
+    background-color: #81c784; /* Brighter version of Bootstrap success color */
+}
+.card-room {
+    background-color: #e57373; /* Brighter version of Bootstrap danger color */
+}
+.card-person {
+    background-color: #64b5f6; /* Brighter version of Bootstrap primary color */
+}
