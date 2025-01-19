@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  <div class="row overflow-auto">
+  <div class="row overflow-auto" [@popIn]>
     <div class="col-md-4 m-3 p-2">
       <div class="card shadow-lg h-100 ">
         <div class="card-body">
@@ -39,12 +39,12 @@
 <!-- New Row with all dynamic dashboard items -->
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
-    <div class="row overflow-auto">
-      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems">
+    <div class="row overflow-auto" >
+      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems"  [@popIn]>
 
         <ng-container [ngSwitch]="item.itemType">
           <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
-            <div class="card shadow-lg h-100 card-device">
+            <div class="card shadow-lg h-100 card-device" >
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
@@ -52,7 +52,7 @@
                     <p class="card-text">{{ item.description }}</p>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="icon" style="font-size: 32pt;">⚙️</span>
+                    <span class="big-icon">⚙️</span>
                   </div>
                 </div>
               </div>
@@ -67,7 +67,7 @@
                     <p class="card-text">{{ item.description }}</p>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="icon" style="font-size: 32pt;">⏯️</span>
+                    <span class="big-icon">⏯️</span>
                   </div>
                 </div>
               </div>
@@ -82,7 +82,7 @@
                     <p class="card-text">{{ item.description }}</p>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="icon" style="font-size: 32pt;">🟨</span>
+                    <span class="big-icon">🟨</span>
                   </div>
                 </div>
               </div>
@@ -97,7 +97,7 @@
                     <p class="card-text">{{ item.description }}</p>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="icon" style="font-size: 32pt;">👤</span>
+                    <span class="big-icon">👤</span>
                   </div>
                 </div>
               </div>

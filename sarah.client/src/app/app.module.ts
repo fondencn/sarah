@@ -16,6 +16,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-device-modal.component'; // Import the interceptor
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -41,7 +42,8 @@ import { CommonModule } from '@angular/common';
             }), 
         FormsModule,
         HttpClientModule, 
-        ApiModule.forRoot(() => new Configuration({ basePath: environment.apiBaseUrl })) // Use environment configuration
+        ApiModule.forRoot(() => new Configuration({ basePath: environment.apiBaseUrl })), // Use environment configuration
+        BrowserAnimationsModule
     ], 
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true } // Provide the interceptor

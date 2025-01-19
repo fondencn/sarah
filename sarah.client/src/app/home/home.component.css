@@ -10,3 +10,6 @@
 .card-person {
     background-color: #64b5f6; /* Brighter version of Bootstrap primary color */
 }
+.big-icon {
+    font-size: 28pt;
+}
