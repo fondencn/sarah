@@ -1,36 +1,57 @@
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-md-12 text-center">
-      <div class="d-flex flex-row flex-wrap justify-content-center">
+  <div class="row overflow-auto">
+    <div class="col-md-4 m-3 p-2">
+      <div class="card shadow-lg h-100 ">
+        <div class="card-body">
+          <ng-container *ngIf="isLoggedIn()">
+            <h5 class="card-title">Welcome, {{ currentUserDisplayName }}</h5>
+            <p class="card-text">You are logged in.</p>
+            <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
+          </ng-container>
+          <ng-template #loginTemplate>
+            <h5 class="card-title">Authentication needed</h5>
+            <p class="card-text">Please log in.</p>
+            <button class="btn btn-primary mt-4" (click)="login()">User Login</button>
+          </ng-template>
+        </div>
+      </div>
+    </div>
 
-        <div class="card shadow-lg p-3 m-2 flex-grow-1" style="background: rgba(255, 255, 255, 0.8); border-radius: 15px; min-width: 300px;">
+    <ng-container *ngIf="isLoggedIn()">
+      <div class="col-md-4 m-3 p-2">
+        <div class="card shadow-lg  h-100">
           <div class="card-body">
-            <h1 class="display-4 text-primary">Welcome</h1>
-            <p class="lead">You are logged in.</p>
-            <ng-container *ngIf="this.isLoggedIn(); else loginTemplate">
-              <h2 class="mt-4">Welcome, {{ currentUserDisplayName }}</h2>
-              <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
-            </ng-container>
-            <ng-template #loginTemplate>
-              <button class="btn btn-primary mt-4" (click)="login()">User Login</button>
-            </ng-template>
+            <h5 class="card-title">System Status</h5>
+            <p class="card-text">
+              {{ statusMessage }}<br />
+              Hostname: {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
+              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Controller: {{ statusDto?.controllerStatus }}
+            </p>
           </div>
         </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
 
-        <ng-container *ngIf="this.isLoggedIn()">
-          <div class="card shadow-lg p-3 m-2 flex-grow-1" style="background: rgba(255, 255, 255, 0.8); border-radius: 15px; min-width: 300px;">
-            <div class="card-body">
-              <h1 class="display-4 text-primary">System Status</h1>
-              <span class="lead">{{ statusMessage }}</span><br/>
-              <span class="lead">Hostname: {{ statusDto?.hostname }}</span><br/>
-              <span class="lead">Port: {{ statusDto?.port }}</span><br/>
-              <span class="lead">Authenticated: {{ statusDto?.isAuthenticated }}</span><br/>
-              <span class="lead">Username (Server): {{ statusDto?.username }}</span><br/>
-              <span class="lead">Controller: {{ statusDto?.controllerStatus }}</span>
-            </div>
+
+<ng-container *ngIf="isLoggedIn()">
+  <div class="container-fluid">
+    <div class="row overflow-auto">
+      <!-- New Row with all dashboard items -->
+      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems">
+        <div class="card shadow-lg h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <p class="card-text">{{ item.description }}</p>
+            <!-- Add more content here as needed -->
           </div>
-        </ng-container>
+        </div>
       </div>
     </div>
   </div>
-</div>
+</ng-container>
