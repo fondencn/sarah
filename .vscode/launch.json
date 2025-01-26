@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build sarah server",
-            "program": "${workspaceFolder}/Sarah.Server/bin/Debug/net8.0/Sarah.Server.dll", // Adjust the path if necessary
+            "program": "${workspaceFolder}/Sarah.Server/bin/Debug/net9.0/Sarah.Server.dll", // Adjust the path if necessary
             "args": [],
             "cwd": "${workspaceFolder}/Sarah.Server",
             "stopAtEntry": false,
