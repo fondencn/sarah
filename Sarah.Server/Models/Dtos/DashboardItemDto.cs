@@ -3,14 +3,19 @@ namespace Sarah.Server.Models.Dtos
 {
     public class DashboardItemDto
     {
-        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemType.Device, Title = "Default", Description = "Mark items as favorite to see them here"};
+        /// <summary>
+        /// Default dashboard item
+        /// </summary>
+        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemTypeDto.Device, Title = "Default", Description = "Mark items as favorite to see them here"};
+        
+        
         public long ItemId { get; set; }
-        public DashboardItemType ItemType {get;set;}
+        public DashboardItemTypeDto ItemType {get;set;}
         public string Title { get; set; } = String.Empty;
         public string Description { get; set; } = String.Empty;
     }
 
-    public enum DashboardItemType
+    public enum DashboardItemTypeDto
     {
         Device,
         Scene,

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Sarah.Server.Models.Dtos;
 
 namespace Sarah.Server.Controllers
@@ -7,7 +10,7 @@ namespace Sarah.Server.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class DashboardController : ControllerBase
+    public class DashboardController(IDBService _databaseService, IDeviceService _deviceService) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DashboardItemDto>>> GetDashboard()
@@ -22,8 +25,37 @@ namespace Sarah.Server.Controllers
 
         private async Task<List<DashboardItemDto>> GetDashboardItemsForUser(string username)
         {
-            /* TODO Implement fetching dashboard items for user */
-            return new List<DashboardItemDto>(new DashboardItemDto[]{ DashboardItemDto.Default});
+            /* Get all favourites for the user */
+            var userFavourites = await _databaseService.UserFavourites
+                .Where(f => f.UserId == username)
+                .ToListAsync();
+
+            /* Create a list of dashboard items based on the user's favourites */
+            var list = new List<DashboardItemDto>();
+            if (userFavourites.Any())
+            {
+                foreach (var favourite in userFavourites)
+                {
+                    if(favourite.ItemType == API.BusinessObjects.DashboardItemType.Device)
+                    {
+                        var device = _databaseService.Devices.First(d => d.Id == favourite.ItemId);
+                        DashboardItemDto item = new DashboardItemDto()
+                        {
+                            ItemId = device.Id,
+                            ItemType = (DashboardItemTypeDto)favourite.ItemType,
+                            Title = device.Name ?? "Unknown Device",
+                            Description = device.GetNetworkItem(_deviceService).StateInfo
+                        };
+                        list.Add(item);
+                    }
+                    /* TODO: Generate more dashboard items for other types of favourites */
+                }
+            }
+            else
+            {
+                list.Add(DashboardItemDto.Default);
+            }
+            return list;
         }
     }
 }

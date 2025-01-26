@@ -14,6 +14,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
 
 
+
   devices: DeviceDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
@@ -171,6 +172,22 @@ export class DevicesComponent implements OnInit, OnDestroy {
       }).catch((error) => {
         console.error('Error showing confirm dialog:', error);
       });
+  }
+
+  /**
+   * Sets the favourite state of a device
+   * @param device the device to set the favourite state for
+   * @param isFavourite true if the device should be marked as favourite, false if not
+   */
+  public setFavourite(device: DeviceDto, isFavourite: boolean) {
+    this.devicesService.devicesIdFavouriteIsFavouritePut((device.id as number), isFavourite).subscribe({
+      next: () => {
+        device.isFavourite = isFavourite;
+      },
+      error: (error) => {
+        console.error('Error setting favourite state:', error);
+      }
+    });
   }
 
 }

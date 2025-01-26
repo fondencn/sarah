@@ -12,7 +12,7 @@ git_push.sh
 index.ts
 model/baseDataDto.ts
 model/dashboardItemDto.ts
-model/dashboardItemType.ts
+model/dashboardItemTypeDto.ts
 model/deviceDto.ts
 model/enumDto.ts
 model/knownDeviceTypes.ts

@@ -49,4 +49,9 @@ public class DeviceDto
     /// Gets or sets a value indicating whether the device is read-only.
     /// </summary>
     public bool IsReadonly { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the device is a favourite.
+    /// </summary>
+    public bool IsFavourite {get; set; }
 }

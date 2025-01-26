@@ -7,12 +7,13 @@ using Sarah.Logging;
 using ZWave.Devices;
 using Sarah.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-[Authorize] 
+[Authorize]
 public class DevicesController(IDeviceService _deviceService, IDBService _databaseService) : ControllerBase
 {
 
@@ -22,10 +23,18 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         try
         {
             // Get all devices
-            IEnumerable<DeviceDto> dtos = (await _databaseService.Devices
-                .ToListAsync())
+            List<DeviceDto> dtos = (await _databaseService.Devices.ToListAsync())
                 .Select(item => item.ToDto(_deviceService))
-                .OrderBy(x => x.NodeId);
+                .OrderBy(x => x.NodeId)
+                .ToList();
+
+            var userFavourites = await _databaseService.UserFavourites
+                .Where(f => f.UserId == User.Identity.Name)
+                .ToListAsync();
+            foreach(var dto in dtos)
+            {
+                dto.IsFavourite = userFavourites.Any(x => x.ItemId == dto.Id && x.ItemType == DashboardItemType.Device);
+            }   
             return Ok(dtos);
         }
         catch (Exception ex)
@@ -47,7 +56,15 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         DeviceInfo entity = device.ToEntity();
         await _databaseService.Devices.AddAsync(entity);
         await _databaseService.SaveChangesAsync();
-        return Ok(entity.ToDto(_deviceService));
+        var dto = entity.ToDto(_deviceService);
+        
+        var userFavourites = await _databaseService.UserFavourites
+            .Where(f => f.UserId == User.Identity.Name)
+            .ToListAsync();
+        dto.IsFavourite = userFavourites.Any(x => x.ItemId == dto.Id && x.ItemType == DashboardItemType.Device);
+
+        
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -59,7 +76,7 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         {
             return BadRequest("Device cannot be null");
         }
-        
+
         DeviceInfo? entity = _databaseService.Devices.Find(device.Id);
         if (entity == null)
         {
@@ -67,7 +84,14 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         }
         entity.UpdateFromDto(device);
         await _databaseService.SaveChangesAsync();
-        return Ok(entity.ToDto(_deviceService));
+        var dto = entity.ToDto(_deviceService);
+        
+        var userFavourites = await _databaseService.UserFavourites
+            .Where(f => f.UserId == User.Identity.Name)
+            .ToListAsync();
+        dto.IsFavourite = userFavourites.Any(x => x.ItemId == dto.Id && x.ItemType == DashboardItemType.Device);
+
+        return Ok(dto);
     }
 
     [HttpDelete("{id}")]
@@ -80,6 +104,43 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
             return NotFound("Device not found");
         }
         _databaseService.Devices.Remove(entity);
+        await _databaseService.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPut("{id}/favourite/{isFavourite}")]
+    public async Task<ActionResult> SetFavourite(long id, bool isFavourite)
+    {
+        // Set a device as favourite
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+            
+        var existing = await _databaseService.UserFavourites.FirstOrDefaultAsync(x => x.ItemId == id && x.UserId == User.Identity.Name && x.ItemType == DashboardItemType.Device);
+
+        if (isFavourite)
+        {
+            if (existing != null)
+            {
+                return BadRequest("Device already marked as favourite");
+            }
+            _databaseService.UserFavourites.Add(new UserFavourite
+            {
+                ItemId = id,
+                UserId = User.Identity.Name,
+                ItemType = DashboardItemType.Device
+            });
+        }
+        else
+        {
+            if (existing != null)
+            {
+                _databaseService.UserFavourites.Remove(existing);
+            }
+        }
+        
         await _databaseService.SaveChangesAsync();
         return Ok();
     }

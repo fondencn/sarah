@@ -7,12 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { DashboardItemType } from './dashboardItemType';
+import { DashboardItemTypeDto } from './dashboardItemTypeDto';
 
 
 export interface DashboardItemDto { 
     itemId?: number;
-    itemType?: DashboardItemType;
+    itemType?: DashboardItemTypeDto;
     title?: string | null;
     description?: string | null;
 }

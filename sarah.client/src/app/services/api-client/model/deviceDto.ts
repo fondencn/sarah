@@ -19,6 +19,7 @@ export interface DeviceDto {
     deviceType?: KnownDeviceTypes;
     roomId?: number | null;
     isReadonly?: boolean;
+    isFavourite?: boolean;
 }
 export namespace DeviceDto {
 }
