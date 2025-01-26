@@ -16,7 +16,7 @@ namespace Sarah.Data
     {
         public static string DatabaseFileName => "./InteLuk.db";
 
-        public ApplicationDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
@@ -26,9 +26,8 @@ namespace Sarah.Data
 
         public static IDBService CreateDefault()
         {
-            DbContextOptionsBuilder builder = new DbContextOptionsBuilder();
-            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath( DatabaseFileName));
-            builder.UseSqlite("Filename=" + DatabaseFileName);
+            DbContextOptionsBuilder<ApplicationDbContext> builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(DatabaseFileName));
             return new ApplicationDbContext(builder.Options);
         }
 
