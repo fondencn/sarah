@@ -24,10 +24,20 @@ namespace Sarah.Data
         {
         }
 
+         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlite($"Filename={DatabaseFileName}");
+            }
+        }
+
+
         public static IDBService CreateDefault()
         {
             DbContextOptionsBuilder<ApplicationDbContext> builder = new DbContextOptionsBuilder<ApplicationDbContext>();
             Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(DatabaseFileName));
+            builder.UseSqlite($"Filename={DatabaseFileName}");
             return new ApplicationDbContext(builder.Options);
         }
 
