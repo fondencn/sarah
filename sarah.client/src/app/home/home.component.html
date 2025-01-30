@@ -49,7 +49,7 @@
                 <div class="row">
                   <div class="col-10">
                     <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.description }}</p>
+                    <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <span class="big-icon">⚙️</span>
@@ -64,7 +64,7 @@
                 <div class="row">
                   <div class="col-10">
                     <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.description }}</p>
+                    <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <span class="big-icon">⏯️</span>
@@ -79,7 +79,7 @@
                 <div class="row">
                   <div class="col-10">
                     <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.description }}</p>
+                    <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <span class="big-icon">🟨</span>
@@ -94,7 +94,7 @@
                 <div class="row">
                   <div class="col-10">
                     <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.description }}</p>
+                    <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <span class="big-icon">👤</span>
@@ -107,7 +107,7 @@
             <div class="card shadow-lg h-100">
               <div class="card-body">
                 <h5 class="card-title">{{ item.title }}</h5>
-                <p class="card-text">{{ item.description }}</p>
+                <div class="card-text" [innerHTML]="item.description"></div>
                 <!-- Add more content here as needed -->
               </div>
             </div>

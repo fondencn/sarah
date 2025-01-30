@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemType } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto } from '../services/api-client'; // Import the generated client
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
@@ -29,10 +29,10 @@ export class HomeComponent implements OnInit {
   statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemDto[] = [];
 
-  ITEM_TYPE_DEVICE : DashboardItemType = DashboardItemType.NUMBER_0;
-  ITEM_TYPE_SCENE  : DashboardItemType = DashboardItemType.NUMBER_1;
-  ITEM_TYPE_ROOM   : DashboardItemType = DashboardItemType.NUMBER_2;
-  ITEM_TYPE_PERSON : DashboardItemType = DashboardItemType.NUMBER_3;
+  ITEM_TYPE_DEVICE : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_0;
+  ITEM_TYPE_SCENE  : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_1;
+  ITEM_TYPE_ROOM   : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
+  ITEM_TYPE_PERSON : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_3;
 
   ngOnInit(): void {
     this.onComponentLoad();

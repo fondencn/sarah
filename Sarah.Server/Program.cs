@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Sarah.Data;
 using Sarah.Server.Extensions;
 
 namespace Sarah.Server
@@ -87,6 +89,13 @@ namespace Sarah.Server
 
             var app = builder.Build();
 
+            // Apply pending migrations
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
+                dbContext.Database.Migrate();
+            }
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
@@ -107,6 +116,8 @@ namespace Sarah.Server
             app.MapControllers();
 
             app.Run();
+
+
         }
     }
 }

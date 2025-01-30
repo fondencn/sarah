@@ -38,13 +38,15 @@ namespace Sarah.Server.Controllers
                 {
                     if(favourite.ItemType == API.BusinessObjects.DashboardItemType.Device)
                     {
-                        var device = _databaseService.Devices.First(d => d.Id == favourite.ItemId);
+                        var device = await _databaseService.Devices
+                            .Where(d => d.Id == favourite.ItemId)
+                            .FirstOrDefaultAsync();
                         DashboardItemDto item = new DashboardItemDto()
                         {
-                            ItemId = device.Id,
+                            ItemId = device?.Id ?? 0,
                             ItemType = (DashboardItemTypeDto)favourite.ItemType,
-                            Title = device.Name ?? "Unknown Device",
-                            Description = device.GetNetworkItem(_deviceService).StateInfo
+                            Title = device?.Name ?? "Unknown Device",
+                            Description = device?.GetNetworkItem(_deviceService)?.StateInfo ?? String.Empty
                         };
                         list.Add(item);
                     }
