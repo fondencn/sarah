@@ -133,15 +133,15 @@ namespace Sarah.DeviceService.Model
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append("<p>Letzte Nachricht: " + (this.LastMessageReceived == DateTime.MinValue ? "Keine" : this.LastMessageReceived.ToString("dd.MM.yy HH:mm:ss")) + "</p>");
-                sb.Append("<p>Aktuelle Position: " + this.Position + "</p>");
-                sb.Append("<p>Letzte bekannte Position: " + this.LastValidPosition + "</p>");
-                sb.Append("<p>Entfernung: " + (this.LastValidPosition == null ? "Unbekannt" : (Math.Round(this.LastValidPosition.GetDistanceTo(LocatorPosition.ZuHause), 2).ToString() + " m")) + "</p>");
-                sb.Append("<p>Batterie: " + this.Battery + "</p>");
-                sb.Append("<p>SOS-Knopf gedrückt: " + this.IsButtonPressed + "</p>");
+                sb.Append("Letzte Nachricht: " + (this.LastMessageReceived == DateTime.MinValue ? "Keine" : this.LastMessageReceived.ToString("dd.MM.yy HH:mm:ss")) + "<br/>");
+                sb.Append("Aktuelle Position: " + this.Position + "<br/>");
+                sb.Append("Letzte bekannte Position: " + this.LastValidPosition + "<br/>");
+                sb.Append("Entfernung: " + (this.LastValidPosition == null ? "Unbekannt" : (Math.Round(this.LastValidPosition.GetDistanceTo(LocatorPosition.ZuHause), 2).ToString() + " m")) + "<br/>");
+                sb.Append("Batterie: " + this.Battery + "<br/>");
+                sb.Append("SOS-Knopf gedrückt: " + this.IsButtonPressed + "<br/>");
                 if (this.NearbyDevices?.Any() == true)
                 {
-                    sb.Append("<p>Geräte in der Nähe: " + String.Join(",", this.NearbyDevices.Select(item => item.ToString())) + "</p>");
+                    sb.Append("Geräte in der Nähe: " + String.Join(",", this.NearbyDevices.Select(item => item.ToString())) + "<br/>");
                 }
                 return sb.ToString();
             }
