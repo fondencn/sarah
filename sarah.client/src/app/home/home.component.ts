@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
@@ -32,7 +32,7 @@ export class HomeComponent implements OnInit {
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
-  dashboardItems: DashboardItemDto[] = [];
+  dashboardItems: DashboardItemViewModel[] = [];
   animateItems: boolean = true; // Flag to control animation
 
   ITEM_TYPE_DEVICE : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_0;
@@ -81,12 +81,28 @@ export class HomeComponent implements OnInit {
     this.setLampBrightness(itemId, 100);
   }
 
+  switchWallplugOn(itemId: number) {
+    this.setWallplugState(itemId, true);
+  }
+
   switchWallplugOff(itemId: number) {
     this.setWallplugState(itemId, false);
   }
 
-  switchWallplugOn(itemId: number) {
-    this.setWallplugState(itemId, true);
+  toggleWallplug(itemId: number | undefined, eventTarget: EventTarget|null) {
+    var element: HTMLInputElement = eventTarget as HTMLInputElement;
+    const isChecked: boolean = element.checked;
+    this.setWallplugState(itemId as number, isChecked);
+  }
+
+  toggleLamp(itemId: number | undefined, eventTarget: EventTarget|null) {
+    var element: HTMLInputElement = eventTarget as HTMLInputElement;
+    const isChecked: boolean = element.checked;
+    if(isChecked) {
+      this.switchLampOn(itemId as number);
+    } else {
+      this.switchLampOff(itemId as number);
+    } 
   }
 
   setLampColor(itemId: number, eventTarget: EventTarget | null) {
@@ -95,13 +111,16 @@ export class HomeComponent implements OnInit {
   }
 
 
+
+
   /* ******************** API Calls ******************** */
   private loadDashboardItems() : void {
     this.animateItems = true;
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
         console.log('Dashboard items:', items);
-        this.dashboardItems = items;
+        //this.dashboardItems = items;
+        this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
       },
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
@@ -118,9 +137,9 @@ export class HomeComponent implements OnInit {
         const updatedItem = items.find(i => i.itemId === item.itemId && item.itemType === i.itemType);
         if (updatedItem) {
           // Update the properties
-          item.description = updatedItem.description;
-          item.extendedProperties = updatedItem.extendedProperties;
-          item.title = updatedItem.title;
+          item.description = updatedItem.description as string;
+          item.extendedProperties = updatedItem.extendedProperties as ExtendedPropertyDto[]; 
+          item.title = updatedItem.title as string;
 
 
           // Mark for check and manually trigger change detection
@@ -185,5 +204,64 @@ export class HomeComponent implements OnInit {
       }
     });
   }
+}
 
+export class DashboardItemViewModel {
+  constructor(public item: DashboardItemDto) {}
+
+  get lampColor(): string | null | undefined {
+    return this.item.extendedProperties?.find(x => x.key === 'Color')?.value;
+  }
+
+  get isOn(): boolean | null | undefined {
+    return this.item.extendedProperties?.find(x => x.key === 'IsOn')?.value === 'True';
+  }
+
+  get itemId(): number {
+    return this.item.itemId as number;
+  }
+
+  set itemId(value: number) {
+    this.item.itemId = value;
+  }
+
+  get itemType(): DashboardItemTypeDto {
+    return this.item.itemType as DashboardItemTypeDto;
+  }
+
+  set itemType(value: DashboardItemTypeDto) {
+    this.item.itemType = value;
+  }
+
+  get subType(): string {
+    return this.item.subtype as string;
+  }
+
+  set subType(value: string) {
+    this.item.subtype = value;
+  }
+
+  get title(): string {
+    return this.item.title as string;
+  }
+
+  set title(value: string) {
+    this.item.title = value;
+  }
+
+  get description(): string {
+    return this.item.description as string;
+  }
+
+  set description(value: string) {
+    this.item.description = value;
+  }
+
+  get extendedProperties(): ExtendedPropertyDto[] {
+    return this.item.extendedProperties as ExtendedPropertyDto[];
+  }
+
+  set extendedProperties(value: any[]) {
+    this.item.extendedProperties = value;
+  }
 }

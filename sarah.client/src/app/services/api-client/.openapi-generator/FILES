@@ -15,8 +15,7 @@ model/dashboardItemDto.ts
 model/dashboardItemTypeDto.ts
 model/deviceDto.ts
 model/enumDto.ts
-model/jsonNode.ts
-model/jsonNodeOptions.ts
+model/extendedPropertyDto.ts
 model/knownDeviceTypes.ts
 model/models.ts
 model/networkElementDto.ts

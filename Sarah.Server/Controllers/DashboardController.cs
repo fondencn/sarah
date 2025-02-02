@@ -2,6 +2,8 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.VisualBasic;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
@@ -44,18 +46,24 @@ namespace Sarah.Server.Controllers
                         var device = await _databaseService.Devices
                             .Where(d => d.Id == favourite.ItemId)
                             .FirstOrDefaultAsync();
-                        var networkElement =  device?.GetNetworkItem(_deviceService);
-                        JsonObject extendedProperties = ReadObjPropertiesAsJson(networkElement);
-                        DashboardItemDto item = new DashboardItemDto()
+                        if(device != null)
                         {
-                            ItemId = device?.Id ?? 0,
-                            ItemType = (DashboardItemTypeDto)favourite.ItemType,
-                            Subtype = networkElement?.ClassDescription ?? String.Empty,
-                            Title = device?.Name ?? "Unknown Device",
-                            Description = networkElement?.StateInfo ?? String.Empty,
-                            ExtendedProperties = extendedProperties
-                        };
+                            var networkElement =  device.GetNetworkItem(_deviceService);
+                            var room = await _databaseService.Rooms.FirstOrDefaultAsync(r => r.Id == device.Id_Room);
+                            var extendedProperties = ReadObjPropertiesAsJson(networkElement);
+                            var description = (networkElement?.ClassDescription ?? "Unknown device type") + " in " + (room?.Name ?? "unknown room");
+                            
+                            DashboardItemDto item = new DashboardItemDto()
+                            {
+                                ItemId = device.Id,
+                                ItemType = (DashboardItemTypeDto)favourite.ItemType,
+                                Subtype = networkElement?.ClassDescription ?? String.Empty,
+                                Title = device.Name ?? "Unknown Device",
+                                Description = description,
+                                ExtendedProperties = extendedProperties
+                            };
                         list.Add(item);
+                        }
                     }
                     /* TODO: Generate more dashboard items for other types of favourites */
                 }
@@ -68,23 +76,23 @@ namespace Sarah.Server.Controllers
         }
 
         /// <summary>
-        ///  Read the public, non-static properties of an object and return them as a JsonObject
+        ///  Read the public, non-static properties of an object and return them as a ExtendedPropertyDto[]
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        private JsonObject ReadObjPropertiesAsJson(object? device)
+        private ExtendedPropertyDto[] ReadObjPropertiesAsJson(object? item)
         {
-            JsonObject result = new JsonObject();
+            List<ExtendedPropertyDto> result = new List<ExtendedPropertyDto>();
 
-            if (device != null) 
+            if (item != null) 
             {
-                foreach(var property in device.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                foreach(var property in item.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
                 {
-                   result.Add(property.Name, property.GetValue(device)?.ToString());
+                   result.Add(new ExtendedPropertyDto() {Key = property.Name, Value = property.GetValue(item)?.ToString()  ?? ""});
                 }
             }
 
-            return result;
+            return result.ToArray();
         }
     }
 }

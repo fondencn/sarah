@@ -8,7 +8,7 @@ namespace Sarah.Server.Models.Dtos
         /// <summary>
         /// Default dashboard item
         /// </summary>
-        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemTypeDto.Device, Title = "Default", Description = "Mark items as favorite to see them here", ExtendedProperties = new JsonObject()};
+        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemTypeDto.Device, Title = "Default", Description = "Mark items as favorite to see them here", ExtendedProperties = Array.Empty<ExtendedPropertyDto>() };
         
         
         public long ItemId { get; set; }
@@ -16,7 +16,13 @@ namespace Sarah.Server.Models.Dtos
         public string Title { get; set; } = String.Empty;
         public string Description { get; set; } = String.Empty;
         public string Subtype { get; set; } = String.Empty;
-        public required JsonObject ExtendedProperties {get;set;}
+        public required ExtendedPropertyDto[] ExtendedProperties { get; set; }
+    }
+
+    public class ExtendedPropertyDto
+    {
+        public string Key {get;set;} = "";
+        public string Value {get;set;} = "";
     }
 
     public enum DashboardItemTypeDto

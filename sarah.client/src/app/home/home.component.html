@@ -50,19 +50,31 @@
                   <div class="col-9">
                     <h5 class="card-title">{{ item.title }}</h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
-                    <ng-container [ngSwitch]="item.subtype">
+                    <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
-                        <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
-                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button>
+                        <!-- <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
+                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button> -->
+                        
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" role="switch" 
+                            [checked]="item.isOn"
+                            (change)="toggleLamp(item.itemId, $event.target)">
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                        </div>
+
                         <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px; padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
                             <input type="color" style="width: 65px; height: 30px;"
-                              [value]="item.extendedProperties?.['Color']"
+                              [value]="item.lampColor"
                               (change)="setLampColor(item.itemId, $event.target)" />
                         </button>
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
-                        <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px"  *ngIf="item.itemId !== undefined" (click)="switchWallplugOn(item.itemId)">turn on</button>
-                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px"  *ngIf="item.itemId !== undefined" (click)="switchWallplugOff(item.itemId)">turn off</button>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" role="switch" 
+                            [checked]="item.isOn"
+                            (change)="toggleWallplug(item.itemId, $event.target)">
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                        </div>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
@@ -75,20 +87,20 @@
                     </ng-container> 
                   </div>
                   <div class="col-3 d-flex align-items-center justify-content-center">
-                    <ng-container [ngSwitch]="item.subtype">
+                    <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
-                        <span class="big-icon" title="{{ item.subtype }}">💡</span>
+                        <span class="big-icon" title="{{ item.subType }}">💡</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
-                        <span class="big-icon" title="{{ item.subtype }}">🔌</span>
+                        <span class="big-icon" title="{{ item.subType }}">🔌</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
-                        <span class="big-icon" title="{{ item.subtype }}">🌐</span>
+                        <span class="big-icon" title="{{ item.subType }}">🌐</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
-                          <span class="big-icon" title="{{ item.subtype }}">⚙️</span>
-                          <small>{{ item.subtype }}</small>
+                          <span class="big-icon" title="{{ item.subType }}">⚙️</span>
+                          <small>{{ item.subType }}</small>
                         </div>
                       </ng-container>
                     </ng-container> 

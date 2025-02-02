@@ -501,9 +501,9 @@
             "nullable": true
           },
           "extendedProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/JsonNode"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtendedPropertyDto"
             },
             "nullable": true
           }
@@ -575,26 +575,16 @@
         },
         "additionalProperties": false
       },
-      "JsonNode": {
+      "ExtendedPropertyDto": {
         "type": "object",
         "properties": {
-          "options": {
-            "$ref": "#/components/schemas/JsonNodeOptions"
+          "key": {
+            "type": "string",
+            "nullable": true
           },
-          "parent": {
-            "$ref": "#/components/schemas/JsonNode"
-          },
-          "root": {
-            "$ref": "#/components/schemas/JsonNode"
-          }
-        },
-        "additionalProperties": false
-      },
-      "JsonNodeOptions": {
-        "type": "object",
-        "properties": {
-          "propertyNameCaseInsensitive": {
-            "type": "boolean"
+          "value": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
