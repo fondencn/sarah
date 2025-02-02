@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService } from '../services/api-client'; // Import the generated client
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
@@ -22,21 +22,28 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
 })
 export class HomeComponent implements OnInit {
 
-  constructor(public authService: AuthService, private statusService: StatusService, private dashboardService : DashboardService, private devicesService : DevicesService) { }
+  constructor(public authService: AuthService, 
+    private statusService: StatusService, 
+    private dashboardService : DashboardService, 
+    private devicesService : DevicesService,
+    private cdr: ChangeDetectorRef) { }  
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemDto[] = [];
+  animateItems: boolean = true; // Flag to control animation
 
   ITEM_TYPE_DEVICE : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_0;
   ITEM_TYPE_SCENE  : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_1;
   ITEM_TYPE_ROOM   : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
   ITEM_TYPE_PERSON : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_3;
+  UPDATE_MILLISECONDS : number = 3000;
 
   ngOnInit(): void {
     this.onComponentLoad();
+    this.startDashboardUpdateTimer();
   }
 
   onComponentLoad(): void {
@@ -44,6 +51,13 @@ export class HomeComponent implements OnInit {
     console.log('HomeComponent loaded');
     this.loadStatus();
     this.loadDashboardItems();
+  }
+
+
+  startDashboardUpdateTimer(): void {
+    setInterval(() => {
+      this.updateDashboardItems();
+    }, this.UPDATE_MILLISECONDS); // Update every 10 seconds
   }
 
 
@@ -82,7 +96,8 @@ export class HomeComponent implements OnInit {
 
 
   /* ******************** API Calls ******************** */
-  private loadDashboardItems() {
+  private loadDashboardItems() : void {
+    this.animateItems = true;
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
         console.log('Dashboard items:', items);
@@ -91,6 +106,28 @@ export class HomeComponent implements OnInit {
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
       }
+    })
+  }
+
+
+
+  updateDashboardItems(): void {
+    this.animateItems = false;
+    this.dashboardService.apiDashboardGet().subscribe(items => {
+      this.dashboardItems.forEach((item, index) => {
+        const updatedItem = items.find(i => i.itemId === item.itemId && item.itemType === i.itemType);
+        if (updatedItem) {
+          // Update the properties
+          item.description = updatedItem.description;
+          item.extendedProperties = updatedItem.extendedProperties;
+          item.title = updatedItem.title;
+
+
+          // Mark for check and manually trigger change detection
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 
@@ -120,7 +157,6 @@ export class HomeComponent implements OnInit {
     this.devicesService.devicesLampIdColorColorPost(itemId,color).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampColor:', response);
-        this.statusDto = response;
       },
       error: (error) => {
         console.error('Error setting lamp color:', error);
@@ -132,7 +168,6 @@ export class HomeComponent implements OnInit {
     this.devicesService.devicesLampIdBrightnessBrightnessPost(itemId, brightness).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampBrightness:', response);
-        this.statusDto = response;
       },
       error: (error) => {
         console.error('Error setting lamp brightness:', error);
@@ -144,11 +179,11 @@ export class HomeComponent implements OnInit {
     this.devicesService.devicesWallplugIdIsOnPost(itemId, state).subscribe({
       next: (response: StatusDto) => {
         console.log('setWallplugState:', response);
-        this.statusDto = response;
       },
       error: (error) => {
         console.error('Error setting lamp brightness:', error);
       }
     });
   }
+
 }
