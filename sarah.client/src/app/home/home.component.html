@@ -53,13 +53,10 @@
                   </div>
                   <div class="col-3 d-flex align-items-center justify-content-center">
                     <ng-container [ngSwitch]="item.subtype">
-                      <ng-container *ngSwitchCase="'Lamp'">
+                      <ng-container *ngSwitchCase="'Lampe'">
                         <span class="big-icon" title="{{ item.subtype }}">💡</span>
                       </ng-container>
-                      <ng-container *ngSwitchCase="'ShellyWifiLamp'">
-                        <span class="big-icon" title="{{ item.subtype }}">💡</span>
-                      </ng-container>
-                      <ng-container *ngSwitchCase="'WifiWallPlug'">
+                      <ng-container *ngSwitchCase="'Steckdose'">
                         <span class="big-icon" title="{{ item.subtype }}">🔌</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">

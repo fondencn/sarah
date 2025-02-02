@@ -45,7 +45,7 @@ namespace Sarah.Server.Controllers
                         {
                             ItemId = device?.Id ?? 0,
                             ItemType = (DashboardItemTypeDto)favourite.ItemType,
-                            Subtype = device?.GetNetworkItem(_deviceService)?.GetType().Name ?? String.Empty,
+                            Subtype = device?.GetNetworkItem(_deviceService)?.ClassDescription ?? String.Empty,
                             Title = device?.Name ?? "Unknown Device",
                             Description = device?.GetNetworkItem(_deviceService)?.StateInfo ?? String.Empty,
                         };
