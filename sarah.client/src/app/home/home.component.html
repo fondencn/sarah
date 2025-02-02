@@ -51,7 +51,7 @@
                     <h5 class="card-title">{{ item.title }}</h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                     <ng-container [ngSwitch]="item.subtype">
-                    <ng-container *ngSwitchCase="'Lampe'">
+                      <ng-container *ngSwitchCase="'Lampe'">
                         <button class="btn btn-primary" style="margin-right:2px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
                         <button class="btn btn-secondary"  style="margin-right:2px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button>
                         <button class="btn btn-secondary"  style="margin-right:2px; padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
