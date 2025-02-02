@@ -13,6 +13,7 @@ namespace Sarah.Server.Models.Dtos
         public DashboardItemTypeDto ItemType {get;set;}
         public string Title { get; set; } = String.Empty;
         public string Description { get; set; } = String.Empty;
+        public string Subtype { get; set; } = String.Empty;
     }
 
     public enum DashboardItemTypeDto
