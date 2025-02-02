@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { DashboardItemTypeDto } from './dashboardItemTypeDto';
+import { JsonNode } from './jsonNode';
 
 
 export interface DashboardItemDto { 
@@ -16,6 +17,7 @@ export interface DashboardItemDto {
     title?: string | null;
     description?: string | null;
     subtype?: string | null;
+    extendedProperties?: { [key: string]: JsonNode; } | null;
 }
 export namespace DashboardItemDto {
 }

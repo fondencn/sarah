@@ -1,8 +1,11 @@
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
+using Sarah.Data.Models;
 using Sarah.Server.Models.Dtos;
 
 namespace Sarah.Server.Controllers
@@ -41,13 +44,16 @@ namespace Sarah.Server.Controllers
                         var device = await _databaseService.Devices
                             .Where(d => d.Id == favourite.ItemId)
                             .FirstOrDefaultAsync();
+                        var networkElement =  device?.GetNetworkItem(_deviceService);
+                        JsonObject extendedProperties = ReadObjPropertiesAsJson(networkElement);
                         DashboardItemDto item = new DashboardItemDto()
                         {
                             ItemId = device?.Id ?? 0,
                             ItemType = (DashboardItemTypeDto)favourite.ItemType,
-                            Subtype = device?.GetNetworkItem(_deviceService)?.ClassDescription ?? String.Empty,
+                            Subtype = networkElement?.ClassDescription ?? String.Empty,
                             Title = device?.Name ?? "Unknown Device",
-                            Description = device?.GetNetworkItem(_deviceService)?.StateInfo ?? String.Empty,
+                            Description = networkElement?.StateInfo ?? String.Empty,
+                            ExtendedProperties = extendedProperties
                         };
                         list.Add(item);
                     }
@@ -59,6 +65,26 @@ namespace Sarah.Server.Controllers
                 list.Add(DashboardItemDto.Default);
             }
             return list;
+        }
+
+        /// <summary>
+        ///  Read the public, non-static properties of an object and return them as a JsonObject
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        private JsonObject ReadObjPropertiesAsJson(object? device)
+        {
+            JsonObject result = new JsonObject();
+
+            if (device != null) 
+            {
+                foreach(var property in device.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                {
+                   result.Add(property.Name, property.GetValue(device)?.ToString());
+                }
+            }
+
+            return result;
         }
     }
 }

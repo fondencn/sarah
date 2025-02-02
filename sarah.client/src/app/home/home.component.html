@@ -56,6 +56,7 @@
                         <button class="btn btn-secondary"  style="margin-right:2px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button>
                         <button class="btn btn-secondary"  style="margin-right:2px; padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
                             <input type="color" style="width: 65px; height: 30px;"
+                              [value]="item.extendedProperties?.['Color']"
                               (change)="setLampColor(item.itemId, $event.target)" />
                         </button>
                       </ng-container>

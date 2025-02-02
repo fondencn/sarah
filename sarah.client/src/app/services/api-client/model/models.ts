@@ -3,6 +3,8 @@ export * from './dashboardItemDto';
 export * from './dashboardItemTypeDto';
 export * from './deviceDto';
 export * from './enumDto';
+export * from './jsonNode';
+export * from './jsonNodeOptions';
 export * from './knownDeviceTypes';
 export * from './networkElementDto';
 export * from './roomDto';

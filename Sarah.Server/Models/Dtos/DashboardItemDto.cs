@@ -1,4 +1,6 @@
 
+using System.Text.Json.Nodes;
+
 namespace Sarah.Server.Models.Dtos
 {
     public class DashboardItemDto
@@ -6,7 +8,7 @@ namespace Sarah.Server.Models.Dtos
         /// <summary>
         /// Default dashboard item
         /// </summary>
-        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemTypeDto.Device, Title = "Default", Description = "Mark items as favorite to see them here"};
+        public static DashboardItemDto Default {get; } = new DashboardItemDto() {ItemId = -1, ItemType = DashboardItemTypeDto.Device, Title = "Default", Description = "Mark items as favorite to see them here", ExtendedProperties = new JsonObject()};
         
         
         public long ItemId { get; set; }
@@ -14,6 +16,7 @@ namespace Sarah.Server.Models.Dtos
         public string Title { get; set; } = String.Empty;
         public string Description { get; set; } = String.Empty;
         public string Subtype { get; set; } = String.Empty;
+        public required JsonObject ExtendedProperties {get;set;}
     }
 
     public enum DashboardItemTypeDto
