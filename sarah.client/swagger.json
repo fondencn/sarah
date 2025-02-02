@@ -332,6 +332,10 @@
           "description": {
             "type": "string",
             "nullable": true
+          },
+          "subtype": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

@@ -15,6 +15,7 @@ export interface DashboardItemDto {
     itemType?: DashboardItemTypeDto;
     title?: string | null;
     description?: string | null;
+    subtype?: string | null;
 }
 export namespace DashboardItemDto {
 }

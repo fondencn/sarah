@@ -47,12 +47,31 @@
             <div class="card shadow-lg h-100 card-device" >
               <div class="card-body">
                 <div class="row">
-                  <div class="col-10">
+                  <div class="col-9">
                     <h5 class="card-title">{{ item.title }}</h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
-                  <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="big-icon">⚙️</span>
+                  <div class="col-3 d-flex align-items-center justify-content-center">
+                    <ng-container [ngSwitch]="item.subtype">
+                      <ng-container *ngSwitchCase="'Lamp'">
+                        <span class="big-icon" title="{{ item.subtype }}">💡</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'ShellyWifiLamp'">
+                        <span class="big-icon" title="{{ item.subtype }}">💡</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'WifiWallPlug'">
+                        <span class="big-icon" title="{{ item.subtype }}">🔌</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
+                        <span class="big-icon" title="{{ item.subtype }}">🌐</span>
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        <div class="row">
+                          <span class="big-icon" title="{{ item.subtype }}">⚙️</span>
+                          <small>{{ item.subtype }}</small>
+                        </div>
+                      </ng-container>
+                    </ng-container> 
                   </div>
                 </div>
               </div>
