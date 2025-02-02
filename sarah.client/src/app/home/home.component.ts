@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService } from '../services/api-client'; // Import the generated client
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
@@ -21,7 +21,8 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   ]
 })
 export class HomeComponent implements OnInit {
-  constructor(public authService: AuthService, private statusService: StatusService, private dashboardService : DashboardService) { }
+
+  constructor(public authService: AuthService, private statusService: StatusService, private dashboardService : DashboardService, private devicesService : DevicesService) { }
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
@@ -46,6 +47,41 @@ export class HomeComponent implements OnInit {
   }
 
 
+  login(): void {
+    this.authService.login();
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  switchLampOff(itemId: number) {
+    this.setLampBrightness(itemId, 0);
+  }
+
+  switchLampOn(itemId: number) {
+    this.setLampBrightness(itemId, 100);
+  }
+
+  switchWallplugOff(itemId: number) {
+    this.setWallplugState(itemId, false);
+  }
+
+  switchWallplugOn(itemId: number) {
+    this.setWallplugState(itemId, true);
+  }
+
+  setLampColor(itemId: number, eventTarget: EventTarget | null) {
+    var element : HTMLInputElement = eventTarget as HTMLInputElement;
+    this.setLampColorInternal(itemId, element.value);
+  }
+
+
+  /* ******************** API Calls ******************** */
   private loadDashboardItems() {
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
@@ -57,6 +93,7 @@ export class HomeComponent implements OnInit {
       }
     });
   }
+
 
   private loadStatus() {
     this.statusMessage = "Component has been loaded.";
@@ -77,15 +114,41 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  login(): void {
-    this.authService.login();
+
+
+  private setLampColorInternal(itemId: number, color: string) {
+    this.devicesService.devicesLampIdColorColorPost(itemId,color).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setLampColor:', response);
+        this.statusDto = response;
+      },
+      error: (error) => {
+        console.error('Error setting lamp color:', error);
+      }
+    });
   }
 
-  logout(): void {
-    this.authService.logout();
+  private setLampBrightness(itemId: number, brightness: number) {
+    this.devicesService.devicesLampIdBrightnessBrightnessPost(itemId, brightness).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setLampBrightness:', response);
+        this.statusDto = response;
+      },
+      error: (error) => {
+        console.error('Error setting lamp brightness:', error);
+      }
+    });
   }
 
-  isLoggedIn(): boolean {
-    return this.authService.isLoggedIn();
+  private setWallplugState(itemId: number, state: boolean) {
+    this.devicesService.devicesWallplugIdIsOnPost(itemId, state).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setWallplugState:', response);
+        this.statusDto = response;
+      },
+      error: (error) => {
+        console.error('Error setting lamp brightness:', error);
+      }
+    });
   }
 }

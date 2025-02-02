@@ -144,4 +144,117 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         await _databaseService.SaveChangesAsync();
         return Ok();
     }
+
+    [HttpPost("lamp/{id}/brightness/{brightness}")]
+    public async Task<ActionResult> SetLampBrightness(long id, byte brightness)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var lamp = _deviceService.Lamps.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (lamp == null)
+        {
+            return NotFound("Device is not a lamp");
+        }
+        await lamp.SetBrightness(brightness); 
+        
+        return Ok();
+    }
+
+    [HttpPost("lamp/{id}/color/{color}")]
+    public async Task<ActionResult> SetLampColor(long id, string color)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var lamp = _deviceService.Lamps.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (lamp == null)
+        {
+            return NotFound("Device is not a lamp");
+        }
+        await lamp.SetColor(color);
+        
+        return Ok();
+    }
+
+    [HttpGet("lamp/{id}/color")]
+    public ActionResult GetLampColor(long id)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var lamp = _deviceService.Lamps.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (lamp == null)
+        {
+            return NotFound("Device is not a lamp");
+        }
+
+        return Ok(lamp.Color);
+    }
+
+    [HttpPost("lamp/{id}/warmwhite")]
+    public async Task<ActionResult> SetLampWarmWhite(long id)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var lamp = _deviceService.Lamps.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (lamp == null)
+        {
+            return NotFound("Device is not a lamp");
+        }
+        await lamp.SetWarmWhite();
+        
+        return Ok();
+    }
+
+    [HttpPost("lamp/{id}/coldwhite")]
+    public async Task<ActionResult> SetLampColdWhite(long id)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var lamp = _deviceService.Lamps.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (lamp == null)
+        {
+            return NotFound("Device is not a lamp");
+        }
+        await lamp.SetColdWhite();
+        
+        return Ok();
+    }
+
+    [HttpPost("wallplug/{id}/{isOn}")]
+    public async Task<ActionResult> SetWallplugOnOff(long id, bool isOn)
+    {
+        // Set the state of a device
+        DeviceInfo? entity = _databaseService.Devices.Find(id);
+        if (entity == null)
+        {
+            return NotFound("Device not found");
+        }
+        var wallplug = _deviceService.WallPlugs.FirstOrDefault(x => x.NodeID == entity.NodeID);
+        if (wallplug == null)
+        {
+            return NotFound("Device is not a wallplug");
+        }
+        await wallplug.SetState(isOn);
+        
+        return Ok();
+    }
 }

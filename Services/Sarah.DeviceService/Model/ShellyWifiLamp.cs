@@ -156,7 +156,7 @@ namespace Sarah.DeviceService.Model
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Helligkeit: " + this.Brightness + (IsActive == true ? "💡" : "🌙") + "<br/>");
                 sb.Append("Farbe: " + this.Color + "<br/>");
-                sb.Append("Verbrauch: " + this.Meter + "<br/>");
+                sb.Append("Leistung: " + this.Meter + "<br/>");
                 return sb.ToString();
             }
         }
