@@ -1,36 +1,170 @@
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-md-12 text-center">
-      <div class="d-flex flex-row flex-wrap justify-content-center">
+  <div class="row overflow-auto" [@popIn]>
+    <div class="col-md-4 m-3 p-2">
+      <div class="card shadow-lg h-100 ">
+        <div class="card-body">
+          <ng-container *ngIf="isLoggedIn() else loginTemplate">
+            <h5 class="card-title">Welcome, {{ currentUserDisplayName }}</h5>
+            <p class="card-text">You are logged in.</p>
+            <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
+          </ng-container>
+          <ng-template #loginTemplate>
+            <h5 class="card-title">Authentication needed</h5>
+            <p class="card-text">Please log in.</p>
+            <button class="btn btn-primary mt-4" (click)="login()">User Login</button>
+          </ng-template>
+        </div>
+      </div>
+    </div>
 
-        <div class="card shadow-lg p-3 m-2 flex-grow-1" style="background: rgba(255, 255, 255, 0.8); border-radius: 15px; min-width: 300px;">
+    <ng-container *ngIf="isLoggedIn()">
+      <div class="col-md-4 m-3 p-2">
+        <div class="card shadow-lg  h-100">
           <div class="card-body">
-            <h1 class="display-4 text-primary">Welcome</h1>
-            <p class="lead">You are logged in.</p>
-            <ng-container *ngIf="this.isLoggedIn(); else loginTemplate">
-              <h2 class="mt-4">Welcome, {{ currentUserDisplayName }}</h2>
-              <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
-            </ng-container>
-            <ng-template #loginTemplate>
-              <button class="btn btn-primary mt-4" (click)="login()">User Login</button>
-            </ng-template>
+            <h5 class="card-title">System Status</h5>
+            <p class="card-text">
+              {{ statusMessage }}<br />
+              Hostname: {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
+              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Controller: {{ statusDto?.controllerStatus }}
+            </p>
           </div>
         </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
 
-        <ng-container *ngIf="this.isLoggedIn()">
-          <div class="card shadow-lg p-3 m-2 flex-grow-1" style="background: rgba(255, 255, 255, 0.8); border-radius: 15px; min-width: 300px;">
-            <div class="card-body">
-              <h1 class="display-4 text-primary">System Status</h1>
-              <span class="lead">{{ statusMessage }}</span><br/>
-              <span class="lead">Hostname: {{ statusDto?.hostname }}</span><br/>
-              <span class="lead">Port: {{ statusDto?.port }}</span><br/>
-              <span class="lead">Authenticated: {{ statusDto?.isAuthenticated }}</span><br/>
-              <span class="lead">Username (Server): {{ statusDto?.username }}</span><br/>
-              <span class="lead">Controller: {{ statusDto?.controllerStatus }}</span>
+
+<!-- New Row with all dynamic dashboard items -->
+<ng-container *ngIf="isLoggedIn()">
+  <div class="container-fluid">
+    <div class="row overflow-auto" >
+      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems" [@popIn]="animateItems ? 'in' : 'out'">
+
+        <ng-container [ngSwitch]="item.itemType">
+          <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
+            <div class="card shadow-lg h-100 card-device" >
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-9">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <div class="card-text" [innerHTML]="item.description"></div>
+                    <ng-container [ngSwitch]="item.subType">
+                      <ng-container *ngSwitchCase="'Lampe'">
+                        <!-- <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
+                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button> -->
+                        
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" role="switch" 
+                            [checked]="item.isOn"
+                            (change)="toggleLamp(item.itemId, $event.target)">
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                        </div>
+
+                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px; padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
+                            <input type="color" style="width: 65px; height: 30px;"
+                              [value]="item.lampColor"
+                              (change)="setLampColor(item.itemId, $event.target)" />
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'Steckdose'">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" role="switch" 
+                            [checked]="item.isOn"
+                            (change)="toggleWallplug(item.itemId, $event.target)">
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
+                        
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        <div class="row">
+                          &nbsp;
+                        </div>
+                      </ng-container>
+                    </ng-container> 
+                  </div>
+                  <div class="col-3 d-flex align-items-center justify-content-center">
+                    <ng-container [ngSwitch]="item.subType">
+                      <ng-container *ngSwitchCase="'Lampe'">
+                        <span class="big-icon" title="{{ item.subType }}">💡</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'Steckdose'">
+                        <span class="big-icon" title="{{ item.subType }}">🔌</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
+                        <span class="big-icon" title="{{ item.subType }}">🌐</span>
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        <div class="row">
+                          <span class="big-icon" title="{{ item.subType }}">⚙️</span>
+                          <small>{{ item.subType }}</small>
+                        </div>
+                      </ng-container>
+                    </ng-container> 
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_SCENE">
+            <div class="card shadow-lg h-100 card-scene">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <div class="card-text" [innerHTML]="item.description"></div>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="big-icon">⏯️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_ROOM">
+            <div class="card shadow-lg h-100 card-room">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <div class="card-text" [innerHTML]="item.description"></div>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="big-icon">🟨</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="ITEM_TYPE_PERSON">
+            <div class="card shadow-lg h-100 card-person">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-10">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <div class="card-text" [innerHTML]="item.description"></div>
+                  </div>
+                  <div class="col-2 d-flex align-items-center justify-content-center">
+                    <span class="big-icon">👤</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchDefault>
+            <div class="card shadow-lg h-100">
+              <div class="card-body">
+                <h5 class="card-title">{{ item.title }}</h5>
+                <div class="card-text" [innerHTML]="item.description"></div>
+                <!-- Add more content here as needed -->
+              </div>
+            </div>
+          </ng-container>
         </ng-container>
       </div>
     </div>
   </div>
-</div>
+</ng-container>

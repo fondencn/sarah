@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Sarah.Logging
 {
@@ -14,23 +15,26 @@ namespace Sarah.Logging
     /// </summary>
     public class Logger
     {
-        #region Singleton Pattern
-        private static Logger _Instance = null;
-        public static Logger Instance
+
+        private readonly ILogger _logger;
+
+        public Logger(ILogger<Logger> logger)
         {
-            get
-            {
-                if(_Instance == null)
-                {
-                    _Instance = new Logger();
-                }
-                return _Instance;
-            }
+            this.LogDebug("ILogger logging system is now injected");
+            _logger = logger;
+            Instance = this;
         }
 
-        private Logger() { }
-        #endregion
+        private Logger()
+        {
+            this.LogDebug("Default logger created. Waiting for ILogger to be injected. ");
+            Instance = this;
+        }
 
+        public static Logger Instance
+        {
+            get; private set;
+        } = new Logger(); //Default instace while no ILogger is configured via service provider
 
         /// <summary>
         /// Maximalgröße der in-Memory Log-Queue
@@ -49,17 +53,6 @@ namespace Sarah.Logging
         /// </summary>
         public string[] LastLogLines => _lastLog.ToArray();
 
-#if DEBUG
-        /// <summary>
-        /// Die aktuelle Mindest-Loglevel des Loggers
-        /// </summary>
-        public ErrorLevel ErrorLevel { get; set; } = ErrorLevel.Debug;
-#else
-        /// <summary>
-        /// Die aktuelle Mindest-Loglevel des Loggers
-        /// </summary>
-        public ErrorLevel ErrorLevel { get; set; } = ErrorLevel.Info;
-#endif
 
         /// <summary>
         ///
@@ -99,19 +92,37 @@ namespace Sarah.Logging
         /// <param name="msg"></param>
         public void Log(ErrorLevel level, string msg)
         {
-            if (level >= ErrorLevel)
+            _lastLog.Enqueue(msg);
+            if (_lastLog.Count > MAX_LASTLOG_SIZE)
             {
-                int threadId = Thread.CurrentThread.ManagedThreadId;
-                string log = String.Format(CultureInfo.CurrentCulture, "[{0}]\t{1}\t{2}\t{3}", level, DateTime.Now, threadId, msg);
-                if (level == ErrorLevel.Debug)
+                _lastLog.TryDequeue(out string _);
+            }
+
+            if (_logger == null)
+            {
+                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
+            }
+            else
+            {
+
+                switch (level)
                 {
-                    Debug.WriteLine(log);
-                }
-                Console.WriteLine(log);
-                this._lastLog.Enqueue(log);
-                if (this._lastLog.Count > MAX_LASTLOG_SIZE)
-                {
-                    this._lastLog.TryDequeue(out string _);
+                    case ErrorLevel.Debug:
+                        _logger.LogDebug(msg);
+                        break;
+                    case ErrorLevel.Info:
+                        _logger.LogInformation(msg);
+                        break;
+                    case ErrorLevel.Warning:
+                        _logger.LogWarning(msg);
+                        break;
+                    case ErrorLevel.Error:
+                        _logger.LogError(msg);
+                        break;
+                    case ErrorLevel.Exception:
+                        _logger.LogError(msg);
+                        break;
                 }
             }
         }

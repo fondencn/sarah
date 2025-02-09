@@ -1,6 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>6cad3655-e434-4eda-bdb6-054ee16353b6</UserSecretsId>
@@ -28,5 +29,6 @@
     <ProjectReference Include="..\Services\Sarah.Logging\Sarah.Logging.csproj" />
     <ProjectReference Include="..\Services\Sarah.Data\Sarah.Data.csproj" />
     <ProjectReference Include="..\Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj" />
+    <Content Include="Extensions\ServiceCollectionExtensions.cs" />
   </ItemGroup>
 </Project>

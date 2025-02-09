@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Sarah.Data;
 using Sarah.Server.Extensions;
 
 namespace Sarah.Server
@@ -10,13 +12,11 @@ namespace Sarah.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Logging.ClearProviders();
-                builder.Logging.AddConsole();
-                builder.Logging.AddDebug();
-                builder.Logging.SetMinimumLevel(LogLevel.Debug);
-            }
+            
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+            builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
             // Add services to the container.
             builder.Services.AddSarahServices();
@@ -25,51 +25,69 @@ namespace Sarah.Server
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Configure OIDC authentication
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+            // Configure JWT Bearer Token Authentication
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.Authority = builder.Configuration["OIDCAuthority"];
+                options.Audience = builder.Configuration["Jwt:Audience"];
+                options.RequireHttpsMetadata = false; // Set to true in production
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    options.Authority = builder.Configuration["OIDCAuthority"];
-                    options.Audience = "account";
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    ValidateIssuer = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
                     {
-                        ValidateIssuer = true,
-                        ValidIssuer = builder.Configuration["OIDCIssuer"], // Set the valid issuer
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        NameClaimType = "preferred_username" // Map preferred_username to User.Identity.Name
-                    };
-                    options.Events = new JwtBearerEvents
+                        // Retrieve the JWKS from the JWKS endpoint
+                        var handler = new HttpClientHandler
+                        {
+                            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                        };
+                        var client = new HttpClient(handler);
+                        var certUri = builder.Configuration["OIDCAuthority"] + "/protocol/openid-connect/certs";
+                        var jwks = client.GetStringAsync(certUri).Result;
+                        return new JsonWebKeySet(jwks).GetSigningKeys();
+                    },
+                    NameClaimType = "preferred_username" // Map preferred_username to User.Identity.Name
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
                     {
-                        OnAuthenticationFailed = context =>
+                        // Log the error without modifying the response
+                        Console.WriteLine("Authentication failed: " + context.Exception.ToString());
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        // if (builder.Environment.IsDevelopment())
+                        // {
+                        //     Console.WriteLine("Token validated successfully.");
+                        // }
+                        return Task.CompletedTask;
+                    },
+                    OnMessageReceived = context =>
+                    {
+                        // Log the Authorization header
+                        if (builder.Environment.IsDevelopment())
                         {
-                            // Log the error without modifying the response
-                            Console.WriteLine("Authentication failed: " + context.Exception.ToString());
-                            return Task.CompletedTask;
-                        },
-                        OnTokenValidated = context =>
-                        {
-                            if (builder.Environment.IsDevelopment())
+                            if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
                             {
-                                Console.WriteLine("Token validated successfully.");
+                                Console.WriteLine("Authorization Header is missing.");
                             }
-                            return Task.CompletedTask;
-                        },
-                        OnMessageReceived = context =>
-                        {
-                            // Log the Authorization header
-                            if (builder.Environment.IsDevelopment())
-                            {
-                                if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
-                                {
-                                    Console.WriteLine("Authorization Header is missing.");
-                                }
-                            }
-                            return Task.CompletedTask;
                         }
-                    };
-                });
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
             builder.Services.AddAuthorization();
 
@@ -87,15 +105,19 @@ namespace Sarah.Server
 
             var app = builder.Build();
 
+            // Apply pending migrations
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
+                dbContext.Database.Migrate();
+            }
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
@@ -106,7 +128,11 @@ namespace Sarah.Server
 
             app.MapControllers();
 
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Server started. Enable logging system.");
+
             app.Run();
+
+
         }
     }
 }

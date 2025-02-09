@@ -1,27 +1,157 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
+  animations: [
+    trigger('popIn', [
+      transition('* => *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'scale(0.5)' }),
+          stagger(300, [
+            animate('0.5s ease-out', style({ opacity: 1, transform: 'scale(1)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class HomeComponent implements OnInit {
-  constructor(public authService: AuthService, private statusService: StatusService) { }
+
+  constructor(public authService: AuthService, 
+    private statusService: StatusService, 
+    private dashboardService : DashboardService, 
+    private devicesService : DevicesService,
+    private cdr: ChangeDetectorRef) { }  
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
+  dashboardItems: DashboardItemViewModel[] = [];
+  animateItems: boolean = true; // Flag to control animation
+
+  ITEM_TYPE_DEVICE : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_0;
+  ITEM_TYPE_SCENE  : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_1;
+  ITEM_TYPE_ROOM   : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
+  ITEM_TYPE_PERSON : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_3;
+  UPDATE_MILLISECONDS : number = 3000;
 
   ngOnInit(): void {
     this.onComponentLoad();
+    this.startDashboardUpdateTimer();
   }
 
   onComponentLoad(): void {
     // Add your logic here that should be executed after the component is loaded
     console.log('HomeComponent loaded');
+    this.loadStatus();
+    this.loadDashboardItems();
+  }
+
+
+  startDashboardUpdateTimer(): void {
+    setInterval(() => {
+      this.updateDashboardItems();
+    }, this.UPDATE_MILLISECONDS); // Update every 10 seconds
+  }
+
+
+  login(): void {
+    this.authService.login();
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  switchLampOff(itemId: number) {
+    this.setLampBrightness(itemId, 0);
+  }
+
+  switchLampOn(itemId: number) {
+    this.setLampBrightness(itemId, 100);
+  }
+
+  switchWallplugOn(itemId: number) {
+    this.setWallplugState(itemId, true);
+  }
+
+  switchWallplugOff(itemId: number) {
+    this.setWallplugState(itemId, false);
+  }
+
+  toggleWallplug(itemId: number | undefined, eventTarget: EventTarget|null) {
+    var element: HTMLInputElement = eventTarget as HTMLInputElement;
+    const isChecked: boolean = element.checked;
+    this.setWallplugState(itemId as number, isChecked);
+  }
+
+  toggleLamp(itemId: number | undefined, eventTarget: EventTarget|null) {
+    var element: HTMLInputElement = eventTarget as HTMLInputElement;
+    const isChecked: boolean = element.checked;
+    if(isChecked) {
+      this.switchLampOn(itemId as number);
+    } else {
+      this.switchLampOff(itemId as number);
+    } 
+  }
+
+  setLampColor(itemId: number, eventTarget: EventTarget | null) {
+    var element : HTMLInputElement = eventTarget as HTMLInputElement;
+    this.setLampColorInternal(itemId, element.value);
+  }
+
+
+
+
+  /* ******************** API Calls ******************** */
+  private loadDashboardItems() : void {
+    this.animateItems = true;
+    this.dashboardService.apiDashboardGet().subscribe({
+      next: (items: DashboardItemDto[]) => {
+        console.log('Dashboard items:', items);
+        //this.dashboardItems = items;
+        this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
+      },
+      error: (error) => {
+        console.error('Error fetching dashboard items:', error);
+      }
+    })
+  }
+
+
+
+  updateDashboardItems(): void {
+    this.animateItems = false;
+    this.dashboardService.apiDashboardGet().subscribe(items => {
+      this.dashboardItems.forEach((item, index) => {
+        const updatedItem = items.find(i => i.itemId === item.itemId && item.itemType === i.itemType);
+        if (updatedItem) {
+          // Update the properties
+          item.description = updatedItem.description as string;
+          item.extendedProperties = updatedItem.extendedProperties as ExtendedPropertyDto[]; 
+          item.title = updatedItem.title as string;
+
+
+          // Mark for check and manually trigger change detection
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+
+  private loadStatus() {
     this.statusMessage = "Component has been loaded.";
     this.statusDto = null;
 
@@ -40,15 +170,98 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  login(): void {
-    this.authService.login();
+
+
+  private setLampColorInternal(itemId: number, color: string) {
+    this.devicesService.devicesLampIdColorColorPost(itemId,color).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setLampColor:', response);
+      },
+      error: (error) => {
+        console.error('Error setting lamp color:', error);
+      }
+    });
   }
 
-  logout(): void {
-    this.authService.logout();
+  private setLampBrightness(itemId: number, brightness: number) {
+    this.devicesService.devicesLampIdBrightnessBrightnessPost(itemId, brightness).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setLampBrightness:', response);
+      },
+      error: (error) => {
+        console.error('Error setting lamp brightness:', error);
+      }
+    });
   }
 
-  isLoggedIn(): boolean {
-    return this.authService.isLoggedIn();
+  private setWallplugState(itemId: number, state: boolean) {
+    this.devicesService.devicesWallplugIdIsOnPost(itemId, state).subscribe({
+      next: (response: StatusDto) => {
+        console.log('setWallplugState:', response);
+      },
+      error: (error) => {
+        console.error('Error setting lamp brightness:', error);
+      }
+    });
+  }
+}
+
+export class DashboardItemViewModel {
+  constructor(public item: DashboardItemDto) {}
+
+  get lampColor(): string | null | undefined {
+    return this.item.extendedProperties?.find(x => x.key === 'Color')?.value;
+  }
+
+  get isOn(): boolean | null | undefined {
+    return this.item.extendedProperties?.find(x => x.key === 'IsOn')?.value === 'True';
+  }
+
+  get itemId(): number {
+    return this.item.itemId as number;
+  }
+
+  set itemId(value: number) {
+    this.item.itemId = value;
+  }
+
+  get itemType(): DashboardItemTypeDto {
+    return this.item.itemType as DashboardItemTypeDto;
+  }
+
+  set itemType(value: DashboardItemTypeDto) {
+    this.item.itemType = value;
+  }
+
+  get subType(): string {
+    return this.item.subtype as string;
+  }
+
+  set subType(value: string) {
+    this.item.subtype = value;
+  }
+
+  get title(): string {
+    return this.item.title as string;
+  }
+
+  set title(value: string) {
+    this.item.title = value;
+  }
+
+  get description(): string {
+    return this.item.description as string;
+  }
+
+  set description(value: string) {
+    this.item.description = value;
+  }
+
+  get extendedProperties(): ExtendedPropertyDto[] {
+    return this.item.extendedProperties as ExtendedPropertyDto[];
+  }
+
+  set extendedProperties(value: any[]) {
+    this.item.extendedProperties = value;
   }
 }

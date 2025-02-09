@@ -16,7 +16,7 @@ namespace Sarah.Data
     {
         public static string DatabaseFileName => "./InteLuk.db";
 
-        public ApplicationDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
@@ -24,11 +24,20 @@ namespace Sarah.Data
         {
         }
 
+         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlite($"Filename={DatabaseFileName}");
+            }
+        }
+
+
         public static IDBService CreateDefault()
         {
-            DbContextOptionsBuilder builder = new DbContextOptionsBuilder();
-            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath( DatabaseFileName));
-            builder.UseSqlite("Filename=" + DatabaseFileName);
+            DbContextOptionsBuilder<ApplicationDbContext> builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(DatabaseFileName));
+            builder.UseSqlite($"Filename={DatabaseFileName}");
             return new ApplicationDbContext(builder.Options);
         }
 
@@ -45,6 +54,7 @@ namespace Sarah.Data
         public DbSet<DeseaseKpi> DeseaseStats => this.Set<DeseaseKpi>();
         public DbSet<RuleInfo> RuleInfo => this.Set<RuleInfo>();
         public DbSet<AlarmSchedule> AlarmSchedule => this.Set<AlarmSchedule>();
+        public DbSet<UserFavourite> UserFavourites => this.Set<UserFavourite>();
 
 
     }

@@ -139,23 +139,23 @@ namespace Sarah.DeviceService.Model
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append("<p>" + (this.IsOn == true ? "🔌✔ An" : "🔌❌ Aus") + "</p>");
+                sb.Append((this.IsOn == true ? "✔ An" : "❌ Aus") + "<br/>");
                 if (!String.IsNullOrWhiteSpace(this.Meter_kWh?.ToString()))
                 {
-                    sb.Append("<p>Verbrauch: " + this.Meter_kWh?.ToString() + "</p>");
+                    sb.Append("Verbrauch: " + this.Meter_kWh?.ToString() + "<br/>");
                 }
                 if (!String.IsNullOrWhiteSpace(this.Meter_W?.ToString()))
                 {
-                    sb.Append("<p>Leistung: " + this.Meter_W?.ToString() + "</p>");
+                    sb.Append("Leistung: " + this.Meter_W?.ToString() + "<br/>");
                 }
                 if (!String.IsNullOrWhiteSpace(this.Meter_kVAh?.ToString()))
                 {
-                    sb.Append("<p>Strom: " + this.Meter_kVAh?.ToString() + "</p>");
+                    sb.Append("Strom: " + this.Meter_kVAh?.ToString() + "<br/>");
                 }
 
                 if (this.LastMeterReport != DateTime.MinValue)
                 {
-                    sb.Append("<p>Stand: " + this.LastMeterReport + "</p>");
+                    sb.Append("Stand: " + this.LastMeterReport + "<br/>");
                 }
                 return sb.ToString();
             }
