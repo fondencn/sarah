@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
+using Sarah.API.BusinessObjects;
 
-namespace Sarah.API.BusinessObjects
+namespace Sarah.Geofences
 {
-    public class GeoFences
+    public class GeoFenceService : IGeoFenceService
     {
         public static readonly GeoFence Zuhause = new GeoFence()
         {
@@ -99,10 +102,12 @@ namespace Sarah.API.BusinessObjects
             }
         }
 
-        public static GeoFence GetCurrent(LocationServiceEntry pos)
+        // public static GeoFence GetCurrent(LocationServiceEntry pos)
+        //     => All.FirstOrDefault(item => item.IsWithin(pos));
+
+        public IGeoFence? GetCurrent(LocatorPosition pos)
             => All.FirstOrDefault(item => item.IsWithin(pos));
 
-        public static GeoFence GetCurrent(LocatorPosition pos)
-            => All.FirstOrDefault(item => item.IsWithin(pos));
+        public IGeoFence GetZuhause() => Zuhause;
     }
 }

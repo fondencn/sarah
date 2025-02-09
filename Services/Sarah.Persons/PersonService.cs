@@ -15,12 +15,14 @@ namespace Sarah.Persons
         private readonly ILogger<PersonService> _logger;
         private readonly IDBService _database;
         private readonly IDeviceService _devices;
+        private readonly IGeoFenceService _geoFenceService;
 
-        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService)
+        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService)
         {
             _logger = logger;
             _database = database;
             _devices = deviceService;
+            _geoFenceService = geoFenceService;
         }
 
         public async Task<IEnumerable<IPerson>> GetAllPersonsAsync()
@@ -52,6 +54,11 @@ namespace Sarah.Persons
                 if(device != null) 
                 {
                     p.IsAtHome = device.IsConnected;
+                }
+
+                if(p.Position == null && device != null) 
+                {
+                    p.IsAtHome |= _geoFenceService.GetCurrent(p.Position) == _geoFenceService.GetZuhause();
                 }
             }
         }
