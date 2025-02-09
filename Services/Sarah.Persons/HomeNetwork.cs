@@ -14,18 +14,8 @@ namespace Sarah.Persons
     internal class HomeNetwork
     {
         #region Singleton Pattern
-        private static HomeNetwork _Instance;
-        public static HomeNetwork Instance
-        {
-            get
-            {
-                if (_Instance == null)
-                {
-                    _Instance = new HomeNetwork();
-                }
-                return _Instance;
-            }
-        }
+        private static readonly HomeNetwork _Instance = new HomeNetwork();
+        public static HomeNetwork Instance => _Instance;
         private HomeNetwork()
         {
 
@@ -39,8 +29,8 @@ namespace Sarah.Persons
         private readonly List<HostsClient> _FritzboxHosts = new List<HostsClient>();
 
 
-        private Task UpdateTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
+        private Task? UpdateTask { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
         private List<HomeNetworkHost>? _knownHosts = null;
         private object _knownHostsLock = new object();
@@ -106,7 +96,7 @@ namespace Sarah.Persons
         /// </summary>
         ~HomeNetwork()
         {
-            if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running)
+            if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running && this.UpdateCancellationTokenSource != null)
             {
                 this.UpdateCancellationTokenSource.Cancel();
             }
@@ -159,7 +149,7 @@ namespace Sarah.Persons
                     try
                     {
                         HostEntry entry = await fritzBox.GetGenericHostEntryAsync(i);
-                        result.Add(new HomeNetworkHost(entry.HostName, entry.MACAddress, entry.Active, entry.IPAddress?.ToString()));
+                        result.Add(new HomeNetworkHost(entry.HostName, entry.MACAddress, entry.Active, entry.IPAddress?.ToString() ?? ""));
                     }
                     catch 
                     {

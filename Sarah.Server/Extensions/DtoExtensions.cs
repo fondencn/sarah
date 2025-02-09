@@ -85,6 +85,10 @@ public static class DtoExtensions {
         return deviceService.GetNetworkItem(dto.Id);
     }
 
+    public static IPerson ToEntity(this PersonDto dto) {
+        return new PersonInfo { Id = dto.Id, Name = dto.Name, GPSTrackerID = dto.GPSTrackerID, MobilePhoneHostname = dto.MobilePhoneHostname }; 
+    }
+
     /// <summary>
     /// Converts a <see cref="Room"/> object to a <see cref="RoomDto"/> object.
     /// </summary>
@@ -113,6 +117,6 @@ public static class DtoExtensions {
     }
 
     public static PersonDto ToDto(this IPerson e) {
-        return new PersonDto { Id = e.Id, Name = e.Name };
+        return new PersonDto { Id = e.Id, Name = e.Name, GPSTrackerID = e.GPSTrackerID, MobilePhoneHostname = e.MobilePhoneHostname };
     }
 }

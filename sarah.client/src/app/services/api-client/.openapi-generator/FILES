@@ -5,6 +5,8 @@ api/api.ts
 api/baseData.service.ts
 api/dashboard.service.ts
 api/devices.service.ts
+api/persons.service.ts
+api/rooms.service.ts
 api/status.service.ts
 configuration.ts
 encoder.ts
@@ -19,6 +21,7 @@ model/extendedPropertyDto.ts
 model/knownDeviceTypes.ts
 model/models.ts
 model/networkElementDto.ts
+model/personDto.ts
 model/roomDto.ts
 model/statusDto.ts
 param.ts

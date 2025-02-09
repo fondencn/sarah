@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,9 +13,5 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
     <PackageReference Include="PS.FritzBox.API" Version="1.2.4" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../../../private-git/InteLuk/InteLuk.HomeNet/HomeNetwork.cs" />
-    <Compile Include="../../../private-git/InteLuk/InteLuk.HomeNet/HomeNetworkHost.cs" />
   </ItemGroup>
 </Project>

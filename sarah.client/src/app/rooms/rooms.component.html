@@ -1,0 +1,36 @@
+<h2 class="mb-4">Rooms List</h2>
+  <button (click)="retrieveRooms()" class="btn btn-primary m-4">🔁 Refresh</button>
+  <button (click)="addRoom()" class="btn btn-secondary m-4">➕ Add</button>
+
+  <!-- Busy Indicator -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <div class="spinner-border text-primary" role="status">
+    </div>
+    <span class="sr-only">Loading...</span>
+  </div>
+
+  <table *ngIf="!isLoading && rooms.length > 0; else noRooms" class="table table-striped table-bordered table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>Room Id</th>
+            <th>Room Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let room of rooms">
+            <td>{{ room.id }}</td>
+            <td>{{ room.name }}</td>
+            <td>
+                <button (click)="editRoom(room)" class="btn btn-secondary btn-sm">✏️</button>
+                <button (click)="deleteRoom(room)" class="btn btn-danger btn-sm">🗑️</button>
+                <button *ngIf="room.isFavourite != true" (click)="setFavourite(room, true)" class="btn btn-secondary">⭐</button>
+                <button *ngIf="room.isFavourite === true" (click)="setFavourite(room, false)" class="btn btn-secondary">◼️</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<ng-template #noRooms>
+    <p class="text-muted">No devices loaded.</p>
+  </ng-template>

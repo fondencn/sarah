@@ -18,6 +18,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PersonsComponent } from './persons/persons.component';
+import { RoomsComponent } from './rooms/rooms.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -26,7 +27,8 @@ import { PersonsComponent } from './persons/persons.component';
         DevicesComponent,
         AdminComponent,
         EditDeviceModalComponent,
-        PersonsComponent
+        PersonsComponent,
+        RoomsComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
