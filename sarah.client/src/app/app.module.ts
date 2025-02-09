@@ -17,6 +17,7 @@ import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-devic
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { PersonsComponent } from './persons/persons.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -24,7 +25,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
         NavComponent,
         DevicesComponent,
         AdminComponent,
-        EditDeviceModalComponent
+        EditDeviceModalComponent,
+        PersonsComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
