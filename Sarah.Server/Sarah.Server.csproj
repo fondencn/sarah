@@ -29,6 +29,7 @@
     <ProjectReference Include="..\Services\Sarah.Logging\Sarah.Logging.csproj" />
     <ProjectReference Include="..\Services\Sarah.Data\Sarah.Data.csproj" />
     <ProjectReference Include="..\Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj" />
+    <ProjectReference Include="..\Services\Sarah.Persons\Sarah.Persons.csproj" />
     <Content Include="Extensions\ServiceCollectionExtensions.cs" />
   </ItemGroup>
 </Project>

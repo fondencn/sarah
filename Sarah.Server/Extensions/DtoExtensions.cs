@@ -111,4 +111,8 @@ public static class DtoExtensions {
     public static NetworkElementDto ToDto(this NetworkElement e) {
         return new NetworkElementDto { Id = e.NodeID, Type = e.GetType().Name };
     }
+
+    public static PersonDto ToDto(this IPerson e) {
+        return new PersonDto { Id = e.Id, Name = e.Name };
+    }
 }
