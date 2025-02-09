@@ -11,7 +11,8 @@ public static class ServiceCollectionExtensions
 {
     public static void AddSarahServices(this IServiceCollection services)
     {
-        services.AddSingleton(sp => Logger.Instance);
+        services.AddSingleton<Logger>();
+
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));
         // services.AddDbContextFactory<ApplicationDbContext>(options =>
         //     options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));

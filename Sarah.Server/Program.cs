@@ -1,12 +1,8 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Data;
 using Sarah.Server.Extensions;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace Sarah.Server
 {
@@ -16,13 +12,11 @@ namespace Sarah.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Logging.ClearProviders();
-                builder.Logging.AddConsole();
-                builder.Logging.AddDebug();
-                builder.Logging.SetMinimumLevel(LogLevel.Debug);
-            }
+            
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+            builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
             // Add services to the container.
             builder.Services.AddSarahServices();
@@ -74,10 +68,10 @@ namespace Sarah.Server
                     },
                     OnTokenValidated = context =>
                     {
-                        if (builder.Environment.IsDevelopment())
-                        {
-                            Console.WriteLine("Token validated successfully.");
-                        }
+                        // if (builder.Environment.IsDevelopment())
+                        // {
+                        //     Console.WriteLine("Token validated successfully.");
+                        // }
                         return Task.CompletedTask;
                     },
                     OnMessageReceived = context =>
@@ -122,11 +116,8 @@ namespace Sarah.Server
             app.UseStaticFiles();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
@@ -136,6 +127,8 @@ namespace Sarah.Server
             app.UseAuthorization();  // Add authorization middleware
 
             app.MapControllers();
+
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Server started. Enable logging system.");
 
             app.Run();
 
