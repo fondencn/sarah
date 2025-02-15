@@ -1,22 +1,54 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { RoomDto, RoomsService } from '../services/api-client';
+import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
+import { Subscription } from 'rxjs';
+import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
 
 @Component({
   selector: 'app-rooms',
   templateUrl: './rooms.component.html',
   styleUrls: ['./rooms.component.css']
 })
-export class RoomsComponent implements OnInit {
+export class RoomsComponent implements OnInit,OnDestroy {
 
-  ngOnInit(): void {
-    this.retrieveRooms();
-  }
+  constructor(private roomsService: RoomsService, private dialogService: DialogService) { }
+
 
   rooms: RoomDto[] = [];
   isLoading: boolean = false;
+  @ViewChild(EditRoomModalComponent) editRoomModal!: EditRoomModalComponent;
+  private dialogClosedSubscription: Subscription | null = null;
 
 
-  constructor(private roomsService: RoomsService) { }
+  ngOnInit(): void {
+    this.retrieveRooms();
+
+    this.dialogClosedSubscription = this.dialogService.dialogClosed.subscribe((e: DialogClosedEventArgs) => {
+      this.onDialogClosed(e);
+    });
+  }
+  ngOnDestroy(): void {
+    if (this.dialogClosedSubscription) {
+      this.dialogClosedSubscription.unsubscribe();
+      this.dialogClosedSubscription = null;
+    }
+  }
+
+
+
+
+
+
+  private onDialogClosed(e: DialogClosedEventArgs) {
+    if (e.success && e.dialogId === 'editRoomModal') {
+      if (this.editRoomModal.isNewRoom) {
+        this.onRoomAdded(e.success);
+      } else {
+        this.onRoomEdited(e.success);
+      }
+    }
+  }
+
 
 
   public retrieveRooms(): void {
@@ -35,17 +67,84 @@ export class RoomsComponent implements OnInit {
   }
 
 
-  public setFavourite(room: RoomDto,isFavourite: boolean) {
-    throw new Error('Method not implemented.');
-  }
   public deleteRoom(room: RoomDto) {
-    throw new Error('Method not implemented.');
+    this.dialogService.showConfirmDialog('Are you sure you want to delete this room?', 'Confirm Deletion')
+    .then((result: boolean) => {
+      if (result) {
+        this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
+          next: () => {
+            this.rooms = this.rooms.filter(d => d.id !== room.id);
+          },
+          error: (error) => {
+            console.error('Error deleting room:', error);
+          }
+        });
+      }
+    }).catch((error) => {
+      console.error('Error showing confirm dialog:', error);
+    });
   }
+
   public editRoom(room: RoomDto) {
-    throw new Error('Method not implemented.');
+    this.editRoomModal.dataContext = room;
+    this.editRoomModal.isNewRoom = false;
+    this.editRoomModal.okButtonText = 'Save changes';
+    this.dialogService.showDialog('editRoomModal');
   }
+
+  public onRoomEdited(success: boolean) {
+    if (success) {
+      var roomDto = this.editRoomModal.dataContext as RoomDto;
+      this.roomsService.apiRoomsIdPut(roomDto.id as number, roomDto).subscribe({
+        next: (response: RoomDto) => {
+          const index = this.rooms.findIndex(d => d.id === response.id);
+          this.rooms[index] = response;
+        },
+        error: (error) => {
+          console.error('Error editing device:', error);
+        }
+      });
+    }
+  }
+
+
   public addRoom() {
-    throw new Error('Method not implemented.');
+    var newRoom = {} as RoomDto;
+    newRoom.name = '';
+    newRoom.id = 0;
+
+    this.editRoomModal.dataContext = newRoom;
+    this.editRoomModal.isNewRoom = true;
+    this.editRoomModal.okButtonText = 'Add room';
+
+    this.dialogService.showDialog('editRoomModal');
+  }
+
+  public onRoomAdded(success: boolean) {
+    if (success) {
+      let addedRoom: RoomDto = this.editRoomModal.dataContext as RoomDto;
+      this.roomsService.apiRoomsPost(addedRoom).subscribe({
+        next: (response: RoomDto) => {
+          this.rooms.push(response);
+        },
+        error: (error) => {
+          console.error('Error adding room:', error);
+        }
+      });
+    }
+  }
+
+
+
+  public setFavourite(room: RoomDto, isFavourite: boolean) {
+    this.roomsService.apiRoomsIdFavouriteIsFavouritePut((room.id as number), isFavourite).subscribe({
+      next: () => {
+        room.isFavourite = isFavourite;
+      },
+      error: (error) => {
+        console.error('Error setting favourite state:', error);
+      }
+    });
   }
 }
 

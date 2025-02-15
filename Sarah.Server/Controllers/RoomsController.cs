@@ -6,6 +6,8 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Server.Models.Dtos;
+using Sarah.Data.Models;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.Server.Controllers
 {
@@ -16,6 +18,8 @@ namespace Sarah.Server.Controllers
     {
         private readonly IDBService _dbService;
         private readonly ILogger<RoomsController> _logger;
+
+        private string CurrentUserName => User.Identity?.Name ?? "";
 
         public RoomsController(IDBService dbService, ILogger<RoomsController> logger)
         {
@@ -100,6 +104,44 @@ namespace Sarah.Server.Controllers
 
             _logger.LogInformation("Room with ID {RoomId} deleted", id);
             return NoContent();
+        }
+
+
+        [HttpPut("{id}/favourite/{isFavourite}")]
+        public async Task<ActionResult> SetFavourite(long id, bool isFavourite)
+        {
+            // Set a device as favourite
+            Room? entity = _dbService.Rooms.Find(id);
+            if (entity == null)
+            {
+                return NotFound("Room not found");
+            }
+
+            var existing = await _dbService.UserFavourites.FirstOrDefaultAsync(x => x.ItemId == id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Room);
+
+            if (isFavourite)
+            {
+                if (existing != null)
+                {
+                    return BadRequest("Room already marked as favourite");
+                }
+                _dbService.UserFavourites.Add(new UserFavourite
+                {
+                    ItemId = id,
+                    UserId = CurrentUserName,
+                    ItemType = DashboardItemType.Room
+                });
+            }
+            else
+            {
+                if (existing != null)
+                {
+                    _dbService.UserFavourites.Remove(existing);
+                }
+            }
+
+            await _dbService.SaveChangesAsync();
+            return Ok();
         }
     }
 }

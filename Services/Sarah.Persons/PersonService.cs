@@ -36,7 +36,7 @@ namespace Sarah.Persons
             return persons;
         }
 
-        public async Task<IPerson?> GetPersonByIdAsync(int id)
+        public async Task<IPerson?> GetPersonByIdAsync(long id)
         {
             await HomeNetwork.Instance.Initialize();
 
@@ -69,7 +69,7 @@ namespace Sarah.Persons
             _logger.LogInformation($"Person {person.Name} added successfully.");
         }
 
-        public async Task DeletePersonAsync(int id)
+        public async Task DeletePersonAsync(long id)
         {
             var person = await _database.Persons.FirstOrDefaultAsync(p => p.Id == id);
             if (person == null)

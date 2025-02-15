@@ -399,3 +399,4 @@ FodyWeavers.xsd
 Services/Sarah.DeviceService/ttn.config
 Services/Sarah.Persons/homenet.txt
 Services/Sarah.Persons/fritzboxpassword.txt
+Sarah.Server/fritzboxpassword.txt

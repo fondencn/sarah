@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
 using Sarah.Data.Models;
 using Sarah.Server.Models.Dtos;
@@ -15,10 +18,14 @@ namespace Sarah.Server.Controllers
     public class PersonsController : ControllerBase
     {
         private readonly IPersonService _personService;
+        private readonly IDBService _databaseService;
 
-        public PersonsController(IPersonService personService)
+        private string CurrentUserName => User.Identity?.Name ?? "";
+
+        public PersonsController(IPersonService personService, IDBService databaseService)
         {
             _personService = personService;
+            _databaseService = databaseService;
         }
 
         [HttpGet]
@@ -66,6 +73,45 @@ namespace Sarah.Server.Controllers
         {
             await _personService.DeletePersonAsync(id);
             return NoContent();
+        }
+
+
+
+        [HttpPut("{id}/favourite/{isFavourite}")]
+        public async Task<ActionResult> SetFavourite(long id, bool isFavourite)
+        {
+            // Set a device as favourite
+            PersonInfo? entity = _databaseService.Persons.Find(id);
+            if (entity == null)
+            {
+                return NotFound("Room not found");
+            }
+
+            var existing = await _databaseService.UserFavourites.FirstOrDefaultAsync(x => x.ItemId == id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Person);
+
+            if (isFavourite)
+            {
+                if (existing != null)
+                {
+                    return BadRequest("Person already marked as favourite");
+                }
+                _databaseService.UserFavourites.Add(new UserFavourite
+                {
+                    ItemId = id,
+                    UserId = CurrentUserName,
+                    ItemType = DashboardItemType.Person
+                });
+            }
+            else
+            {
+                if (existing != null)
+                {
+                    _databaseService.UserFavourites.Remove(existing);
+                }
+            }
+
+            await _databaseService.SaveChangesAsync();
+            return Ok();
         }
     }
 }

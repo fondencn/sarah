@@ -6,9 +6,9 @@ namespace Sarah.API.Interfaces.Services
     public interface IPersonService
     {
         Task AddPersonAsync(IPerson person);
-        Task DeletePersonAsync(int id);
+        Task DeletePersonAsync(long id);
         Task<IEnumerable<IPerson>> GetAllPersonsAsync();
-        Task<IPerson> GetPersonByIdAsync(int id);
+        Task<IPerson> GetPersonByIdAsync(long id);
         Task UpdatePersonAsync(IPerson person);
     }
 }
