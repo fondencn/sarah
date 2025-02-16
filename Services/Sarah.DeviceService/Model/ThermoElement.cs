@@ -1,4 +1,5 @@
-﻿using Sarah.API.Business;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
@@ -141,7 +142,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override  Task InitializeAsync(IDeviceService deviceService)
+        public override  Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             try
             {

@@ -1,13 +1,8 @@
 ﻿using Sarah.Logging;
 using PS.FritzBox.API;
-using PS.FritzBox.API.Base;
 using PS.FritzBox.API.LANDevice;
-using PS.FritzBox.API.WANDevice;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.Persons
 {
@@ -22,9 +17,14 @@ namespace Sarah.Persons
         }
         #endregion
 
-        private string _password = "";
+        /// <summary>
+        ///  Update-Intervall für die Aktualisierung der verbundenen Geräte
+        /// </summary>
+        private const int UPDATE_WAIT_TIME = 60000;
 
         private bool _initialized = false;
+        private bool _initializing = false;
+
 
         private readonly List<HostsClient> _FritzboxHosts = new List<HostsClient>();
 
@@ -48,17 +48,29 @@ namespace Sarah.Persons
         }
 
 
-        public async Task Initialize()
+        public async Task Initialize(IConfiguration configuration)
         {
+            if (_initializing)
+            {
+                return;
+            } 
+            else 
+            {
+                _initializing = true;
+            }
+            
             if (_initialized)
             {
                 return;
             }
-            ReadConfig();
+
             var devices = await FritzDevice.LocateDevicesAsync();
             foreach (var device in devices)
             {
-                device.Credentials = new System.Net.NetworkCredential("", this._password);
+                /* Credentials form config */
+                string username = configuration["FritzBox:Username"] ?? "";
+                string password = configuration["FritzBox:Password"] ?? "";
+                device.Credentials = new System.Net.NetworkCredential(username, password);
 
                 //var client = await device.GetServiceClient<WANCommonInterfaceConfigClient>(settings);
                 //OnlineMonitorInfo monitor = await client.GetOnlineMonitorAsync(0);
@@ -77,17 +89,13 @@ namespace Sarah.Persons
                 {
                     await UpdateConnectedHosts();
                     /* Alle 60 Sekunden */
-                    await Task.Delay(60000);
+                    await Task.Delay(UPDATE_WAIT_TIME, this.UpdateCancellationTokenSource.Token);
                 }
             }, cts.Token);
 
 
             _initialized = true;
-        }
-
-        private void ReadConfig()
-        {
-            this._password = File.ReadAllText("fritzboxpassword.txt");
+            _initializing = false;
         }
 
 

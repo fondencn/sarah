@@ -1,4 +1,5 @@
-﻿using Sarah.API.Business;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
@@ -208,7 +209,7 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync(IDeviceService deviceService)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
             Node node = deviceService.GetNode(this.NodeID) as Node;

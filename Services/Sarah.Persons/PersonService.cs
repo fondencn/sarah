@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
@@ -16,19 +17,21 @@ namespace Sarah.Persons
         private readonly IDBService _database;
         private readonly IDeviceService _devices;
         private readonly IGeoFenceService _geoFenceService;
+        private readonly IConfiguration _config;
 
-        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService)
+        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService, IConfiguration config)
         {
             _logger = logger;
             _database = database;
             _devices = deviceService;
             _geoFenceService = geoFenceService;
+            _config = config;
         }
 
 
         public async Task<IEnumerable<IPerson>> GetAllPersonsAsync()
         {
-            await HomeNetwork.Instance.Initialize();
+            await HomeNetwork.Instance.Initialize(this._config);
 
             var persons = await _database.Persons
                 .ToListAsync();
@@ -38,7 +41,7 @@ namespace Sarah.Persons
 
         public async Task<IPerson?> GetPersonByIdAsync(long id)
         {
-            await HomeNetwork.Instance.Initialize();
+            await HomeNetwork.Instance.Initialize(this._config);
 
             var person = await _database.Persons
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -109,8 +112,10 @@ namespace Sarah.Persons
 
         public async Task <string[]> GetMobilePhones()
         {
-            await HomeNetwork.Instance.Initialize();
-            return HomeNetwork.Instance.KnownHosts?.Select(item => item.Hostname).ToArray() ?? [];
+            await HomeNetwork.Instance.Initialize(this._config);
+            return HomeNetwork.Instance.KnownHosts?
+                .Where (item => item.IsConnected)
+                .Select(item => item.Hostname).ToArray() ?? [];
         }
 
         private void LoadLocationInfos(PersonInfo p)

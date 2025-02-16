@@ -1,4 +1,5 @@
-﻿using Sarah.API.BusinessObjects;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace Sarah.DeviceService.Model
 
         }
 
-        public override async Task InitializeAsync(IDeviceService deviceService)
+        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             Node node = deviceService.GetNode(this.NodeID) as Node;
 

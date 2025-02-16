@@ -15,6 +15,7 @@ using ZWave.Channel;
 using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.DeviceService
 {
@@ -25,6 +26,7 @@ namespace Sarah.DeviceService
 
         public string StatusMessage { get; private set; }
 
+        private readonly IConfiguration _configuration;
         private string _serialPortName;
 
         public string SerialPortName => _serialPortName;
@@ -73,8 +75,9 @@ namespace Sarah.DeviceService
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config)
         {
+            this._configuration = config;
             this._serialPortName = ReadConfig();
             this.Start(nodeFactory).Wait();
         }
@@ -238,7 +241,7 @@ namespace Sarah.DeviceService
                         Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
                         networkElements.Add(nodeElement);
                     }
-                    await nodeElement.InitializeAsync(this);
+                    await nodeElement.InitializeAsync(this, _configuration);
                 }
             }
 
@@ -255,7 +258,7 @@ namespace Sarah.DeviceService
                 {
                     Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
                     networkElements.Add(nodeElement);
-                    await nodeElement.InitializeAsync(this);
+                    await nodeElement.InitializeAsync(this, _configuration);
                 }
             }
 
