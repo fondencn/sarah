@@ -11,7 +11,13 @@ namespace Sarah.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            
+            // Add appsettings.secrets.json to the configuration
+            builder.Configuration
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
             
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
