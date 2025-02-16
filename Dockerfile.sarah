@@ -1,12 +1,14 @@
 #See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER app
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+#server port
+EXPOSE 7165
+#client port
+EXPOSE 4200 
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS with-node
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS with-node
 RUN apt-get update
 RUN apt-get install curl
 RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
@@ -16,9 +18,6 @@ RUN npm install -g @angular/cli
 FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Sarah.Server/Sarah.Server.csproj", "Sarah.Server/"]
-COPY ["sarah.client/sarah.client.esproj", "sarah.client/"]
-RUN dotnet restore "./Sarah.Server/Sarah.Server.csproj"
 COPY . .
 WORKDIR "/src/Sarah.Server"
 RUN dotnet build "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
