@@ -15,7 +15,7 @@ namespace Sarah.Server.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class DashboardController(IDBService _databaseService, IDeviceService _deviceService, IPersonService _personService, IGeoFenceService _geoFenceService) : ControllerBase
+    public class DashboardController(IDBService _databaseService, IDeviceService _deviceService, IPersonService _personService) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DashboardItemDto>>> GetDashboard()
@@ -71,8 +71,7 @@ namespace Sarah.Server.Controllers
                         if(person != null)
                         {
                             var extendedProperties = ReadObjPropertiesAsJson(person);
-                            var geofence = _geoFenceService.GetCurrent(person.Position);
-                            string geofenceInfo = geofence != null ? " (at " + geofence.Name + ")" : "";
+                            string geofenceInfo =  " at " + person.CurrentGeoFence?.Name + " (" + person.GPSTracker?.Position + ")";
                             DashboardItemDto item = new DashboardItemDto()
                             {
                                 ItemId = person.Id,
@@ -96,10 +95,14 @@ namespace Sarah.Server.Controllers
                             var extendedProperties = ReadObjPropertiesAsJson(room);
                             var deviceCount = _databaseService.Devices.Count(d => d.Id_Room == room.Id);
                             var avgTemp = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
+                                .ToList()
                                 .Select(item => item.GetNetworkItem(_deviceService))
                                 .OfType<ITemperatureSensor>()
-                                .Average(d => d.Temperature.Value);
+                                .Select(d => d.Temperature.Value)
+                                .DefaultIfEmpty(0)
+                                .Average();
                             var presence = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
+                                .ToList()
                                 .Select(item => item.GetNetworkItem(_deviceService))
                                 .OfType<IMultiSensor>()
                                 .Select(d => d.Presence.Value)

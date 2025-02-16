@@ -105,8 +105,8 @@ namespace Sarah.Geofences
         // public static GeoFence GetCurrent(LocationServiceEntry pos)
         //     => All.FirstOrDefault(item => item.IsWithin(pos));
 
-        public IGeoFence? GetCurrent(LocatorPosition pos)
-            => All.FirstOrDefault(item => item.IsWithin(pos));
+        public IGeoFence? GetCurrent(LocatorPosition? pos)
+            => pos == null ? null : All.FirstOrDefault(item => item.IsWithin(pos));
 
         public IGeoFence GetZuhause() => Zuhause;
     }

@@ -107,16 +107,20 @@ namespace Sarah.Persons
             _logger.LogInformation($"Person {person.Name} updated successfully.");
         }
 
+        public async Task <string[]> GetMobilePhones()
+        {
+            await HomeNetwork.Instance.Initialize();
+            return HomeNetwork.Instance.KnownHosts?.Select(item => item.Hostname).ToArray() ?? [];
+        }
+
         private void LoadLocationInfos(PersonInfo p)
         {
             // Aktuelle GPS Tracker Position laden
             if(p.GPSTrackerID > 0) 
             {
-                var device = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID ==  p.GPSTrackerID);
-                if(device != null) 
-                {
-                    p.Position = device.Position;
-                }
+               // var device = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID ==  p.GPSTrackerID);
+                var device = _database.Devices.FirstOrDefault(item => item.Id == p.GPSTrackerID);
+                p.TrackerDeviceName = device?.Name;
             }
 
             // Prüfen ob Mobiltelefon der Person zu Hause ist
@@ -128,9 +132,12 @@ namespace Sarah.Persons
                     p.IsAtHome = device.IsConnected;
                 }
 
-                if(p.Position == null && device != null) 
+                var trackerDevice = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID == p.GPSTrackerID);
+                if(trackerDevice != null) 
                 {
-                    p.IsAtHome |= _geoFenceService.GetCurrent(p.Position) == _geoFenceService.GetZuhause();
+                    var geofence = _geoFenceService.GetCurrent(trackerDevice.Position);
+                    p.IsAtHome |=  geofence== _geoFenceService.GetZuhause();
+                    p.CurrentGeoFence = geofence;   
                 }
             }
         }

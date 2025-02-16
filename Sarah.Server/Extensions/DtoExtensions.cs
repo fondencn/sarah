@@ -94,8 +94,8 @@ public static class DtoExtensions {
     /// </summary>
     /// <param name="r"></param>
     /// <returns></returns>
-    public static RoomDto ToDto(this Room r) {
-        return new RoomDto { Id = r.Id, Name = (r.Name ?? String.Empty)  };
+    public static RoomDto ToDto(this Room r, bool isFavourite) {
+        return new RoomDto { Id = r.Id, Name = (r.Name ?? String.Empty), IsFavourite = isFavourite };
     }
 
     /// <summary>
@@ -116,7 +116,18 @@ public static class DtoExtensions {
         return new NetworkElementDto { Id = e.NodeID, Type = e.GetType().Name };
     }
 
-    public static PersonDto ToDto(this IPerson e) {
-        return new PersonDto { Id = e.Id, Name = e.Name, GPSTrackerID = e.GPSTrackerID, MobilePhoneHostname = e.MobilePhoneHostname };
+    public static PersonDto ToDto(this IPerson e, bool isFavourite) {
+        return new PersonDto 
+        { 
+            Id = e.Id, 
+            Name = e.Name, 
+            GPSTrackerID = e.GPSTrackerID, 
+            MobilePhoneHostname = e.MobilePhoneHostname ,
+            IsAtHome = e.IsAtHome,
+            GPSTrackerName = e.TrackerDeviceName,
+            CurrentGeoFence = e.CurrentGeoFence?.Name,
+            CurrentPosition = e.GPSTracker?.Position?.ToString() ?? "Position unknown",
+            IsFavourite = isFavourite
+        };
     }
 }

@@ -32,8 +32,8 @@
         <td>
           <button (click)="editDevice(device)" class="btn btn-secondary btn-sm">✏️</button>
           <button (click)="deleteDevice(device)" class="btn btn-danger btn-sm">🗑️</button>
-          <button *ngIf="device.isFavourite != true" (click)="setFavourite(device, true)" class="btn btn-secondary">⭐</button>
-          <button *ngIf="device.isFavourite === true" (click)="setFavourite(device, false)" class="btn btn-secondary">◼️</button>
+          <button *ngIf="device.isFavourite != true" (click)="setFavourite(device, true)" class="btn btn-secondary  btn-sm">⭐</button>
+          <button *ngIf="device.isFavourite === true" (click)="setFavourite(device, false)" class="btn btn-secondary  btn-sm">◼️</button>
         </td>
       </tr>
     </tbody>

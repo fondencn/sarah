@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PersonDto } from '../../services/api-client';
+import { PersonDto, TrackerDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
 import { CacheService } from '../../services/cache.service';
 
@@ -35,11 +35,22 @@ export class EditPersonModalComponent extends DialogContent {
     if (person) {
       this.personForm.patchValue({
         name: person.name,
-        id : person.id
+        id : person.id,
+        mobilePhoneHostname: person.mobilePhoneHostname,
+        gpsTrackerId: person.gpsTrackerID
       });
     }
   }
 
+
+  public get allTrackers(): TrackerDto[] {
+    return this.cacheService.get<TrackerDto[]>(CacheService.TRACKERS_KEY) ?? [];
+  }
+
+  public get allMobilePhones(): string[] {
+    return this.cacheService.get<string[]>(CacheService.MOBILEPHONES_KEY) ?? [];
+  }
+  
   
 
   constructor(private fb: FormBuilder, dialogService: DialogService, public cacheService: CacheService) {
@@ -47,6 +58,8 @@ export class EditPersonModalComponent extends DialogContent {
 
     this.personForm = this.fb.group({
       name: ['', Validators.required],
+      mobilePhoneHostname: [''],
+      gpsTrackerId: [0],
       id: [0]
     });
   }

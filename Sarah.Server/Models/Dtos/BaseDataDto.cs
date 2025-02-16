@@ -20,5 +20,9 @@ namespace Sarah.Server.Models.Dtos
         /// Gets or sets the collection of network elements.
         /// </summary>
         public NetworkElementDto[] NetworkElements { get; set; } = [];
+
+        public string[] MobilePhones { get; set; } = [];
+
+        public TrackerDto[] Trackers {get; set; } = [];
     }
 }

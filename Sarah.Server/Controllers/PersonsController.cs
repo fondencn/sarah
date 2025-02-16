@@ -32,7 +32,7 @@ namespace Sarah.Server.Controllers
         public async Task<ActionResult<IEnumerable<PersonDto>>> GetAllPersons()
         {
             var persons = await _personService.GetAllPersonsAsync();
-            var personDtos = persons.Select(person => person.ToDto());
+            var personDtos = persons.Select(person => person.ToDto(_databaseService.UserFavourites.FirstOrDefault(x => x.ItemId == person.Id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Person) != null));
             return Ok(personDtos);
         }
 
@@ -44,7 +44,9 @@ namespace Sarah.Server.Controllers
             {
                 return NotFound();
             }
-            var personDto = person.ToDto();
+
+            var favouriteEntity = await _databaseService.UserFavourites.FirstOrDefaultAsync(x => x.ItemId == id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Person);
+            var personDto = person.ToDto(favouriteEntity != null);
             return Ok(personDto);
         }
 

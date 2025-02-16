@@ -139,8 +139,8 @@ namespace Sarah.Persons
         private async Task<List<HomeNetworkHost>> GetConnectedDevices()
         {
             List<HomeNetworkHost> result = new List<HomeNetworkHost>();
-
-            foreach (var fritzBox in _FritzboxHosts)
+            List<HostsClient> threadSafeList = [.. _FritzboxHosts];
+            foreach (var fritzBox in threadSafeList)
             {
                 ushort numHosts = await fritzBox.GetHostNumberOfEntriesAsync();
 

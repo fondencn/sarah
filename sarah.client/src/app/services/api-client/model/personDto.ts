@@ -13,6 +13,10 @@ export interface PersonDto {
     id?: number;
     name?: string | null;
     gpsTrackerID?: number;
+    gpsTrackerName?: string | null;
+    currentGeoFence?: string | null;
+    currentPosition?: string | null;
+    isAtHome?: boolean;
     mobilePhoneHostname?: string | null;
     isFavourite?: boolean;
 }

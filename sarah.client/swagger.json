@@ -872,6 +872,20 @@
               "$ref": "#/components/schemas/NetworkElementDto"
             },
             "nullable": true
+          },
+          "mobilePhones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "trackers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrackerDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1041,6 +1055,21 @@
             "type": "integer",
             "format": "int32"
           },
+          "gpsTrackerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentGeoFence": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentPosition": {
+            "type": "string",
+            "nullable": true
+          },
+          "isAtHome": {
+            "type": "boolean"
+          },
           "mobilePhoneHostname": {
             "type": "string",
             "nullable": true
@@ -1087,6 +1116,20 @@
             "nullable": true
           },
           "controllerStatus": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrackerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
             "type": "string",
             "nullable": true
           }

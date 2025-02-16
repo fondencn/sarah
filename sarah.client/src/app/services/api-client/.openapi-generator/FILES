@@ -24,5 +24,6 @@ model/networkElementDto.ts
 model/personDto.ts
 model/roomDto.ts
 model/statusDto.ts
+model/trackerDto.ts
 param.ts
 variables.ts

@@ -26,14 +26,17 @@ namespace Sarah.Data.Models
         public byte GPSTrackerID { get; set; }
 
 
-        [Display(Name = "Aktuelle Position der Person")]
         [NotMapped]
-        public LocatorPosition? Position { get; set; }
+        public bool IsAtHome {get; set; }
 
-
-        [Display(Name = "Gibt an ob entweder der Tracker oder das Telefon dieser Person zu Hause ist")]
         [NotMapped]
-        public bool IsAtHome { get; set; } = false;
+        public string? TrackerDeviceName {get;set;}
+
+        [NotMapped]
+        public IGPSTracker? GPSTracker { get; set; }
+
+        [NotMapped]
+        public IGeoFence? CurrentGeoFence { get; set; }
 
         // [Display(Name = "IP Mobilgerät")]
         // [NotMapped]

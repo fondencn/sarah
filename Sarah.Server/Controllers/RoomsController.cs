@@ -32,7 +32,7 @@ namespace Sarah.Server.Controllers
         {
             _logger.LogInformation("Getting rooms");
             var rooms = await _dbService.Rooms.ToListAsync();
-            return Ok(rooms.Select(room => room.ToDto()));
+            return Ok(rooms.Select(room => room.ToDto(_dbService.UserFavourites.FirstOrDefault(x => x.ItemId == room.Id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Room) != null)));
         }
 
         [HttpGet("{id}")]
@@ -45,7 +45,8 @@ namespace Sarah.Server.Controllers
                 _logger.LogWarning("Room with ID {RoomId} not found", id);
                 return NotFound();
             }
-            return Ok(room);
+            var userFavouriteEntity = await _dbService.UserFavourites.FirstOrDefaultAsync(x => x.ItemId == room.Id && x.UserId == CurrentUserName && x.ItemType == DashboardItemType.Room);
+            return Ok(room.ToDto(userFavouriteEntity != null));
         }
 
         [HttpPost]

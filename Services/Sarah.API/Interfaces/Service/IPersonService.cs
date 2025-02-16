@@ -10,5 +10,6 @@ namespace Sarah.API.Interfaces.Services
         Task<IEnumerable<IPerson>> GetAllPersonsAsync();
         Task<IPerson> GetPersonByIdAsync(long id);
         Task UpdatePersonAsync(IPerson person);
+        Task<string[]> GetMobilePhones();
     }
 }
