@@ -6,16 +6,11 @@ using Sarah.Ttn;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Numerics;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
-using ZWave.Channel;
-using ZWave;
 using System.Linq;
 using Sarah.API.Interfaces.Services;
-using System.IO;
+using System.Configuration;
 
 namespace Sarah.DeviceService.Model
 {
@@ -213,10 +208,8 @@ namespace Sarah.DeviceService.Model
 
         private  void LoadTtnApiKey() 
         {
-            string str = File.ReadAllText("ttn.config");
-            string[] rows = str.Split("\n");
-            Ttn_cf_ApiKey = rows[0].Split("=")[1];
-            TtnApiKey_SarahApiKey = rows[1].Split("=")[1];
+            Ttn_cf_ApiKey = ConfigurationManager.AppSettings["TTN:AppApiKey"];
+            TtnApiKey_SarahApiKey = ConfigurationManager.AppSettings["TTN:SarahApiKey"];
         }
 
         public void Dispose()

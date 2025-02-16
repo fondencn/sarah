@@ -1,13 +1,7 @@
 ﻿using Sarah.Logging;
 using PS.FritzBox.API;
-using PS.FritzBox.API.Base;
 using PS.FritzBox.API.LANDevice;
-using PS.FritzBox.API.WANDevice;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Configuration;
 
 namespace Sarah.Persons
 {
@@ -87,7 +81,7 @@ namespace Sarah.Persons
 
         private void ReadConfig()
         {
-            this._password = File.ReadAllText("fritzboxpassword.txt");
+            this._password = ConfigurationManager.AppSettings["Fritzbox:Password"] ??  "";
         }
 
 
