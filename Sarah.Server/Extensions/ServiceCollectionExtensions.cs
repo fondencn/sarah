@@ -4,6 +4,8 @@ using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
 using Sarah.Data;
 using Sarah.Logging;
+using Sarah.Persons;
+using Sarah.Geofences;
 
 namespace Sarah.Server.Extensions;
 
@@ -23,5 +25,7 @@ public static class ServiceCollectionExtensions
         //it is requested from the dependency injection container.
         services.AddTransient<IDBService>(sp => ApplicationDbContext.CreateDefault());
         services.AddSingleton<IDeviceService, Sarah.DeviceService.DeviceService>();
+        services.AddSingleton<IGeoFenceService, GeoFenceService>();
+        services.AddSingleton<IPersonService, PersonService>();
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
 
 namespace Sarah.Data.Models
 {
     [Table("Persons")]
-    public class PersonInfo
+    public class PersonInfo : IPerson
     {
         [Column]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -22,6 +24,19 @@ namespace Sarah.Data.Models
         [Display(Name = "ID des zugeordneten GPS Tracker")]
         [Column]
         public byte GPSTrackerID { get; set; }
+
+
+        [NotMapped]
+        public bool IsAtHome {get; set; }
+
+        [NotMapped]
+        public string? TrackerDeviceName {get;set;}
+
+        [NotMapped]
+        public IGPSTracker? GPSTracker { get; set; }
+
+        [NotMapped]
+        public IGeoFence? CurrentGeoFence { get; set; }
 
         // [Display(Name = "IP Mobilgerät")]
         // [NotMapped]

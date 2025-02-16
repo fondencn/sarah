@@ -1,0 +1,43 @@
+<div class="modal fade" id="editPersonModal" tabindex="-1" role="dialog" aria-labelledby="editPersonModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editPersonModalLabel">{{okButtonText}}</h5>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="personForm">
+          <div class="form-group">
+            <input type="hidden" formControlName="id" id="id">
+          </div>
+          <div class="form-group">
+            <label for="name">Name: </label>
+            <input type="text" id="name" class="form-control" formControlName="name">
+          </div>
+          <div class="form-group">
+            <label for="mobilePhoneHostname">Mobile Phone</label>
+            <select id="mobilePhoneHostname" class="form-control" formControlName="mobilePhoneHostname">
+              <option *ngFor="let phone of allMobilePhones" [value]="phone">
+                {{ phone}}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="gpsTrackerId">Tracker</label>
+            <select id="gpsTrackerId" class="form-control" formControlName="gpsTrackerId">
+              <option *ngFor="let tracker of allTrackers" [value]="tracker.id">
+                {{ tracker.name}}
+              </option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancelButton" class="btn btn-secondary" (click)="onCancel()"
+          data-dismiss="modal">Cancel</button>
+        <button type="button" id="okButton" class="btn btn-primary" (click)="onOk()"
+          [disabled]="personForm.invalid">{{okButtonText}}</button>
+      </div>
+    </div>
+  </div>
+</div>

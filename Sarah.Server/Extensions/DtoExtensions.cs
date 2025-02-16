@@ -85,13 +85,17 @@ public static class DtoExtensions {
         return deviceService.GetNetworkItem(dto.Id);
     }
 
+    public static IPerson ToEntity(this PersonDto dto) {
+        return new PersonInfo { Id = dto.Id, Name = dto.Name, GPSTrackerID = dto.GPSTrackerID, MobilePhoneHostname = dto.MobilePhoneHostname }; 
+    }
+
     /// <summary>
     /// Converts a <see cref="Room"/> object to a <see cref="RoomDto"/> object.
     /// </summary>
     /// <param name="r"></param>
     /// <returns></returns>
-    public static RoomDto ToDto(this Room r) {
-        return new RoomDto { Id = r.Id, Name = (r.Name ?? String.Empty)  };
+    public static RoomDto ToDto(this Room r, bool isFavourite) {
+        return new RoomDto { Id = r.Id, Name = (r.Name ?? String.Empty), IsFavourite = isFavourite };
     }
 
     /// <summary>
@@ -110,5 +114,20 @@ public static class DtoExtensions {
     /// <returns></returns>
     public static NetworkElementDto ToDto(this NetworkElement e) {
         return new NetworkElementDto { Id = e.NodeID, Type = e.GetType().Name };
+    }
+
+    public static PersonDto ToDto(this IPerson e, bool isFavourite) {
+        return new PersonDto 
+        { 
+            Id = e.Id, 
+            Name = e.Name, 
+            GPSTrackerID = e.GPSTrackerID, 
+            MobilePhoneHostname = e.MobilePhoneHostname ,
+            IsAtHome = e.IsAtHome,
+            GPSTrackerName = e.TrackerDeviceName,
+            CurrentGeoFence = e.CurrentGeoFence?.Name,
+            CurrentPosition = e.GPSTracker?.Position?.ToString() ?? "Position unknown",
+            IsFavourite = isFavourite
+        };
     }
 }

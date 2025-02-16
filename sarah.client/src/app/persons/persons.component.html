@@ -1,0 +1,52 @@
+<div class="container mt-4">
+
+    <h2 class="mb-4">Persons List</h2>
+    <button (click)="retrievePersons()" class="btn btn-primary m-4">🔁 Refresh</button>
+    <button (click)="addPerson()" class="btn btn-secondary m-4">➕ Add</button>
+
+    <!-- Busy Indicator -->
+    <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="spinner-border text-primary" role="status">
+        </div>
+        <span class="sr-only">Loading...</span>
+    </div>
+
+    <table *ngIf="!isLoading && persons.length > 0; else noRooms"
+        class="table table-striped table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Id</th>
+                <th>name</th>
+                <th>GpsTracker</th>
+                <th>Geofence</th>
+                <th>Position</th>
+                <th>Phone name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let person of persons">
+                <td>{{ person.id }}</td>
+                <td>{{ person.name }}</td>
+                <td>{{ person.gpsTrackerName }}</td>
+                <td>{{ person.currentGeoFence }}</td>
+                <td>{{ person.currentPosition }}</td>
+                <td>{{ person.mobilePhoneHostname }}</td>
+                <td>
+                    <button (click)="editPerson(person)" class="btn btn-secondary btn-sm">✏️</button>
+                    <button (click)="deletePerson(person)" class="btn btn-danger btn-sm">🗑️</button>
+                    <button *ngIf="person.isFavourite != true" (click)="setFavourite(person, true)"
+                        class="btn btn-secondary  btn-sm">⭐</button>
+                    <button *ngIf="person.isFavourite === true" (click)="setFavourite(person, false)"
+                        class="btn btn-secondary  btn-sm">◼️</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <ng-template #noRooms>
+        <p class="text-muted">No persons loaded.</p>
+    </ng-template>
+</div>
+
+<editPersonModal></editPersonModal>

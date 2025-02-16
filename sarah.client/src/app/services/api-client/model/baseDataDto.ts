@@ -10,11 +10,14 @@
 import { RoomDto } from './roomDto';
 import { EnumDto } from './enumDto';
 import { NetworkElementDto } from './networkElementDto';
+import { TrackerDto } from './trackerDto';
 
 
 export interface BaseDataDto { 
     deviceTypeEnumeration?: Array<EnumDto> | null;
     rooms?: Array<RoomDto> | null;
     networkElements?: Array<NetworkElementDto> | null;
+    mobilePhones?: Array<string> | null;
+    trackers?: Array<TrackerDto> | null;
 }
 

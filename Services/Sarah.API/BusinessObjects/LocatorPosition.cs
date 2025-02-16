@@ -181,7 +181,7 @@ namespace Sarah.API.BusinessObjects
             return this.ToString().GetHashCode();
         }
 
-        public static explicit operator PointF(LocatorPosition pos) =>
+        public static explicit operator PointF(LocatorPosition pos) => pos == null ? default :
             new PointF(pos.Longtitude.Value, pos.Latitude.Value);
     }
 }

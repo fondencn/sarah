@@ -13,10 +13,14 @@ import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
 import { environment } from '../environments/environment'; // Import environment configuration
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-device-modal.component'; // Import the interceptor
+import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-device-modal.component'; 
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { PersonsComponent } from './persons/persons.component';
+import { RoomsComponent } from './rooms/rooms.component';
+import { EditRoomModalComponent } from './rooms/edit-room-modal/edit-room-modal.component';
+import { EditPersonModalComponent } from './persons/edit-person-modal/edit-person-modal.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -24,7 +28,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
         NavComponent,
         DevicesComponent,
         AdminComponent,
-        EditDeviceModalComponent
+        EditDeviceModalComponent,
+        PersonsComponent,
+        RoomsComponent,
+        EditRoomModalComponent,
+        EditPersonModalComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

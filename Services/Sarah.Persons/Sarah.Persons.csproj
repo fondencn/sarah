@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Sarah.API\Sarah.API.csproj" />
+    <ProjectReference Include="..\Sarah.Logging\Sarah.Logging.csproj" />
+    <ProjectReference Include="..\Sarah.Data\Sarah.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+    <PackageReference Include="PS.FritzBox.API" Version="1.2.4" />
+  </ItemGroup>
+</Project>

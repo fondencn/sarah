@@ -1,12 +1,14 @@
 ﻿using System.Drawing;
 using System.Linq;
+using Sarah.API.Interfaces;
+using Sarah.API.BusinessObjects;
 
-namespace Sarah.API.BusinessObjects
+namespace Sarah.Geofences
 {
-    public class GeoFence
+    public class GeoFence : IGeoFence
     {
-        public string Name { get; set; }
-        public LocatorPosition[] Points { get; set; }
+        public required string Name { get; set; }
+        public required LocatorPosition[] Points { get; set; }
 
         public bool IsWithin(LocatorPosition pos) => IsPointInPolygon(this.Points.Select(item => (PointF) item).ToArray(), (PointF)pos);
         public bool IsWithin(LocationServiceEntry pos) => IsPointInPolygon(this.Points.Select(item => (PointF)item).ToArray(), (PointF)pos);

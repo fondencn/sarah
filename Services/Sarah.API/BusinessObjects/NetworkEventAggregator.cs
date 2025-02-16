@@ -205,10 +205,10 @@ namespace Sarah.API.BusinessObjects
     public class PersonGeoFenceEvent : NetworkEvent
     {
         public long Id_Person { get; private set; }
-        public GeoFence CurrentGeoFence { get; private set; }
-        public GeoFence PreviousGeoFence { get; private set; }
+        public IGeoFence CurrentGeoFence { get; private set; }
+        public IGeoFence PreviousGeoFence { get; private set; }
         public string PersonName { get; private set; }
-        public PersonGeoFenceEvent(long personId, string personName, GeoFence newState, GeoFence previousGeoFence) : base(0, "PersonGeoFence")
+        public PersonGeoFenceEvent(long personId, string personName, IGeoFence newState, IGeoFence previousGeoFence) : base(0, "PersonGeoFence")
         {
             this.Id_Person = personId;
             this.CurrentGeoFence = newState;

@@ -13,6 +13,8 @@ export class CacheService {
     public static readonly DEVICE_TYPES_KEY = 'baseData.DeviceTypes';
     public static readonly NETWORK_ELEMENTS_KEY = 'baseData.NetworkElements';
     public static readonly ROOMS_KEY = 'baseData.Rooms';
+    public static readonly MOBILEPHONES_KEY = 'baseData.MobilePhones';
+    public static readonly TRACKERS_KEY = 'baseData.Trackers';
 
 
     /**
@@ -62,6 +64,8 @@ export class CacheService {
             this.set(CacheService.DEVICE_TYPES_KEY, response.deviceTypeEnumeration);
             this.set(CacheService.NETWORK_ELEMENTS_KEY, response.networkElements);
             this.set(CacheService.ROOMS_KEY, response.rooms);
+            this.set(CacheService.TRACKERS_KEY, response.trackers);
+            this.set(CacheService.MOBILEPHONES_KEY, response.mobilePhones);
             })
         );
     }

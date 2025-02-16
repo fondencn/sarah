@@ -6,5 +6,7 @@ export * from './enumDto';
 export * from './extendedPropertyDto';
 export * from './knownDeviceTypes';
 export * from './networkElementDto';
+export * from './personDto';
 export * from './roomDto';
 export * from './statusDto';
+export * from './trackerDto';

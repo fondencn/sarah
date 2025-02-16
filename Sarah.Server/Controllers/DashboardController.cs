@@ -15,7 +15,7 @@ namespace Sarah.Server.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class DashboardController(IDBService _databaseService, IDeviceService _deviceService) : ControllerBase
+    public class DashboardController(IDBService _databaseService, IDeviceService _deviceService, IPersonService _personService) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DashboardItemDto>>> GetDashboard()
@@ -60,6 +60,62 @@ namespace Sarah.Server.Controllers
                                 Subtype = networkElement?.ClassDescription ?? String.Empty,
                                 Title = device.Name ?? "Unknown Device",
                                 Description = description,
+                                ExtendedProperties = extendedProperties
+                            };
+                        list.Add(item);
+                        }
+                    }
+                    else if(favourite.ItemType == API.BusinessObjects.DashboardItemType.Person)
+                    {
+                        var person = await _personService.GetPersonByIdAsync(favourite.ItemId);
+                        if(person != null)
+                        {
+                            var extendedProperties = ReadObjPropertiesAsJson(person);
+                            string geofenceInfo =  " at " + person.CurrentGeoFence?.Name + " (" + person.GPSTracker?.Position + ")";
+                            DashboardItemDto item = new DashboardItemDto()
+                            {
+                                ItemId = person.Id,
+                                ItemType = (DashboardItemTypeDto)favourite.ItemType,
+                                Subtype = String.Empty,
+                                Title = person.Name ?? "Unknown Person",
+                                Description = person.IsAtHome ? "At home" : "Away" + geofenceInfo,
+                                ExtendedProperties = extendedProperties
+                            };
+                        list.Add(item);
+                        }
+                    }
+
+                    else if(favourite.ItemType == API.BusinessObjects.DashboardItemType.Room)
+                    {
+                        var room = await _databaseService.Rooms
+                            .Where(d => d.Id == favourite.ItemId)
+                            .FirstOrDefaultAsync();
+                        if(room != null)
+                        {
+                            var extendedProperties = ReadObjPropertiesAsJson(room);
+                            var deviceCount = _databaseService.Devices.Count(d => d.Id_Room == room.Id);
+                            var avgTemp = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
+                                .ToList()
+                                .Select(item => item.GetNetworkItem(_deviceService))
+                                .OfType<ITemperatureSensor>()
+                                .Select(d => d.Temperature.Value)
+                                .DefaultIfEmpty(0)
+                                .Average();
+                            var presence = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
+                                .ToList()
+                                .Select(item => item.GetNetworkItem(_deviceService))
+                                .OfType<IMultiSensor>()
+                                .Select(d => d.Presence.Value)
+                                .Any(item => item != 0) 
+                                ? "| 👤" : "";
+                            string roomStatusInfo = $"{deviceCount} devices | {avgTemp}°C {presence}";
+                            DashboardItemDto item = new DashboardItemDto()
+                            {
+                                ItemId = room.Id,
+                                ItemType = (DashboardItemTypeDto)favourite.ItemType,
+                                Subtype = String.Empty,
+                                Title = room.Name ?? "Unknown Room",
+                                Description = roomStatusInfo,
                                 ExtendedProperties = extendedProperties
                             };
                         list.Add(item);
