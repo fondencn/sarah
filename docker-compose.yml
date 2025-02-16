@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  sarah-server:
+    image: localhost:6000/sarah:latest
+    ports:
+      - "7165:7165"
+      - "4200:4200"
+    volumes:
+    #  - /path/to/your/host/directory:/app/data
+      - /var/opt/sarah:/app/data:rw
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - SARAH_DB_PATH=/app/data/InteLuk.db
+    
+

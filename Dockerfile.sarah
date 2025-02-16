@@ -25,6 +25,9 @@ RUN dotnet build "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+#macht kein Sinn, Datenbank darf nicht im Container sein
+#COPY ./Sarah.Server/*.db /app/publish
+
 
 FROM base AS final
 WORKDIR /app

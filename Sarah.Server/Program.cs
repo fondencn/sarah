@@ -30,7 +30,7 @@ namespace Sarah.Server
             builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
             // Add services to the container.
-            builder.Services.AddSarahServices();
+            builder.Services.AddSarahServices(builder.Configuration);
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -120,6 +120,8 @@ namespace Sarah.Server
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
+                app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Apply DB migrations to " + ApplicationDbContext.DBPath + "...");
+                
                 dbContext.Database.Migrate();
             }
 

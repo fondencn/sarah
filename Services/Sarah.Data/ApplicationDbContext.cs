@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
+using Microsoft.Extensions.Configuration;
 using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
 using Sarah.Logging;
@@ -14,31 +16,39 @@ namespace Sarah.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, string>, IDBService
     {
-        public static string DatabaseFileName => "./InteLuk.db";
+        private readonly IConfiguration _configuration;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public static string DBPath {get; private set;}
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : base(options)
         {
+            _configuration = configuration;
         }
 
         protected ApplicationDbContext()
         {
         }
 
-         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite($"Filename={DatabaseFileName}");
+                var databaseFileName = _configuration["SARAH_DB_PATH"] ?? "./InteLuk.db";
+                DBPath = databaseFileName;
+                optionsBuilder.UseSqlite($"Filename={databaseFileName}");
             }
         }
 
-
-        public static IDBService CreateDefault()
+        public static IDBService CreateDefault(IConfiguration configuration)
         {
             DbContextOptionsBuilder<ApplicationDbContext> builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(DatabaseFileName));
-            builder.UseSqlite($"Filename={DatabaseFileName}");
-            return new ApplicationDbContext(builder.Options);
+            var databaseFileName = configuration["SARAH_DB_PATH"] ?? "./InteLuk.db";
+
+            Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(databaseFileName));
+            builder.UseSqlite($"Filename={databaseFileName}");
+            DBPath = databaseFileName;
+
+            return new ApplicationDbContext(builder.Options, configuration);
         }
 
         public Task<int> SaveChangesAsync()
@@ -55,8 +65,5 @@ namespace Sarah.Data
         public DbSet<RuleInfo> RuleInfo => this.Set<RuleInfo>();
         public DbSet<AlarmSchedule> AlarmSchedule => this.Set<AlarmSchedule>();
         public DbSet<UserFavourite> UserFavourites => this.Set<UserFavourite>();
-
-
     }
-
 }

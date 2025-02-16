@@ -11,11 +11,11 @@ namespace Sarah.Server.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddSarahServices(this IServiceCollection services)
+    public static void AddSarahServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<Logger>();
-
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));
+        string dbFile = configuration["SARAH_DB_PATH"] ?? "./InteLuk.db";
+        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite("Filename=" + dbFile));
         // services.AddDbContextFactory<ApplicationDbContext>(options =>
         //     options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));
         services.AddSingleton<INodeFactory, Sarah.NodeFactory.NodeFactory>();
@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
         //system registers a service with a transient lifetime. 
         //This means that a new instance of the service will be created each time 
         //it is requested from the dependency injection container.
-        services.AddTransient<IDBService>(sp => ApplicationDbContext.CreateDefault());
+        services.AddTransient<IDBService>(sp => ApplicationDbContext.CreateDefault(configuration));
         services.AddSingleton<IDeviceService, Sarah.DeviceService.DeviceService>();
         services.AddSingleton<IGeoFenceService, GeoFenceService>();
         services.AddSingleton<IPersonService, PersonService>();
