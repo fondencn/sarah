@@ -15,9 +15,14 @@ namespace Sarah.Server
             // Add appsettings.secrets.json to the configuration
             builder.Configuration
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: false)
                 .AddEnvironmentVariables();
+            
+            if (string.IsNullOrEmpty( builder.Configuration["OIDCAuthority"])) 
+            {
+                throw new NotSupportedException("OIDCAuthority is not set in appsettings.json or appsettings.secrets.json.");
+            }
             
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();

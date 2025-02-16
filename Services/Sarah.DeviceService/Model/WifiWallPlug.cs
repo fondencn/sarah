@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Sarah.API.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.DeviceService.Model
 {
@@ -40,7 +41,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override Task InitializeAsync(IDeviceService deviceService)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             Logger.Instance.LogInfo("Wifi WallPlug " +
                  this.Hostname + ": start polling status...");

@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
 using Sarah.API.Interfaces.Services;
-using System.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.DeviceService.Model
 {
@@ -200,16 +200,16 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override async Task InitializeAsync(IDeviceService deviceService)
+        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
-            LoadTtnApiKey();
+            LoadTtnApiKey(config);
             await _ttn.Start(TtnHostname, TtnPort, true, TtnUserName, TtnApiKey_SarahApiKey, TimeSpan.FromSeconds(5));
         }
 
-        private  void LoadTtnApiKey() 
+        private  void LoadTtnApiKey(IConfiguration config) 
         {
-            Ttn_cf_ApiKey = ConfigurationManager.AppSettings["TTN:AppApiKey"];
-            TtnApiKey_SarahApiKey = ConfigurationManager.AppSettings["TTN:SarahApiKey"];
+            Ttn_cf_ApiKey = config["TTN:AppApiKey"];
+            TtnApiKey_SarahApiKey = config["TTN:SarahApiKey"];
         }
 
         public void Dispose()

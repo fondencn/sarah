@@ -1,4 +1,5 @@
-﻿using Sarah.API.Business;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
@@ -312,7 +313,7 @@ public class ZWaveWallPlug : WallPlug
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override async Task InitializeAsync(IDeviceService deviceService)
+        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
             Node node = deviceService.GetNode(this.NodeID) as Node;

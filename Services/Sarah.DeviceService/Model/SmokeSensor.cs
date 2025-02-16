@@ -10,6 +10,7 @@ using ZWave.CommandClasses;
 using ZWave;
 using Sarah.Logging;
 using Sarah.API.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.DeviceService.Model
 {
@@ -60,7 +61,7 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync(IDeviceService deviceService)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             Node node = deviceService.GetNode(this.NodeID) as Node;
 

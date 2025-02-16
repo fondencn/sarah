@@ -1,4 +1,5 @@
-﻿using Sarah.API.BusinessObjects;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
@@ -79,7 +80,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung mit dem Zwave Gerät / Network Node
         /// </summary>
-        public override Task InitializeAsync(IDeviceService deviceService)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
             Node n = deviceService.GetNode(this.NodeID) as Node;
