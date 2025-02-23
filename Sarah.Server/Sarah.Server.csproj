@@ -8,7 +8,8 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <SpaRoot>..\sarah.client</SpaRoot>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
-    <SpaProxyServerUrl>https://localhost:4200</SpaProxyServerUrl>
+    <SpaProxyServerUrl Condition=" '$(HTTPS_FRONTEND_PORT)' == '' ">https://localhost:4200</SpaProxyServerUrl>
+    <SpaProxyServerUrl Condition=" '$(HTTPS_FRONTEND_PORT)' != '' ">https://localhost:$(HTTPS_FRONTEND_PORT)</SpaProxyServerUrl>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">

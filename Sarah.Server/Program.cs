@@ -116,7 +116,7 @@ namespace Sarah.Server
 
             if (builder.Environment.IsProduction())
             {
-                var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "443";
+                var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
                 var certPath = builder.Configuration["CERT_PATH"];
                 var certPassword = builder.Configuration["CERT_PASSWORD"];
 
