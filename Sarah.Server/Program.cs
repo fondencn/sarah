@@ -11,19 +11,19 @@ namespace Sarah.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
             // Add appsettings.secrets.json to the configuration
             builder.Configuration
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: false)
                 .AddEnvironmentVariables();
-            
-            if (string.IsNullOrEmpty( builder.Configuration["OIDCAuthority"])) 
+
+            if (string.IsNullOrEmpty(builder.Configuration["OIDCAuthority"]))
             {
                 throw new NotSupportedException("OIDCAuthority is not set in appsettings.json or appsettings.secrets.json.");
             }
-            
+
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
             builder.Logging.AddDebug();
@@ -108,20 +108,46 @@ namespace Sarah.Server
                 options.AddPolicy("AllowSpecificOrigins",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:4200","https://localhost:4200", "https://pi:4200")
+                        builder.WithOrigins("http://localhost:4200", "https://localhost:4200", "https://pi:4200")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     });
             });
+
+            if (builder.Environment.IsProduction())
+            {
+                var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "443";
+                var certPath = builder.Configuration["CERT_PATH"];
+                var certPassword = builder.Configuration["CERT_PASSWORD"];
+
+                if (string.IsNullOrEmpty(certPath) || string.IsNullOrEmpty(certPassword))
+                {
+                    throw new InvalidOperationException("Certificate path or password is not set in environment variables.");
+                }
+
+                builder.WebHost.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.ListenAnyIP(int.Parse(httpsPort), listenOptions =>
+                    {
+                        listenOptions.UseHttps(certPath, certPassword);
+                    });
+                });
+            }
 
             var app = builder.Build();
 
             // Apply pending migrations
             using (var scope = app.Services.CreateScope())
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
-                app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Apply DB migrations to " + ApplicationDbContext.DBPath + "...");
-                
+                if (!File.Exists(ApplicationDbContext.DBPath))
+                {
+                    Console.WriteLine("Database file not found. Creating a new one...");
+                    app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Creating a new database...");
+                }
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.EnsureCreated();
+                Console.WriteLine("Apply DB migrations to " + ApplicationDbContext.DBPath + "...");
+                app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Applying pending migrations...");
                 dbContext.Database.Migrate();
             }
 
@@ -144,8 +170,6 @@ namespace Sarah.Server
             app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Server started. Enable logging system.");
 
             app.Run();
-
-
         }
     }
 }

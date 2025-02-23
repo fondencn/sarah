@@ -10,7 +10,11 @@ services:
     #  - /path/to/your/host/directory:/app/data
       - /var/opt/sarah:/app/data:rw
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
+      - CERT_PATH=/app/data/certificate.pfx
+      - CERT_PASSWORD=ayayaycaramba
+      - HTTPS_BACKEND_PORT=7165
+      - HTTPS_FRONTEND_PORT=4200
       - SARAH_DB_PATH=/app/data/InteLuk.db
     
 

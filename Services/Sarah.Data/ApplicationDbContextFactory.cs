@@ -12,9 +12,9 @@ namespace Sarah.Data
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
             // Configure the DbContext to use SQLite
-            optionsBuilder.UseSqlite(ApplicationDbContext.DatabaseFileName);
+            optionsBuilder.UseSqlite(ApplicationDbContext.DBPath);
 
-            return new ApplicationDbContext(optionsBuilder.Options);
+            return new ApplicationDbContext(optionsBuilder.Options, null);
         }
     }
 }

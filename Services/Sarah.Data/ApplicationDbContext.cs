@@ -16,11 +16,11 @@ namespace Sarah.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, string>, IDBService
     {
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration? _configuration;
 
-        public static string DBPath {get; private set;}
+        public static string DBPath {get; private set;} = "./InteLuk.db";
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration? configuration) : base(options)
         {
             _configuration = configuration;
         }
@@ -33,7 +33,7 @@ namespace Sarah.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var databaseFileName = _configuration["SARAH_DB_PATH"] ?? "./InteLuk.db";
+                var databaseFileName = _configuration?["SARAH_DB_PATH"] ?? "./InteLuk.db";
                 DBPath = databaseFileName;
                 optionsBuilder.UseSqlite($"Filename={databaseFileName}");
             }
@@ -42,7 +42,7 @@ namespace Sarah.Data
         public static IDBService CreateDefault(IConfiguration configuration)
         {
             DbContextOptionsBuilder<ApplicationDbContext> builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            var databaseFileName = configuration["SARAH_DB_PATH"] ?? "./InteLuk.db";
+            var databaseFileName = configuration?["SARAH_DB_PATH"] ?? "./InteLuk.db";
 
             Logger.Instance.LogDebug("Using database at " + Path.GetFullPath(databaseFileName));
             builder.UseSqlite($"Filename={databaseFileName}");

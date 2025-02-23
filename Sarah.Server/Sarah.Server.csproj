@@ -31,6 +31,5 @@
     <ProjectReference Include="..\Services\Sarah.NodeFactory\Sarah.NodeFactory.csproj" />
     <ProjectReference Include="..\Services\Sarah.Persons\Sarah.Persons.csproj" />
     <ProjectReference Include="..\Services\Sarah.Geofences\Sarah.Geofences.csproj" />
-    <Content Include="Extensions\ServiceCollectionExtensions.cs" />
   </ItemGroup>
 </Project>

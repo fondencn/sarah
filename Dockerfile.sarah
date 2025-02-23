@@ -19,7 +19,9 @@ FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY . .
+RUN rm -f InteLuk.db
 WORKDIR "/src/Sarah.Server"
+RUN rm -f InteLuk.db
 RUN dotnet build "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
