@@ -18,7 +18,7 @@ namespace Sarah.Data
     {
         private readonly IConfiguration? _configuration;
 
-        public static string DBPath {get; private set;} = "./InteLuk.db";
+        public static string DBPath {get; private set;} = Environment.GetEnvironmentVariable("SARAH_DB_PATH") ?? "./InteLuk.db";
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration? configuration) : base(options)
         {

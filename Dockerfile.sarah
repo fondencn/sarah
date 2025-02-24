@@ -38,7 +38,7 @@ FROM with-node AS final
 # Start the application
 WORKDIR /app
 COPY --from=publish /app/publish ./sarah.server
-COPY --from=publish /src/sarah.client/dist/sarah.client ./sarah-client
+COPY --from=publish /src/sarah.client/dist/sarah.client ./sarah.client
 
 
 

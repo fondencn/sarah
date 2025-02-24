@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Data;
 using Sarah.Server.Extensions;
+using Microsoft.AspNetCore.SpaServices.Extensions;
 
 namespace Sarah.Server
 {
@@ -114,11 +115,15 @@ namespace Sarah.Server
                     });
             });
 
+            var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
+            var httpsFrontendPort = builder.Configuration["HTTPS_FRONTEND_PORT"] ?? "4200";
+            
+            var certPath = builder.Configuration["CERT_PATH"];
+            var certPassword = builder.Configuration["CERT_PASSWORD"];
+
+
             if (builder.Environment.IsProduction())
             {
-                var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
-                var certPath = builder.Configuration["CERT_PATH"];
-                var certPassword = builder.Configuration["CERT_PASSWORD"];
 
                 if (string.IsNullOrEmpty(certPath) || string.IsNullOrEmpty(certPassword))
                 {
@@ -136,18 +141,21 @@ namespace Sarah.Server
 
             var app = builder.Build();
 
+            var logger = app.Services.GetRequiredService<Sarah.Logging.Logger>();
+            logger.LogInfo("Starting backend");
+            logger.LogInfo($"Listening on port {httpsPort}");
+            logger.LogInfo($"Using certificate {certPath}");
+
             // Apply pending migrations
             using (var scope = app.Services.CreateScope())
             {
                 if (!File.Exists(ApplicationDbContext.DBPath))
                 {
-                    Console.WriteLine("Database file not found. Creating a new one...");
-                    app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Creating a new database...");
+                    throw new NotSupportedException($"Database file {ApplicationDbContext.DBPath} not found");
                 }
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                logger.LogInfo("Applying pending migrations...");
                 dbContext.Database.EnsureCreated();
-                Console.WriteLine("Apply DB migrations to " + ApplicationDbContext.DBPath + "...");
-                app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Applying pending migrations...");
                 dbContext.Database.Migrate();
             }
 
@@ -167,7 +175,18 @@ namespace Sarah.Server
 
             app.MapControllers();
 
-            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Server started. Enable logging system.");
+            // Serve the Angular application
+            app.UseSpa(spa =>
+            {
+
+                spa.Options.SourcePath = "sarah.client";
+                spa.Options.DefaultPage = "/index.html";
+                string frontendUrl = $"https://localhost:{httpsFrontendPort}";
+                logger.LogInfo($"Starting frontend proxy on {frontendUrl}");
+                spa.UseProxyToSpaDevelopmentServer(frontendUrl);
+            });
+
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Starting backend");
 
             app.Run();
         }
