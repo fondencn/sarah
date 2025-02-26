@@ -17,9 +17,7 @@ services:
       - SARAH_DB_PATH=/app/data/InteLuk.db
 
   sarah-client:
-    build:
-      context: .
-      dockerfile: Dockerfile.sarah-client
+    image: localhost:6000/sarah-client:latest
     ports:
       - "4200:4200"
     environment:
