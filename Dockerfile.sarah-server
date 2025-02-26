@@ -4,19 +4,9 @@ USER app
 WORKDIR /app
 #server port
 EXPOSE 7165
-#client port
-EXPOSE 4200 
 
-# Install Node.js
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS with-node
-RUN apt-get update
-RUN apt-get install curl
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
-RUN apt-get -y install nodejs
-RUN npm install -g @angular/cli
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Copy and build the application
-FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY . .
@@ -33,15 +23,15 @@ RUN dotnet publish "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publi
 
 
 # Final stage
-FROM with-node AS final
+FROM publish AS final
 
 # Start the application
 WORKDIR /app
-COPY --from=publish /app/publish ./sarah.server
-COPY --from=publish /src/sarah.client/dist/sarah.client ./sarah.client
+COPY --from=publish /app/publish .
+#COPY --from=publish /src/sarah.client/dist/sarah.client ./sarah.client
 
 
 
-# Set up SPA
-WORKDIR /app/sarah.server
+# Set up Backend and run
+WORKDIR /app
 ENTRYPOINT ["dotnet", "Sarah.Server.dll"]

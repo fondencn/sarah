@@ -2,10 +2,9 @@ version: '3.8'
 
 services:
   sarah-server:
-    image: localhost:6000/sarah:latest
+    image: localhost:6000/sarah-server:latest
     ports:
       - "7165:7165"
-      - "4200:4200"
     volumes:
     #  - /path/to/your/host/directory:/app/data
       - /var/opt/sarah:/app/data:rw
@@ -16,5 +15,16 @@ services:
       - HTTPS_BACKEND_PORT=7165
       - HTTPS_FRONTEND_PORT=4200
       - SARAH_DB_PATH=/app/data/InteLuk.db
+
+  sarah-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-client
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=production
+      - HTTPS_BACKEND_PORT=7165
+      - HTTPS_FRONTEND_PORT=4200
     
 

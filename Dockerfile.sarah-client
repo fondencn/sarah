@@ -1,0 +1,12 @@
+# Stage 1: Build the Angular app
+FROM node:20 AS build
+WORKDIR /app
+COPY ./sarah.client/ ./
+RUN npm install
+RUN npm run build --prod
+
+# Stage 2: Serve the Angular app
+FROM nginx:alpine as final
+COPY --from=build /app/dist/sarah.client /usr/share/nginx/html
+EXPOSE 4200
+CMD ["nginx", "-g", "daemon off;"]

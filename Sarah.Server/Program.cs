@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Data;
 using Sarah.Server.Extensions;
-using Microsoft.AspNetCore.SpaServices.Extensions;
+//using Microsoft.AspNetCore.SpaServices.Extensions;
 
 namespace Sarah.Server
 {
@@ -116,7 +116,7 @@ namespace Sarah.Server
             });
 
             var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
-            var httpsFrontendPort = builder.Configuration["HTTPS_FRONTEND_PORT"] ?? "4200";
+            //var httpsFrontendPort = builder.Configuration["HTTPS_FRONTEND_PORT"] ?? "4200";
             
             var certPath = builder.Configuration["CERT_PATH"];
             var certPassword = builder.Configuration["CERT_PASSWORD"];
@@ -176,15 +176,15 @@ namespace Sarah.Server
             app.MapControllers();
 
             // Serve the Angular application
-            app.UseSpa(spa =>
-            {
+            // app.UseSpa(spa =>
+            // {
 
-                spa.Options.SourcePath = "sarah.client";
-                spa.Options.DefaultPage = "/index.html";
-                string frontendUrl = $"https://localhost:{httpsFrontendPort}";
-                logger.LogInfo($"Starting frontend proxy on {frontendUrl}");
-                spa.UseProxyToSpaDevelopmentServer(frontendUrl);
-            });
+            //     spa.Options.SourcePath = "sarah.client";
+            //     spa.Options.DefaultPage = "/index.html";
+            //     string frontendUrl = $"https://localhost:{httpsFrontendPort}";
+            //     logger.LogInfo($"Starting frontend proxy on {frontendUrl}");
+            //     spa.UseProxyToSpaDevelopmentServer(frontendUrl);
+            // });
 
             app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Starting backend");
 
