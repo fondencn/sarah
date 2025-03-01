@@ -20,6 +20,9 @@ services:
     image: localhost:6000/sarah-client:latest
     ports:
       - "4200:4200"
+    volumes:
+      - /var/opt/sarah/certificate.crt:/etc/ssl/certs/certificate.crt
+      - /var/opt/sarah/private.key:/etc/ssl/certs/private.key
     environment:
       - NODE_ENV=production
       - HTTPS_BACKEND_PORT=7165
