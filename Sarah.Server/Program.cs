@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Sarah.Data;
 using Sarah.Server.Extensions;
+//using Microsoft.AspNetCore.SpaServices.Extensions;
 
 namespace Sarah.Server
 {
@@ -11,26 +12,26 @@ namespace Sarah.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
             // Add appsettings.secrets.json to the configuration
             builder.Configuration
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: false)
                 .AddEnvironmentVariables();
-            
-            if (string.IsNullOrEmpty( builder.Configuration["OIDCAuthority"])) 
+
+            if (string.IsNullOrEmpty(builder.Configuration["OIDCAuthority"]))
             {
                 throw new NotSupportedException("OIDCAuthority is not set in appsettings.json or appsettings.secrets.json.");
             }
-            
+
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
             builder.Logging.AddDebug();
             builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
             // Add services to the container.
-            builder.Services.AddSarahServices();
+            builder.Services.AddSarahServices(builder.Configuration);
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -108,18 +109,53 @@ namespace Sarah.Server
                 options.AddPolicy("AllowSpecificOrigins",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:4200","https://localhost:4200", "https://pi:4200")
+                        builder.WithOrigins("http://localhost:4200", "https://localhost:4200", "https://pi:4200")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     });
             });
 
+            var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
+            //var httpsFrontendPort = builder.Configuration["HTTPS_FRONTEND_PORT"] ?? "4200";
+            
+            var certPath = builder.Configuration["CERT_PATH"];
+            var certPassword = builder.Configuration["CERT_PASSWORD"];
+
+
+            if (builder.Environment.IsProduction())
+            {
+
+                if (string.IsNullOrEmpty(certPath) || string.IsNullOrEmpty(certPassword))
+                {
+                    throw new InvalidOperationException("Certificate path or password is not set in environment variables.");
+                }
+
+                builder.WebHost.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.ListenAnyIP(int.Parse(httpsPort), listenOptions =>
+                    {
+                        listenOptions.UseHttps(certPath, certPassword);
+                    });
+                });
+            }
+
             var app = builder.Build();
+
+            var logger = app.Services.GetRequiredService<Sarah.Logging.Logger>();
+            logger.LogInfo("Starting backend");
+            logger.LogInfo($"Listening on port {httpsPort}");
+            logger.LogInfo($"Using certificate {certPath}");
 
             // Apply pending migrations
             using (var scope = app.Services.CreateScope())
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
+                if (!File.Exists(ApplicationDbContext.DBPath))
+                {
+                    throw new NotSupportedException($"Database file {ApplicationDbContext.DBPath} not found");
+                }
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                logger.LogInfo("Applying pending migrations...");
+                dbContext.Database.EnsureCreated();
                 dbContext.Database.Migrate();
             }
 
@@ -139,11 +175,20 @@ namespace Sarah.Server
 
             app.MapControllers();
 
-            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Server started. Enable logging system.");
+            // Serve the Angular application
+            // app.UseSpa(spa =>
+            // {
+
+            //     spa.Options.SourcePath = "sarah.client";
+            //     spa.Options.DefaultPage = "/index.html";
+            //     string frontendUrl = $"https://localhost:{httpsFrontendPort}";
+            //     logger.LogInfo($"Starting frontend proxy on {frontendUrl}");
+            //     spa.UseProxyToSpaDevelopmentServer(frontendUrl);
+            // });
+
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Starting backend");
 
             app.Run();
-
-
         }
     }
 }

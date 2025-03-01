@@ -1,0 +1,30 @@
+# Base image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+USER app
+WORKDIR /app
+
+# build/publish .Net backend app using SDK 9.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS publish
+ARG BUILD_CONFIGURATION=Release
+WORKDIR "/app/src/Services"
+COPY ./Services .
+WORKDIR "/app/src/Sarah.Server"
+COPY ./Sarah.Server .
+RUN dotnet publish "./Sarah.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+
+# Final stage, use base image without SDK because it is smaller
+FROM base AS final
+ARG BUILD_CONFIGURATION=Release
+#server port
+EXPOSE 7165
+
+# Copy the compiled application
+WORKDIR /app
+COPY --from=publish /app/publish .
+
+
+
+# Set up Backend and run
+WORKDIR /app
+ENTRYPOINT ["dotnet", "Sarah.Server.dll"]

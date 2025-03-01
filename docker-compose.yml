@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  sarah-server:
+    image: localhost:6000/sarah-server:latest
+    ports:
+      - "7165:7165"
+    volumes:
+    #  - /path/to/your/host/directory:/app/data
+      - /var/opt/sarah:/app/data:rw
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - CERT_PATH=/app/data/certificate.pfx
+      - CERT_PASSWORD=ayayaycaramba
+      - HTTPS_BACKEND_PORT=7165
+      - HTTPS_FRONTEND_PORT=4200
+      - SARAH_DB_PATH=/app/data/InteLuk.db
+
+  sarah-client:
+    image: localhost:6000/sarah-client:latest
+    ports:
+      - "4200:4200"
+    volumes:
+      - /var/opt/sarah/certificate.crt:/etc/ssl/certs/certificate.crt
+      - /var/opt/sarah/private.key:/etc/ssl/certs/private.key
+    environment:
+      - NODE_ENV=production
+      - HTTPS_BACKEND_PORT=7165
+      - HTTPS_FRONTEND_PORT=4200
+    
+
