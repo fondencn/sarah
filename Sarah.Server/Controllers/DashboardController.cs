@@ -100,7 +100,7 @@ namespace Sarah.Server.Controllers
                                 .OfType<ITemperatureSensor>()
                                 .Select(d => d.Temperature.Value)
                                 .DefaultIfEmpty(0);
-                            var avgTemp = temperatures.Any() ? temperatures.Average().ToString() : "N/A";
+                            var avgTemp = temperatures.Sum() > 0 ? temperatures.Average().ToString() : "N/A";
                             var presence = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
                                 .ToList()
                                 .Select(item => item.GetNetworkItem(_deviceService))
