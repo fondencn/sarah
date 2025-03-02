@@ -217,6 +217,10 @@ namespace Sarah.DeviceService.Model
             /* Register for Device events */
             try
             {
+                if(node == null) 
+                {
+                    throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
+                }
                 Logger.Instance.LogDebug("Initializing new Multisensor for node " + this.NodeID + " ...");
 
                 var basicCmd = node.GetCommandClass<Basic>();

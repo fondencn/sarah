@@ -36,6 +36,7 @@ namespace Sarah.Logging
         /// </summary>
         private const int MAX_LASTLOG_SIZE = 20;
 
+        public bool LogDebugAsInfo { get; set; } = false;
 
         /// <summary>
         /// In-Memory Log-Queue
@@ -104,7 +105,15 @@ namespace Sarah.Logging
                 switch (level)
                 {
                     case ErrorLevel.Debug:
-                        _logger.LogDebug(msg);
+                        if (this.LogDebugAsInfo)
+                        {
+                            /* Debug als Info loggen in Docker */
+                            _logger.LogInformation(msg);
+                        }
+                        else
+                        {
+                            _logger.LogDebug(msg);
+                        }
                         break;
                     case ErrorLevel.Info:
                         _logger.LogInformation(msg);

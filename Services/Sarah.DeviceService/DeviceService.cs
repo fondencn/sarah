@@ -21,15 +21,25 @@ namespace Sarah.DeviceService
 {
     public class DeviceService : IDeviceService
     {
+        private readonly IConfiguration _configuration;
+        private readonly INodeFactory _nodeFactory;
+        /// <summary>
+        /// ctor creates and starts the ZWAve service component
+        /// </summary>  
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config)
+        {
+            this._configuration = config;
+            this._nodeFactory = nodeFactory;
+        }
+
+
         private ZWaveController Controller { get; set; }
         private NodeCollection Nodes { get; set; }
 
         public string StatusMessage { get; private set; }
 
-        private readonly IConfiguration _configuration;
-        private string _serialPortName;
 
-        public string SerialPortName => _serialPortName;
+        public string SerialPortName => _configuration["ZWave:SerialPortName"];
 
         private List<NetworkElement> NetworkElements { get; } = new List<NetworkElement>();
 
@@ -49,7 +59,6 @@ namespace Sarah.DeviceService
         public IEnumerable<NetworkElement> Elements => NetworkElements.AsReadOnly();
 
         public INetworkElement GetNetworkItem(byte nodeID) => this.NetworkElements?.FirstOrDefault(item => item.NodeID == nodeID);
-
 
         /// <summary>
         /// Map für bestimmte Parameterprovider
@@ -73,16 +82,6 @@ namespace Sarah.DeviceService
 
     
         /// <summary>
-        /// ctor creates and starts the ZWAve service component
-        /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config)
-        {
-            this._configuration = config;
-            this._serialPortName = ReadConfig();
-            this.Start(nodeFactory).Wait();
-        }
-
-        /// <summary>
         /// dtor
         /// </summary>
         ~DeviceService()
@@ -95,52 +94,26 @@ namespace Sarah.DeviceService
         }
 
 
-        /// <summary>
-        /// Read ZWAve Hardware settings from config file serialport.cfg. 
-        /// Defaults to COM7 if no config file is present.
-        /// </summary>
-        /// <returns>Serial port name to be used by Zwave hardware</returns>
-        private static string ReadConfig()
-        {
-            string portname = null;
-            if(File.Exists("serialport.cfg"))
-            {
-                portname = File.ReadAllText("serialport.cfg");
-            }
-
-
-            string[] availablePorts = System.IO.Ports.SerialPort.GetPortNames();
-
-            if (String.IsNullOrWhiteSpace(portname))
-            {
-                portname = availablePorts?.FirstOrDefault() ?? "COM7"; //Fallback: Windows Development Default
-            }
-
-
-            Logger.Instance.LogDebug("Available Serial Ports: " + String.Join(", ", availablePorts));
-            Logger.Instance.LogDebug("Selected Serial Port:   " + portname);
-
-            return portname;
-        }
 
 
         /// <summary>
         /// Startet das Netzwerk  auf dem übergebenen Defaultport
         /// </summary>
         /// <returns></returns>
-        private async Task Start(INodeFactory nodeFactory)
+        public async Task Start()
         {
             try
             {
-                if (_serialPortName == null)
+                Logger.Instance.LogDebugAsInfo = true;
+                if (SerialPortName == null)
                 {
-                    throw new InvalidOperationException("Kein SerialPort übergeben - erster Aufruf muss mit COM-Port als Parameter erfolgen");
+                    throw new InvalidOperationException("Missing configuration for ZWave serial port");
                 }
-                Logger.Instance.LogDebug("Starting Controller on serial port " + _serialPortName);
+                Logger.Instance.LogInfo("Starting Controller on serial port " + SerialPortName);
                 ISerialPort serialPort;
                 try
                 {
-                    serialPort = SerialPortFactory.Instance.Create(_serialPortName);
+                    serialPort = SerialPortFactory.Instance.Create(SerialPortName);
                     ZWaveController controller = new ZWaveController(serialPort);
 
                     // open the controller
@@ -151,10 +124,12 @@ namespace Sarah.DeviceService
                 {
                     serialPort = null;
                     this.StatusMessage = ex.Message;
+                    Logger.Instance.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
+                    Logger.Instance.LogException(ex);
                 }
 
 
-                await UpdateNodeList(nodeFactory);
+                await UpdateNodeList();
 
                 /////////////////// DISPOSE PROBLEM: NODES SIND XFACH DA!!!!!!!!!!!!!!!!!!!!!!
                 //CancellationTokenSource cts = new CancellationTokenSource();
@@ -198,6 +173,11 @@ namespace Sarah.DeviceService
                 this.Nodes = null;
                 Logger.Instance.LogDebug(ex.Message);
                 this.StatusMessage = ex.Message;
+            } 
+            finally
+            {
+                Logger.Instance.LogInfo("DeviceService started.");
+                Logger.Instance.LogDebugAsInfo = false;
             }
         }
 
@@ -213,7 +193,7 @@ namespace Sarah.DeviceService
         /// Aktualisiert die interne Liste der verbundenen ZWave-Knoten
         /// </summary>
         /// <returns>Task</returns>
-        private async Task UpdateNodeList(INodeFactory nodeFactory)
+        private async Task UpdateNodeList()
         {
             Logger.Instance.LogDebug("Updating NodeList...");
             this.StatusMessage = "Verbundene Geräte werden Initialisiert...";
@@ -230,7 +210,7 @@ namespace Sarah.DeviceService
             {
                 foreach (Node n in this.Nodes)
                 {
-                    NetworkElement nodeElement = nodeFactory.CreateByNodeId(n.NodeID);
+                    NetworkElement nodeElement = _nodeFactory.CreateByNodeId(n.NodeID);
                     if (nodeElement == null)
                     {
                         Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
@@ -246,9 +226,9 @@ namespace Sarah.DeviceService
             }
 
             /* jetzt die Nicht-ZWave Geräte */
-            foreach (byte nodeId in nodeFactory.GetNonZwaveNodeIds().ToList())
+            foreach (byte nodeId in _nodeFactory.GetNonZwaveNodeIds().ToList())
             {
-                NetworkElement nodeElement = nodeFactory.CreateByNodeId(nodeId);
+                NetworkElement nodeElement = _nodeFactory.CreateByNodeId(nodeId);
                 if (nodeElement == null)
                 {
                     Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
@@ -265,7 +245,7 @@ namespace Sarah.DeviceService
             this.NetworkElements.Clear();
             this.NetworkElements.AddRange(networkElements);
 
-            if(!Debugger.IsAttached && (this.NetworkElements.Count != this.Nodes.Count() + nodeFactory.GetNonZwaveNodeIds().Count()))
+            if(!Debugger.IsAttached && (this.NetworkElements.Count != this.Nodes.Count() + _nodeFactory.GetNonZwaveNodeIds().Count()))
             {
                 var missing = this.Nodes.Where(item => !this.NetworkElements.Any(item2 => item.NodeID == item2.NodeID)).ToList();
                 throw new InvalidOperationException("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert (ist=" + this.NetworkElements.Count + ", Soll=" + this.Nodes.Count() + ")");
@@ -448,7 +428,7 @@ namespace Sarah.DeviceService
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {
-            if(String.IsNullOrEmpty(this._serialPortName))
+            if(String.IsNullOrEmpty(this.SerialPortName))
             {
                 yield return new SelfTestResult(true, "ZWave Controller", "Keine serielle Schnittstelle für den ZWave Controller definiert oder ZWave Anbindung nicht gestartet.");
             }

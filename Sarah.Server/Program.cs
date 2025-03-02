@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Sarah.API.Interfaces.Services;
 using Sarah.Data;
 using Sarah.Server.Extensions;
 //using Microsoft.AspNetCore.SpaServices.Extensions;
@@ -186,8 +187,10 @@ namespace Sarah.Server
             //     spa.UseProxyToSpaDevelopmentServer(frontendUrl);
             // });
 
-            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("Starting backend");
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("initializing required services..");
+            app.Services.GetRequiredService<IDeviceService>().Start().Wait();
 
+            app.Services.GetRequiredService<Sarah.Logging.Logger>().LogInfo("initialization done.");
             app.Run();
         }
     }
