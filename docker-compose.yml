@@ -8,6 +8,8 @@ services:
     volumes:
     #  - /path/to/your/host/directory:/app/data
       - /var/opt/sarah:/app/data:rw
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - CERT_PATH=/app/data/certificate.pfx
@@ -15,6 +17,10 @@ services:
       - HTTPS_BACKEND_PORT=7165
       - HTTPS_FRONTEND_PORT=4200
       - SARAH_DB_PATH=/app/data/InteLuk.db
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
+    privileged: true
 
   sarah-client:
     image: localhost:6000/sarah-client:latest
