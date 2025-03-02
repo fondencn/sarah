@@ -27,9 +27,8 @@ namespace Sarah.DeviceService
         public string StatusMessage { get; private set; }
 
         private readonly IConfiguration _configuration;
-        private string _serialPortName;
 
-        public string SerialPortName => _serialPortName;
+        public string SerialPortName => _configuration["ZWave:SerialPortName"];
 
         private List<NetworkElement> NetworkElements { get; } = new List<NetworkElement>();
 
@@ -49,7 +48,6 @@ namespace Sarah.DeviceService
         public IEnumerable<NetworkElement> Elements => NetworkElements.AsReadOnly();
 
         public INetworkElement GetNetworkItem(byte nodeID) => this.NetworkElements?.FirstOrDefault(item => item.NodeID == nodeID);
-
 
         /// <summary>
         /// Map für bestimmte Parameterprovider
@@ -78,7 +76,6 @@ namespace Sarah.DeviceService
         public DeviceService(INodeFactory nodeFactory, IConfiguration config)
         {
             this._configuration = config;
-            this._serialPortName = ReadConfig();
             this.Start(nodeFactory).Wait();
         }
 
@@ -95,33 +92,6 @@ namespace Sarah.DeviceService
         }
 
 
-        /// <summary>
-        /// Read ZWAve Hardware settings from config file serialport.cfg. 
-        /// Defaults to COM7 if no config file is present.
-        /// </summary>
-        /// <returns>Serial port name to be used by Zwave hardware</returns>
-        private static string ReadConfig()
-        {
-            string portname = null;
-            if(File.Exists("serialport.cfg"))
-            {
-                portname = File.ReadAllText("serialport.cfg");
-            }
-
-
-            string[] availablePorts = System.IO.Ports.SerialPort.GetPortNames();
-
-            if (String.IsNullOrWhiteSpace(portname))
-            {
-                portname = availablePorts?.FirstOrDefault() ?? "COM7"; //Fallback: Windows Development Default
-            }
-
-
-            Logger.Instance.LogDebug("Available Serial Ports: " + String.Join(", ", availablePorts));
-            Logger.Instance.LogDebug("Selected Serial Port:   " + portname);
-
-            return portname;
-        }
 
 
         /// <summary>
@@ -132,15 +102,15 @@ namespace Sarah.DeviceService
         {
             try
             {
-                if (_serialPortName == null)
+                if (SerialPortName == null)
                 {
-                    throw new InvalidOperationException("Kein SerialPort übergeben - erster Aufruf muss mit COM-Port als Parameter erfolgen");
+                    throw new InvalidOperationException("Missing configuration for ZWave serial port");
                 }
-                Logger.Instance.LogDebug("Starting Controller on serial port " + _serialPortName);
+                Logger.Instance.LogInfo("Starting Controller on serial port " + SerialPortName);
                 ISerialPort serialPort;
                 try
                 {
-                    serialPort = SerialPortFactory.Instance.Create(_serialPortName);
+                    serialPort = SerialPortFactory.Instance.Create(SerialPortName);
                     ZWaveController controller = new ZWaveController(serialPort);
 
                     // open the controller
@@ -151,6 +121,8 @@ namespace Sarah.DeviceService
                 {
                     serialPort = null;
                     this.StatusMessage = ex.Message;
+                    Logger.Instance.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
+                    Logger.Instance.LogException(ex);
                 }
 
 
@@ -448,7 +420,7 @@ namespace Sarah.DeviceService
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {
-            if(String.IsNullOrEmpty(this._serialPortName))
+            if(String.IsNullOrEmpty(this.SerialPortName))
             {
                 yield return new SelfTestResult(true, "ZWave Controller", "Keine serielle Schnittstelle für den ZWave Controller definiert oder ZWave Anbindung nicht gestartet.");
             }
