@@ -94,13 +94,13 @@ namespace Sarah.Server.Controllers
                         {
                             var extendedProperties = ReadObjPropertiesAsJson(room);
                             var deviceCount = _databaseService.Devices.Count(d => d.Id_Room == room.Id);
-                            var avgTemp = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
+                            var temperatures = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
                                 .ToList()
                                 .Select(item => item.GetNetworkItem(_deviceService))
                                 .OfType<ITemperatureSensor>()
                                 .Select(d => d.Temperature.Value)
-                                .DefaultIfEmpty(0)
-                                .Average();
+                                .DefaultIfEmpty(0);
+                            var avgTemp = temperatures.Any() ? temperatures.Average().ToString() : "N/A";
                             var presence = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
                                 .ToList()
                                 .Select(item => item.GetNetworkItem(_deviceService))
