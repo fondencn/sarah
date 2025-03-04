@@ -13,5 +13,6 @@ namespace Sarah.API.Interfaces
         Task PublishNetworkEventAsync(NetworkEvent networkEvent, CancellationToken cancellationToken = default);
         Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default);
         Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default);
+        Task PublishSay(SayEvent e, CancellationToken cancellationToken = default);
     }
 }

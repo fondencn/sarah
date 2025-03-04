@@ -9,13 +9,15 @@ using Sarah.API.BusinessObjects;
 using Sarah.Logging;
 using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
+using Sarah.API.Extensions;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.Monitoring.Monitors
 {
     /// <summary>
     /// Überwachungsdienst für die Luftqualität in Räumen
     /// </summary>
-    internal class AirQualityMonitor(IDBService _db, IEventProcessingService _events, IDeviceService _devices) : ICanSelfTest, INetworkEventSubscriber
+    internal class AirQualityMonitor(IDBService _db, IEventProcessingService _events, IDeviceService _devices, IConfiguration _config) : ICanSelfTest, INetworkEventSubscriber
     {
         private bool IsRunning { get; set; }
         private DateTime LastUpdate { get; set; }
@@ -29,7 +31,7 @@ namespace Sarah.Monitoring.Monitors
         internal static bool IsInSilentTime => false;
 
 #else
-        internal static bool IsInSilentTime => DateTime.Now.IsInSilentTime() || DateTime.Now.Hour < 9 || DateTime.Now.Hour >= 20;
+        internal static bool IsInSilentTime => DateTime.Now.IsInSilentTime(_config) || DateTime.Now.Hour < 9 || DateTime.Now.Hour >= 20;
 
 #endif
 

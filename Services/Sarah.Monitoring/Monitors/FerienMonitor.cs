@@ -1,14 +1,7 @@
-﻿using Ical.Net;
-using InteLuk.API.BusinessObjects;
-using InteLuk.API.Interfaces;
-using InteLuk.Logging;
-using InteLuk.ZWave.Notifications;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
+using Sarah.Logging;
+using Ical.Net;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -29,7 +22,7 @@ namespace Sarah.Monitoring.Monitors
         /// <summary>
         /// Gibt das aktuelle Ferienelemente (für heute) zurück oder NULL, falls keine Ferien sind.
         /// </summary>
-        public Ferien AktuelleFerien => this.Ferien?.FirstOrDefault(item => item.Start <= DateTime.Now && item.Ende >= DateTime.Now);
+        public Ferien? AktuelleFerien => this.Ferien?.FirstOrDefault(item => item.Start <= DateTime.Now && item.Ende >= DateTime.Now);
 
         #region Singleton Pattern
         /// <summary>
@@ -55,11 +48,6 @@ namespace Sarah.Monitoring.Monitors
         {
             FerienDateien.Instance.Load();
             Logger.Instance.LogDebug(FerienDateien.Instance.Items.Count + " Ferienelemente geladen.");
-
-
-            /* Als Feriendienst registrieren */
-            NotificationEngine.Instance.Ferien = this;
-
             return Task.CompletedTask;
         }
 
@@ -81,7 +69,7 @@ namespace Sarah.Monitoring.Monitors
     /// </summary>
     public class FerienDateien
     {
-        public IReadOnlyCollection<FerienDatei> Items { get; private set; }
+        public IReadOnlyCollection<FerienDatei>? Items { get; private set; }
         public static FerienDateien Instance { get; } = new FerienDateien();
         private FerienDateien()
         {

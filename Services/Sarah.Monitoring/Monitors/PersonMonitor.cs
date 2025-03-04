@@ -1,44 +1,18 @@
-﻿using InteLuk.API.BusinessObjects;
-using InteLuk.API.Interfaces;
-using InteLuk.Data;
-using InteLuk.Logging;
-using InteLuk.ZWave.Model;
-using InteLuk.ZWave.Presence;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Service;
+using Sarah.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor : IPersonInfoProvider, ICanSelfTest
+    public class PersonMonitor (IDBService _db) : ICanSelfTest
     {
-        private ApplicationDbContext DB { get; }
         private readonly object DBLock = new object();
 
         private DateTime _lastUpdate;
 
 
 
-        #region Singleton Pattern
-        private static PersonMonitor _Instance;
-        public static PersonMonitor Instance
-        {
-            get
-            {
-                if (_Instance == null)
-                {
-                    _Instance = new PersonMonitor();
-                }
-                return _Instance;
-            }
-        }
-        private PersonMonitor()
-        {
-            this.DB = ApplicationDbContext.CreateDefault();
-        }
         /// <summary>
         /// dtor (managed)
         /// </summary>
@@ -49,14 +23,13 @@ namespace Sarah.Monitoring.Monitors
                 this.UpdateCancellationTokenSource.Cancel();
             }
         }
-        #endregion
 
 
         private Task UpdateTask { get; set; }
         private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
 
         private Dictionary<long, bool> ConnectionStatesByPersonId { get; } = new Dictionary<long, bool>();
-        private Dictionary<long, GeoFence> GeoFencesByPersonId { get; } = new Dictionary<long, GeoFence>();
+        private Dictionary<long, IGeoFence> GeoFencesByPersonId { get; } = new Dictionary<long, IGeoFence>();
 
         public Task Start()
         {
@@ -77,8 +50,6 @@ namespace Sarah.Monitoring.Monitors
 
             Logger.Instance.LogDebug("PersonMonitor gestartet.");
 
-            ZWave.Presence.PresenceEngine.Instance.PersonInfos = this;
-
             return Task.CompletedTask;
         }
 
@@ -86,7 +57,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                foreach (var person in DB.Persons)
+                foreach (var person in _db.Persons)
                 {
                     bool lastState;
                     if (!ConnectionStatesByPersonId.TryGetValue(person.Id, out lastState))
@@ -95,7 +66,7 @@ namespace Sarah.Monitoring.Monitors
                         ConnectionStatesByPersonId.Add(person.Id, lastState);
                     }
 
-                    bool currentState = person.IsActive; // das hier wird vom Router geladen (Gerät ist im LAN oder nicht)
+                    bool currentState = person.IsAtHome; // das hier wird vom Router geladen (Gerät ist im LAN oder nicht)
                     bool changed = currentState != lastState;
 
                     if (changed)
@@ -153,7 +124,7 @@ namespace Sarah.Monitoring.Monitors
                 bool res;
                 try
                 {
-                    var person = DB.Persons.AsEnumerable().FirstOrDefault(item => String.Equals(item.Name, personName, StringComparison.OrdinalIgnoreCase));
+                    var person = _db.Persons.AsEnumerable().FirstOrDefault(item => String.Equals(item.Name, personName, StringComparison.OrdinalIgnoreCase));
 
 
                     res = InteLuk.HomeNet.HomeNetwork.Instance.KnownHosts?
@@ -162,7 +133,7 @@ namespace Sarah.Monitoring.Monitors
 
                     if (person.GPSTrackerID != 0)
                     {
-                        var trackerDevice = DB.Devices.First(item => item.Id == person.GPSTrackerID);
+                        var trackerDevice = _db.Devices.First(item => item.Id == person.GPSTrackerID);
                         IGPSTracker tracker = trackerDevice.NetworkElement as IGPSTracker;
                         if (tracker != null && tracker.Position?.IsValid == true)
                         {

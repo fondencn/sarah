@@ -1,24 +1,9 @@
-﻿using InteLuk.API.BusinessObjects;
-using InteLuk.API.Interfaces;
-using InteLuk.Data;
-using InteLuk.Logging;
-using InteLuk.Models.Extensions;
-using InteLuk.Models.SelfTest;
-using InteLuk.ViewModel;
-using InteLuk.Voice;
-using InteLuk.ZWave.Model;
-using InteLuk.ZWave.Model.Animations;
-using InteLuk.ZWave.Notifications;
-using InteLuk.ZWave.Presence;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Sarah.Logging;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Service;
+using Sarah.Data.Models;
+using Sarah.API.Interfaces.Services;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -26,7 +11,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor : INetworkEventSubscriber, ICanSelfTest
+    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices) : INetworkEventSubscriber, ICanSelfTest
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -74,29 +59,12 @@ namespace Sarah.Monitoring.Monitors
 
         private List<SurveillanceTask> CurrentOpenDoorTasks { get; } = new List<SurveillanceTask>();
 
-        private ApplicationDbContext DB { get; }
 
         private bool IsRunning { get; set; }
 
         private DateTime LastUpdate { get; set; }
 
-        #region Singleton Pattern
-        private static DoorMonitor _Instance;
-        public static DoorMonitor Instance
-        {
-            get
-            {
-                if (_Instance == null)
-                {
-                    _Instance = new DoorMonitor();
-                }
-                return _Instance;
-            }
-        }
-        private DoorMonitor()
-        {
-            this.DB = ApplicationDbContext.CreateDefault();
-        }
+  
         /// <summary>
         /// dtor (managed)
         /// </summary>
@@ -107,7 +75,6 @@ namespace Sarah.Monitoring.Monitors
                 this.CurrentOpenDoorTasks.ForEach(task => task.Cancel());
             }
         }
-        #endregion
 
 
 
@@ -115,15 +82,14 @@ namespace Sarah.Monitoring.Monitors
         /// Startet alle Überwachungsfunktionen für Türsensoren
         /// </summary>
         /// <returns></returns>
-        public Task Start()
+        public async Task Start()
         {
             if (!this.IsRunning)
             {
-                NetworkEventAggregator.Instance.Subscribe(this);
+                await _events.SubscribeNetworkEventAsync(this);
                 Logger.Instance.LogDebug("DoorMonitor gestartet.");
                 this.IsRunning = true;
             }
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -134,11 +100,11 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceInfo device = DB.Devices.FirstOrDefault(item => item.NodeID == changedNodeId);
+                DeviceInfo? device = _db.Devices.FirstOrDefault(item => item.NodeID == changedNodeId);
 
                 if (device != null)
                 {
-                    DoorSensor sensor = device.NetworkElement as DoorSensor;
+                    IDoorSensor? sensor = device.GetNetworkItem(_devices) as IDoorSensor;
 
                     if (sensor != null)
                     {
@@ -154,10 +120,10 @@ namespace Sarah.Monitoring.Monitors
                             if (!this.CurrentOpenDoorTasks.Any(task => task.Device.NodeID == changedNodeId)
                                 && sensor.LastStateChanged.HasValue)
                             {
-                                Room room;
+                                Room? room;
                                 if (device.Id_Room.HasValue)
                                 {
-                                    room = this.DB.Rooms.Where(item => item.Id == device.Id_Room).FirstOrDefault();
+                                    room = _db.Rooms.Where(item => item.Id == device.Id_Room).FirstOrDefault();
                                 }
                                 else
                                 {
@@ -171,7 +137,7 @@ namespace Sarah.Monitoring.Monitors
                                     associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
                                 }
 
-                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, this.DB, warnAtOpen, associatedHeatings));
+                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this));
                             }
                         }
                         else
@@ -262,6 +228,11 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         private class SurveillanceTask
         {
+            private readonly IDBService _db;
+            private readonly IEventProcessingService _events;
+            private readonly IDeviceService _devices;
+            private readonly DoorMonitor _doorMonitor;
+
             /// <summary>
             /// Der Türsensor
             /// </summary>
@@ -288,11 +259,6 @@ namespace Sarah.Monitoring.Monitors
             public byte[] AssociatedHeatings { get; private set; }
 
             /// <summary>
-            /// Datenbankkontext
-            /// </summary>
-            private ApplicationDbContext DB { get; }
-
-            /// <summary>
             /// CancellationToken um den Monitoring-Task abzubrechen
             /// </summary>
             private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
@@ -317,9 +283,12 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room room, ApplicationDbContext db, bool warnAtOpen, byte[] associatedHeatings)
+            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room room, IDBService db, bool warnAtOpen, byte[] associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor)
             {
-                this.DB = db;
+                this._db = db;
+                this._events = events;
+                this._devices = devices;
+                this._doorMonitor = doorMonitor;
                 this.Device = device;
                 this.Room = room;
                 this.SensorThreshold = sensorThreshold;
@@ -361,14 +330,14 @@ namespace Sarah.Monitoring.Monitors
                 int lastMinutes = -1;
                 TimeSpan waitTime = this.SensorThreshold;
                 bool isInitialLoop = true;
-                string artikel = this.Device.Name.IndexOf("Fenster", StringComparison.OrdinalIgnoreCase) >= 0 ?
+                string artikel = this.Device.Name!.IndexOf("Fenster", StringComparison.OrdinalIgnoreCase) >= 0 ?
                     "Das" : "Die";
 
                 while (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
                 {
                     if (this.WarnAtOpen && isInitialLoop)
                     {
-                        NotificationEngine.Instance.Voice.Say(artikel + " " + this.Device.Name + " wurde geöffnet.", NotificationEngine.BroadcastAllSpeakers);
+                        await _events.PublishSay(new SayEvent(artikel + " " + this.Device.Name + " wurde geöffnet."));
                         isInitialLoop = false;
                     }
 
@@ -378,8 +347,8 @@ namespace Sarah.Monitoring.Monitors
                     }
                     catch (System.Threading.Tasks.TaskCanceledException) { /* Weiter laufen lassen, das bedeutet nur dass die Tür wieder zu ist */ }
 
-                    DoorSensor sensor = (DoorSensor)this.Device.NetworkElement;
-                    TimeSpan openTime = sensor.LastOpenDuration.Value;
+                    IDoorSensor sensor = (IDoorSensor)this.Device.GetNetworkItem(_devices);
+                    TimeSpan openTime = sensor.LastOpenDuration.GetValueOrDefault();
 
 
                     if (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
@@ -405,19 +374,24 @@ namespace Sarah.Monitoring.Monitors
                                     sayMsg = artikel + " " + this.Device.Name + " ist " + minutes + " Minuten offen. ";
                                     if (this.Room != null)
                                     {
-                                        RoomViewModel room = new RoomViewModel(this.Room);
-                                        await room.Initialize(this.DB);
-                                        if (room.TemperatureNumeric.HasValue && room.TemperatureNumeric.Value < 18)
+                                        var temperatures = _db.Devices.Where(d => d.Id_Room == this.Room.Id)
+                                            .ToList()
+                                            .Select(item => item.GetNetworkItem(_devices))
+                                            .OfType<ITemperatureSensor>()
+                                            .Select(d => d.Temperature.Value)
+                                            .DefaultIfEmpty(0);
+                                        var avgTemp = temperatures.Sum() > 0 ? temperatures.Average(): 21;
+                                        if (avgTemp < 18)
                                         {
-                                            sayMsg += "Die Raumtemperatur beträgt nur noch " + room.Temperature + ". ";
+                                            sayMsg += "Die Raumtemperatur beträgt nur noch " + avgTemp + "°C. ";
                                             if (WeatherMonitor.Instance.CurrentOutdoorTemperature < 12)
                                             {
                                                 sayMsg += "Draußen ist es kalt, Fenster bitte schließen. ";
                                             }
                                         }
-                                        else if (room.TemperatureNumeric.HasValue && room.TemperatureNumeric.Value > 26)
+                                        else if (avgTemp > 26)
                                         {
-                                            sayMsg += "Die Raumtemperatur beträgt mehr als " + room.Temperature + ". ";
+                                            sayMsg += "Die Raumtemperatur beträgt mehr als " + avgTemp + "°C. ";
                                             if (WeatherMonitor.Instance.CurrentOutdoorTemperature > 27)
                                             {
                                                 sayMsg += "Draußen ist es ziemlich heiß, Fenster bitte schließen. ";
@@ -467,7 +441,7 @@ namespace Sarah.Monitoring.Monitors
                                 {
                                     foreach (byte heatingId in this.AssociatedHeatings)
                                     {
-                                        IThermoElement heating = InteLukNetworkFactory.InteLukNetwork.Heatings.FirstOrDefault(item => item.NodeID == heatingId);
+                                        IThermoElement? heating = _devices.Heatings.FirstOrDefault(item => item.NodeID == heatingId);
                                         if (heating != null)
                                         {
                                             /* 12° bedeutet "aus" - nur ausschalten wenn nicht sowieso schon aus! */
@@ -488,8 +462,8 @@ namespace Sarah.Monitoring.Monitors
 
                                     if (this.OriginalHeatingTemperatures.Any())
                                     {
-                                        var heatingdeviceInfos = this.DB.Devices.ToList().Where(d => this.AssociatedHeatings.Contains(d.NodeID)).ToList();
-                                        var rooms = this.DB.Rooms.ToList().Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id)).ToList();
+                                        var heatingdeviceInfos = _db.Devices.ToList().Where(d => this.AssociatedHeatings.Contains(d.NodeID)).ToList();
+                                        var rooms = _db.Rooms.ToList().Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id)).ToList();
 
                                         sayMsg += " Heizung" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "")
                                             + " im " + String.Join(" und ", rooms.Select(r => r.Name))  + " ausgeschalt" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "et");
@@ -498,12 +472,12 @@ namespace Sarah.Monitoring.Monitors
                                 if (DoorMonitor.WarnLouderNodeIds.Contains(this.Device.NodeID))
                                 {
                                     /* Bei der Haustüre Lautere Sprachausgabe */
-                                    NotificationEngine.Instance.Voice.Say(sayMsg, NotificationEngine.BroadcastAllSpeakers, SpeechVolume.VeryLoud);
+                                    await _events.PublishSay(new SayEvent(sayMsg, vol: SpeechVolume.VeryLoud));
                                 } 
                                 else 
                                 {
                                     /* Normale Sprachausgabe */
-                                    NotificationEngine.Instance.Voice.Say(sayMsg, NotificationEngine.BroadcastAllSpeakers);
+                                    await _events.PublishSay(new SayEvent(sayMsg));
                                 }
                             }
                         }
@@ -523,8 +497,8 @@ namespace Sarah.Monitoring.Monitors
                         /* Wenn die gekoppelte Heizung bei öffnen an war, dann jetzt wieder einschalten */
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            List<DeviceInfo> heatingdeviceInfos = this.DB.Devices.ToList().Where(d => this.AssociatedHeatings.Contains(d.NodeID)).ToList();
-                            List<Room> rooms = this.DB.Rooms.ToList().Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id)).ToList();
+                            List<DeviceInfo> heatingdeviceInfos = _db.Devices.ToList().Where(d => this.AssociatedHeatings.Contains(d.NodeID)).ToList();
+                            List<Room> rooms = _db.Rooms.ToList().Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id)).ToList();
 
                             List<string> heatingMsg = new List<string>();
                             foreach(var origTemp in this.OriginalHeatingTemperatures)
@@ -532,7 +506,7 @@ namespace Sarah.Monitoring.Monitors
                                 DeviceInfo heating = heatingdeviceInfos.First(item => item.NodeID == origTemp.Key);
                                 Room room = rooms.First(item => item.Id == heating.Id_Room);
 
-                                bool isAnotherWindowOpen = DoorMonitor.Instance.GetWindowTrackingsForHeating(origTemp.Key)
+                                bool isAnotherWindowOpen = _doorMonitor.GetWindowTrackingsForHeating(origTemp.Key)
                                     .Any(item => item.Device.Id != this.Device.Id);
 
                                 /* Heizung nur an machen, wenn nicht noch ein anderes Fenster offen ist, welches mit dieser
@@ -543,7 +517,7 @@ namespace Sarah.Monitoring.Monitors
                                     /* Heizung ohne await damit die Sprachausgabe sofort kommt
                                      * Könnte zum Problem bei mehreren Heizungen werden (ZWave-RaceCondition!)
                                      */
-                                    _ = ((ThermoElement)heating.NetworkElement).SetTemperature(origTemp.Value);
+                                    _ = ((IThermoElement)heating.GetNetworkItem(_devices)).SetTemperature(origTemp.Value);
                                     heatingMsg.Add(" im " + room.Name + " auf " + origTemp.Value + " °C gestellt");
                                 }
                                 else
@@ -556,7 +530,7 @@ namespace Sarah.Monitoring.Monitors
                                 + String.Join(" und ", heatingMsg);
                         }
 
-                        NotificationEngine.Instance.Voice.Say(sayMsg, NotificationEngine.BroadcastAllSpeakers);
+                        await _events.PublishSay(new SayEvent(sayMsg));
 
                         //Ende der Taskausführung!
                         break;

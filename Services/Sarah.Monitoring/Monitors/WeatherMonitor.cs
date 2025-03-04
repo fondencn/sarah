@@ -1,24 +1,7 @@
-﻿using BingMapsRESTToolkit;
-using InteLuk.API.BusinessObjects;
-using InteLuk.API.Interfaces;
-using InteLuk.Logging;
-using InteLuk.Models.SelfTest;
-using InteLuk.ZWave.Model;
-using InteLuk.ZWave.Notifications;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.Internal;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json.Converters;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Runtime.CompilerServices;
+﻿using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
+using Sarah.Logging;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -106,9 +89,6 @@ namespace Sarah.Monitoring.Monitors
             this.UpdateCancellationTokenSource = cts;
             this.UpdateTask = Task.Run(Update, cts.Token);
             this.UpdateWarningsTask = Task.Run(UpdateWarnings, cts.Token);
-
-            /* Als Wetterdienst registrieren */
-            NotificationEngine.Instance.Weather = this;
 
             Logger.Instance.LogDebug("WeatherMonitor gestartet und als Provider registriert.");
 
@@ -289,7 +269,7 @@ namespace Sarah.Monitoring.Monitors
                     warnNow = true;
                 }
                 /* SilentHours beachten */
-                warnNow &= !now.IsInSilentTime();
+                warnNow &= !now.IsInSilentTime(_config);
 
                 /* gültigkeitszeit beachten */
                 if (warning.EndDate.HasValue && !warning.IsAllDayWarning)

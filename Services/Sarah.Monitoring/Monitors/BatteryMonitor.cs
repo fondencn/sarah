@@ -4,14 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
+using Sarah.Data.Models;
 using Sarah.Logging;
+using Sarah.API.Extensions;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(IDBService _db, IDeviceService _devices, IEventProcessingService _events) : ICanSelfTest
+    internal class BatteryMonitor(IDBService _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config) : ICanSelfTest
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
@@ -107,7 +111,7 @@ namespace Sarah.Monitoring.Monitors
                 bool warnNow = (now - this._lastWarning) > _WarnInterval;
 
                 /* SilentHours beachten */
-                warnNow &= !now.IsInSilentTime();
+                warnNow &= !now.IsInSilentTime(_config);
 
                 if (warnNow)
                 {
@@ -128,7 +132,7 @@ namespace Sarah.Monitoring.Monitors
                     {
                         sbWarnings.Insert(0, "Achtung, Ladezustand kritisch: " + Environment.NewLine);
                         Logger.Instance.LogWarning(sbWarnings.ToString());
-                        NotificationEngine.Instance.Voice.Say(sbWarnings.ToString(), NotificationEngine.BroadcastAllSpeakers);
+                        _events.PublishSay(new SayEvent(sbWarnings.ToString(), ""));
                     }
 
                     _lastWarning = DateTime.Now;
@@ -146,19 +150,19 @@ namespace Sarah.Monitoring.Monitors
             try
             {
                 this.CurrentBatteryInfos.Clear();
-                var batteryDrivenDevices = InteLukNetworkFactory.InteLukNetwork.BatterySensors.ToList();
+                var batteryDrivenDevices = _devices.BatterySensors.ToList();
                 if (batteryDrivenDevices?.Any() == true)
                 {
-                    var deviceInfos = this.DB.Devices.ToList();
-                    var roomInfos = this.DB.Rooms.ToList();
+                    var deviceInfos = _db.Devices.ToList();
+                    var roomInfos = _db.Rooms.ToList();
                     foreach (IBatterySensor sensor in batteryDrivenDevices)
                     {
                         if (!object.ReferenceEquals(sensor, null) && !object.ReferenceEquals(sensor.Battery, null))
                         {
                             float batteryPercentage = (sensor?.Battery?.Value).GetValueOrDefault();
-                            DeviceInfo device = deviceInfos.FirstOrDefault(item => item.NodeID == sensor.NodeID);
-                            Room room = device != null ?  roomInfos.FirstOrDefault(item => item.Id == device.Id_Room) : null;
-                            this.CurrentBatteryInfos.Add(new BatteryInfo(sensor.NodeID, device?.Name + (room != null ? " im " + room.Name : String.Empty), batteryPercentage));
+                            DeviceInfo? device = deviceInfos.FirstOrDefault(item => item.NodeID == sensor!.NodeID);
+                            Room? room = device != null ?  roomInfos.FirstOrDefault(item => item.Id == device.Id_Room) : null;
+                            this.CurrentBatteryInfos.Add(new BatteryInfo(sensor!.NodeID, device?.Name + (room != null ? " im " + room.Name : String.Empty), batteryPercentage));
                         }
                     }
                 }
@@ -181,7 +185,7 @@ namespace Sarah.Monitoring.Monitors
             {
                 yield return new SelfTestResult(true, "Sensorbatterie-Überwachung", "Die Daten sind älter als 2 Tage");
             }
-            foreach(var lowBatItem in this.CurrentBatteryInfos.Where(item => item.BatteryLevel <= 10))
+            foreach(var lowBatItem in this.CurrentBatteryInfos!.Where(item => item.BatteryLevel <= 10))
             {
                 yield return new SelfTestResult(true, "Sensorbatterie-Überwachung", lowBatItem.NodeDescription + " Batterie bei " + lowBatItem.BatteryLevel + "%");
             }

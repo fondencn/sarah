@@ -28,6 +28,7 @@ namespace Sarah.EventProcessing
             { typeof(NetworkEvent<int>),        "networkevents-int" },
             { typeof(NetworkEvent),             "networkevents" },
             { typeof(AirQualityChangedEvent),   "airqualityevents" },
+            { typeof(SayEvent),                 "speech" },
         };  
 
         public EventProcessingService(ILogger<EventProcessingService> logger, IConfiguration configuration)    
@@ -98,6 +99,13 @@ namespace Sarah.EventProcessing
         {
             string queueName = _exchangeNames[airQualityChangedEvent.GetType()];
             string message = JsonSerializer.Serialize(airQualityChangedEvent);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishSay(SayEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
             return PublishEvent(queueName, message, cancellationToken);
         }
 

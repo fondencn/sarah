@@ -137,4 +137,18 @@ namespace Sarah.API.BusinessObjects
         public string Message { get;  }
         public string RoomName { get; }
     }
+
+    public class SayEvent
+    {
+        public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string caller = null) 
+        {
+            this.Message = msg;
+            this.TargetSpeaker = targetSpeaker;
+            this.Volume = vol;
+        }
+
+        public string Message { get; }
+        public string TargetSpeaker { get; }
+        public SpeechVolume Volume { get; }
+    }
 }
