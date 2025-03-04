@@ -6,6 +6,7 @@ using Sarah.Data;
 using Sarah.Logging;
 using Sarah.Persons;
 using Sarah.Geofences;
+using Sarah.EventProcessing;
 
 namespace Sarah.Server.Extensions;
 
