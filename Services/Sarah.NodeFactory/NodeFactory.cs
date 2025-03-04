@@ -142,7 +142,7 @@ namespace Sarah.NodeFactory
                     {
                         lampMode = _ColorModeMappings[nodeId];
                     }
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, lampMode, this._events);
+                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, lampMode, _events);
                 }
                 else if (nodeType == typeof(WifiWallPlug))
                 {
@@ -150,7 +150,7 @@ namespace Sarah.NodeFactory
                     {
                         /* Ctor Ausnahme: Wifi-Steckdosen brauchen zusätzlich noch einen Hostname, über welchen Sie über das WLAN erreichbar sind */
                         string hostname = _WifiDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, this._events);
+                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
                     }
                     else
                     {
@@ -164,7 +164,7 @@ namespace Sarah.NodeFactory
                     {
                         /* Ctor Ausnahme: Wifi-lAMEPN brauchen zusätzlich noch einen Hostname, über welchen Sie über das WLAN erreichbar sind */
                         string hostname = _WifiDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, this._events);
+                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
                     }
                     else
                     {
@@ -178,7 +178,7 @@ namespace Sarah.NodeFactory
                     {
                         /* Ctor Ausnahme: TTN Device ID mit übergeben */
                         string deviceName = _TtnDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, deviceName, this._events);
+                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, deviceName, _events);
                     }
                     else
                     {
@@ -188,7 +188,7 @@ namespace Sarah.NodeFactory
                 }
                 else
                 {
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, this._events);
+                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, _events);
                 }
             }
             else
