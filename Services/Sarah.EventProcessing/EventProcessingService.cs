@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using Sarah.API.BusinessObjects;
+using RabbitMQ.Client.Events;
 
 namespace Sarah.EventProcessing
 {
@@ -21,10 +22,12 @@ namespace Sarah.EventProcessing
 
         private Dictionary<Type, string> _exchangeNames = new Dictionary<Type, string>
         {
-            { typeof(NetworkEvent<string>), "networkevents" },
-            { typeof(NetworkEvent<float>), "networkevents" },
-            { typeof(NetworkEvent<bool>), "networkevents" },
-            { typeof(NetworkEvent<int>), "networkevents" },
+            { typeof(NetworkEvent<string>),     "networkevents-string" },
+            { typeof(NetworkEvent<float>),      "networkevents-float" },
+            { typeof(NetworkEvent<bool>),       "networkevents-bool" },
+            { typeof(NetworkEvent<int>),        "networkevents-int" },
+            { typeof(NetworkEvent),             "networkevents" },
+            { typeof(AirQualityChangedEvent),   "airqualityevents" },
         };  
 
         public EventProcessingService(ILogger<EventProcessingService> logger, IConfiguration configuration)    
@@ -67,6 +70,34 @@ namespace Sarah.EventProcessing
         {
             string queueName = _exchangeNames[networkEvent.GetType()];
             string message = JsonSerializer.Serialize(networkEvent);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+        public async Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default)
+        {
+            var queueName = _exchangeNames[typeof(NetworkEvent<string>)];
+            var consumer = new AsyncEventingBasicConsumer(_channel);
+            consumer.ReceivedAsync += async (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var eventType = _exchangeNames.FirstOrDefault(x => x.Value == queueName).Key;
+                var networkEvent = (NetworkEvent)JsonSerializer.Deserialize(message, eventType);
+
+                await subscriber.Notify(networkEvent);
+            };
+
+            await _channel.BasicConsumeAsync(
+                queue: queueName,
+                autoAck: true,
+                consumer: consumer,
+                cancellationToken: cancellationToken);
+            
+        }
+
+        public Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[airQualityChangedEvent.GetType()];
+            string message = JsonSerializer.Serialize(airQualityChangedEvent);
             return PublishEvent(queueName, message, cancellationToken);
         }
 
