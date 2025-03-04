@@ -127,7 +127,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public ThermoElement(byte nodeid) : base(nodeid)
+        public ThermoElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

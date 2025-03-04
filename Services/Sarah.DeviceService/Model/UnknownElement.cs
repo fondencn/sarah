@@ -12,7 +12,7 @@ namespace Sarah.DeviceService.Model
         public override string ClassDescription => this._genericType;
 
 
-        public UnknownElement(byte nodeid) : base(nodeid)
+        public UnknownElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

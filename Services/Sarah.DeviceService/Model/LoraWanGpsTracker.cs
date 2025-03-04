@@ -144,7 +144,7 @@ namespace Sarah.DeviceService.Model
 
         private ITTNPayloadParser Parser { get; }
 
-        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId) : base(nodeid)
+        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId, IEventProcessingService events) : base(nodeid, events)
         {
             this.TtnDeviceId = ttnDeviceId;
             this.Parser = new SenseCapTTNParser(); // TODO: Make configurable if more devices get integrated

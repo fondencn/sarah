@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         // services.AddDbContextFactory<ApplicationDbContext>(options =>
         //     options.UseSqlite("Filename=" + ApplicationDbContext.DatabaseFileName));
         services.AddSingleton<INodeFactory, Sarah.NodeFactory.NodeFactory>();
+        services.AddSingleton<IEventProcessingService, EventProcessingService>();
         //The services.AddTransient method in ASP.NET Core's dependency injection 
         //system registers a service with a transient lifetime. 
         //This means that a new instance of the service will be created each time 

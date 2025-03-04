@@ -31,7 +31,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public ShellyWifiLamp(byte nodeid, string ipOrHostname) : base(nodeid)
+        public ShellyWifiLamp(byte nodeid, string ipOrHostname, IEventProcessingService events) : base(nodeid, events)
         {
             this.Hostname = ipOrHostname;
         }

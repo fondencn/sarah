@@ -9,110 +9,6 @@ using System.Threading.Tasks;
 
 namespace Sarah.API.BusinessObjects
 {
-    /// <summary>
-    /// Ein Pub/Sub Event Aggregator für Ereignisse im Netzwerk. 
-    /// Alle Subscriber werden asynchron benachrichtigt.
-    /// </summary>
-    public class NetworkEventAggregator : IDisposable
-    {
-        #region Singleton Pattern
-        private static NetworkEventAggregator _Instance = null;
-        public static NetworkEventAggregator Instance
-        {
-            get
-            {
-                if(_Instance == null)
-                {
-                    _Instance = new NetworkEventAggregator();
-                }
-                return _Instance;
-            }
-        }
-
-        public void Subscribe(INetworkEventSubscriber subscriber)
-        {
-            if(subscriber == null)
-            {
-                throw new ArgumentNullException(nameof(subscriber));
-            }
-
-            this.Subscribers.Add(subscriber);
-        }
-
-        private NetworkEventAggregator()
-        {
-            Task unwawaitedTask = Task.Run(DoEventProcessing);
-        }
-
-
-        private bool ContinueProcessing { get; set; } = true;
-        public void Dispose()
-        {
-            this.ContinueProcessing = false;
-        }
-        #endregion
-
-        /// <summary>
-        /// Events
-        /// </summary>
-        private ConcurrentQueue<NetworkEvent> Events { get; } = new ConcurrentQueue<NetworkEvent>();
-
-        /// <summary>
-        /// Anzahl Events im Puffer
-        /// </summary>
-        public int EventCount => Events.Count;
-
-        /// <summary>
-        /// Subscribers
-        /// </summary>
-        private ConcurrentBag<INetworkEventSubscriber> Subscribers { get; } = new ConcurrentBag<INetworkEventSubscriber>();
-
-        /// <summary>
-        /// Anzahl von Zuhörern, die bei neuen Ereignissen benachrichtigt werden
-        /// </summary>
-        public int SubscriberCount => Subscribers.Count;
-
-
-
-        /// <summary>
-        /// Registriert ein neues Ereignis beim Aggregator
-        /// </summary>
-        /// <param name="e">Das neue Ereignis</param>
-        public void Report(NetworkEvent e)
-        {
-            this.Events.Enqueue(e);
-            this._semaphore.Set();
-        }
-
-        private ManualResetEvent _semaphore = new ManualResetEvent(false);
-
-        private  void DoEventProcessing()
-        {
-            while(this.ContinueProcessing)
-            {
-                this._semaphore.WaitOne();
-
-                while (this.Events.TryDequeue(out NetworkEvent e))
-                {
-                    foreach (var subscriber in this.Subscribers)
-                    {
-                        try
-                        {
-                            subscriber.Notify(e).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.LogDebug("Fehler beim Event processing: " + ex.Message);
-                        }
-                    }
-                }
-
-                this._semaphore.Reset();
-            }
-        }
-    }
-
-
     public abstract class NetworkEvent
     {
 
@@ -190,6 +86,9 @@ namespace Sarah.API.BusinessObjects
         }
     }
 
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Person zu hause anwesend oder abwesend gemeldet wird
+    /// </summary>
     public class PersonAvailabilityEvent : NetworkEvent
     {
         public long Id_Person { get; private set; }
@@ -202,6 +101,10 @@ namespace Sarah.API.BusinessObjects
             this.PersonName = personName;
         }
     }
+
+    /// <summary>
+    ///   Event wird ausgelöst, wenn eine Person ein GeoFence betritt oder verlässt
+    /// </summary>
     public class PersonGeoFenceEvent : NetworkEvent
     {
         public long Id_Person { get; private set; }
@@ -217,16 +120,9 @@ namespace Sarah.API.BusinessObjects
         }
     }
 
-    public class ImpftermineChangedEvent : NetworkEvent
-    {
-        public bool IsTerminAvailable { get; private set; }
-        public ImpftermineChangedEvent(bool newState) : base(0, "ImpftermineChanged")
-        {
-            this.IsTerminAvailable = newState;
-        }
-    }
-
-
+    /// <summary>
+    /// Event wird ausgelöst, wenn sich die Luftqualität in einem Raum ändert
+    /// </summary>
     public class AirQualityChangedEvent : NetworkEvent
     {
         public AirQualityChangedEvent(byte source ,

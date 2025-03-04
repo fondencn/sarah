@@ -72,7 +72,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public Lamp(byte nodeid, LampColorModes mode) : base(nodeid)
+        public Lamp(byte nodeid, LampColorModes mode, IEventProcessingService events) : base(nodeid, events)
         {
             this.ColorMode = mode;
         }

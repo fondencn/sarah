@@ -26,7 +26,7 @@ namespace Sarah.DeviceService.Model
         private DateTime _lastStateChange;
 
 
-        protected WallPlug(byte nodeid) : base(nodeid)
+        protected WallPlug(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 
@@ -294,7 +294,7 @@ public class ZWaveWallPlug : WallPlug
         /// ctor
         /// </summary>
         /// <param name="nodeid">ID des ZWave Knotens</param>
-        public ZWaveWallPlug(byte nodeid) : base(nodeid)
+        public ZWaveWallPlug(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

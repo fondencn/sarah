@@ -23,13 +23,17 @@ namespace Sarah.DeviceService
     {
         private readonly IConfiguration _configuration;
         private readonly INodeFactory _nodeFactory;
+        private readonly IEventProcessingService _events;
+
+
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
+            this._events = events;
         }
 
 
@@ -214,7 +218,7 @@ namespace Sarah.DeviceService
                     if (nodeElement == null)
                     {
                         Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
-                        networkElements.Add(new UnknownElement(n.NodeID));
+                        networkElements.Add(new UnknownElement(n.NodeID, this._events));
                     }
                     else
                     {
@@ -232,7 +236,7 @@ namespace Sarah.DeviceService
                 if (nodeElement == null)
                 {
                     Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
-                    networkElements.Add(new UnknownElement(nodeId));
+                    networkElements.Add(new UnknownElement(nodeId, this._events));
                 }
                 else
                 {

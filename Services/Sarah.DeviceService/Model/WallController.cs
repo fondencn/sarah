@@ -39,7 +39,7 @@ namespace Sarah.DeviceService.Model
         public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
 
 
-        public WallController(byte nodeid) : base(nodeid)
+        public WallController(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 
