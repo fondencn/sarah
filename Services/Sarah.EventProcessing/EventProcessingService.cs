@@ -21,7 +21,10 @@ namespace Sarah.EventProcessing
 
         private Dictionary<Type, string> _exchangeNames = new Dictionary<Type, string>
         {
-            { typeof(NetworkEvent), "networkevents" }
+            { typeof(NetworkEvent<string>), "networkevents" },
+            { typeof(NetworkEvent<float>), "networkevents" },
+            { typeof(NetworkEvent<bool>), "networkevents" },
+            { typeof(NetworkEvent<int>), "networkevents" },
         };  
 
         public EventProcessingService(ILogger<EventProcessingService> logger, IConfiguration configuration)    
@@ -30,9 +33,15 @@ namespace Sarah.EventProcessing
             _configuration = configuration;
         }
 
-        public async Task InitializeAsync()
+        public async Task Start()
         {
-            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQ:HostName"] };
+            var factory = new ConnectionFactory() 
+            { 
+                HostName = _configuration["RabbitMQ:HostName"] ?? "",
+                Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
+                UserName = _configuration["RabbitMQ:UserName"] ?? "",
+                Password = _configuration["RabbitMQ:Password"] ?? ""
+            };
             
             _connection = await factory.CreateConnectionAsync();
             _channel = await _connection.CreateChannelAsync();
@@ -54,19 +63,28 @@ namespace Sarah.EventProcessing
             return PublishEvent(queueName, message, cancellationToken);
         }
 
+        public  Task PublishNetworkEventAsync<T>(NetworkEvent<T> networkEvent, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[networkEvent.GetType()];
+            string message = JsonSerializer.Serialize(networkEvent);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
         private async Task PublishEvent(string queueName, string message, CancellationToken cancellationToken = default)
         {
             var body = Encoding.UTF8.GetBytes(message);
 
+            if (_channel != null) 
+            {
+                await _channel.BasicPublishAsync(
+                    exchange: queueName, 
+                    routingKey: "",
+                    mandatory: true,  
+                    body: body,
+                    cancellationToken);
 
-            await _channel.BasicPublishAsync(
-                exchange: queueName, 
-                routingKey: "",
-                mandatory: true,  
-                body: body,
-                cancellationToken);
-
-            _logger.LogInformation("{1} Sent to {0}", queueName, message);
+                _logger.LogInformation($"Message {message} was sent to queue {queueName}...");
+            }
         }
 
         public void Dispose()

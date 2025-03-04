@@ -7,6 +7,9 @@ namespace Sarah.API.Interfaces
 {
     public interface IEventProcessingService 
     {
+
+        Task Start();
+        Task PublishNetworkEventAsync<T>(NetworkEvent<T> networkEvent, CancellationToken cancellationToken = default);
         Task PublishNetworkEventAsync(NetworkEvent networkEvent, CancellationToken cancellationToken = default);
     }
 }

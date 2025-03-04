@@ -65,11 +65,20 @@ namespace Sarah.API.BusinessObjects
         }
 
         /// <summary>
+        /// Übergibt ein beliebiges Netzwerkereignis an den Event Aggregator
+        /// </summary>
+        /// <param name="e"></param>
+        protected void ReportEvent<T>(NetworkEvent<T> e)
+        {
+            _EventProcessing.PublishNetworkEventAsync(e);
+        }
+
+        /// <summary>
         /// Liefert die Assoziationsgruppen des Geräts
         /// </summary>
         public virtual Task<IAssociationGroup[]> GetAssociationGroups(IDeviceService network)
         {
-            return (network.GetAssociationGroups(this.NodeID)) ;
+            return network.GetAssociationGroups(this.NodeID);
 
         }
 
