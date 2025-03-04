@@ -9,15 +9,9 @@ namespace Sarah.NodeFactory
     /// <summary>
     /// Factory Klasse für alle bekannten Netzwerkknoten
     /// </summary>
-    public class NodeFactory : INodeFactory
+    public class NodeFactory(IEventProcessingService events) : INodeFactory
     {
-        private readonly IEventProcessingService _events;
-
-        public Nodefactory(IEventProcessingService events)
-        {
-            this._events = events;
-        }
-
+        private readonly IEventProcessingService _events = events;
         private readonly Dictionary<byte, Type> _knownNodes = new Dictionary<byte, Type>()
         {
             {1, typeof(ControllerElement)} ,
