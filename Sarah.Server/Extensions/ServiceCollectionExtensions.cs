@@ -7,6 +7,7 @@ using Sarah.Logging;
 using Sarah.Persons;
 using Sarah.Geofences;
 using Sarah.EventProcessing;
+using Sarah.Monitoring;
 
 namespace Sarah.Server.Extensions;
 
@@ -29,5 +30,28 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDeviceService, Sarah.DeviceService.DeviceService>();
         services.AddSingleton<IGeoFenceService, GeoFenceService>();
         services.AddSingleton<IPersonService, PersonService>();
+        services.AddSingleton<IMonitoringService, MonitoringService>();
+    }
+
+
+
+    /// <summary>
+    /// Initializes the required services for the Sarah application.
+    /// </summary>
+    /// <param name="app">The <see cref="WebApplication"/> instance.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task InitSarahServices(this WebApplication app)
+    {
+        var logger = app.Services.GetRequiredService<Logger>();
+        logger.LogInfo("initializing required services..");
+
+        await app.Services.GetRequiredService<IEventProcessingService>()
+            .Start();
+        await app.Services.GetRequiredService<IDeviceService>()
+            .Start();
+        await app.Services.GetRequiredService<IMonitoringService>()
+            .Start();
+
+        logger.LogInfo("initialization done.");
     }
 }

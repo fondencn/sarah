@@ -119,7 +119,7 @@ namespace Sarah.Server
 
             var httpsPort = builder.Configuration["HTTPS_BACKEND_PORT"] ?? "7165";
             //var httpsFrontendPort = builder.Configuration["HTTPS_FRONTEND_PORT"] ?? "4200";
-            
+
             var certPath = builder.Configuration["CERT_PATH"];
             var certPassword = builder.Configuration["CERT_PASSWORD"];
 
@@ -188,16 +188,9 @@ namespace Sarah.Server
             //     spa.UseProxyToSpaDevelopmentServer(frontendUrl);
             // });
 
-            app.Services.GetRequiredService<Sarah.Logging.Logger>()
-                .LogInfo("initializing required services..");
-            app.Services.GetRequiredService<IEventProcessingService>()
-                .Start()
-                .Wait();
-            app.Services.GetRequiredService<IDeviceService>()
-                .Start()
-                .Wait();
-            app.Services.GetRequiredService<Sarah.Logging.Logger>()
-                .LogInfo("initialization done.");
+            app.InitSarahServices()
+            .Wait();
+
             app.Run();
         }
     }

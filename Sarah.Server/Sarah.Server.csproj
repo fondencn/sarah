@@ -35,5 +35,6 @@
     <ProjectReference Include="..\Services\Sarah.Persons\Sarah.Persons.csproj" />
     <ProjectReference Include="..\Services\Sarah.Geofences\Sarah.Geofences.csproj" />
     <ProjectReference Include="..\Services\Sarah.EventProcessing\Sarah.EventProcessing.csproj" />
+    <ProjectReference Include="..\Services\Sarah.Monitoring\Sarah.Monitoring.csproj" />
   </ItemGroup>
 </Project>
