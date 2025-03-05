@@ -1,13 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using Sarah.API.Interfaces;
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 using Sarah.API.BusinessObjects;
 using RabbitMQ.Client.Events;
 
@@ -22,13 +18,17 @@ namespace Sarah.EventProcessing
 
         private Dictionary<Type, string> _exchangeNames = new Dictionary<Type, string>
         {
-            { typeof(NetworkEvent<string>),     "networkevents-string" },
-            { typeof(NetworkEvent<float>),      "networkevents-float" },
-            { typeof(NetworkEvent<bool>),       "networkevents-bool" },
-            { typeof(NetworkEvent<int>),        "networkevents-int" },
-            { typeof(NetworkEvent),             "networkevents" },
-            { typeof(AirQualityChangedEvent),   "airqualityevents" },
-            { typeof(SayEvent),                 "speech" },
+            { typeof(NetworkEvent<string>),                 "networkevents-string" },
+            { typeof(NetworkEvent<float>),                  "networkevents-float" },
+            { typeof(NetworkEvent<bool>),                   "networkevents-bool" },
+            { typeof(NetworkEvent<int>),                    "networkevents-int" },
+            { typeof(NetworkEvent),                         "networkevents" },
+            { typeof(AirQualityChangedEvent),               "airqualityevents" },
+            { typeof(SayEvent),                             "speechevents" },
+            { typeof(PersonAvailabilityEvent),              "personavailabilityevents" },
+            { typeof(PersonGeoFenceEvent),                  "geofenceevents" },
+            { typeof(OutDoorTemperatureChangedEvent),       "outdoortempevents" },
+            { typeof(WeatherWarningEvent),                  "weatherwarningevents" },
         };  
 
         public EventProcessingService(ILogger<EventProcessingService> logger, IConfiguration configuration)    
@@ -82,7 +82,7 @@ namespace Sarah.EventProcessing
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 var eventType = _exchangeNames.FirstOrDefault(x => x.Value == queueName).Key;
-                var networkEvent = (NetworkEvent)JsonSerializer.Deserialize(message, eventType);
+                var networkEvent = (NetworkEvent)JsonSerializer.Deserialize(message, eventType)!;
 
                 await subscriber.Notify(networkEvent);
             };
@@ -103,6 +103,36 @@ namespace Sarah.EventProcessing
         }
 
         public Task PublishSay(SayEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishGeoFenceEventAsync(PersonGeoFenceEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishPersonAvailabilityAsync(PersonAvailabilityEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+
+
+        public Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishWeatherWarningEventAsync(WeatherWarningEvent e, CancellationToken cancellationToken = default)
         {
             string queueName = _exchangeNames[e.GetType()];
             string message = JsonSerializer.Serialize(e);

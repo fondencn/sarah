@@ -11,7 +11,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices) : INetworkEventSubscriber, ICanSelfTest
+    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -137,7 +137,7 @@ namespace Sarah.Monitoring.Monitors
                                     associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
                                 }
 
-                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this));
+                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this, _weather));
                             }
                         }
                         else
@@ -232,6 +232,7 @@ namespace Sarah.Monitoring.Monitors
             private readonly IEventProcessingService _events;
             private readonly IDeviceService _devices;
             private readonly DoorMonitor _doorMonitor;
+            private readonly IWeatherProvider _weather;
 
             /// <summary>
             /// Der Türsensor
@@ -283,12 +284,13 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room room, IDBService db, bool warnAtOpen, byte[] associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor)
+            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room room, IDBService db, bool warnAtOpen, byte[] associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather)
             {
                 this._db = db;
                 this._events = events;
                 this._devices = devices;
                 this._doorMonitor = doorMonitor;
+                this._weather = weather;
                 this.Device = device;
                 this.Room = room;
                 this.SensorThreshold = sensorThreshold;
@@ -384,7 +386,7 @@ namespace Sarah.Monitoring.Monitors
                                         if (avgTemp < 18)
                                         {
                                             sayMsg += "Die Raumtemperatur beträgt nur noch " + avgTemp + "°C. ";
-                                            if (WeatherMonitor.Instance.CurrentOutdoorTemperature < 12)
+                                            if (_weather.CurrentOutdoorTemperature < 12)
                                             {
                                                 sayMsg += "Draußen ist es kalt, Fenster bitte schließen. ";
                                             }
@@ -392,7 +394,7 @@ namespace Sarah.Monitoring.Monitors
                                         else if (avgTemp > 26)
                                         {
                                             sayMsg += "Die Raumtemperatur beträgt mehr als " + avgTemp + "°C. ";
-                                            if (WeatherMonitor.Instance.CurrentOutdoorTemperature > 27)
+                                            if (_weather.CurrentOutdoorTemperature > 27)
                                             {
                                                 sayMsg += "Draußen ist es ziemlich heiß, Fenster bitte schließen. ";
                                             }

@@ -1,11 +1,12 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Sarah.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor (IDBService _db) : ICanSelfTest
+    public class PersonMonitor (IDBService _db, IEventProcessingService _events, IGeoFenceService _geofences) : ICanSelfTest
     {
         private readonly object DBLock = new object();
 
@@ -26,10 +27,10 @@ namespace Sarah.Monitoring.Monitors
 
 
         private Task UpdateTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
         private Dictionary<long, bool> ConnectionStatesByPersonId { get; } = new Dictionary<long, bool>();
-        private Dictionary<long, IGeoFence> GeoFencesByPersonId { get; } = new Dictionary<long, IGeoFence>();
+        private Dictionary<long, IGeoFence?> GeoFencesByPersonId { get; } = new Dictionary<long, IGeoFence?>();
 
         public Task Start()
         {
@@ -72,20 +73,14 @@ namespace Sarah.Monitoring.Monitors
                     if (changed)
                     {
                         ConnectionStatesByPersonId[person.Id] = currentState;
-                        NetworkEventAggregator.Instance.Report(new PersonAvailabilityEvent(person.Id, person.Name, currentState));
+                        await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person.Name, currentState));
                     }
 
-                    //if (!currentState)
-                    //{
                         /* Person ist nicht daheim -> Suchen, ob sie sich in einem GeoFence befindet oder im Vergleich zum letzten Mal einen Verlassen hat */
-                        await person.LoadLocationTrace(DB);
-                        GeoFence currentFence = null;
-                        if (person.Trace?.Any() == true)
-                        {
-                            currentFence = GeoFences.GetCurrent(person.Trace.FirstOrDefault());
-                        }
+
                 
-                        GeoFence lastFence;
+                        IGeoFence? lastFence, currentFence = null;
+                        currentFence = person.CurrentGeoFence;
 
                         if (!GeoFencesByPersonId.TryGetValue(person.Id, out lastFence))
                         {
@@ -97,9 +92,8 @@ namespace Sarah.Monitoring.Monitors
                         {
                             /* GeoFence Der Person hat sich geändert -> Event auslösen! */
                             GeoFencesByPersonId[person.Id] = currentFence;
-                            NetworkEventAggregator.Instance.Report(new PersonGeoFenceEvent(person.Id, person.Name, currentFence, lastFence));
+                            await _events.PublishGeoFenceEventAsync(new PersonGeoFenceEvent(person.Id, person.Name, currentFence, lastFence));
                         }
-                    //}
                 }
                 this._lastUpdate = DateTime.Now;
             }
@@ -109,55 +103,55 @@ namespace Sarah.Monitoring.Monitors
             }
         }
 
-        /// <summary>
-        /// Gibt an, ob die Person mit dem angegebenen Namen aktuell zuhause ist. 
-        /// Dies erfolgt über das verbundene Mobiltelefon und über den zugeordneten GPS Tracker. 
-        /// 
-        /// Wenn eines der beiden Geräte im Zuhause Geofence ist, dann gilt die Person als Anwesend. 
-        /// </summary>
-        /// <param name="personName">Name der gesuchten Person</param>
-        /// <returns>true wenn das Mobiltelefon oder der GPS Tracker der Person zu Hause ist</returns>
-        public bool IsPresent(string personName)
-        {
-            lock (DBLock)
-            {
-                bool res;
-                try
-                {
-                    var person = _db.Persons.AsEnumerable().FirstOrDefault(item => String.Equals(item.Name, personName, StringComparison.OrdinalIgnoreCase));
+        // /// <summary>
+        // /// Gibt an, ob die Person mit dem angegebenen Namen aktuell zuhause ist. 
+        // /// Dies erfolgt über das verbundene Mobiltelefon und über den zugeordneten GPS Tracker. 
+        // /// 
+        // /// Wenn eines der beiden Geräte im Zuhause Geofence ist, dann gilt die Person als Anwesend. 
+        // /// </summary>
+        // /// <param name="personName">Name der gesuchten Person</param>
+        // /// <returns>true wenn das Mobiltelefon oder der GPS Tracker der Person zu Hause ist</returns>
+        // public bool IsPresent(string personName)
+        // {
+        //     lock (DBLock)
+        //     {
+        //         bool res;
+        //         try
+        //         {
+        //             var person = _db.Persons.AsEnumerable().FirstOrDefault(item => String.Equals(item.Name, personName, StringComparison.OrdinalIgnoreCase));
 
 
-                    res = InteLuk.HomeNet.HomeNetwork.Instance.KnownHosts?
-                        .Any(item => String.Equals(item.Hostname, person.MobilePhoneHostname, StringComparison.OrdinalIgnoreCase)
-                            && item.IsConnected) == true;
+        //             res = InteLuk.HomeNet.HomeNetwork.Instance.KnownHosts?
+        //                 .Any(item => String.Equals(item.Hostname, person.MobilePhoneHostname, StringComparison.OrdinalIgnoreCase)
+        //                     && item.IsConnected) == true;
 
-                    if (person.GPSTrackerID != 0)
-                    {
-                        var trackerDevice = _db.Devices.First(item => item.Id == person.GPSTrackerID);
-                        IGPSTracker tracker = trackerDevice.NetworkElement as IGPSTracker;
-                        if (tracker != null && tracker.Position?.IsValid == true)
-                        {
-                            bool isTrackerAtHome = GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause;
-                            res |= isTrackerAtHome;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Instance.LogDebug("Fehler beim Abfragen  der Präsenz von " + personName + ": " + ex.Message);
-                    res = false;
-                }
-                return res;
-            }
-        }
+        //             if (person.GPSTrackerID != 0)
+        //             {
+        //                 var trackerDevice = _db.Devices.First(item => item.Id == person.GPSTrackerID);
+        //                 IGPSTracker tracker = trackerDevice.NetworkElement as IGPSTracker;
+        //                 if (tracker != null && tracker.Position?.IsValid == true)
+        //                 {
+        //                     bool isTrackerAtHome = GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause;
+        //                     res |= isTrackerAtHome;
+        //                 }
+        //             }
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             Logger.Instance.LogDebug("Fehler beim Abfragen  der Präsenz von " + personName + ": " + ex.Message);
+        //             res = false;
+        //         }
+        //         return res;
+        //     }
+        // }
 
-        public bool IsSomeonePresent()
-        {
-            bool isDeviceInHomeWifi = this.ConnectionStatesByPersonId.Count > 0 && this.ConnectionStatesByPersonId.Any(entry => entry.Value == true);
-            bool isTrackerAtHome = InteLukNetwork.GetSingletonInstance().GPSTrackers.Any(tracker => GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause);
+        // public bool IsSomeonePresent()
+        // {
+        //     bool isDeviceInHomeWifi = this.ConnectionStatesByPersonId.Count > 0 && this.ConnectionStatesByPersonId.Any(entry => entry.Value == true);
+        //     bool isTrackerAtHome = InteLukNetwork.GetSingletonInstance().GPSTrackers.Any(tracker => GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause);
 
-            return isDeviceInHomeWifi || isTrackerAtHome;
-        }
+        //     return isDeviceInHomeWifi || isTrackerAtHome;
+        // }
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {

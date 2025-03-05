@@ -1,6 +1,10 @@
-﻿using Sarah.API.BusinessObjects;
+﻿using Microsoft.Extensions.Configuration;
+using Sarah.API.BusinessObjects;
+using Sarah.API.Extensions;
 using Sarah.API.Interfaces;
 using Sarah.Logging;
+using Sarah.Monitoring.BusinessObjects.OpenWeather.CurrentWeather;
+using Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast;
 using System.Text.RegularExpressions;
 
 namespace Sarah.Monitoring.Monitors
@@ -8,7 +12,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachung für Wetterwarnungen (In-Memory, Datenquelle DWD-Warnwetter)
     /// </summary>
-    public class WeatherMonitor : IWeatherProvider, ICanSelfTest
+    public class WeatherMonitor(IConfiguration _config, IEventProcessingService _events) : IWeatherProvider, ICanSelfTest
     {
         private static readonly Uri _DwdUri = new Uri("https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json");
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(30);
@@ -18,11 +22,11 @@ namespace Sarah.Monitoring.Monitors
         private static readonly TimeSpan _UpdateIntervalWarnings = TimeSpan.FromMinutes(10);
 #endif
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(3);
-        private string WarnLocation { get; set; }
+        private string WarnLocation { get; set; } = "";
 
-        private Task UpdateTask { get; set; }
-        private Task UpdateWarningsTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
+        private Task? UpdateTask { get; set; }
+        private Task? UpdateWarningsTask { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
         /// <summary>
         /// DIe aktuellen Warnungen für den eingestellten Landkreis (DWD-Format)
@@ -32,12 +36,12 @@ namespace Sarah.Monitoring.Monitors
         /// <summary>
         /// Die aktuelle Wettervorhersage für den einstellten Ort
         /// </summary>
-        public OpenWeather.CurrentWeather.WeatherForecast CurrentWeather { get; set; }
+        public WeatherForecast? CurrentWeather { get; set; }
 
         /// <summary>
         /// Die Wettervorhersage
         /// </summary>
-        public OpenWeather.Forecast.Root WeatherForecast { get; set; }
+        public Root? WeatherForecast { get; set; }
 
         private DateTime LastUpdate { get; set; }
         private DateTime LastUpdateWarnings { get; set; }
@@ -46,7 +50,7 @@ namespace Sarah.Monitoring.Monitors
         /// <summary>
         /// OpenWeatherMap REST API freier Schlüssel für diese Anwendung
         /// </summary>
-        private static string OpenWeatherMap_ApiKey { get; } = "84bbd04458c25bf51c231b0e884ebdfd";
+        private string OpenWeatherMap_ApiKey => _config["OpenWeatherMap:ApiKey"] ?? "";
 
 
 
@@ -55,13 +59,6 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         public double CurrentOutdoorTemperature => (CurrentWeather?.main?.temp).GetValueOrDefault(22);
 
-        #region Singleton
-        public static WeatherMonitor Instance { get; } = new WeatherMonitor();
-
-        private WeatherMonitor()
-        {
-
-        }
         /// <summary>
         /// dtor (managed)
         /// </summary>
@@ -72,7 +69,6 @@ namespace Sarah.Monitoring.Monitors
                 this.UpdateCancellationTokenSource.Cancel();
             }
         }
-        #endregion
 
         /// <summary>
         /// Startet die Überwachung in einem eigenen Task
@@ -90,7 +86,7 @@ namespace Sarah.Monitoring.Monitors
             this.UpdateTask = Task.Run(Update, cts.Token);
             this.UpdateWarningsTask = Task.Run(UpdateWarnings, cts.Token);
 
-            Logger.Instance.LogDebug("WeatherMonitor gestartet und als Provider registriert.");
+            Logger.Instance.LogDebug("WeatherMonitor gestartet.");
 
             return Task.CompletedTask;
         }
@@ -147,7 +143,7 @@ namespace Sarah.Monitoring.Monitors
                 {
                     response.EnsureSuccessStatusCode();
                     string json = await response.Content.ReadAsStringAsync();
-                    OpenWeather.Forecast.Root forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenWeather.Forecast.Root>(json);
+                    Root forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<Root>(json)!;
                     this.WeatherForecast = forecast;
                     Logger.Instance.LogInfo("Wettervorhersage für " + forecast.city.name + " aktualisiert (" + forecast.cnt + " Elemente): " + forecast.message);
                     //NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
@@ -173,10 +169,10 @@ namespace Sarah.Monitoring.Monitors
                 {
                     response.EnsureSuccessStatusCode();
                     string json = await response.Content.ReadAsStringAsync();
-                    OpenWeather.CurrentWeather.WeatherForecast currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<OpenWeather.CurrentWeather.WeatherForecast>(json);
+                    WeatherForecast currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<WeatherForecast>(json)!;
                     this.CurrentWeather = currentWeather;
                     Logger.Instance.LogInfo("Aktuelles Wetter für " + currentWeather.name + " aktualisiert: " + currentWeather.DisplayText);
-                    NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
+                    await _events.PublishOutDoorTemperatureChangedEventAsync(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
                 }
             }
             catch (Exception ex)
@@ -198,7 +194,7 @@ namespace Sarah.Monitoring.Monitors
                 string resultJson = await http.GetStringAsync(_DwdUri);
                 resultJson = resultJson.Replace('\n', ' ').Replace('\r', ' ');
                 resultJson = resultJson.Substring("warnWetter.loadWarnings(".Length, resultJson.Length - "warnWetter.loadWarnings(".Length - 2);
-                DwdWarnings deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson);
+                DwdWarnings deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson)!;
 
 
                 IEnumerable<DwdWarning> ludwigsburgWarnings = deserialized.warnings
@@ -234,8 +230,8 @@ namespace Sarah.Monitoring.Monitors
                     str += "End: " + entry.EndDate + Environment.NewLine;
                     str += "instruction: " + entry.instruction + Environment.NewLine;
                     str += "LastWarn: " + entry.LastWarn + Environment.NewLine;
-                    Logger.Instance.LogError(str);
-                    NetworkEventAggregator.Instance.Report(new WeatherWarningEvent(entry.@event));
+                    Logger.Instance.LogInfo(str);
+                    await _events.PublishWeatherWarningEventAsync(new WeatherWarningEvent(entry.@event));
                     CurrentLocalWeatherWarnings.Add(entry);
                 }
 
@@ -253,7 +249,7 @@ namespace Sarah.Monitoring.Monitors
         /// Löst für alle Warnungen die neu sind oder das Warnintervall überschritten haben, eine Sprachwarnung aus
         /// </summary>
         /// <returns></returns>
-        private void RaisePendingWarnings()
+        private async Task RaisePendingWarnings()
         {
             List<string> warningMessages = new List<string>();
             foreach (DwdWarning warning in CurrentLocalWeatherWarnings)
@@ -288,7 +284,7 @@ namespace Sarah.Monitoring.Monitors
             {
                 string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
                     + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
-                NotificationEngine.Instance.Voice.Say(warnMessage, NotificationEngine.BroadcastAllSpeakers);
+                await _events.PublishSay(new SayEvent(warnMessage));
                 Logger.Instance.LogInfo(warnMessage);
             }
         }
@@ -366,7 +362,7 @@ namespace Sarah.Monitoring.Monitors
         }
 
 
-        private string GetWeatherString(IEnumerable<OpenWeather.Forecast.List> weatherItems)
+        private string GetWeatherString(IEnumerable<Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast.List> weatherItems)
         {
             if (weatherItems?.Any() == true)
             {
@@ -487,12 +483,12 @@ namespace Sarah.Monitoring.Monitors
             /// <summary>
             /// Liste mit Warnungen (key=id)
             /// </summary>
-            public Dictionary<string, DwdWarning[]> warnings { get; set; }
+            public Dictionary<string, DwdWarning[]>? warnings { get; set; }
 
             /// <summary>
             /// Liste mit Vorabinformationen zu Wetterlagen
             /// </summary>
-            public Dictionary<string, DwdWarning[]> vorabInformation { get; set; }
+            public Dictionary<string, DwdWarning[]>? vorabInformation { get; set; }
 
         }
 
@@ -510,17 +506,17 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             public string Key => description + "|" + start.GetValueOrDefault(0) + "|" + end.GetValueOrDefault(0);
 
-            public string regionName { get; set; }
+            public string? regionName { get; set; }
             public long? end { get; set; }
             public long? start { get; set; }
             public int? type { get; set; }
-            public string state { get; set; }
+            public string? state { get; set; }
             public int? level { get; set; }
-            public string description { get; set; }
-            public string @event { get; set; }
-            public string headline { get; set; }
-            public string instruction { get; set; }
-            public string stateShort { get; set; }
+            public string? description { get; set; }
+            public string? @event { get; set; }
+            public string? headline { get; set; }
+            public string? instruction { get; set; }
+            public string? stateShort { get; set; }
             /// <summary>
             /// Gibt an, wann dieses System zuletzt für diese Warnung eine Ausgabe gemacht hat
             /// </summary>
@@ -539,12 +535,12 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             public bool IsAllDayWarning => StartDate == EndDate;
 
-            public int CompareTo(DwdWarning other)
+            public int CompareTo(DwdWarning? other)
             {
                 return String.Compare(this.Key, other?.Key);
             }
 
-            public bool Equals(DwdWarning other)
+            public bool Equals(DwdWarning? other)
             {
                 return String.Equals(this.Key, other?.Key);
             }
@@ -561,7 +557,7 @@ namespace Sarah.Monitoring.Monitors
             /// <returns></returns>
             public string GetOutputString(bool getWarningDetails = false)
             {
-                string str;
+                string? str;
                 str = getWarningDetails ? this.description : this.headline;
                 if (this.StartDate.HasValue)
                 {
@@ -591,17 +587,18 @@ namespace Sarah.Monitoring.Monitors
                     else
                     {
                         // Irgendwann anders: Datum ausgeben
-                        str = "Am " + this.start.Value.ToString("dd.MM HH:mm") + " Uhr: " + str;
+                        str = "Am " + this.start!.Value.ToString("dd.MM HH:mm") + " Uhr: " + str;
                     }
 
-
+                    if (!String.IsNullOrEmpty(this.description)) {
                     Regex regexWind = new Regex("([0-9]+) km/h", RegexOptions.IgnoreCase);
-                    MatchCollection windmatches = regexWind.Matches(this.description);
+                    MatchCollection windmatches = regexWind.Matches(this.description!);
                     /* Bei Windwarnungen die Windgeschwindigkeit es der Description mit anhängen. Nicht alle Details, aber verkürzt nur die km/h */
                     if (windmatches.Any() && !getWarningDetails)
                     {
                         int maxKmh = windmatches.Select(m => Int32.Parse(m.Groups[1].Value)).Max();
                         str += ". Die Windgeschwindigkeit beträgt bis zu " + maxKmh + " Kilometer pro Stunde.";
+                    }
                     }
                 }
 
@@ -611,16 +608,16 @@ namespace Sarah.Monitoring.Monitors
                 // m/s, kn und bft raussschmeissen, uns interessieren nur die km/h
                 //"Es treten oberhalb 600 m Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus südwestlicher Richtung auf.
                 Regex regex = new Regex(@"\(([^)]*)\)");
-                MatchCollection matches = regex.Matches(str);
+                MatchCollection matches = regex.Matches(str!);
                 if (matches.Count > 0)
                 {
                     foreach (Match m in matches)
                     {
-                        str = str.Replace(m.Value, string.Empty);
+                        str = str!.Replace(m.Value, string.Empty);
                     }
                 }
 
-                return str;
+                return str!;
             }
         }
 
