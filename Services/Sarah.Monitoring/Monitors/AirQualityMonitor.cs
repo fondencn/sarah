@@ -17,7 +17,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachungsdienst für die Luftqualität in Räumen
     /// </summary>
-    internal class AirQualityMonitor(IDBService _db, IEventProcessingService _events, IDeviceService _devices, IConfiguration _config) : ICanSelfTest, INetworkEventSubscriber
+    internal class AirQualityMonitor(IDBService _db, IEventProcessingService _events, IDeviceService _devices) : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
         private bool IsRunning { get; set; }
         private DateTime LastUpdate { get; set; }
@@ -174,8 +174,8 @@ namespace Sarah.Monitoring.Monitors
 
             public DeviceInfo Device { get; private set; }
             public Room? Room { get; private set; }
-            private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
-            private Task Task { get; set; }
+            private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
+            private Task? Task { get; set; }
 
             public SurveillanceTask(DeviceInfo device, Room? room, IDeviceService devices, IEventProcessingService events)
             {
@@ -200,7 +200,7 @@ namespace Sarah.Monitoring.Monitors
             public void Cancel()
             {
                 Logger.Instance.LogDebug("Beende überwachung der Luftqualität: " + this.Device.Name + "... ");
-                this.UpdateCancellationTokenSource.Cancel();
+                this.UpdateCancellationTokenSource?.Cancel();
             }
 
             private async void Tick()
@@ -209,7 +209,7 @@ namespace Sarah.Monitoring.Monitors
                 {
                     Logger.Instance.LogDebug("Starte überwachung der Luftqualität: " + this.Device.Name + "... ");
 
-                    while (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
+                    while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
                         List<string> msg = new List<string>();
                         IMultiSensor sensor = (IMultiSensor)this.Device.GetNetworkItem(_devices);
@@ -258,7 +258,8 @@ namespace Sarah.Monitoring.Monitors
 
                             AirQualitityLevel badestLevel = new AirQualitityLevel[] { voc.Item1, co2.Item1, humidity.Item1 }
                                 .OrderByDescending(item => item).First();
-                            await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, badestLevel, String.Join(". " + Environment.NewLine, msg), this.Room.Name, "AirQualityChanged"));
+                            await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, badestLevel, String.Join(". " + Environment.NewLine, msg), 
+                                (this.Room?.Name ?? ""), "AirQualityChanged"));
                         }
 
                         /* warten uns später nochmal bescheid sagen */

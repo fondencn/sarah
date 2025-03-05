@@ -15,7 +15,7 @@ using Sarah.API.Extensions;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(IDBService _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config) : ICanSelfTest
+    internal class BatteryMonitor(IDBService _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config) : ICanSelfTest, IMonitor
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);

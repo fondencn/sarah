@@ -12,7 +12,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachung für Wetterwarnungen (In-Memory, Datenquelle DWD-Warnwetter)
     /// </summary>
-    public class WeatherMonitor(IConfiguration _config, IEventProcessingService _events) : IWeatherProvider, ICanSelfTest
+    public class WeatherMonitor(IConfiguration _config, IEventProcessingService _events) : IWeatherProvider, ICanSelfTest, IMonitor
     {
         private static readonly Uri _DwdUri = new Uri("https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json");
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(30);
@@ -74,13 +74,16 @@ namespace Sarah.Monitoring.Monitors
         /// Startet die Überwachung in einem eigenen Task
         /// </summary>
         /// <returns></returns>
-        public Task Start(string regionName)
+        public Task Start()
         {
             if (this.UpdateTask != null)
             {
                 throw new InvalidOperationException("WeatherMonitor wurde bereits gestartet und kann nicht noch einmal gestartet werden.");
             }
-            this.WarnLocation = regionName;
+            if (String.IsNullOrEmpty(this.WarnLocation)) 
+            {
+                throw new InvalidOperationException("WeatherMonitor wurde ohne WarnLocation gestartet.");
+            }
             CancellationTokenSource cts = new CancellationTokenSource();
             this.UpdateCancellationTokenSource = cts;
             this.UpdateTask = Task.Run(Update, cts.Token);

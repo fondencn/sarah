@@ -11,7 +11,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest
+    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest, IMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,

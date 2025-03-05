@@ -6,7 +6,7 @@ using Sarah.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor (IDBService _db, IEventProcessingService _events, IGeoFenceService _geofences) : ICanSelfTest
+    public class PersonMonitor (IDBService _db, IEventProcessingService _events) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 

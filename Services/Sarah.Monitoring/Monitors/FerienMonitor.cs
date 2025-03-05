@@ -8,7 +8,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Stellt Daten für Schulferien für das System bereit
     /// </summary>
-    public class FerienMonitor : IFerienInfoProvider, ICanSelfTest
+    public class FerienMonitor : IFerienInfoProvider, ICanSelfTest, IMonitor
     {
         /// <summary>
         /// Die bekannten Schulferien als vereinheitlichte Liste
@@ -24,30 +24,16 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         public Ferien? AktuelleFerien => this.Ferien?.FirstOrDefault(item => item.Start <= DateTime.Now && item.Ende >= DateTime.Now);
 
-        #region Singleton Pattern
-        /// <summary>
-        /// Singleton
-        /// </summary>
-        public static FerienMonitor Instance { get; } = new FerienMonitor();
-
-
-        /// <summary>
-        /// ctor
-        /// </summary>
-        private FerienMonitor()
-        {
-
-        }
-        #endregion
+    
 
         /// <summary>
         /// Lädt alle bekannten Ferien aus den Dateien im iCal Unterordner
         /// </summary>
         /// <returns></returns>
-        public Task Initialize()
+        public Task Start()
         {
             FerienDateien.Instance.Load();
-            Logger.Instance.LogDebug(FerienDateien.Instance.Items.Count + " Ferienelemente geladen.");
+            Logger.Instance.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
             return Task.CompletedTask;
         }
 

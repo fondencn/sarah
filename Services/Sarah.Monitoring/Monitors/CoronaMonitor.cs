@@ -7,7 +7,7 @@
 
 // namespace Sarah.Monitoring.Monitors
 // {
-//     public class CoronaMonitor (IEventProcessingService _events): IDeseaseStatsProvider, ICanSelfTest
+//     public class CoronaMonitor (IEventProcessingService _events): IDeseaseStatsProvider, ICanSelfTest, IMonitor
 //     {
 //         public string DeseaseName => "Corona";
 
