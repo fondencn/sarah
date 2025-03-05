@@ -18,7 +18,7 @@ public class MonitoringService (IDBService _db, IDeviceService _devices, IEventP
             new Monitors.PersonMonitor(_db, _events),
             new Monitors.BatteryMonitor(_db, _devices, _events, _config), 
             new Monitors.DoorMonitor(_db, _events, _devices, weather),
-            new Monitors.FerienMonitor(), 
+            new Monitors.FerienMonitor(_config), 
             weather
         };
 

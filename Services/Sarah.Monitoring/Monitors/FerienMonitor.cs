@@ -2,13 +2,14 @@
 using Sarah.API.Interfaces;
 using Sarah.Logging;
 using Ical.Net;
+using Microsoft.Extensions.Configuration;
 
 namespace Sarah.Monitoring.Monitors
 {
     /// <summary>
     /// Stellt Daten für Schulferien für das System bereit
     /// </summary>
-    public class FerienMonitor : IFerienInfoProvider, ICanSelfTest, IMonitor
+    public class FerienMonitor (IConfiguration _config) : IFerienInfoProvider, ICanSelfTest, IMonitor
     {
         /// <summary>
         /// Die bekannten Schulferien als vereinheitlichte Liste
@@ -32,7 +33,8 @@ namespace Sarah.Monitoring.Monitors
         /// <returns></returns>
         public Task Start()
         {
-            FerienDateien.Instance.Load();
+            string iCalFolder = _config["iCalFolder"];
+            FerienDateien.Instance.Load(iCalFolder);
             Logger.Instance.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
             return Task.CompletedTask;
         }
@@ -64,10 +66,10 @@ namespace Sarah.Monitoring.Monitors
         /// <summary>
         /// Lädt alle ics Dateien
         /// </summary>
-        public void Load()
+        public void Load(string iCalFolder)
         {
             List<FerienDatei> lst = new List<FerienDatei>();
-            foreach (string icalFile in Directory.EnumerateFiles(Path.Combine("wwwroot","ical"), "ferien_baden-wuerttemberg_*.ics"))
+            foreach (string icalFile in Directory.EnumerateFiles(iCalFolder, "ferien_baden-wuerttemberg_*.ics"))
             {
                 lst.Add(new FerienDatei(icalFile));
             }

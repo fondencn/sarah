@@ -16,4 +16,11 @@
     <PackageReference Include="Ical.Net" Version="4.3.1" />
   </ItemGroup>
 
+  <!-- Kalender Dateien in output kopieren -->
+  <ItemGroup>
+    <None Update="Services/Sarah.Monitoring/assets/ical/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
