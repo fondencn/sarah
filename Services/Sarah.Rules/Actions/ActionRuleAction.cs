@@ -1,0 +1,84 @@
+﻿using Sarah.API.BusinessObjects;
+using System;
+using System.Threading.Tasks;
+
+namespace Sarah.Rules.Actions
+{
+    /// <summary>
+    /// Beispielimplementierung einer Aktion, die beim Zutreffen einer Regel ausgeführt wird
+    /// (via Action-Callback)
+    /// </summary>
+    public class ActionRuleAction : RuleAction
+    {
+        private Action<NetworkEvent> ExecuteAction { get; }
+
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="executeAction">Callback der bei Execute aufgerufen wird</param>
+        public ActionRuleAction(Action<NetworkEvent> executeAction)
+        {
+            if(executeAction == null)
+            {
+                throw new ArgumentNullException(nameof(executeAction));
+            }
+            this.ExecuteAction = executeAction;
+        }
+
+
+        /// <summary>
+        /// Wird aufgerufen, wenn die zugeordnete Regel zutrifft
+        /// </summary>
+        public override void Execute(NetworkEvent sourceEvent)
+        {
+            try
+            {
+                this.ExecuteAction.Invoke(sourceEvent);
+            } 
+            catch (Exception ex)
+            {
+                Logging.Logger.Instance.LogException("Fehler beim Ausführen einer ActionRuleAction: " , ex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Beispielimplementierung einer Aktion, die beim Zutreffen einer Regel ausgeführt wird
+    /// (via Task)
+    /// </summary>
+    public class TaskRuleAction : RuleAction
+    {
+        private Func<Task> TaskFactory { get; }
+
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="executeAction">Callback der bei Execute aufgerufen wird</param>
+        public TaskRuleAction(Func<Task> taskFactory)
+        {
+            if (taskFactory == null)
+            {
+                throw new ArgumentNullException(nameof(taskFactory));
+            }
+            this.TaskFactory = taskFactory;
+        }
+
+
+        /// <summary>
+        /// Wird aufgerufen, wenn die zugeordnete Regel zutrifft
+        /// </summary>
+        public override void Execute(NetworkEvent sourceEvent)
+        {
+            try
+            {
+                Task promise = Task.Run(this.TaskFactory);
+                promise.Wait(TimeSpan.FromMinutes(2)); // warte max 2 Minuten auf Ende der Ausführung, das ist lang genug
+            }
+            catch (Exception ex)
+            {
+                Logging.Logger.Instance.LogException("Fehler beim Ausführen einer TaskRuleAction: ", ex);
+            }
+        }
+    }
+
+}

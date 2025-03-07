@@ -146,5 +146,11 @@ namespace Sarah.Persons
                 }
             }
         }
+
+        public async Task<bool> IsSomeonePresent()
+        {
+            var persons = await this.GetAllPersonsAsync();
+            return persons.Any(p => p.IsAtHome);
+        }
     }
 }

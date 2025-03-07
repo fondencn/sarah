@@ -158,4 +158,25 @@ namespace Sarah.API.BusinessObjects
         public string TargetSpeaker { get; }
         public SpeechVolume Volume { get; }
     }
+
+    public class StartAudioEvent {
+        public StartAudioEvent(string audioFileName, string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        {
+            this.TargetSpeaker = targetSpeaker;
+            this.AudioFileName = audioFileName;
+        }
+
+        public string TargetSpeaker { get; }
+        public string AudioFileName { get; }
+    }
+
+    public class StopAudioEvent 
+    {
+        public StopAudioEvent(string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        {
+            this.TargetSpeaker = targetSpeaker;
+        }
+
+        public string TargetSpeaker { get; }
+    }
 }

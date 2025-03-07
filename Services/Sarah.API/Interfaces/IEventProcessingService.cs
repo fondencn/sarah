@@ -18,5 +18,8 @@ namespace Sarah.API.Interfaces
         Task PublishGeoFenceEventAsync(PersonGeoFenceEvent personGeoFenceEvent, CancellationToken cancellationToken = default);
         Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent outDoorTemperatureChangedEvent, CancellationToken cancellationToken = default);
         Task PublishWeatherWarningEventAsync(WeatherWarningEvent weatherWarningEvent, CancellationToken cancellationToken = default);
+        Task PublishTimerEventAsync(TimerEvent timerEvent, CancellationToken cancellationToken = default);
+        Task PublishStartPlayAudioEventAsync(StartAudioEvent startAudioEvent, CancellationToken cancellationToken = default);
+        Task PublishStopPlayAudioEventAsync(StopAudioEvent stopAudioEvent, CancellationToken cancellationToken = default);
     }
 }
