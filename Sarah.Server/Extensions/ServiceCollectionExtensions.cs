@@ -8,6 +8,8 @@ using Sarah.Persons;
 using Sarah.Geofences;
 using Sarah.EventProcessing;
 using Sarah.Monitoring;
+using Sarah.Rules;
+using Sarah.API.Businessobjects;
 
 namespace Sarah.Server.Extensions;
 
@@ -31,6 +33,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGeoFenceService, GeoFenceService>();
         services.AddSingleton<IPersonService, PersonService>();
         services.AddSingleton<IMonitoringService, MonitoringService>();
+        services.AddSingleton<IRuleService, RuleService>();
+        services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
     }
 
 
@@ -43,14 +47,25 @@ public static class ServiceCollectionExtensions
     public static async Task InitSarahServices(this WebApplication app)
     {
         var logger = app.Services.GetRequiredService<Logger>();
+        var monitorService = app.Services.GetRequiredService<IMonitoringService>();
+        var deviceService = app.Services.GetRequiredService<IDeviceService>();
+        var eventService = app.Services.GetRequiredService<IEventProcessingService>();
+        var personService = app.Services.GetRequiredService<IPersonService>();
+        var email = app.Services.GetRequiredService<IEmailNotifier>();
         logger.LogInfo("initializing required services..");
 
-        await app.Services.GetRequiredService<IEventProcessingService>()
+        await eventService
             .Start();
-        await app.Services.GetRequiredService<IDeviceService>()
+        await deviceService
             .Start();
-        await app.Services.GetRequiredService<IMonitoringService>()
+        await monitorService
             .Start();
+
+        /* Feste Regeln von Christian hinzufügen. 
+         * TODO: Move this to external config instead of hardcoding 
+         */
+        app.Services.GetRequiredService<IRuleService>()
+            .RegisterRuleStore(new HardCodedRuleStore(monitorService.Weather, eventService, deviceService, personService, email, monitorService.Ferien));
 
         logger.LogInfo("initialization done.");
     }

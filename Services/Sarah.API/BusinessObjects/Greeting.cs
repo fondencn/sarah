@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sarah.Voice
+namespace Sarah.API.BusinessObjects
 {
     /// <summary>
     /// Bgrüßungsformeln

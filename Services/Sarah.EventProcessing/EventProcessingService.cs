@@ -29,6 +29,9 @@ namespace Sarah.EventProcessing
             { typeof(PersonGeoFenceEvent),                  "geofenceevents" },
             { typeof(OutDoorTemperatureChangedEvent),       "outdoortempevents" },
             { typeof(WeatherWarningEvent),                  "weatherwarningevents" },
+            { typeof(TimerEvent),                           "timerevents" },
+            { typeof(StartAudioEvent),                      "startaudioevents" },
+            { typeof(StopAudioEvent),                       "stopaudioevents" },
         };  
 
         public EventProcessingService(ILogger<EventProcessingService> logger, IConfiguration configuration)    
@@ -135,6 +138,27 @@ namespace Sarah.EventProcessing
         }
 
         public Task PublishWeatherWarningEventAsync(WeatherWarningEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishTimerEventAsync(TimerEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishStartPlayAudioEventAsync(StartAudioEvent e, CancellationToken cancellationToken = default)
+        {
+            string queueName = _exchangeNames[e.GetType()];
+            string message = JsonSerializer.Serialize(e);
+            return PublishEvent(queueName, message, cancellationToken);
+        }
+
+        public Task PublishStopPlayAudioEventAsync(StopAudioEvent e, CancellationToken cancellationToken = default)
         {
             string queueName = _exchangeNames[e.GetType()];
             string message = JsonSerializer.Serialize(e);

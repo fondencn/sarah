@@ -9,5 +9,8 @@ namespace Sarah.API.Interfaces.Services
     {
 
         Task Start();
+
+        IWeatherProvider Weather {get; }
+        IFerienInfoProvider Ferien {get; }
     }
 }
