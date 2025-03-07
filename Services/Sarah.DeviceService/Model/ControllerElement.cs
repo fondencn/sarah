@@ -10,7 +10,7 @@ namespace Sarah.DeviceService.Model
 {
     public class ControllerElement : NetworkElement, IControllerElement
     {
-        public ControllerElement(byte nodeid) : base(nodeid)
+        public ControllerElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

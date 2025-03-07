@@ -22,7 +22,9 @@ namespace Sarah.DeviceService.Model
         private SensorData _alarm;
         private SensorData _smokeDetected;
         private SensorData _overHeatDetected;
-        public SmokeSensor(byte nodeid) : base(nodeid)
+
+
+        public SmokeSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

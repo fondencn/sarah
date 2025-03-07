@@ -193,7 +193,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public MultiSensor(byte nodeid) : base(nodeid)
+        public MultiSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 

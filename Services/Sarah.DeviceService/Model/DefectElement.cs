@@ -13,7 +13,7 @@ namespace Sarah.DeviceService.Model
         public override string ClassDescription => this._genericType;
 
 
-        public DefectElement(byte nodeid) : base(nodeid)
+        public DefectElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
 
         }

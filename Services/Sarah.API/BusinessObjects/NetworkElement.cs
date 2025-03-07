@@ -11,6 +11,8 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public abstract class NetworkElement : INetworkElement
     {
+        private readonly IEventProcessingService _EventProcessing;
+
         /// <summary>
         /// Name
         /// </summary>
@@ -47,7 +49,11 @@ namespace Sarah.API.BusinessObjects
         /// ctor
         /// </summary>
         /// <param name="nodeid">ZWave Node ID des Geräts</param>
-        public NetworkElement(byte nodeid) { this.NodeID = nodeid; }
+        public NetworkElement(byte nodeid, IEventProcessingService  eventProcessing) 
+        { 
+            this.NodeID = nodeid; 
+            this._EventProcessing = eventProcessing;
+        }
 
         /// <summary>
         /// Übergibt ein beliebiges Netzwerkereignis an den Event Aggregator
@@ -55,7 +61,16 @@ namespace Sarah.API.BusinessObjects
         /// <param name="e"></param>
         protected void ReportEvent(NetworkEvent e)
         {
-            NetworkEventAggregator.Instance.Report(e);
+            _EventProcessing.PublishNetworkEventAsync(e);
+        }
+
+        /// <summary>
+        /// Übergibt ein beliebiges Netzwerkereignis an den Event Aggregator
+        /// </summary>
+        /// <param name="e"></param>
+        protected void ReportEvent<T>(NetworkEvent<T> e)
+        {
+            _EventProcessing.PublishNetworkEventAsync(e);
         }
 
         /// <summary>
@@ -63,7 +78,7 @@ namespace Sarah.API.BusinessObjects
         /// </summary>
         public virtual Task<IAssociationGroup[]> GetAssociationGroups(IDeviceService network)
         {
-            return (network.GetAssociationGroups(this.NodeID)) ;
+            return network.GetAssociationGroups(this.NodeID);
 
         }
 

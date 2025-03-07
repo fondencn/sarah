@@ -1,10 +1,39 @@
 using System;
+using Microsoft.Extensions.Configuration;
 using Sarah.API.BusinessObjects;
 
 namespace Sarah.API.Extensions
 {
     public static class DateTimeExtensions
     {
+        /// <summary>
+        /// Gibt an, ob das Datum in der in der Ruhezeit liegt
+        /// </summary>
+        /// <param name="dte"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static bool IsInSilentTime(this DateTime dte, IConfiguration config) 
+        {
+            int silentStart = int.Parse(config["SilentStartHour"] ?? "22");
+            int silentEnd = int.Parse(config["SilentStartHour"] ?? "6");
+
+            if (silentStart == 0 && silentEnd == 0)
+            {
+                return false;
+            }
+
+            var silentStartDateTime = new DateTime(dte.Year, dte.Month, dte.Day, silentStart, 0, 0);
+            var silentEndDateTime = new DateTime(dte.Year, dte.Month, dte.Day, silentEnd, 0, 0);
+
+            if (silentStartDateTime > silentEndDateTime)
+            {
+                silentEndDateTime = silentEndDateTime.AddDays(1);
+            }
+
+            return dte >= silentStartDateTime && dte <= silentEndDateTime;     
+        }
+
+
         /// <summary>
         /// Gibt an, ob sich das Datum in der Zukunft befindet mindestens einige Sekunden, weicher Vergleich)
         /// </summary>

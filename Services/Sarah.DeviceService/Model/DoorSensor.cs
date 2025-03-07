@@ -163,7 +163,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid">ZWave Node ID</param>
-        public DoorSensor(byte nodeid) : base(nodeid)
+        public DoorSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
         {
         }
 
