@@ -11,6 +11,7 @@ using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
 using Sarah.API.Extensions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -66,11 +67,11 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public Task Notify(NetworkEvent e)
+        public async Task Notify(NetworkEvent e)
         {
             try
             {
-                DeviceInfo? device = _db.Devices.FirstOrDefault(item => item.NodeID == e.SourceNodeId);
+                DeviceInfo? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
 
                 if (device != null)
                 {
@@ -82,7 +83,7 @@ namespace Sarah.Monitoring.Monitors
                         Room? room;
                         if (device.Id_Room.HasValue)
                         {
-                            room = _db.Rooms.Where(item => item.Id == device.Id_Room).FirstOrDefault();
+                            room = await _db.Rooms.FindAsync(device.Id_Room);
                         }
                         else
                         {
@@ -110,7 +111,7 @@ namespace Sarah.Monitoring.Monitors
                                 {
                                     //NotificationEngine.Instance.Voice.Say("Die Luftqualität im " + room.Name + " ist wiederhergestellt."
                                     //    , NotificationEngine.Speaker1);
-                                    _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, 
+                                    await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, 
                                         AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name, "AirQualityChanged"));
 
                                 }
@@ -124,7 +125,6 @@ namespace Sarah.Monitoring.Monitors
             {
                 Logger.Instance.LogError("Fehler beim Aktualisieren der Luftqualitätszustände: " + ex.Message);
             }
-            return Task.CompletedTask;
         }
 
 

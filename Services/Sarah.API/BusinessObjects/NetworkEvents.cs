@@ -15,17 +15,17 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// ZWave Node ID des Gerätes, welches das Ereignis ausgelöst hat
         /// </summary>
-        public byte SourceNodeId { get; }
+        public byte SourceNodeId { get; set;}
 
         /// <summary>
         /// Zeitpunkt, zu welchem Das Ereignis ausgelöst wurde
         /// </summary>
-        public DateTime CreationDate { get; }
+        public DateTime CreationDate { get;  set;}
 
         /// <summary>
         /// Name der veränderten Eigenschaft
         /// </summary>
-        public string Property { get; }
+        public string Property { get;  set;}
 
         /// <summary>
         /// ctor
@@ -38,6 +38,8 @@ namespace Sarah.API.BusinessObjects
             this.CreationDate = DateTime.Now;
             this.Property = caller;
         }
+
+        public NetworkEvent() : this(0, null) {}
     }
 
     /// <summary>
@@ -50,7 +52,7 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Der neue Wert
         /// </summary>
-        public TValue NewValue { get; }
+        public TValue NewValue { get; set;}
 
 
         /// <summary>
@@ -62,6 +64,11 @@ namespace Sarah.API.BusinessObjects
         {
             this.NewValue = newVal;
         }
+
+        /// <summary>
+        /// ctor 
+        /// </summary>
+        public NetworkEvent() : this(0, default, null) {}
     }
 
     /// <summary>

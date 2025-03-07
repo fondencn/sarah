@@ -12,6 +12,7 @@ public class MonitoringService (IDBService _db, IDeviceService _devices, IEventP
     public Task Start()
     {
         var weather = new Monitors.WeatherMonitor(_config, _events);
+        weather.WarnLocation = _config["WeatherWarnLocation"] ?? "";
         Monitors = new IMonitor[]
         {
             new Monitors.AirQualityMonitor(_db, _events, _devices),

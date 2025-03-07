@@ -4,6 +4,7 @@ using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -96,11 +97,11 @@ namespace Sarah.Monitoring.Monitors
         /// Wird aufgerufen, wenn eine Device-Nachricht veröffentlicht wird
         /// </summary>
         /// <param name="changedNodeId">ID des geändertes Knotens</param>
-        private void Update(byte changedNodeId)
+        private async Task Update(byte changedNodeId)
         {
             try
             {
-                DeviceInfo? device = _db.Devices.FirstOrDefault(item => item.NodeID == changedNodeId);
+                DeviceInfo? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID  ==(long)changedNodeId);
 
                 if (device != null)
                 {
@@ -123,7 +124,7 @@ namespace Sarah.Monitoring.Monitors
                                 Room? room;
                                 if (device.Id_Room.HasValue)
                                 {
-                                    room = _db.Rooms.Where(item => item.Id == device.Id_Room).FirstOrDefault();
+                                    room = await _db.Rooms.FindAsync(device.Id_Room);
                                 }
                                 else
                                 {
@@ -143,7 +144,7 @@ namespace Sarah.Monitoring.Monitors
                         else
                         {
                             /* Tür geschlossen, Überwachung beenden, kurze Sprachausgabe zur Info erzeugen */
-                            SurveillanceTask task = this.CurrentOpenDoorTasks.FirstOrDefault(task => task.Device.NodeID == changedNodeId);
+                            SurveillanceTask? task = this.CurrentOpenDoorTasks.FirstOrDefault(task => task.Device.NodeID == changedNodeId);
                             if (task != null)
                             {
                                 task.Cancel();
@@ -167,8 +168,7 @@ namespace Sarah.Monitoring.Monitors
         /// <returns>Task</returns>
         public Task Notify(NetworkEvent e)
         {
-            Update(e.SourceNodeId);
-            return Task.CompletedTask;
+            return Update(e.SourceNodeId);
         }
 
         /// <summary>

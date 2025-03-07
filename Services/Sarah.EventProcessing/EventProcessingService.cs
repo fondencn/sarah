@@ -73,10 +73,11 @@ namespace Sarah.EventProcessing
             string message = JsonSerializer.Serialize(networkEvent);
             return PublishEvent(queueName, message, cancellationToken);
         }
+
         public async Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default)
         {
             var queueName = _exchangeNames[typeof(NetworkEvent<string>)];
-            var consumer = new AsyncEventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel!);
             consumer.ReceivedAsync += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
@@ -87,12 +88,13 @@ namespace Sarah.EventProcessing
                 await subscriber.Notify(networkEvent);
             };
 
-            await _channel.BasicConsumeAsync(
+            await _channel!.BasicConsumeAsync(
                 queue: queueName,
                 autoAck: true,
                 consumer: consumer,
                 cancellationToken: cancellationToken);
             
+            _logger.LogDebug($"{subscriber.GetType().Name} subscribed to queue {queueName}...");
         }
 
         public Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default)

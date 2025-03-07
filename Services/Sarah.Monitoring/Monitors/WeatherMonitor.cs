@@ -22,7 +22,7 @@ namespace Sarah.Monitoring.Monitors
         private static readonly TimeSpan _UpdateIntervalWarnings = TimeSpan.FromMinutes(10);
 #endif
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(3);
-        private string WarnLocation { get; set; } = "";
+        internal string WarnLocation { get; set; } = "";
 
         private Task? UpdateTask { get; set; }
         private Task? UpdateWarningsTask { get; set; }
@@ -191,7 +191,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                Logger.Instance.LogError(nameof(UpdateWeatherWarnings));
+                Logger.Instance.LogDebug(nameof(UpdateWeatherWarnings));
 
                 HttpClient http = new HttpClient();
                 string resultJson = await http.GetStringAsync(_DwdUri);

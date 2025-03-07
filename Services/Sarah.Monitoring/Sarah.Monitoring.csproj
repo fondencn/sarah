@@ -18,8 +18,8 @@
 
   <!-- Kalender Dateien in output kopieren -->
   <ItemGroup>
-    <None Update="Services/Sarah.Monitoring/assets/ical/**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <None Update="assets/ical/**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

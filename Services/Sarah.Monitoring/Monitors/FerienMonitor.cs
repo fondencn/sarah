@@ -3,6 +3,7 @@ using Sarah.API.Interfaces;
 using Sarah.Logging;
 using Ical.Net;
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -15,8 +16,10 @@ namespace Sarah.Monitoring.Monitors
         /// Die bekannten Schulferien als vereinheitlichte Liste
         /// </summary>
         public IReadOnlyCollection<Ferien> Ferien => FerienDateien.Instance.Items
-            .SelectMany(ferienFile => ferienFile.Ferien)
-            .ToList()
+            ?.SelectMany(ferienFile => ferienFile.Ferien)
+            ?.ToList()
+            ?.AsReadOnly() 
+            ?? new List<Ferien>()
             .AsReadOnly();
 
 
@@ -33,7 +36,7 @@ namespace Sarah.Monitoring.Monitors
         /// <returns></returns>
         public Task Start()
         {
-            string iCalFolder = _config["iCalFolder"];
+            string iCalFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "/", _config["iCalFolder"] ?? "");
             FerienDateien.Instance.Load(iCalFolder);
             Logger.Instance.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
             return Task.CompletedTask;
@@ -68,6 +71,10 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         public void Load(string iCalFolder)
         {
+            if(!Directory.Exists(iCalFolder))
+            {
+                throw new InvalidOperationException("Der iCal Ordner existiert nicht: " + iCalFolder);
+            }
             List<FerienDatei> lst = new List<FerienDatei>();
             foreach (string icalFile in Directory.EnumerateFiles(iCalFolder, "ferien_baden-wuerttemberg_*.ics"))
             {
