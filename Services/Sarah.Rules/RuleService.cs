@@ -17,7 +17,7 @@ namespace Sarah.Rules
     /// <summary>
     /// Die RuleEngine (Singleton)
     /// </summary>
-    public sealed class RuleService : INetworkEventSubscriber, IDisposable
+    public sealed class RuleService : IRuleService, INetworkEventSubscriber, IDisposable
     {
         private readonly IDeviceService _devices;
         private readonly IEventProcessingService _events;

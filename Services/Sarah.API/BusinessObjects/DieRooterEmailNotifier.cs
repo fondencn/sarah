@@ -3,9 +3,9 @@ using Sarah.API.Interfaces;
 using System.Net;
 using System.Security;
 
-namespace Sarah.API.BUsinessobjects
+namespace Sarah.API.Businessobjects
 {
-    internal class DieRooterEmailNotifier : IEmailNotifier
+    public class DieRooterEmailNotifier : IEmailNotifier
     {
         private string? _smtpServer;
         private int _smtpPort;

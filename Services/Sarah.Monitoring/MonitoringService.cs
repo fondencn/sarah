@@ -25,4 +25,7 @@ public class MonitoringService (IDBService _db, IDeviceService _devices, IEventP
 
         return Task.WhenAll(Monitors.Select(m => m.Start()).ToArray());
     }
+
+    public IWeatherProvider Weather => Monitors.OfType<IWeatherProvider>().First();
+    public IFerienInfoProvider Ferien => Monitors.OfType<IFerienInfoProvider>().First();
 }
