@@ -12,7 +12,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest, IMonitor
+    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -132,7 +132,7 @@ namespace Sarah.Monitoring.Monitors
                                 }
                                 bool warnAtOpen = this.WarnImmediateNodeIds.Contains(device.NodeID);
 
-                                byte[] associatedHeatings;
+                                byte[]? associatedHeatings;
                                 if (!DoorToHeatingsMapping.TryGetValue(device.NodeID, out associatedHeatings))
                                 {
                                     associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
@@ -196,7 +196,7 @@ namespace Sarah.Monitoring.Monitors
         /// <returns></returns>
         public bool IsWindowForHeatingTracking(byte nodeID) =>
             this.CurrentOpenDoorTasks
-                .SelectMany(item => item.AssociatedHeatings)
+                .SelectMany(item => item.AssociatedHeatings ?? new byte[0])
                 .Any(item => item == nodeID);
 
 
@@ -207,7 +207,7 @@ namespace Sarah.Monitoring.Monitors
         /// <returns>Liste mit internen Überwachungstasks (daher ist die Methode private)</returns>
         private IList<SurveillanceTask> GetWindowTrackingsForHeating(byte heatingId) =>
             this.CurrentOpenDoorTasks
-                .Where(item => item.AssociatedHeatings.Contains(heatingId))
+                .Where(item => item.AssociatedHeatings?.Contains(heatingId) == true)
                 .ToList();
 
 
@@ -218,7 +218,7 @@ namespace Sarah.Monitoring.Monitors
         /// <param name="temperatureSetpoint">neuer Temperatur-Zielwert nach dem Schließen des Fensters</param>
         public void UpdateTargetTemperature(byte nodeID, byte temperatureSetpoint) =>
             this.CurrentOpenDoorTasks
-                .Where (item => item.AssociatedHeatings.Contains(nodeID))
+                .Where (item => item.AssociatedHeatings?.Contains(nodeID) == true)
                 .ToList()
                 .ForEach(item => item.UpdateOriginalHeatingTemperature(nodeID, temperatureSetpoint));
 
@@ -242,7 +242,7 @@ namespace Sarah.Monitoring.Monitors
             /// <summary>
             /// zugeordneter Raum
             /// </summary>
-            public Room Room { get; private set; }
+            public Room? Room { get; private set; }
 
             /// <summary>
             /// start-Zeit, ab wann gewarnt werden soll
@@ -257,7 +257,7 @@ namespace Sarah.Monitoring.Monitors
             /// <summary>
             /// Zugeordnete Heizkörper, die an/aus geschaltet werden sollen
             /// </summary>
-            public byte[] AssociatedHeatings { get; private set; }
+            public byte[]? AssociatedHeatings { get; private set; }
 
             /// <summary>
             /// CancellationToken um den Monitoring-Task abzubrechen
@@ -284,7 +284,7 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room room, IDBService db, bool warnAtOpen, byte[] associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather)
+            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room? room, IDBService db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather)
             {
                 this._db = db;
                 this._events = events;
@@ -310,7 +310,6 @@ namespace Sarah.Monitoring.Monitors
             {
                 this.UpdateCancellationTokenSource?.Cancel();
                 this.UpdateCancellationTokenSource?.Dispose();
-                this.UpdateCancellationTokenSource = null;
             }
 
             /// <summary>
@@ -499,8 +498,14 @@ namespace Sarah.Monitoring.Monitors
                         /* Wenn die gekoppelte Heizung bei öffnen an war, dann jetzt wieder einschalten */
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            List<DeviceInfo> heatingdeviceInfos = _db.Devices.ToList().Where(d => this.AssociatedHeatings.Contains(d.NodeID)).ToList();
-                            List<Room> rooms = _db.Rooms.ToList().Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id)).ToList();
+                            List<DeviceInfo> heatingdeviceInfos = _db.Devices
+                                .ToList()
+                                .Where(d => this.AssociatedHeatings?.Contains(d.NodeID) == true)
+                                .ToList();
+                            List<Room> rooms = _db.Rooms
+                                .ToList()
+                                .Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id))
+                                .ToList();
 
                             List<string> heatingMsg = new List<string>();
                             foreach(var origTemp in this.OriginalHeatingTemperatures)

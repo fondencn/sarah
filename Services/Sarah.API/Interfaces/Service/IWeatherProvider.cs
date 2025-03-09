@@ -15,6 +15,7 @@ namespace Sarah.API.Interfaces
         string GetWeatherForecastString(DateTime dteDate);
         string GetWeatherWarningString();
         DateTime? GetSunrise();
+        double? AverageTemperatureNext4Hours { get; }
     }
 
     public class OutDoorTemperatureChangedEvent : NetworkEvent<double>

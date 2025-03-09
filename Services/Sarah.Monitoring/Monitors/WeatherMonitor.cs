@@ -39,9 +39,18 @@ namespace Sarah.Monitoring.Monitors
         public WeatherForecast? CurrentWeather { get; set; }
 
         /// <summary>
+        /// DIe durchschnittliche vorhergesagte Temperatur für die nächsten 4 Stunden
+        /// </summary> 
+        public double? AverageTemperatureNext4Hours => 
+            this.WeatherForecast
+            ?.list
+            ?.Where(item => item.Date > DateTime.Now && item.Date < DateTime.Now.AddHours(4))
+            .Average(item => item.main.temp);
+
+        /// <summary>
         /// Die Wettervorhersage
         /// </summary>
-        public Root? WeatherForecast { get; set; }
+        internal Root? WeatherForecast { get; set; }
 
         private DateTime LastUpdate { get; set; }
         private DateTime LastUpdateWarnings { get; set; }
@@ -66,7 +75,7 @@ namespace Sarah.Monitoring.Monitors
         {
             if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running)
             {
-                this.UpdateCancellationTokenSource.Cancel();
+                this.UpdateCancellationTokenSource?.Cancel();
             }
         }
 
@@ -102,10 +111,10 @@ namespace Sarah.Monitoring.Monitors
             await UpdateForecast();
             this.LastUpdate = DateTime.Now;
 
-            while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+            while (!this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
             {
                 await Task.Delay(_UpdateInterval);
-                if (this.UpdateCancellationTokenSource.Token.IsCancellationRequested) break;
+                if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
                 await UpdateCurrentWeather();
                 await UpdateForecast();
@@ -120,10 +129,10 @@ namespace Sarah.Monitoring.Monitors
             await UpdateWeatherWarnings();
             this.LastUpdateWarnings = DateTime.Now;
 
-            while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+            while (!this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
             {
                 await Task.Delay(_UpdateIntervalWarnings);
-                if (this.UpdateCancellationTokenSource.Token.IsCancellationRequested) break;
+                if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
                 await UpdateWeatherWarnings();
                 this.LastUpdateWarnings = DateTime.Now;
@@ -200,12 +209,14 @@ namespace Sarah.Monitoring.Monitors
                 DwdWarnings deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson)!;
 
 
-                IEnumerable<DwdWarning> ludwigsburgWarnings = deserialized.warnings
-                    .Where(item => item.Value.Any(itemVal => itemVal.regionName.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase)))
+                IEnumerable<DwdWarning> ludwigsburgWarnings = deserialized.warnings!
+                    .Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
                     .SelectMany(item => item.Value)
                     .Concat(
-                        deserialized.vorabInformation.Where(item => item.Value.Any(itemVal => itemVal.regionName.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase)))
-                        .SelectMany(item => item.Value)
+                        deserialized.vorabInformation
+                        ?.Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
+                        ?.SelectMany(item => item.Value)
+                        ?? new List<DwdWarning>()
                     )
                     .ToList();
 
@@ -239,7 +250,7 @@ namespace Sarah.Monitoring.Monitors
                 }
 
                 /* check pending warnings */
-                RaisePendingWarnings();
+                _ = RaisePendingWarnings();
             }
             catch (Exception ex)
             {

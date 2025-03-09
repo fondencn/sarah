@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\Sarah.Logging\Sarah.Logging.csproj" />
     <ProjectReference Include="..\Sarah.Data\Sarah.Data.csproj" />
+    <ProjectReference Include="..\Sarah.Rules\Sarah.Rules.csproj" />
   </ItemGroup>
 
   <ItemGroup>
