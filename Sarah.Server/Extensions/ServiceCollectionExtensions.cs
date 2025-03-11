@@ -47,19 +47,20 @@ public static class ServiceCollectionExtensions
     public static async Task InitSarahServices(this WebApplication app)
     {
         var logger = app.Services.GetRequiredService<Logger>();
-        var monitorService = app.Services.GetRequiredService<IMonitoringService>();
-        var deviceService = app.Services.GetRequiredService<IDeviceService>();
-        var eventService = app.Services.GetRequiredService<IEventProcessingService>();
-        var personService = app.Services.GetRequiredService<IPersonService>();
-        var email = app.Services.GetRequiredService<IEmailNotifier>();
         logger.LogInfo("initializing required services..");
-
+        
+        var eventService = app.Services.GetRequiredService<IEventProcessingService>();
         await eventService
             .Start();
-        await deviceService
-            .Start();
+        var monitorService = app.Services.GetRequiredService<IMonitoringService>();
         await monitorService
             .Start();
+        var deviceService = app.Services.GetRequiredService<IDeviceService>();
+        await deviceService
+            .Start();
+        var personService = app.Services.GetRequiredService<IPersonService>();
+        var email = app.Services.GetRequiredService<IEmailNotifier>();
+
 
         /* Feste Regeln von Christian hinzufügen. 
          * TODO: Move this to external config instead of hardcoding 
