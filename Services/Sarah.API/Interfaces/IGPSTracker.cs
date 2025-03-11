@@ -10,5 +10,6 @@ namespace Sarah.API.Interfaces
         LocatorPosition Position { get; }
         LocatorPosition[] PositionTrace { get; }
         DateTime LastMessageReceived { get; }
+        SensorData IsButtonPressed { get; }
     }
 }

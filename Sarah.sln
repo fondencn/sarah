@@ -25,9 +25,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Geofences", "Services
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.EventProcessing", "Services\Sarah.EventProcessing\Sarah.EventProcessing.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF2F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Monitoring", "Services\Sarah.Monitoring\Sarah.Monitoring.csproj", "{70EFA4CF-DA48-475C-B30D-D242363ECF3F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServer", "Sarah.LocationServer\Sarah.LocationServer.csproj", "{1E081096-86EE-418E-8EBA-BF79DFF3C688}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServerClient", "Services\Sarah.LocationServerClient\Sarah.LocationServerClient.csproj", "{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Rules", "Services\Sarah.Rules\Sarah.Rules.csproj", "{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +81,10 @@ Global
 		{70EFA4CF-DA48-475C-B30D-D242363ECF2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70EFA4CF-DA48-475C-B30D-D242363ECF2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70EFA4CF-DA48-475C-B30D-D242363ECF2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70EFA4CF-DA48-475C-B30D-D242363ECF3F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E081096-86EE-418E-8EBA-BF79DFF3C688}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -85,6 +93,10 @@ Global
 		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +112,8 @@ Global
 		{70EFA4CF-DA48-475C-B30D-D242363ECF0F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{70EFA4CF-DA48-475C-B30D-D242363ECF1F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{70EFA4CF-DA48-475C-B30D-D242363ECF2F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{70EFA4CF-DA48-475C-B30D-D242363ECF3F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 	EndGlobalSection
 EndGlobal

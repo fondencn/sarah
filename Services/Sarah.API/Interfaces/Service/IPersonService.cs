@@ -11,5 +11,6 @@ namespace Sarah.API.Interfaces.Services
         Task<IPerson> GetPersonByIdAsync(long id);
         Task UpdatePersonAsync(IPerson person);
         Task<string[]> GetMobilePhones();
+        Task<bool> IsSomeonePresent();
     }
 }

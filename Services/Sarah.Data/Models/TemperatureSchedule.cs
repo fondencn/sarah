@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
 
 namespace Sarah.Data.Models
 {
@@ -38,25 +39,17 @@ namespace Sarah.Data.Models
         /// Gibt an, ob es in den nächten 4 Stunden
         /// zu heiß ist, um die Heizung einzuschalten
         /// </summary>
-        // public static bool IsTooHot
-        // {
-        //     get
-        //     {
-        //         if (WeatherMonitor.Instance.WeatherForecast != null)
-        //         {
-        //             double averageTemperatureNext4Hours = WeatherMonitor.Instance.WeatherForecast.list
-        //                 .Where(item => item.Date < DateTime.Now.AddHours(4))
-        //                 .Select(item => item.main.temp)
-        //                 .Average();
-
-        //             return averageTemperatureNext4Hours >= MinOutdoorTemperature;
-        //         } 
-        //         else
-        //         {
-        //             return false;
-        //         }
-        //     }
-        // }
+        public static bool IsTooHot(IWeatherProvider weatherProvider)
+        {
+            if (weatherProvider.AverageTemperatureNext4Hours.HasValue)
+            {
+                return weatherProvider.AverageTemperatureNext4Hours >= MinOutdoorTemperature;
+            } 
+            else
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// ID (Autowert)

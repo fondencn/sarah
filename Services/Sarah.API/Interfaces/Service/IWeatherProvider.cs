@@ -8,11 +8,14 @@ namespace Sarah.API.Interfaces
 {
     public interface IWeatherProvider
     {
+        double CurrentOutdoorTemperature { get; }
+
         string GetCurrentWeatherString(bool addDebugOutput = false, bool getWarningDetails = false);
         string GetWeatherForecastStringForToday();
         string GetWeatherForecastString(DateTime dteDate);
         string GetWeatherWarningString();
         DateTime? GetSunrise();
+        double? AverageTemperatureNext4Hours { get; }
     }
 
     public class OutDoorTemperatureChangedEvent : NetworkEvent<double>

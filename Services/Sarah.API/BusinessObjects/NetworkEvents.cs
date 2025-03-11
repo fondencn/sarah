@@ -15,17 +15,17 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// ZWave Node ID des Gerätes, welches das Ereignis ausgelöst hat
         /// </summary>
-        public byte SourceNodeId { get; }
+        public byte SourceNodeId { get; set;}
 
         /// <summary>
         /// Zeitpunkt, zu welchem Das Ereignis ausgelöst wurde
         /// </summary>
-        public DateTime CreationDate { get; }
+        public DateTime CreationDate { get;  set;}
 
         /// <summary>
         /// Name der veränderten Eigenschaft
         /// </summary>
-        public string Property { get; }
+        public string Property { get;  set;}
 
         /// <summary>
         /// ctor
@@ -38,6 +38,8 @@ namespace Sarah.API.BusinessObjects
             this.CreationDate = DateTime.Now;
             this.Property = caller;
         }
+
+        public NetworkEvent() : this(0, null) {}
     }
 
     /// <summary>
@@ -50,7 +52,7 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Der neue Wert
         /// </summary>
-        public TValue NewValue { get; }
+        public TValue NewValue { get; set;}
 
 
         /// <summary>
@@ -62,6 +64,11 @@ namespace Sarah.API.BusinessObjects
         {
             this.NewValue = newVal;
         }
+
+        /// <summary>
+        /// ctor 
+        /// </summary>
+        public NetworkEvent() : this(0, default, null) {}
     }
 
     /// <summary>
@@ -136,5 +143,40 @@ namespace Sarah.API.BusinessObjects
         public AirQualitityLevel Level { get;  }
         public string Message { get;  }
         public string RoomName { get; }
+    }
+
+    public class SayEvent
+    {
+        public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string caller = null) 
+        {
+            this.Message = msg;
+            this.TargetSpeaker = targetSpeaker;
+            this.Volume = vol;
+        }
+
+        public string Message { get; }
+        public string TargetSpeaker { get; }
+        public SpeechVolume Volume { get; }
+    }
+
+    public class StartAudioEvent {
+        public StartAudioEvent(string audioFileName, string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        {
+            this.TargetSpeaker = targetSpeaker;
+            this.AudioFileName = audioFileName;
+        }
+
+        public string TargetSpeaker { get; }
+        public string AudioFileName { get; }
+    }
+
+    public class StopAudioEvent 
+    {
+        public StopAudioEvent(string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        {
+            this.TargetSpeaker = targetSpeaker;
+        }
+
+        public string TargetSpeaker { get; }
     }
 }
