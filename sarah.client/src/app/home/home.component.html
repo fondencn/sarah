@@ -48,7 +48,9 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-9">
-                    <h5 class="card-title">{{ item.title }}</h5>
+                    <h5 class="card-title">
+                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: '{{item.itemId' }" class="text-decoration-none">{{ item.title }}</a>
+                    </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                     <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
@@ -75,6 +77,7 @@
                             (change)="toggleWallplug(item.itemId, $event.target)">
                           <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
                         </div>
+                        <span>Leistung: {{item.powerConsumption}}</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
@@ -129,7 +132,7 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
-                    <h5 class="card-title">{{ item.title }}</h5>
+                    <a [routerLink]="['/home/details']" [queryParams]="{ type: 'room', id: '{{item.itemId' }" class="text-decoration-none">{{ item.title }}</a>
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
@@ -144,7 +147,7 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
-                    <h5 class="card-title">{{ item.title }}</h5>
+                    <a [routerLink]="['/home/details']" [queryParams]="{ type: 'person', id: '{{item.itemId' }" class="text-decoration-none">{{ item.title }}</a>
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">

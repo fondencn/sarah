@@ -21,6 +21,10 @@ import { PersonsComponent } from './persons/persons.component';
 import { RoomsComponent } from './rooms/rooms.component';
 import { EditRoomModalComponent } from './rooms/edit-room-modal/edit-room-modal.component';
 import { EditPersonModalComponent } from './persons/edit-person-modal/edit-person-modal.component';
+import { HomedetailsComponent } from './home/details/homedetails.component';
+import { PersondetailsComponent } from './home/details/person/persondetails/persondetails.component';
+import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
+import { DevicedetailsComponent } from './home/details/device/devicedetails/devicedetails.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -32,7 +36,11 @@ import { EditPersonModalComponent } from './persons/edit-person-modal/edit-perso
         PersonsComponent,
         RoomsComponent,
         EditRoomModalComponent,
-        EditPersonModalComponent
+        EditPersonModalComponent,
+        HomedetailsComponent,
+        PersondetailsComponent,
+        RoomdetailsComponent,
+        DevicedetailsComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

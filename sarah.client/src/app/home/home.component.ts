@@ -217,6 +217,10 @@ export class DashboardItemViewModel {
     return this.item.extendedProperties?.find(x => x.key === 'IsOn')?.value === 'True';
   }
 
+  get powerConsumption(): number | null | undefined {
+    return Number(this.item.extendedProperties?.find(x => x.key === 'Meter_W')?.value ?? "0");
+  }
+
   get itemId(): number {
     return this.item.itemId as number;
   }
