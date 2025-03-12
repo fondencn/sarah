@@ -49,7 +49,7 @@
                 <div class="row">
                   <div class="col-9">
                     <h5 class="card-title">
-                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: '{{item.itemId' }" class="text-decoration-none">{{ item.title }}</a>
+                        <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
                     </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                     <ng-container [ngSwitch]="item.subType">

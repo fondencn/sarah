@@ -7,16 +7,17 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./homedetails.component.css']
 })
 export class HomedetailsComponent implements OnInit {
-  
+
   type: string | null = null;
-  id: string | null = null;
+  id: number | null = null;
 
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.queryParamMap.subscribe(params => {
       this.type = params.get('type');
-      this.id = params.get('id');
+      const idParam = params.get('id');
+      this.id = idParam ? +idParam : null; // Convert id to number if it exists
     });
   }
 }

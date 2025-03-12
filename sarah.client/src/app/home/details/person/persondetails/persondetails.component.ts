@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrl: './persondetails.component.css'
 })
 export class PersondetailsComponent {
-
+  id: number = 0;
 }

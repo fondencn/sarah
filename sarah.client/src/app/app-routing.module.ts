@@ -11,16 +11,16 @@ import { DevicedetailsComponent } from './home/details/device/devicedetails/devi
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 
 const routes: Routes = [
-  { path: "home",component: HomeComponent},
-  { path: "home/details",component: HomedetailsComponent},
-  { path: "home/details/person",component: PersondetailsComponent},
-  { path: "home/details/device",component: DevicedetailsComponent},
-  { path: "home/details/room",component: RoomdetailsComponent},
-  { path: "admin",component: AdminComponent},
-  { path: "devices",component: DevicesComponent},
-  { path: "persons",component: PersonsComponent},
-  { path: "rooms",component: RoomsComponent},
-  { path: '',   redirectTo: '/home', pathMatch: 'full' }, // redirect to `home`
+  { path: "home", component: HomeComponent },
+  { path: "home/details", component: HomedetailsComponent },
+  { path: "home/details/person", component: PersondetailsComponent },
+  { path: "home/details/device", component: DevicedetailsComponent },
+  { path: "home/details/room", component: RoomdetailsComponent },
+  { path: "admin", component: AdminComponent },
+  { path: "devices", component: DevicesComponent },
+  { path: "persons", component: PersonsComponent },
+  { path: "rooms", component: RoomsComponent },
+  { path: '', redirectTo: '/home', pathMatch: 'full' }, // redirect to `home`
 ];
 
 @NgModule({
