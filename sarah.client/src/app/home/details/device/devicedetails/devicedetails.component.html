@@ -9,19 +9,24 @@
         <p class="card-text"><strong>ID:</strong> {{ deviceDetails.id }}</p>
         <p class="card-text"><strong>Type:</strong> {{ deviceDetails.deviceType }}</p>
         <p class="card-text"><strong>Info:</strong> {{ deviceDetails.info }}</p>
+        <p class="card-text"><strong>isFavourite:</strong> {{ deviceDetails.isFavourite }}</p>
+        <p class="card-text"><strong>isReadonly:</strong> {{ deviceDetails.isReadonly }}</p>
+        <p class="card-text"><strong>nodeId:</strong> {{ deviceDetails.nodeId }}</p>
+        <p class="card-text"><strong>roomId:</strong> {{ deviceDetails.roomId }}</p>
+        <p class="card-text"><strong>typeName:</strong> {{ deviceDetails.typeName }}</p>
         <!-- Add more device-specific details here -->
       </div>
       <div class="card-footer text-muted">
-        Last updated: january 1, 2021
+        Last updated: {{ lastUpdated }}
       </div>
     </div>
   </div>
   <ng-template #loading>
     <div class="text-center">
       <div class="spinner-border" role="status">
-        <span class="sr-only">Loading...</span>
+        <span class="sr-only"></span>
       </div>
-      <p>Loading device details...</p>
+      <p>Loading...</p>
     </div>
   </ng-template>
 </div>

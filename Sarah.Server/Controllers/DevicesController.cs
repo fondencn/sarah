@@ -51,8 +51,11 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         try
         {
             // Get all devices
-            DeviceDto dto = (await _databaseService.Devices.FindAsync(id))
+            DeviceDto? dto = (await _databaseService.Devices.FindAsync(id))
                 !.ToDto(_deviceService);
+            if (dto == null) {
+                throw new InvalidOperationException($"Device {id} not found");
+            }
 
             var userFavourites = await _databaseService.UserFavourites
                 .Where(f => f.UserId == CurrentUserName)

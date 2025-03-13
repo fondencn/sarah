@@ -2,21 +2,21 @@
 <div *ngIf="type === 'device'">
   <h2>Device Details</h2>
   <p>Displaying details for device with ID: {{ id }}</p>
-  <app-devicedetails [id]="[id]"></app-devicedetails>
+  <app-devicedetails [id]="id"></app-devicedetails>
 </div>
 
 <!-- Template for type 'person' -->
 <div *ngIf="type === 'person'">
   <h2>Person Details</h2>
   <p>Displaying details for person with ID: {{ id }}</p>
-  <app-persondetails [id]="[id]"></app-persondetails>
+  <app-persondetails [id]="id"></app-persondetails>
 </div>
 
 <!-- Template for type 'user' -->
 <div *ngIf="type === 'room'">
   <h2>Room Details</h2>
   <p>Displaying details for room with ID: {{ id }}</p>
-  <app-roomdetails [id]="[id]"></app-roomdetails>
+  <app-roomdetails [id]="id"></app-roomdetails>
 </div>
 
 <!-- Default template if type is not recognized -->

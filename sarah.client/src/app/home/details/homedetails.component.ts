@@ -8,16 +8,16 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class HomedetailsComponent implements OnInit {
 
-  type: string | null = null;
-  id: number | null = null;
+  type: string = "";
+  id: number = 0;
 
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
-      this.type = params.get('type');
+      this.type = params.get('type') ?? "";
       const idParam = params.get('id');
-      this.id = idParam ? +idParam : null; // Convert id to number if it exists
+      this.id = idParam ? +idParam : 0; // Convert id to number if it exists
     });
   }
 }

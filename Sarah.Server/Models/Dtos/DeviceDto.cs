@@ -54,4 +54,9 @@ public class DeviceDto
     /// Gets or sets a value indicating whether the device is a favourite.
     /// </summary>
     public bool IsFavourite {get; set; }
+
+    /// <summary>
+    /// Gets or sets the extended properties of the device.
+    /// </summary>
+    public ExtendedPropertyDto[]? ExtendedProperties { get; set; }
 }

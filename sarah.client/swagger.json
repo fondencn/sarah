@@ -1007,6 +1007,13 @@
           },
           "isFavourite": {
             "type": "boolean"
+          },
+          "extendedProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtendedPropertyDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false

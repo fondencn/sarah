@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-roomdetails',
@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrl: './roomdetails.component.css'
 })
 export class RoomdetailsComponent {
-  id: number = 0;
+  @Input() id: number = 0;
 }

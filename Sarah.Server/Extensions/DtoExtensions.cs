@@ -15,8 +15,9 @@ public static class DtoExtensions {
     /// <param name="device"></param>
     /// <param name="deviceService"></param>
     /// <returns></returns>
-    public static DeviceDto ToDto(this DeviceInfo device, IDeviceService deviceService) {
-        return new DeviceDto {
+    public static DeviceDto? ToDto(this DeviceInfo device, IDeviceService deviceService) 
+    {
+        var dto =  device == null ? null : new DeviceDto {
             Id = device.Id,
             NodeId = device.NodeID,
             TypeName = device.SpecificType.ToString() + "|" + (device.GetNetworkItem(deviceService)?.GetType().Name ?? "Unknown type"),
@@ -26,12 +27,19 @@ public static class DtoExtensions {
             RoomId = device.Id_Room, 
             IsReadonly = device.IsReadonly
         };
+
+        if(dto != null) 
+        {
+            dto.ExtendedProperties = device?.GetNetworkItem(deviceService)?.ReadObjPropertiesAsJson();
+        }
+        return dto;
     }
 
     /// <summary>
     /// Converts a <see cref="Room"/> object to a <see cref="RoomDto"/> object.
     /// </summary>
-    public static DeviceInfo ToEntity(this DeviceDto dto) {
+    public static DeviceInfo ToEntity(this DeviceDto dto) 
+    {
         return new DeviceInfo {
             Id = dto.Id,
             NodeID = dto.NodeId,
@@ -130,4 +138,25 @@ public static class DtoExtensions {
             IsFavourite = isFavourite
         };
     }
+
+
+        /// <summary>
+        ///  Read the public, non-static properties of an object and return them as a ExtendedPropertyDto[]
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        internal static ExtendedPropertyDto[] ReadObjPropertiesAsJson(this object? item)
+        {
+            List<ExtendedPropertyDto> result = new List<ExtendedPropertyDto>();
+
+            if (item != null) 
+            {
+                foreach(var property in item.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                {
+                   result.Add(new ExtendedPropertyDto() {Key = property.Name, Value = property.GetValue(item)?.ToString()  ?? ""});
+                }
+            }
+
+            return result.ToArray();
+        }
 }
