@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^18.2.1",
     "@angular/platform-browser-dynamic": "^18.2.1",
     "@angular/router": "^18.2.1",
+    "@types/bingmaps": "^7.0.25",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "angular-oauth2-oidc": "^17.0.2",

@@ -5,6 +5,7 @@ api/api.ts
 api/baseData.service.ts
 api/dashboard.service.ts
 api/devices.service.ts
+api/location.service.ts
 api/persons.service.ts
 api/rooms.service.ts
 api/status.service.ts
@@ -18,10 +19,14 @@ model/dashboardItemTypeDto.ts
 model/deviceDto.ts
 model/enumDto.ts
 model/extendedPropertyDto.ts
+model/geofenceDto.ts
 model/knownDeviceTypes.ts
+model/locationDto.ts
 model/models.ts
+model/namedLocationDto.ts
 model/networkElementDto.ts
 model/personDto.ts
+model/pointDto.ts
 model/roomDto.ts
 model/statusDto.ts
 model/trackerDto.ts

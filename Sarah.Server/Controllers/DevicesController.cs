@@ -285,4 +285,5 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         
         return Ok();
     }
+
 }

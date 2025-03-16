@@ -30,4 +30,16 @@
       <p>Loading person details...</p>
     </div>
   </ng-template>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Position von {{ personDetails?.name }}</h3>
+    </div>
+    <div class="card-body">
+        <app-bing-map id="map"></app-bing-map>
+    </div>
+    <div class="card-footer text-muted">
+      Last updated: {{ lastUpdated }}
+    </div>
+  </div>
 </div>
