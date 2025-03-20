@@ -14,7 +14,7 @@ export class PersondetailsComponent implements OnDestroy {
   lastUpdated : string = "";
   personlatitude: number = 0;
   personlongitude: number = 0;
-  refreshInterval: NodeJS.Timeout | null = null;
+  refreshInterval: any | null = null;
   zuhause: NamedLocationDto | null = null;
   @ViewChild('map') mapElement: BingMapComponent | null = null;
   
@@ -59,7 +59,9 @@ export class PersondetailsComponent implements OnDestroy {
       });
       this.locationService.apiLocationWellknownlocationsGet().subscribe(locations => {
         this.zuhause = locations.find(l => l.name === "Zuhause") ?? null; 
-        this.mapElement.SetCenter(this.zuhause);
+        if (this.zuhause && this.mapElement) {
+          this.mapElement?.SetCenter(this.zuhause);
+        }
       });
     }
   }
