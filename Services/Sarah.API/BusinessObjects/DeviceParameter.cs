@@ -5,7 +5,7 @@
         public byte Id { get; set; }
         public string Name { get; set; } = string.Empty;
 
-        public object Value { get; set; }
+        public object Value { get; set; } = default!;
         public byte Size { get; set; }
     }
 }

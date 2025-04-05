@@ -47,7 +47,9 @@ namespace Sarah.Rules
         /// <summary>
         ///
         /// </summary>
+        #pragma warning disable 67 // Suppress warning for unused event
         public event EventHandler Changed; // wird momentan nie ausgelöst, da die Regeln immer fest im ctor erzeugt werden
+        #pragma warning restore 67
 
 
 

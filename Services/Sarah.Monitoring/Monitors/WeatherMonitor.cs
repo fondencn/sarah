@@ -45,7 +45,7 @@ namespace Sarah.Monitoring.Monitors
             this.WeatherForecast
             ?.list
             ?.Where(item => item.Date > DateTime.Now && item.Date < DateTime.Now.AddHours(4))
-            .Average(item => item.main.temp);
+            .Average(item => item?.main?.temp);
 
         /// <summary>
         /// Die Wettervorhersage
@@ -157,7 +157,7 @@ namespace Sarah.Monitoring.Monitors
                     string json = await response.Content.ReadAsStringAsync();
                     Root forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<Root>(json)!;
                     this.WeatherForecast = forecast;
-                    Logger.Instance.LogInfo("Wettervorhersage für " + forecast.city.name + " aktualisiert (" + forecast.cnt + " Elemente): " + forecast.message);
+                    Logger.Instance.LogInfo("Wettervorhersage für " + forecast?.city?.name + " aktualisiert (" + forecast?.cnt + " Elemente): " + forecast?.message);
                     //NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
                 }
             }
@@ -184,7 +184,10 @@ namespace Sarah.Monitoring.Monitors
                     WeatherForecast currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<WeatherForecast>(json)!;
                     this.CurrentWeather = currentWeather;
                     Logger.Instance.LogInfo("Aktuelles Wetter für " + currentWeather.name + " aktualisiert: " + currentWeather.DisplayText);
-                    await _events.PublishOutDoorTemperatureChangedEventAsync(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
+                    if (currentWeather.main != null)
+                    {
+                        await _events.PublishOutDoorTemperatureChangedEventAsync(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
+                    }
                 }
             }
             catch (Exception ex)
@@ -245,7 +248,10 @@ namespace Sarah.Monitoring.Monitors
                     str += "instruction: " + entry.instruction + Environment.NewLine;
                     str += "LastWarn: " + entry.LastWarn + Environment.NewLine;
                     Logger.Instance.LogInfo(str);
-                    await _events.PublishWeatherWarningEventAsync(new WeatherWarningEvent(entry.@event));
+                    if(entry.@event != null) 
+                    {
+                        await _events.PublishWeatherWarningEventAsync(new WeatherWarningEvent(entry.@event));
+                    }
                     CurrentLocalWeatherWarnings.Add(entry);
                 }
 
@@ -383,8 +389,8 @@ namespace Sarah.Monitoring.Monitors
                 double rainmm = Math.Round(weatherItems.Average(item => (item.rain?._3h).GetValueOrDefault(0)), 0);
                 double snowmm = Math.Round(weatherItems.Average(item => (item.snow?._3h).GetValueOrDefault(0)), 0);
 
-                string res = weatherItems.First().weather.First().description
-                    + " bei " + Math.Round(weatherItems.Average(item => item.main.temp), 0) + "°C";
+                string res = weatherItems.First()?.weather?.First().description
+                    + " bei " + Math.Round(weatherItems.Average(item => item?.main?.temp ?? 21), 0) + "°C";
 
                 if (rainmm > 0)
                 {
@@ -392,7 +398,7 @@ namespace Sarah.Monitoring.Monitors
                 }
                 if (snowmm > 0)
                 {
-                    res += " , Schneee: ungefähr" + rainmm + " mm";
+                    res += " , Schneee: ungefähr" + snowmm + " mm";
                 }
 
                 return res;
@@ -471,7 +477,7 @@ namespace Sarah.Monitoring.Monitors
         {
             if (this.CurrentWeather != null)
             {
-                return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather.sys.sunrise);
+                return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather?.sys?.sunrise);
             } 
             else
             {

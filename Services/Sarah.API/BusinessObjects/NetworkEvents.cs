@@ -66,7 +66,7 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// ctor 
         /// </summary>
-        public NetworkEvent() : this(0, default, "NetworkEvent") {}
+        public NetworkEvent() : this(0, default!, "NetworkEvent") {}
     }
 
     /// <summary>

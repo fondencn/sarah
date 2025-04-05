@@ -19,7 +19,7 @@ namespace Sarah.Data.Models
 
         [Display(Name = "Bezeichnung des Mobiltelefons")]
         [Column]
-        public string? MobilePhoneHostname { get; set; }
+        public string MobilePhoneHostname { get; set; } = "";
 
         [Display(Name = "ID des zugeordneten GPS Tracker")]
         [Column]

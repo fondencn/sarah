@@ -7,7 +7,7 @@ using Sarah.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor (IDBService _db, IEventProcessingService _events) : ICanSelfTest, IMonitor
+    public class PersonMonitor(IDBService _db, IEventProcessingService _events) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 
@@ -61,27 +61,29 @@ namespace Sarah.Monitoring.Monitors
             {
                 foreach (PersonInfo person in _db.Persons)
                 {
-                    bool lastState;
-                    if (!ConnectionStatesByPersonId.TryGetValue(person.Id, out lastState))
+                    if (person != null)
                     {
-                        lastState = false;
-                        ConnectionStatesByPersonId.Add(person.Id, lastState);
-                    }
+                        bool lastState;
+                        if (!ConnectionStatesByPersonId.TryGetValue(person.Id, out lastState))
+                        {
+                            lastState = false;
+                            ConnectionStatesByPersonId.Add(person.Id, lastState);
+                        }
 
-                    bool currentState = person.IsAtHome; // das hier wird vom Router geladen (Gerät ist im LAN oder nicht)
-                    bool changed = currentState != lastState;
+                        bool currentState = person.IsAtHome; // das hier wird vom Router geladen (Gerät ist im LAN oder nicht)
+                        bool changed = currentState != lastState;
 
-                    if (changed)
-                    {
-                        ConnectionStatesByPersonId[person.Id] = currentState;
-                        await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person?.Name ?? "", currentState));
-                    }
+                        if (changed)
+                        {
+                            ConnectionStatesByPersonId[person.Id] = currentState;
+                            await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person?.Name ?? "", currentState));
+                        }
 
                         /* Person ist nicht daheim -> Suchen, ob sie sich in einem GeoFence befindet oder im Vergleich zum letzten Mal einen Verlassen hat */
 
-                
+
                         IGeoFence? lastFence, currentFence = null;
-                        currentFence = person.CurrentGeoFence;
+                        currentFence = person!.CurrentGeoFence;
 
                         if (!GeoFencesByPersonId.TryGetValue(person.Id, out lastFence))
                         {
@@ -95,6 +97,7 @@ namespace Sarah.Monitoring.Monitors
                             GeoFencesByPersonId[person.Id] = currentFence;
                             await _events.PublishGeoFenceEventAsync(new PersonGeoFenceEvent(person.Id, person?.Name ?? "", currentFence, lastFence));
                         }
+                    }
                 }
                 this._lastUpdate = DateTime.Now;
             }

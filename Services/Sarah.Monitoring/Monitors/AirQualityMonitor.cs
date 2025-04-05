@@ -112,7 +112,7 @@ namespace Sarah.Monitoring.Monitors
                                     //NotificationEngine.Instance.Voice.Say("Die Luftqualität im " + room.Name + " ist wiederhergestellt."
                                     //    , NotificationEngine.Speaker1);
                                     await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, 
-                                        AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name, "AirQualityChanged"));
+                                        AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? "", "AirQualityChanged"));
 
                                 }
                             }
@@ -220,33 +220,24 @@ namespace Sarah.Monitoring.Monitors
 
 
                         /* Check Humidity */
-                        if (sensor.RelativeHumidity != null)
+                        humidity = AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value);
+                        if (humidity.Item1 > AirQualitityLevel.OK)
                         {
-                            humidity = AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value);
-                            if (humidity.Item1 > AirQualitityLevel.OK)
-                            {
-                                msg.Add(humidity.Item2);
-                            }
+                            msg.Add(humidity.Item2);
                         }
 
                         /* Check CO² */
-                        if (sensor.CO2 != null)
+                        co2 = AirQualityDefinitions.GetCo2Level(sensor.CO2.Value);
+                        if (co2.Item1 > AirQualitityLevel.OK)
                         {
-                            co2 = AirQualityDefinitions.GetCo2Level(sensor.CO2.Value);
-                            if (co2.Item1 > AirQualitityLevel.OK)
-                            {
-                                msg.Add(co2.Item2);
-                            }
+                            msg.Add(co2.Item2);
                         }
 
                         /* Check VOC */
-                        if (sensor.VolatileOrganicCompounds != null)
+                        voc = AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value);
+                        if (voc.Item1 > AirQualitityLevel.OK)
                         {
-                            voc = AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value);
-                            if (voc.Item1 > AirQualitityLevel.OK)
-                            {
-                                msg.Add(voc.Item2);
-                            }
+                            msg.Add(voc.Item2);
                         }
 
                         /* SilentHours beachten */
@@ -286,22 +277,15 @@ namespace Sarah.Monitoring.Monitors
                 bool isWarning = false;
 
                 /* Check Humidity */
-                if (sensor.RelativeHumidity != null)
-                {
-                    isWarning |= AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value).Item1 > AirQualitityLevel.OK;
-                }
+                isWarning |= AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value).Item1 > AirQualitityLevel.OK;
+                
 
                 /* Check CO² */
-                if (sensor.CO2 != null)
-                {
-                    isWarning |= AirQualityDefinitions.GetCo2Level(sensor.CO2.Value).Item1 > AirQualitityLevel.OK;
-                }
+                isWarning |= AirQualityDefinitions.GetCo2Level(sensor.CO2.Value).Item1 > AirQualitityLevel.OK;
 
                 /* Check VOC */
-                if (sensor.VolatileOrganicCompounds != null)
-                {
-                    isWarning |= AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value).Item1 > AirQualitityLevel.OK;
-                }
+                isWarning |= AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value).Item1 > AirQualitityLevel.OK;
+                
 
                 return isWarning;
             }

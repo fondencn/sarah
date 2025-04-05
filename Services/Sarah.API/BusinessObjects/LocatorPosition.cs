@@ -106,7 +106,7 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     /// <param name="other">other sensor data</param>
     /// <returns>true if the value property of both items are equal</returns>
-    public bool Equals(LocatorPosition other)
+    public bool Equals(LocatorPosition? other)
         {
             if (object.ReferenceEquals(other, null))
             {
@@ -124,7 +124,7 @@ namespace Sarah.API.BusinessObjects
             return other?.Equals(this) == true;
         }
 
-        public static bool operator ==(LocatorPosition lhs, LocatorPosition rhs)
+        public static bool operator ==(LocatorPosition? lhs, LocatorPosition? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {
@@ -148,7 +148,7 @@ namespace Sarah.API.BusinessObjects
             }
         }
 
-        public static bool operator !=(LocatorPosition lhs, LocatorPosition rhs)
+        public static bool operator !=(LocatorPosition? lhs, LocatorPosition? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {

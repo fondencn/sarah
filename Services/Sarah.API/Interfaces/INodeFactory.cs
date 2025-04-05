@@ -5,7 +5,7 @@ namespace Sarah.API.Interfaces
 {
     public interface INodeFactory
     {
-        public NetworkElement CreateByNodeId(byte nodeId);
+        public NetworkElement? CreateByNodeId(byte nodeId);
         public IEnumerable<byte> GetNonZwaveNodeIds();
     }
 }

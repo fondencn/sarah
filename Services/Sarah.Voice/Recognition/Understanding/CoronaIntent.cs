@@ -32,7 +32,7 @@ namespace Sarah.Voice.Recognition.Understanding
             try
             {
                 GetDeseaseInfoResponse response = await _DeviceServiceClient.GetDeseaseInfo();
-                this.Say(String.IsNullOrWhiteSpace(response.DeseaseInfos) ? "Es liegen keine Coronawarnungen vor." : response.DeseaseInfos);
+                this.Say(String.IsNullOrWhiteSpace(response.DiseaseInfos) ? "Es liegen keine Coronawarnungen vor." : response.DiseaseInfos);
             }
             catch (Exception ex)
             {

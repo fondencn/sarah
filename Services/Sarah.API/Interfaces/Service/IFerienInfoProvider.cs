@@ -17,6 +17,6 @@ namespace Sarah.API.Interfaces
         /// <summary>
         /// Gibt das aktuelle Ferienelemente (für heute) zurück oder NULL, falls keine Ferien sind.
         /// </summary>
-        public Ferien AktuelleFerien { get; }
+        public Ferien? AktuelleFerien { get; }
     }
 }

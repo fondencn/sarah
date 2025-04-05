@@ -86,7 +86,7 @@ public static class DtoExtensions {
     }
 
     public static IPerson ToEntity(this PersonDto dto) {
-        return new PersonInfo { Id = dto.Id, Name = dto.Name, GPSTrackerID = dto.GPSTrackerID, MobilePhoneHostname = dto.MobilePhoneHostname }; 
+        return new PersonInfo { Id = dto.Id, Name = dto.Name ?? "", GPSTrackerID = dto.GPSTrackerID, MobilePhoneHostname = dto.MobilePhoneHostname }; 
     }
 
     /// <summary>
