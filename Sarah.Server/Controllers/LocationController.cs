@@ -29,10 +29,11 @@ namespace Sarah.Server.Controllers
             {
                 return NotFound($"Device {id} is not a GPS tracker");
             }
+
             return Ok(new LocationDto
             {
-                Latitude = gpsTracker.Position.Latitude.Value,
-                Longitude = gpsTracker.Position.Longtitude.Value
+                Latitude = gpsTracker.Position?.Latitude?.Value ?? 0,
+                Longitude = gpsTracker.Position?.Longtitude?.Value ?? 0
             });
         }
 
@@ -61,12 +62,13 @@ namespace Sarah.Server.Controllers
         [HttpGet("wellknownlocations")]
         public ActionResult<IEnumerable<NamedLocationDto>> GetWellKnownLocations()
         {
-            return Ok(new NamedLocationDto
+            var locations = new NamedLocationDto[]{new NamedLocationDto
             {
                 Latitude = LocatorPosition.ZuHause.Latitude.Value,
                 Longitude = LocatorPosition.ZuHause.Longtitude.Value,
                 Name = "Zuhause"
-            });
+            }};
+            return Ok(locations);
         }
 
         [HttpGet("geofences")]

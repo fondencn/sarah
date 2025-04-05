@@ -9,17 +9,17 @@ import { BingMapComponent } from '../../../../shared/bing-map/bing-map.component
 })
 export class PersondetailsComponent implements OnDestroy {
   @Input() id: number = 0;
-  
+
   personDetails: PersonDto | null = null;
-  lastUpdated : string = "";
+  lastUpdated: string = "";
   personlatitude: number = 0;
   personlongitude: number = 0;
   refreshInterval: any | null = null;
   zuhause: NamedLocationDto | null = null;
   @ViewChild('map') mapElement: BingMapComponent | null = null;
-  
-  constructor(private personsService: PersonsService, private locationService : LocationService) {}
-  
+
+  constructor(private personsService: PersonsService, private locationService: LocationService) { }
+
   ngOnInit(): void {
     this.loadPersonDetails();
     this.startLocationRefresh();
@@ -42,25 +42,38 @@ export class PersondetailsComponent implements OnDestroy {
   }
 
   refreshLocation(): void {
-    if (this.id) {
-      this.locationService.apiLocationTrackerIdGet(this.id).subscribe(location => {
-        this.personlatitude = location.latitude ?? 0;
-        this.personlongitude = location.longitude ?? 0;
+    if (this.personDetails?.gpsTrackerID) {
+      this.locationService.apiLocationTrackerIdGet(this.personDetails.gpsTrackerID).subscribe(location => {
+        this.personlatitude = location?.longitude ?? 0;
+        this.personlongitude = location?.latitude ?? 0;
         this.lastUpdated = new Date().toLocaleString('de-DE');
       });
     }
   }
-  
+
+  centerHomeOnMap(): void {
+    if (this.zuhause && this.mapElement) {
+      this.mapElement.SetCenter(this.zuhause);
+    } else if (!this.mapElement) {
+      console.error('No map element found');
+    } else {
+      console.error('No home location found');
+    }
+  }
+
   loadPersonDetails(): void {
     if (this.id) {
       this.personsService.apiPersonsIdGet(this.id).subscribe(person => {
-        this.personDetails = person; 
+        this.personDetails = person;
         this.lastUpdated = new Date().toLocaleString('de-DE');
       });
       this.locationService.apiLocationWellknownlocationsGet().subscribe(locations => {
-        this.zuhause = locations.find(l => l.name === "Zuhause") ?? null; 
-        if (this.zuhause && this.mapElement) {
-          this.mapElement?.SetCenter(this.zuhause);
+        var isarray: boolean = Array.isArray(locations);
+        if (isarray && locations.length > 0) {
+          this.zuhause = locations[0];
+          if (this.zuhause && this.mapElement) {
+            this.mapElement?.SetCenter(this.zuhause);
+          }
         }
       });
     }

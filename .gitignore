@@ -397,4 +397,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 Sarah.Server/appsettings.secrets.json
+sarah.client/src/environments/environment.prod.ts
+sarah.client/src/environments/environment.ts
 sarah.client/.env
