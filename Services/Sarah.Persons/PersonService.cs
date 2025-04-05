@@ -125,7 +125,7 @@ namespace Sarah.Persons
             {
                // var device = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID ==  p.GPSTrackerID);
                 var device = _database.Devices.FirstOrDefault(item => item.Id == p.GPSTrackerID);
-                p.TrackerDeviceName = device?.Name;
+                p.TrackerDeviceName = device?.Name ??"";
             }
 
             // Prüfen ob Mobiltelefon der Person zu Hause ist

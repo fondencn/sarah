@@ -30,8 +30,8 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Gibt an, ob es sich um eine gültige Koordinate handelt
         /// </summary>
-        public bool IsValid => Longtitude != null && Longtitude.Value != 0
-            && Latitude != null && Latitude.Value != 0;
+        public bool IsValid => Longtitude.Value != 0
+            && Latitude.Value != 0;
 
         /// <summary>
         /// Zu Hause
@@ -72,10 +72,6 @@ namespace Sarah.API.BusinessObjects
             {
                 return 0;
             }
-            if (other == null)
-            {
-                return 0;
-            }
             if (!other.IsValid)
             {
                 return 0;
@@ -110,7 +106,7 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     /// <param name="other">other sensor data</param>
     /// <returns>true if the value property of both items are equal</returns>
-    public bool Equals(LocatorPosition other)
+    public bool Equals(LocatorPosition? other)
         {
             if (object.ReferenceEquals(other, null))
             {
@@ -124,11 +120,11 @@ namespace Sarah.API.BusinessObjects
 
         public override bool Equals(object obj)
         {
-            LocatorPosition other = obj as LocatorPosition;
+            LocatorPosition? other = obj as LocatorPosition;
             return other?.Equals(this) == true;
         }
 
-        public static bool operator ==(LocatorPosition lhs, LocatorPosition rhs)
+        public static bool operator ==(LocatorPosition? lhs, LocatorPosition? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {
@@ -152,7 +148,7 @@ namespace Sarah.API.BusinessObjects
             }
         }
 
-        public static bool operator !=(LocatorPosition lhs, LocatorPosition rhs)
+        public static bool operator !=(LocatorPosition? lhs, LocatorPosition? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {
@@ -181,7 +177,7 @@ namespace Sarah.API.BusinessObjects
             return this.ToString().GetHashCode();
         }
 
-        public static explicit operator PointF(LocatorPosition pos) => pos == null ? default :
+        public static explicit operator PointF(LocatorPosition pos) => 
             new PointF(pos.Longtitude.Value, pos.Latitude.Value);
     }
 }

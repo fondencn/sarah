@@ -8,7 +8,7 @@ namespace Sarah.API.Interfaces.Services
         Task AddPersonAsync(IPerson person);
         Task DeletePersonAsync(long id);
         Task<IEnumerable<IPerson>> GetAllPersonsAsync();
-        Task<IPerson> GetPersonByIdAsync(long id);
+        Task<IPerson?> GetPersonByIdAsync(long id);
         Task UpdatePersonAsync(IPerson person);
         Task<string[]> GetMobilePhones();
         Task<bool> IsSomeonePresent();

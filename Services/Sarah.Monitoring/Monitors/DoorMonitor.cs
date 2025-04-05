@@ -446,7 +446,7 @@ namespace Sarah.Monitoring.Monitors
                                         if (heating != null)
                                         {
                                             /* 12° bedeutet "aus" - nur ausschalten wenn nicht sowieso schon aus! */
-                                            if (heating.TemperatureSetpoint != null && heating.TemperatureSetpoint.Value != 12.0f)
+                                            if (heating.TemperatureSetpoint.Value != 12.0f)
                                             {
                                                 this.OriginalHeatingTemperatures.Add(new KeyValuePair<byte, float>(heatingId, heating.TemperatureSetpoint.Value));
 

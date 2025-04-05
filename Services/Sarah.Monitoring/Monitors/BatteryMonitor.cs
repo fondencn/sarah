@@ -19,8 +19,8 @@ namespace Sarah.Monitoring.Monitors
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
-        private Task UpdateTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
+        private Task? UpdateTask { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
         private DateTime _lastUpdate;
         private DateTime _lastWarning;
 
@@ -34,7 +34,7 @@ namespace Sarah.Monitoring.Monitors
         {
             if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running)
             {
-                this.UpdateCancellationTokenSource.Cancel();
+                this.UpdateCancellationTokenSource?.Cancel();
             }
         }
 
@@ -63,7 +63,7 @@ namespace Sarah.Monitoring.Monitors
         private async void Update()
         {
             bool isFirstRun = true;
-            while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+            while (!this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
             {
                 if (isFirstRun)
                 {
@@ -74,7 +74,7 @@ namespace Sarah.Monitoring.Monitors
                 {
                     await Task.Delay(_UpdateInterval);
                 }
-                if (this.UpdateCancellationTokenSource.Token.IsCancellationRequested) break;
+                if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
                 UpdateCurrentBatteryStats();
                 RaiseWarningsIfNecessary();

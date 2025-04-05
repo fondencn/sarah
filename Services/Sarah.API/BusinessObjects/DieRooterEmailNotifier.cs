@@ -20,7 +20,7 @@ namespace Sarah.API.Businessobjects
             this._smtpPort = int.Parse(config["EmailNotifier:SmtpPort"]);
             this._smtpUser = config["EmailNotifier:SmtpUsername"];
             this._smtpPassword = new SecureString();
-            foreach (char c in config["EmailNotifier:SmtpPassword"])
+            foreach (char c in config["EmailNotifier:SmtpPassword"]!)
             {
                 this._smtpPassword.AppendChar(c);
             }

@@ -5,7 +5,7 @@ namespace Sarah.API.Interfaces.Services
 {
     public interface IGeoFenceService
     {
-        IGeoFence GetCurrent(LocatorPosition pos);
+        IGeoFence? GetCurrent(LocatorPosition pos);
         IGeoFence GetZuhause();
     }
 }

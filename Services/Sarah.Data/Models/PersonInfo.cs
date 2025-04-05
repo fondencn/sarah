@@ -15,11 +15,11 @@ namespace Sarah.Data.Models
 
         [Display(Name = "Name")]
         [Column]
-        public string? Name { get; set; }
+        public string Name { get; set; } = "";
 
         [Display(Name = "Bezeichnung des Mobiltelefons")]
         [Column]
-        public string? MobilePhoneHostname { get; set; }
+        public string MobilePhoneHostname { get; set; } = "";
 
         [Display(Name = "ID des zugeordneten GPS Tracker")]
         [Column]
@@ -30,10 +30,10 @@ namespace Sarah.Data.Models
         public bool IsAtHome {get; set; }
 
         [NotMapped]
-        public string? TrackerDeviceName {get;set;}
+        public string TrackerDeviceName {get; set;} = "";
 
         [NotMapped]
-        public IGPSTracker? GPSTracker { get; set; }
+        public IGPSTracker? GPSTracker { get; set; } 
 
         [NotMapped]
         public IGeoFence? CurrentGeoFence { get; set; }

@@ -43,7 +43,7 @@ namespace Sarah.API.BusinessObjects
         /// </summary>
         /// <param name="network">Das Netzwerk, in dem das Gerät registriert ist</param>
         /// <returns>Task</returns>
-        public virtual Task InitializeAsync(IDeviceService network, IConfiguration config = null) => Task.CompletedTask;
+        public virtual Task InitializeAsync(IDeviceService network, IConfiguration config) => Task.CompletedTask;
 
         /// <summary>
         /// ctor

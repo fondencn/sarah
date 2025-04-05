@@ -1,11 +1,6 @@
 ﻿using Sarah.API.Interfaces;
-using Sarah.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sarah.API.BusinessObjects
 {
@@ -32,11 +27,11 @@ namespace Sarah.API.BusinessObjects
         /// </summary>
         /// <param name="source"></param>
         /// <param name="newVal"></param>
-        public NetworkEvent(byte source, [CallerMemberName] string caller = null)
+        public NetworkEvent(byte source, [CallerMemberName] string ?caller = null)
         {
             this.SourceNodeId = source;
             this.CreationDate = DateTime.Now;
-            this.Property = caller;
+            this.Property = caller ?? "NetworkEvent";
         }
 
         public NetworkEvent() : this(0, null) {}
@@ -60,15 +55,18 @@ namespace Sarah.API.BusinessObjects
         /// </summary>
         /// <param name="source"></param>
         /// <param name="newVal"></param>
-        public NetworkEvent(byte source, TValue newVal, [CallerMemberName] string caller = null) : base(source, caller)
+        public NetworkEvent(byte source, TValue newVal, [CallerMemberName] string? caller = null) : base(source, caller ?? "NetworkEvent")
         {
+            this.SourceNodeId = source;
+            this.CreationDate = DateTime.Now;
+            this.Property = caller ?? "NetworkEvent";
             this.NewValue = newVal;
         }
 
         /// <summary>
         /// ctor 
         /// </summary>
-        public NetworkEvent() : this(0, default, null) {}
+        public NetworkEvent() : this(0, default!, "NetworkEvent") {}
     }
 
     /// <summary>
@@ -77,7 +75,7 @@ namespace Sarah.API.BusinessObjects
     public class ClickedEvent : NetworkEvent
     {
         public byte SceneId { get;  }
-        public ClickedEvent(byte source, byte sceneId, [CallerMemberName] string caller = null) : base(source, caller)
+        public ClickedEvent(byte source, byte sceneId, [CallerMemberName] string? caller = null) : base(source, caller?? "ClickedEvent")
         {
             this.SceneId = sceneId;
         }
@@ -88,7 +86,7 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public class TimerEvent : NetworkEvent
     {
-        public TimerEvent(byte source, [CallerMemberName] string caller = null) : base(source, caller)
+        public TimerEvent(byte source, [CallerMemberName] string? caller = null) : base(source, caller?? "TimerEvent")
         {
         }
     }
@@ -115,10 +113,10 @@ namespace Sarah.API.BusinessObjects
     public class PersonGeoFenceEvent : NetworkEvent
     {
         public long Id_Person { get; private set; }
-        public IGeoFence CurrentGeoFence { get; private set; }
-        public IGeoFence PreviousGeoFence { get; private set; }
+        public IGeoFence? CurrentGeoFence { get; private set; }
+        public IGeoFence? PreviousGeoFence { get; private set; }
         public string PersonName { get; private set; }
-        public PersonGeoFenceEvent(long personId, string personName, IGeoFence newState, IGeoFence previousGeoFence) : base(0, "PersonGeoFence")
+        public PersonGeoFenceEvent(long personId, string personName, IGeoFence? newState, IGeoFence? previousGeoFence) : base(0, "PersonGeoFence")
         {
             this.Id_Person = personId;
             this.CurrentGeoFence = newState;
@@ -133,7 +131,7 @@ namespace Sarah.API.BusinessObjects
     public class AirQualityChangedEvent : NetworkEvent
     {
         public AirQualityChangedEvent(byte source ,
-            AirQualitityLevel level, string msg, string roomName, [CallerMemberName] string caller = null) : base(source, caller)
+            AirQualitityLevel level, string msg, string roomName, [CallerMemberName] string? caller = null) : base(source, caller ?? "AirQualityChangedEvent")
         {
             this.Level = level;
             this.Message = msg;
@@ -147,7 +145,7 @@ namespace Sarah.API.BusinessObjects
 
     public class SayEvent
     {
-        public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string caller = null) 
+        public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string? caller = null) 
         {
             this.Message = msg;
             this.TargetSpeaker = targetSpeaker;
@@ -160,7 +158,7 @@ namespace Sarah.API.BusinessObjects
     }
 
     public class StartAudioEvent {
-        public StartAudioEvent(string audioFileName, string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        public StartAudioEvent(string audioFileName, string targetSpeaker = "", [CallerMemberName] string? caller = null) 
         {
             this.TargetSpeaker = targetSpeaker;
             this.AudioFileName = audioFileName;
@@ -172,7 +170,7 @@ namespace Sarah.API.BusinessObjects
 
     public class StopAudioEvent 
     {
-        public StopAudioEvent(string targetSpeaker = "", [CallerMemberName] string caller = null) 
+        public StopAudioEvent(string targetSpeaker = "", [CallerMemberName] string? caller = null) 
         {
             this.TargetSpeaker = targetSpeaker;
         }

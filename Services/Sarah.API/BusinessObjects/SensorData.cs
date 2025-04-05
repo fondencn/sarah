@@ -64,7 +64,7 @@ namespace Sarah.API.Business
 
         public override bool Equals(object obj)
         {
-            SensorData other = obj as SensorData;
+            SensorData? other = obj as SensorData;
             return other?.Equals(this) == true;
         }
 
