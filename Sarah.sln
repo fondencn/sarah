@@ -33,6 +33,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServerClient"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Rules", "Services\Sarah.Rules\Sarah.Rules.csproj", "{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Voice", "Services\Sarah.Voice\Sarah.Voice.csproj", "{1CC74A39-11D7-475E-85EA-D99A8940424F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.DeviceServiceClient", "Services\Sarah.DeviceServiceClient\Sarah.DeviceServiceClient.csproj", "{698C9DF4-548A-44CE-8843-1254A1DA7D66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeakerEventClient", "Services\Sarah.SpeakerEventClient\Sarah.SpeakerEventClient.csproj", "{9C2CCBFA-8597-4210-9B62-05A48CC4F958}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LEDService", "Services\Sarah.LEDService\Sarah.LEDService.csproj", "{78D56A4A-B85C-4300-BC5F-46098237654F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,12 +105,25 @@ Global
 		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CC74A39-11D7-475E-85EA-D99A8940424F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CC74A39-11D7-475E-85EA-D99A8940424F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CC74A39-11D7-475E-85EA-D99A8940424F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CC74A39-11D7-475E-85EA-D99A8940424F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{698C9DF4-548A-44CE-8843-1254A1DA7D66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{698C9DF4-548A-44CE-8843-1254A1DA7D66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{698C9DF4-548A-44CE-8843-1254A1DA7D66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{698C9DF4-548A-44CE-8843-1254A1DA7D66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C2CCBFA-8597-4210-9B62-05A48CC4F958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C2CCBFA-8597-4210-9B62-05A48CC4F958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C2CCBFA-8597-4210-9B62-05A48CC4F958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C2CCBFA-8597-4210-9B62-05A48CC4F958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78D56A4A-B85C-4300-BC5F-46098237654F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78D56A4A-B85C-4300-BC5F-46098237654F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78D56A4A-B85C-4300-BC5F-46098237654F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78D56A4A-B85C-4300-BC5F-46098237654F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B8296C09-7EB1-4CE8-9FF5-E182F5BB833A}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C815FB6F-496F-4559-9FDC-664EDAE84367} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
@@ -115,5 +136,12 @@ Global
 		{70EFA4CF-DA48-475C-B30D-D242363ECF3F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{03CA9967-31C4-42F8-AA2D-6E2EC4D62ED3} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{D0C66B68-32D7-40F6-8AF4-FEAFE9D6B019} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{1CC74A39-11D7-475E-85EA-D99A8940424F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{698C9DF4-548A-44CE-8843-1254A1DA7D66} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{9C2CCBFA-8597-4210-9B62-05A48CC4F958} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+		{78D56A4A-B85C-4300-BC5F-46098237654F} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8296C09-7EB1-4CE8-9FF5-E182F5BB833A}
 	EndGlobalSection
 EndGlobal

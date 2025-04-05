@@ -9,7 +9,7 @@ namespace InteLuk.LocationServiceClient
 {
     public class LocationServiceClient : ILocationService
     {
-        private HttpClient _http = null;
+        private HttpClient? _http = null;
         private HttpClient Http
         {
             get
@@ -65,7 +65,7 @@ namespace InteLuk.LocationServiceClient
             {
                 PropertyNameCaseInsensitive = true
             };
-            LocationServiceEntry result = JsonSerializer.Deserialize<LocationServiceEntry>(json, options);
+            LocationServiceEntry result = JsonSerializer.Deserialize<LocationServiceEntry>(json, options)!;
             return result;
         }
 
@@ -79,7 +79,7 @@ namespace InteLuk.LocationServiceClient
             {
                 PropertyNameCaseInsensitive = true
             };
-            LocationServiceEntry[] result = JsonSerializer.Deserialize<LocationServiceEntry[]>(json, options);
+            LocationServiceEntry[] result = JsonSerializer.Deserialize<LocationServiceEntry[]>(json, options)!;
             return result;
         }
     }

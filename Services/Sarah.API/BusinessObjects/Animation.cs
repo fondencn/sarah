@@ -8,7 +8,7 @@ namespace Sarah.API.BusinessObjects
     public abstract class Animation : IDisposable
     {
         private bool _isDisposed = false;
-        private Task _animationTask;
+        private Task? _animationTask;
         private CancellationTokenSource _animationCancellation = new CancellationTokenSource();
 
         public ILamp LampDevice { get; }
@@ -46,7 +46,6 @@ namespace Sarah.API.BusinessObjects
             }
 
             // free native resources if there are any.
-            _animationCancellation = null;
 
             _isDisposed = true;
         }

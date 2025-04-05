@@ -10,8 +10,8 @@ namespace Sarah.API.Interfaces
         string MobilePhoneHostname { get; set; }
         bool IsAtHome { get; set; } 
         string TrackerDeviceName {get;set;}
-        IGPSTracker GPSTracker { get; set; }
-        IGeoFence CurrentGeoFence {get;set;}
+        IGPSTracker? GPSTracker { get; set; }
+        IGeoFence? CurrentGeoFence {get;set;}
     }
 
 }

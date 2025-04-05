@@ -2,7 +2,7 @@
 using Sarah.API.Interfaces.Services;
 using System.Linq;
 
-namespace InteLuk.Rules.Actions
+namespace Sarah.Rules.Actions
 {
     public class WallPlugToggleStateAction : RuleAction
     {

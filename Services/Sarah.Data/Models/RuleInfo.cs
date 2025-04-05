@@ -20,7 +20,7 @@ namespace Sarah.Data.Models
         public byte[]? RuleSerialized
         {
             get => this.Rule?.Serialize();
-            set => this.Rule = Rule.Deserialize(value);
+            set => this.Rule = value == null ? null :  Rule.Deserialize(value);
         }
 
 

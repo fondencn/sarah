@@ -19,9 +19,9 @@ namespace Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast
     public class Weather
     {
         public int id { get; set; }
-        public string main { get; set; }
-        public string description { get; set; }
-        public string icon { get; set; }
+        public string? main { get; set; }
+        public string? description { get; set; }
+        public string? icon { get; set; }
     }
 
     public class Clouds
@@ -38,7 +38,7 @@ namespace Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast
 
     public class Sys
     {
-        public string pod { get; set; }
+        public string? pod { get; set; }
     }
 
     public class Rain
@@ -55,16 +55,16 @@ namespace Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast
     {
         public int dt { get; set; }
         public DateTime Date => UnixTime.GetDateTimeFromLinuxEpochSeconds(dt).GetValueOrDefault();
-        public Main main { get; set; }
-        public List<Weather> weather { get; set; }
-        public Clouds clouds { get; set; }
-        public Wind wind { get; set; }
+        public Main? main { get; set; }
+        public List<Weather> ?weather { get; set; }
+        public Clouds? clouds { get; set; }
+        public Wind? wind { get; set; }
         public int visibility { get; set; }
         public double pop { get; set; }
-        public Sys sys { get; set; }
-        public string dt_txt { get; set; }
-        public Rain rain { get; set; }
-        public Snow snow { get; set; }
+        public Sys? sys { get; set; }
+        public string? dt_txt { get; set; }
+        public Rain? rain { get; set; }
+        public Snow? snow { get; set; }
     }
 
     public class Coord
@@ -76,9 +76,9 @@ namespace Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast
     public class City
     {
         public int id { get; set; }
-        public string name { get; set; }
-        public Coord coord { get; set; }
-        public string country { get; set; }
+        public string? name { get; set; }
+        public Coord? coord { get; set; }
+        public string? country { get; set; }
         public int population { get; set; }
         public int timezone { get; set; }
         public int sunrise { get; set; }
@@ -87,11 +87,11 @@ namespace Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast
 
     public class Root
     {
-        public string cod { get; set; }
+        public string? cod { get; set; }
         public int message { get; set; }
         public int cnt { get; set; }
-        public List<List> list { get; set; }
-        public City city { get; set; }
+        public List<List>? list { get; set; }
+        public City? city { get; set; }
     }
 
 

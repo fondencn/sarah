@@ -2,6 +2,7 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
+using Sarah.Data.Models;
 using Sarah.Logging;
 
 namespace Sarah.Monitoring.Monitors
@@ -21,12 +22,12 @@ namespace Sarah.Monitoring.Monitors
         {
             if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running)
             {
-                this.UpdateCancellationTokenSource.Cancel();
+                this.UpdateCancellationTokenSource?.Cancel();
             }
         }
 
 
-        private Task UpdateTask { get; set; }
+        private Task? UpdateTask { get; set; }
         private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
         private Dictionary<long, bool> ConnectionStatesByPersonId { get; } = new Dictionary<long, bool>();
@@ -58,7 +59,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                foreach (var person in _db.Persons)
+                foreach (PersonInfo person in _db.Persons)
                 {
                     bool lastState;
                     if (!ConnectionStatesByPersonId.TryGetValue(person.Id, out lastState))
@@ -73,7 +74,7 @@ namespace Sarah.Monitoring.Monitors
                     if (changed)
                     {
                         ConnectionStatesByPersonId[person.Id] = currentState;
-                        await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person.Name, currentState));
+                        await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person?.Name ?? "", currentState));
                     }
 
                         /* Person ist nicht daheim -> Suchen, ob sie sich in einem GeoFence befindet oder im Vergleich zum letzten Mal einen Verlassen hat */
@@ -92,7 +93,7 @@ namespace Sarah.Monitoring.Monitors
                         {
                             /* GeoFence Der Person hat sich geändert -> Event auslösen! */
                             GeoFencesByPersonId[person.Id] = currentFence;
-                            await _events.PublishGeoFenceEventAsync(new PersonGeoFenceEvent(person.Id, person.Name, currentFence, lastFence));
+                            await _events.PublishGeoFenceEventAsync(new PersonGeoFenceEvent(person.Id, person?.Name ?? "", currentFence, lastFence));
                         }
                 }
                 this._lastUpdate = DateTime.Now;
@@ -103,55 +104,6 @@ namespace Sarah.Monitoring.Monitors
             }
         }
 
-        // /// <summary>
-        // /// Gibt an, ob die Person mit dem angegebenen Namen aktuell zuhause ist. 
-        // /// Dies erfolgt über das verbundene Mobiltelefon und über den zugeordneten GPS Tracker. 
-        // /// 
-        // /// Wenn eines der beiden Geräte im Zuhause Geofence ist, dann gilt die Person als Anwesend. 
-        // /// </summary>
-        // /// <param name="personName">Name der gesuchten Person</param>
-        // /// <returns>true wenn das Mobiltelefon oder der GPS Tracker der Person zu Hause ist</returns>
-        // public bool IsPresent(string personName)
-        // {
-        //     lock (DBLock)
-        //     {
-        //         bool res;
-        //         try
-        //         {
-        //             var person = _db.Persons.AsEnumerable().FirstOrDefault(item => String.Equals(item.Name, personName, StringComparison.OrdinalIgnoreCase));
-
-
-        //             res = InteLuk.HomeNet.HomeNetwork.Instance.KnownHosts?
-        //                 .Any(item => String.Equals(item.Hostname, person.MobilePhoneHostname, StringComparison.OrdinalIgnoreCase)
-        //                     && item.IsConnected) == true;
-
-        //             if (person.GPSTrackerID != 0)
-        //             {
-        //                 var trackerDevice = _db.Devices.First(item => item.Id == person.GPSTrackerID);
-        //                 IGPSTracker tracker = trackerDevice.NetworkElement as IGPSTracker;
-        //                 if (tracker != null && tracker.Position?.IsValid == true)
-        //                 {
-        //                     bool isTrackerAtHome = GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause;
-        //                     res |= isTrackerAtHome;
-        //                 }
-        //             }
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             Logger.Instance.LogDebug("Fehler beim Abfragen  der Präsenz von " + personName + ": " + ex.Message);
-        //             res = false;
-        //         }
-        //         return res;
-        //     }
-        // }
-
-        // public bool IsSomeonePresent()
-        // {
-        //     bool isDeviceInHomeWifi = this.ConnectionStatesByPersonId.Count > 0 && this.ConnectionStatesByPersonId.Any(entry => entry.Value == true);
-        //     bool isTrackerAtHome = InteLukNetwork.GetSingletonInstance().GPSTrackers.Any(tracker => GeoFences.GetCurrent(tracker.Position) == GeoFences.Zuhause);
-
-        //     return isDeviceInHomeWifi || isTrackerAtHome;
-        // }
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {

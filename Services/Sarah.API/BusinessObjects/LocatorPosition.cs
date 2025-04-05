@@ -30,8 +30,8 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Gibt an, ob es sich um eine gültige Koordinate handelt
         /// </summary>
-        public bool IsValid => Longtitude != null && Longtitude.Value != 0
-            && Latitude != null && Latitude.Value != 0;
+        public bool IsValid => Longtitude.Value != 0
+            && Latitude.Value != 0;
 
         /// <summary>
         /// Zu Hause
@@ -69,10 +69,6 @@ namespace Sarah.API.BusinessObjects
         public double GetDistanceTo(LocatorPosition other)
         {
             if (!this.IsValid) 
-            {
-                return 0;
-            }
-            if (other == null)
             {
                 return 0;
             }
@@ -124,7 +120,7 @@ namespace Sarah.API.BusinessObjects
 
         public override bool Equals(object obj)
         {
-            LocatorPosition other = obj as LocatorPosition;
+            LocatorPosition? other = obj as LocatorPosition;
             return other?.Equals(this) == true;
         }
 
@@ -181,7 +177,7 @@ namespace Sarah.API.BusinessObjects
             return this.ToString().GetHashCode();
         }
 
-        public static explicit operator PointF(LocatorPosition pos) => pos == null ? default :
+        public static explicit operator PointF(LocatorPosition pos) => 
             new PointF(pos.Longtitude.Value, pos.Latitude.Value);
     }
 }

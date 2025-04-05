@@ -15,6 +15,6 @@ namespace Sarah.API.Interfaces
         Task SetWarmWhite();
         Task ToggleState();
         Task SetColdWhite();
-        Animation CurrentAnimation { get; set; }
+        Animation? CurrentAnimation { get; set; }
     }
 }

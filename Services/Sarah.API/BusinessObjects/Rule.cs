@@ -12,12 +12,12 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Name der Regel zur Anzeige an der Oberfläche
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Ausführungsbedingung
         /// </summary>
-        public RuleCondition Condition { get; set; }
+        public RuleCondition? Condition { get; set; }
 
         /// <summary>
         /// Gibt an, wann diese Regel zuletzt zugetroffen ist (Nur In-Memory! wird außerdem verworfen, sobald die Daten neu aus der DB geladen werden)
@@ -27,11 +27,11 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// Auszuführende Aktion
         /// </summary>
-        public RuleAction Action { get; set; }
+        public RuleAction? Action { get; set; }
 
-        public static Rule Deserialize(byte[] value)
+        public static Rule? Deserialize(byte[] value)
         {
-            Rule r = null;
+            Rule? r = null;
             if (value?.Any() == true)
             {
                 BinaryFormatter serializer = new BinaryFormatter();
