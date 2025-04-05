@@ -8,7 +8,7 @@
     <None Include="..\certificate.pfx" Link="certificate.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Services\Sarah.API\Sarah.API.csproj" />
