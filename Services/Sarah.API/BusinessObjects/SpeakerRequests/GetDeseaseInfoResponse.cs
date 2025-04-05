@@ -2,6 +2,6 @@
 {
     public class GetDeseaseInfoResponse
     {
-        public string DeseaseInfos { get; set; } = string.Empty;
+        public string DiseaseInfos { get; set; } = string.Empty;
     }
 }
