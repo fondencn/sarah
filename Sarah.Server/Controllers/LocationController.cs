@@ -41,21 +41,22 @@ namespace Sarah.Server.Controllers
         public ActionResult<IEnumerable<NamedLocationDto>> GetGpsTrackerLocations()
         {
             // Get the location of all GPS trackers
-            List<NamedLocationDto> dtos = new List<NamedLocationDto>();
-            foreach (var gpsTracker in _deviceService.GPSTrackers)
-            {
-                var gpsTrackerInfo = _databaseService.Devices.FirstOrDefault(x => x.NodeID == gpsTracker.NodeID);
-                if (gpsTrackerInfo == null)
+            var deviceDictionary = _databaseService.Devices
+                .ToDictionary(device => device.NodeID, device => device);
+
+            var dtos = _deviceService.GPSTrackers
+                .Where(gpsTracker => deviceDictionary.ContainsKey(gpsTracker.NodeID))
+                .Select(gpsTracker =>
                 {
-                    return NotFound($"Device {gpsTracker.NodeID} not found");
-                }
-                dtos.Add(new NamedLocationDto
-                {
-                    Latitude = gpsTracker.Position.Latitude.Value,
-                    Longitude = gpsTracker.Position.Longtitude.Value,
-                    Name = gpsTrackerInfo.Name ?? ""
-                });
-            }
+                    var gpsTrackerInfo = deviceDictionary[gpsTracker.NodeID];
+                    return new NamedLocationDto
+                    {
+                        Latitude = gpsTracker.Position.Latitude.Value,
+                        Longitude = gpsTracker.Position.Longtitude.Value,
+                        Name = gpsTrackerInfo.Name ?? ""
+                    };
+                })
+                .ToList();
             return Ok(dtos);
         }
 
