@@ -13,7 +13,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - CERT_PATH=/app/data/certificate.pfx
-      - CERT_PASSWORD=ayayaycaramba
+      - CERT_PASSWORD=
       - HTTPS_BACKEND_PORT=7165
       - HTTPS_FRONTEND_PORT=4200
       - SARAH_DB_PATH=/app/data/InteLuk.db
@@ -33,5 +33,19 @@ services:
       - NODE_ENV=production
       - HTTPS_BACKEND_PORT=7165
       - HTTPS_FRONTEND_PORT=4200
-    
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"      # RabbitMQ main port
+      - "15672:15672"    # RabbitMQ management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=
+      - RABBITMQ_DEFAULT_PASS=
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  rabbitmq-data:
+
 
