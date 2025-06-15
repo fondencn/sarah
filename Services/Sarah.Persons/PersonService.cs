@@ -35,7 +35,10 @@ namespace Sarah.Persons
 
             var persons = await _database.Persons
                 .ToListAsync();
-            persons.ForEach(p => LoadLocationInfos(p));
+            foreach (var person in persons)
+            {
+                await LoadLocationInfos(person);
+            }
             return persons;
         }
 
@@ -47,7 +50,7 @@ namespace Sarah.Persons
                 .FirstOrDefaultAsync(p => p.Id == id);
             if(person != null) 
             {
-                LoadLocationInfos(person);
+                await LoadLocationInfos(person);
             }
             return person;
         }
@@ -118,14 +121,14 @@ namespace Sarah.Persons
                 .Select(item => item.Hostname).ToArray() ?? [];
         }
 
-        private void LoadLocationInfos(PersonInfo p)
+        private async Task LoadLocationInfos(PersonInfo p)
         {
             // Aktuelle GPS Tracker Position laden
             if(p.GPSTrackerID > 0) 
             {
                // var device = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID ==  p.GPSTrackerID);
-                var device = _database.Devices.FirstOrDefault(item => item.Id == p.GPSTrackerID);
-                p.TrackerDeviceName = device?.Name ??"";
+                var device = await _database.Devices.FirstOrDefaultAsync(item => item.Id == p.GPSTrackerID);
+                p.TrackerDeviceName = device?.Name??"";
             }
 
             // Prüfen ob Mobiltelefon der Person zu Hause ist

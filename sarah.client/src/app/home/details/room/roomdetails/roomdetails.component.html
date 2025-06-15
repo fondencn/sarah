@@ -1,0 +1,27 @@
+<div class="container mt-4">
+  <div *ngIf="roomDetails; else loading">
+    <div class="card">
+      <div class="card-header">
+        <h3>{{ roomDetails.name }}</h3>
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">Room Details</h5>
+        <p class="card-text"><strong>ID:</strong> {{ roomDetails.id }}</p>
+        <p class="card-text"><strong>Name:</strong> {{ roomDetails.name }}</p>
+        <p class="card-text"><strong>isFavourite:</strong> {{ roomDetails.isFavourite }}</p>
+        <!-- Add more room-specific details here -->
+      </div>
+      <div class="card-footer text-muted">
+        Last updated: {{ lastUpdated  }}
+      </div>
+    </div>
+  </div>
+  <ng-template #loading>
+    <div class="text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <p>Loading room details...</p>
+    </div>
+  </ng-template>
+</div>

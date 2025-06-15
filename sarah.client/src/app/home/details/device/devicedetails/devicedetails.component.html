@@ -1,0 +1,32 @@
+<div class="container mt-4">
+  <div *ngIf="deviceDetails; else loading">
+    <div class="card">
+      <div class="card-header">
+        <h3>{{ deviceDetails.name }}</h3>
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">Device Details</h5>
+        <p class="card-text"><strong>ID:</strong> {{ deviceDetails.id }}</p>
+        <p class="card-text"><strong>Type:</strong> {{ deviceDetails.deviceType }}</p>
+        <p class="card-text"><strong>Info:</strong> {{ deviceDetails.info }}</p>
+        <p class="card-text"><strong>isFavourite:</strong> {{ deviceDetails.isFavourite }}</p>
+        <p class="card-text"><strong>isReadonly:</strong> {{ deviceDetails.isReadonly }}</p>
+        <p class="card-text"><strong>nodeId:</strong> {{ deviceDetails.nodeId }}</p>
+        <p class="card-text"><strong>roomId:</strong> {{ deviceDetails.roomId }}</p>
+        <p class="card-text"><strong>typeName:</strong> {{ deviceDetails.typeName }}</p>
+        <!-- Add more device-specific details here -->
+      </div>
+      <div class="card-footer text-muted">
+        Last updated: {{ lastUpdated }}
+      </div>
+    </div>
+  </div>
+  <ng-template #loading>
+    <div class="text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+      </div>
+      <p>Loading...</p>
+    </div>
+  </ng-template>
+</div>

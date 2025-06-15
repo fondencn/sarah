@@ -66,7 +66,12 @@
                   "maximumError": "4kb"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "scripts": [
+                {
+                  "input": "replace-env-vars.js"
+                }
+              ]
             },
             "development": {
               "optimization": false,

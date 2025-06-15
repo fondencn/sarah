@@ -50,7 +50,7 @@ namespace Sarah.Server.Controllers
                         {
                             var networkElement =  device.GetNetworkItem(_deviceService);
                             var room = await _databaseService.Rooms.FirstOrDefaultAsync(r => r.Id == device.Id_Room);
-                            var extendedProperties = ReadObjPropertiesAsJson(networkElement);
+                            var extendedProperties = networkElement.ReadObjPropertiesAsJson();
                             var description = (networkElement?.ClassDescription ?? "Unknown device type") + " in " + (room?.Name ?? "unknown room");
                             
                             DashboardItemDto item = new DashboardItemDto()
@@ -70,7 +70,7 @@ namespace Sarah.Server.Controllers
                         var person = await _personService.GetPersonByIdAsync(favourite.ItemId);
                         if(person != null)
                         {
-                            var extendedProperties = ReadObjPropertiesAsJson(person);
+                            var extendedProperties = person.ReadObjPropertiesAsJson();
                             string geofenceInfo =  " at " + person.CurrentGeoFence?.Name + " (" + person.GPSTracker?.Position + ")";
                             DashboardItemDto item = new DashboardItemDto()
                             {
@@ -92,7 +92,7 @@ namespace Sarah.Server.Controllers
                             .FirstOrDefaultAsync();
                         if(room != null)
                         {
-                            var extendedProperties = ReadObjPropertiesAsJson(room);
+                            var extendedProperties = room.ReadObjPropertiesAsJson();
                             var deviceCount = _databaseService.Devices.Count(d => d.Id_Room == room.Id);
                             var temperatures = _databaseService.Devices.Where(d => d.Id_Room == room.Id)
                                 .ToList()
@@ -131,24 +131,5 @@ namespace Sarah.Server.Controllers
             return list;
         }
 
-        /// <summary>
-        ///  Read the public, non-static properties of an object and return them as a ExtendedPropertyDto[]
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
-        private ExtendedPropertyDto[] ReadObjPropertiesAsJson(object? item)
-        {
-            List<ExtendedPropertyDto> result = new List<ExtendedPropertyDto>();
-
-            if (item != null) 
-            {
-                foreach(var property in item.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-                {
-                   result.Add(new ExtendedPropertyDto() {Key = property.Name, Value = property.GetValue(item)?.ToString()  ?? ""});
-                }
-            }
-
-            return result.ToArray();
-        }
     }
 }

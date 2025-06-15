@@ -45,6 +45,33 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         }
     }
 
+    [HttpGet("{id}")]
+    public async Task<ActionResult<DeviceDto>> GetDeviceAsync(long id)
+    {
+        try
+        {
+            // Get all devices
+            DeviceDto? dto = (await _databaseService.Devices.FindAsync(id))
+                !.ToDto(_deviceService);
+            if (dto == null) {
+                throw new InvalidOperationException($"Device {id} not found");
+            }
+
+            var userFavourites = await _databaseService.UserFavourites
+                .Where(f => f.UserId == CurrentUserName)
+                .ToListAsync();
+
+            dto.IsFavourite = userFavourites.Any(x => x.ItemId == dto.Id && x.ItemType == DashboardItemType.Device);
+              
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.LogException("Error getting device " + id, ex);
+            return StatusCode(500, "Error getting device " + id);
+        }
+    }
+
     [HttpPut]
     public async Task<ActionResult<DeviceDto>> AddDevice([FromBody] DeviceDto device)
     {
@@ -258,4 +285,5 @@ public class DevicesController(IDeviceService _deviceService, IDBService _databa
         
         return Ok();
     }
+
 }

@@ -36,6 +36,7 @@ namespace Sarah.Server.Controllers
             return Ok(personDtos);
         }
 
+
         [HttpGet("{id}")]
         public async Task<ActionResult<PersonDto>> GetPersonById(int id)
         {

@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { KnownDeviceTypes } from './knownDeviceTypes';
+import { ExtendedPropertyDto } from './extendedPropertyDto';
 
 
 export interface DeviceDto { 
@@ -20,6 +21,7 @@ export interface DeviceDto {
     roomId?: number | null;
     isReadonly?: boolean;
     isFavourite?: boolean;
+    extendedProperties?: Array<ExtendedPropertyDto> | null;
 }
 export namespace DeviceDto {
 }

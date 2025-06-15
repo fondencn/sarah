@@ -1,0 +1,46 @@
+<div class="container mt-4">
+  <div *ngIf="personDetails; else loading">
+    <div class="card">
+      <div class="card-header">
+        <h3>{{ personDetails.name }}</h3>
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">Person Details</h5>
+        <p class="card-text"><strong>ID:</strong> {{ personDetails.id }}</p>
+        <p class="card-text"><strong>Name:</strong> {{ personDetails.name }}</p>
+        <p class="card-text"><strong>currentGeoFence:</strong> {{ personDetails.currentGeoFence }}</p>
+        <p class="card-text"><strong>currentPosition:</strong> {{ personDetails.currentPosition }}</p>
+        <p class="card-text"><strong>gpsTrackerID:</strong> {{ personDetails.gpsTrackerID }}</p>
+        <p class="card-text"><strong>gpsTrackerName:</strong> {{ personDetails.gpsTrackerName }}</p>
+        <p class="card-text"><strong>isAtHome:</strong> {{ personDetails.isAtHome }}</p>
+        <p class="card-text"><strong>isFavourite:</strong> {{ personDetails.isFavourite }}</p>
+        <p class="card-text"><strong>Phone:</strong> {{ personDetails.mobilePhoneHostname }}</p>
+        <!-- Add more person-specific details here -->
+      </div>
+      <div class="card-footer text-muted">
+        Last updated: {{ lastUpdated }}
+      </div>
+    </div>
+  </div>
+  <ng-template #loading>
+    <div class="text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <p>Loading person details...</p>
+    </div>
+  </ng-template>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Position von {{ personDetails?.name }}</h3>
+      <button class="btn btn-primary" (click)="centerHomeOnMap()">🏡</button>
+    </div>
+    <div class="card-body">
+        <app-bing-map #map  style="width:400px;height:400px" ></app-bing-map>
+    </div>
+    <div class="card-footer text-muted">
+      Last updated: {{ lastUpdated }}
+    </div>
+  </div>
+</div>
