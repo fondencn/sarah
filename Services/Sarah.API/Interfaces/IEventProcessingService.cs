@@ -9,9 +9,10 @@ namespace Sarah.API.Interfaces
     {
 
         Task Start();
+        Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default);
+        Task SubscribeSpeechEventAsync(ISpeechEventSubscriber subscriber, CancellationToken cancellationToken = default);
         Task PublishNetworkEventAsync<T>(NetworkEvent<T> networkEvent, CancellationToken cancellationToken = default);
         Task PublishNetworkEventAsync(NetworkEvent networkEvent, CancellationToken cancellationToken = default);
-        Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default);
         Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default);
         Task PublishSay(SayEvent e, CancellationToken cancellationToken = default);
         Task PublishPersonAvailabilityAsync(PersonAvailabilityEvent personAvailabilityEvent, CancellationToken cancellationToken = default);

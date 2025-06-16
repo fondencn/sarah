@@ -36,7 +36,7 @@ namespace Sarah.Voice.SpeakerEventClient
                 HttpClient http = new HttpClient();
 
                 var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Event/Say");
+                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Speech/Say");
                 Logger.Instance.LogDebug("HTTP POST To " + uri);
                 HttpResponseMessage response = await http.PostAsync(uri, content);
                 response.EnsureSuccessStatusCode();
@@ -54,7 +54,7 @@ namespace Sarah.Voice.SpeakerEventClient
                 HttpClient http = new HttpClient();
 
                 var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Event/StartAudio");
+                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Speech/StartAudio");
                 Logger.Instance.LogDebug("HTTP POST To " + uri);
                 HttpResponseMessage response = await http.PostAsync(uri, content);
                 response.EnsureSuccessStatusCode();
@@ -72,7 +72,7 @@ namespace Sarah.Voice.SpeakerEventClient
                 HttpClient http = new HttpClient();
 
                 var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Event/StopAudio");
+                Uri uri = new Uri(new Uri(String.Format(BaseUri, request.Hostname)), "/Speech/StopAudio");
                 Logger.Instance.LogDebug("HTTP POST To " + uri);
                 HttpResponseMessage response = await http.PostAsync(uri, content);
                 response.EnsureSuccessStatusCode();

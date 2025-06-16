@@ -273,7 +273,7 @@ namespace Sarah.Voice
         private static Task AudioTask { get; set; }
         private static CancellationTokenSource AudiocancellationTokenSource { get; set; }
 
-        public static void StartPlaySound(string audioFileName)
+        public void StartPlaySound(string audioFileName)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             AudiocancellationTokenSource = cts;
@@ -293,7 +293,7 @@ namespace Sarah.Voice
             AudioTask = t;
         }
 
-        public static void StopPlaySound()
+        public void StopPlaySound()
         {
             AudiocancellationTokenSource?.Cancel();
             AudiocancellationTokenSource = null;
