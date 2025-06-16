@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeakerEventClient", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LEDService", "Services\Sarah.LEDService\Sarah.LEDService.csproj", "{78D56A4A-B85C-4300-BC5F-46098237654F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeechServer", "Sarah.SpeechServer\Sarah.SpeechServer.csproj", "{2A2FB747-8B6E-4E48-8EC1-812301F6618B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,10 @@ Global
 		{78D56A4A-B85C-4300-BC5F-46098237654F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78D56A4A-B85C-4300-BC5F-46098237654F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78D56A4A-B85C-4300-BC5F-46098237654F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A2FB747-8B6E-4E48-8EC1-812301F6618B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A2FB747-8B6E-4E48-8EC1-812301F6618B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A2FB747-8B6E-4E48-8EC1-812301F6618B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A2FB747-8B6E-4E48-8EC1-812301F6618B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

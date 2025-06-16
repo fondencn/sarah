@@ -1,0 +1,6 @@
+@Sarah.SpeechServer_HostAddress = http://localhost:5068
+
+GET {{Sarah.SpeechServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
