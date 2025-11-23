@@ -100,6 +100,29 @@ namespace Sarah.EventProcessing
             _logger.LogDebug($"{subscriber.GetType().Name} subscribed to queue {queueName}...");
         }
 
+        public async Task SubscribeSpeechEventAsync(ISpeechEventSubscriber subscriber, CancellationToken cancellationToken = default)
+        {
+            var queueName = _exchangeNames[typeof(SayEvent)];
+            var consumer = new AsyncEventingBasicConsumer(_channel!);
+            consumer.ReceivedAsync += async (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var eventType = _exchangeNames.FirstOrDefault(x => x.Value == queueName).Key;
+                var speechEvent = (SayEvent)JsonSerializer.Deserialize(message, eventType)!;
+
+                await subscriber.Notify(speechEvent);
+            };
+
+            await _channel!.BasicConsumeAsync(
+                queue: queueName,
+                autoAck: true,
+                consumer: consumer,
+                cancellationToken: cancellationToken);
+            
+            _logger.LogDebug($"{subscriber.GetType().Name} subscribed to queue {queueName}...");
+        }
+
         public Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default)
         {
             string queueName = _exchangeNames[airQualityChangedEvent.GetType()];

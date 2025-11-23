@@ -9,6 +9,16 @@ namespace Sarah.API.Interfaces
     public interface ISpeechService
     {
         /// <summary>
+        /// Initialisiert diesen Sprachdienst mit dem angegebenen Ort und den Aktivierungszuständen für Spracherkennung und -synthese.
+        /// Diese Methode sollte nur einmal aufgerufen werden, um den Dienst zu konfigurieren.
+        /// Wenn der Dienst bereits initialisiert ist, wird eine Ausnahme ausgelöst.
+        /// </summary>
+        /// <param name="location">The location or context for this speech service instance.</param>
+        /// <param name="isRecognitionEnabled">Indicates whether speech recognition should be enabled.</param>
+        /// <param name="isSynthesisEnabled">Indicates whether speech synthesis should be enabled.</param>
+        void Initialize(string location, bool isRecognitionEnabled = true, bool isSynthesisEnabled = true);
+
+        /// <summary>
         /// Ort, an dem sich dieser Sprachdienst befindet.
         /// </summary>
         string Location { get; }
@@ -41,5 +51,15 @@ namespace Sarah.API.Interfaces
         /// </summary>
         /// <param name="dateTime"></param>
         void ActivateSilentTime(DateTime dateTime);
+
+        /// <summary>
+        /// Startet die Wiedergabe einer Audiodatei
+        /// </summary>
+        void StartPlaySound(string audioFileName);
+
+        /// <summary>
+        /// Stoppt die Wiedergabe einer Audiodatei
+        /// </summary>
+        void StopPlaySound();
     }
 }

@@ -1,0 +1,31 @@
+@Sarah.SpeechServer_HostAddress = http://localhost:5068
+
+# Test Speech/Say endpoint
+POST {{Sarah.SpeechServer_HostAddress}}/Speech/Say
+Content-Type: application/json
+
+{
+  "text": "Hello, world!"
+}
+
+###
+
+# Test Speech/StartAudio endpoint
+POST {{Sarah.SpeechServer_HostAddress}}/Speech/StartAudio
+Content-Type: application/json
+
+{
+  "audioId": "test-audio-id"
+}
+
+###
+
+# Test Speech/StopAudio endpoint
+POST {{Sarah.SpeechServer_HostAddress}}/Speech/StopAudio
+Content-Type: application/json
+
+{
+  "audioId": "test-audio-id"
+}
+
+###

@@ -168,7 +168,7 @@ namespace Sarah.Voice
             try
             {
                 FileInfo soundFile = new FileInfo(sound);
-                if (soundFile.Exists)
+                if (soundFile.Exists && soundFile.Extension.ToLower() == ".wav")
                 {
 
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -183,7 +183,7 @@ namespace Sarah.Voice
                     else
                     {
                         /* Windows: NetFramework Media.SoundPlayer Klasse via Powershell benutzen, damit wir NetCore kompatibel bleiben */
-                        using (Process p = Process.Start(@"powershell", $@"-c (New-Object Media.SoundPlayer '{sound}').PlaySync();"))
+                        using (Process p = Process.Start("powershell", $"-c (New-Object Media.SoundPlayer '{soundFile.FullName}').PlaySync();"))
                         {
                             p.WaitForExit();
                         }
@@ -270,10 +270,10 @@ namespace Sarah.Voice
         }
 
 
-        private static Task AudioTask { get; set; }
-        private static CancellationTokenSource AudiocancellationTokenSource { get; set; }
+        private Task AudioTask { get; set; }
+        private CancellationTokenSource AudiocancellationTokenSource { get; set; }
 
-        public static void StartPlaySound(string audioFileName)
+        public void StartPlaySound(string audioFileName)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             AudiocancellationTokenSource = cts;
@@ -293,7 +293,7 @@ namespace Sarah.Voice
             AudioTask = t;
         }
 
-        public static void StopPlaySound()
+        public void StopPlaySound()
         {
             AudiocancellationTokenSource?.Cancel();
             AudiocancellationTokenSource = null;
