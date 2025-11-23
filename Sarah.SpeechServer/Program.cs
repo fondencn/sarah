@@ -18,6 +18,7 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
     .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: false)
     .AddEnvironmentVariables();
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
