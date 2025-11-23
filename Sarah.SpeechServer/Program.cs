@@ -35,6 +35,10 @@ app.MapOpenApi();
 app.MapControllers();
 app.UseHttpsRedirection();
 app.UseSpeechService(app.Configuration);
+
+// Start the event processing service to establish RabbitMQ connection
+await app.Services.GetRequiredService<IEventProcessingService>().Start();
+
 await app.UseSpeechEvents();
 
 app.Run();
