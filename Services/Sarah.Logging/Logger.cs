@@ -88,7 +88,9 @@ namespace Sarah.Logging
         /// <param name="msg"></param>
         public void Log(ErrorLevel level, string msg)
         {
-            _lastLog.Enqueue(msg);
+            // Sanitize the message to avoid log forging
+            var sanitizedMsg = SanitizeLogMessage(msg);
+            _lastLog.Enqueue(sanitizedMsg);
             if (_lastLog.Count > MAX_LASTLOG_SIZE)
             {
                 _lastLog.TryDequeue(out string _);
@@ -96,8 +98,8 @@ namespace Sarah.Logging
 
             if (_logger == null)
             {
-                Console.WriteLine(msg);
-                Debug.WriteLine(msg);
+                Console.WriteLine(sanitizedMsg);
+                Debug.WriteLine(sanitizedMsg);
             }
             else
             {
@@ -108,27 +110,42 @@ namespace Sarah.Logging
                         if (this.LogDebugAsInfo)
                         {
                             /* Debug als Info loggen in Docker */
-                            _logger.LogInformation(msg);
+                            _logger.LogInformation(sanitizedMsg);
                         }
                         else
                         {
-                            _logger.LogDebug(msg);
+                            _logger.LogDebug(sanitizedMsg);
                         }
                         break;
                     case ErrorLevel.Info:
-                        _logger.LogInformation(msg);
+                        _logger.LogInformation(sanitizedMsg);
                         break;
                     case ErrorLevel.Warning:
-                        _logger.LogWarning(msg);
+                        _logger.LogWarning(sanitizedMsg);
                         break;
                     case ErrorLevel.Error:
-                        _logger.LogError(msg);
+                        _logger.LogError(sanitizedMsg);
                         break;
                     case ErrorLevel.Exception:
-                        _logger.LogError(msg);
+                        _logger.LogError(sanitizedMsg);
                         break;
                 }
             }
+        }
+    
+        /// <summary>
+        /// Sanitizes a log message by removing or replacing newlines and other problematic characters.
+        /// Prevents log forging.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        private string SanitizeLogMessage(string msg)
+        {
+            if (msg == null)
+                return string.Empty;
+            // Remove \r and \n to prevent log forging
+            // You may want to remove other control chars as needed
+            return msg.Replace("\r", "").Replace("\n", "");
         }
     }
 }
