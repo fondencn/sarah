@@ -25,7 +25,7 @@ namespace Sarah.SpeechServer.Controllers
         [HttpPost("StopAudio")]
         public IActionResult StopPlaySound([FromBody] StopSoundRequest request)
         {
-            // TODO: Implement logic to handle StopSoundRequest
+            speechService.StopPlaySound();
             return Ok();
         }
     }
