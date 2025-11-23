@@ -13,9 +13,9 @@ namespace Sarah.API.Interfaces
         /// Diese Methode sollte nur einmal aufgerufen werden, um den Dienst zu konfigurieren.
         /// Wenn der Dienst bereits initialisiert ist, wird eine Ausnahme ausgelöst.
         /// </summary>
-        /// <param name="location"></param>
-        /// <param name="isRecognitionEnabled"></param>
-        /// <param name="isSynthesisEnabled"></param>
+        /// <param name="location">The location or context for this speech service instance.</param>
+        /// <param name="isRecognitionEnabled">Indicates whether speech recognition should be enabled.</param>
+        /// <param name="isSynthesisEnabled">Indicates whether speech synthesis should be enabled.</param>
         void Initialize(string location, bool isRecognitionEnabled = true, bool isSynthesisEnabled = true);
 
         /// <summary>
