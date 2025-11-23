@@ -132,8 +132,7 @@ namespace Sarah.Logging
                 }
             }
         }
-    }
-
+    
         /// <summary>
         /// Sanitizes a log message by removing or replacing newlines and other problematic characters.
         /// Prevents log forging.
@@ -148,4 +147,5 @@ namespace Sarah.Logging
             // You may want to remove other control chars as needed
             return msg.Replace("\r", "").Replace("\n", "");
         }
+    }
 }
