@@ -19,7 +19,7 @@ namespace Sarah.SpeechServer.Controllers
         [HttpPost("StartAudio")]
         public IActionResult StartPlaySound([FromBody] PlaySoundRequest request)
         {
-            speechService.StartPlaySound(request.FileName);
+            speechService.StartPlaySound(request.AudioFileName);
             return Ok();
         }
 
