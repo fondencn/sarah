@@ -270,8 +270,8 @@ namespace Sarah.Voice
         }
 
 
-        private static Task AudioTask { get; set; }
-        private static CancellationTokenSource AudiocancellationTokenSource { get; set; }
+        private Task AudioTask { get; set; }
+        private CancellationTokenSource AudiocancellationTokenSource { get; set; }
 
         public void StartPlaySound(string audioFileName)
         {
