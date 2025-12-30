@@ -117,6 +117,32 @@ All services implement JWT bearer token authentication validated against Keycloa
 - Services verify token signature, issuer, audience, and expiration
 - SSL/TLS encryption for all communications in production
 
+#### Security Best Practices Implemented
+
+**✓ Shared Authentication Library**: 
+- Centralized JWT authentication configuration (`Sarah.Authentication` library)
+- Eliminates code duplication across microservices
+- Consistent security policy enforcement
+
+**✓ Resource Management**: 
+- Shared HttpClient instance prevents socket exhaustion
+- Proper resource lifecycle management
+
+**✓ Environment-Aware Security**:
+- SSL certificate validation enabled in production
+- HTTPS metadata validation enforced in non-development environments
+- Self-signed certificates supported only in development
+
+**✓ Credential Management**:
+- Environment variables for sensitive credentials
+- `.env` file support with `.env.example` template
+- No hardcoded passwords in docker-compose files
+- `.gitignore` configured to prevent credential leaks
+
+**⚠️ Known Limitations**:
+- IssuerSigningKeyResolver uses `.Result` (synchronous blocking) due to framework limitations
+- Signing keys are cached by JWT middleware, minimizing performance impact
+
 ### Communication Patterns
 
 1. **Synchronous**: REST APIs between Gateway and Microservices
@@ -156,22 +182,36 @@ Docker Compose provides the easiest way to run the entire Sarah ecosystem with a
    cd sarah
    ```
 
-2. Start all services:
+2. **Configure credentials** (IMPORTANT for security):
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env and set strong passwords for:
+   # - KEYCLOAK_ADMIN_PASSWORD
+   # - RABBITMQ_PASSWORD
+   
+   # Example (use your own secure passwords):
+   # KEYCLOAK_ADMIN_PASSWORD=YourSecurePassword123!
+   # RABBITMQ_PASSWORD=YourSecurePassword456!
+   ```
+
+3. Start all services:
    ```bash
    docker-compose -f docker-compose.microservices.yml up --build
    ```
 
-3. Wait for all services to start (Keycloak takes ~30 seconds on first run)
+4. Wait for all services to start (Keycloak takes ~30 seconds on first run)
 
-4. Configure Keycloak (first time only):
+5. Configure Keycloak (first time only):
    - Open Keycloak Admin Console: http://localhost:8080
-   - Login with `admin` / `admin`
+   - Login with credentials from your `.env` file (default: admin/admin if not changed)
    - Create a new realm named `sarah-realm`
    - Create a client named `sarah-client`
    - Set redirect URIs to `http://localhost:4200/*`
    - Enable Direct Access Grants
 
-5. Access the services:
+6. Access the services:
    - **Frontend**: http://localhost:4200
    - **API Gateway**: http://localhost:5000
    - **Device Service**: http://localhost:5001

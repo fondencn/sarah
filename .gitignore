@@ -401,3 +401,6 @@ sarah.client/src/environments/environment.prod.ts
 sarah.client/src/environments/environment.ts
 sarah.client/.env
 docker-compos.secrets.yml
+
+# Environment variables with secrets
+.env

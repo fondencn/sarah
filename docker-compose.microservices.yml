@@ -5,8 +5,8 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
       - KC_HOSTNAME_STRICT=false
       - KC_HTTP_ENABLED=true
     ports:
@@ -25,8 +25,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
@@ -48,8 +48,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5001:8080"
     depends_on:
@@ -68,8 +68,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5002:8080"
     depends_on:
@@ -88,8 +88,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5003:8080"
     depends_on:
@@ -108,8 +108,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5004:8080"
     depends_on:
@@ -128,8 +128,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5005:8080"
     depends_on:
@@ -148,8 +148,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5006:8080"
     depends_on:
@@ -168,8 +168,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
       - DeviceService__Url=http://deviceservice:8080
       - PersonsService__Url=http://personsservice:8080
       - GeofencesService__Url=http://geofencesservice:8080
@@ -215,8 +215,8 @@ services:
       - Jwt__Audience=account
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5011:8080"
     depends_on:
