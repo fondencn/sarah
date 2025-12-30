@@ -1,0 +1,6 @@
+@Sarah.DeviceService.WebApi_HostAddress = http://localhost:5143
+
+GET {{Sarah.DeviceService.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

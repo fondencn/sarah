@@ -1,0 +1,6 @@
+@Sarah.Geofences.WebApi_HostAddress = http://localhost:5171
+
+GET {{Sarah.Geofences.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

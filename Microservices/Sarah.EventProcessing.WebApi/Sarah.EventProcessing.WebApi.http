@@ -1,0 +1,6 @@
+@Sarah.EventProcessing.WebApi_HostAddress = http://localhost:5083
+
+GET {{Sarah.EventProcessing.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

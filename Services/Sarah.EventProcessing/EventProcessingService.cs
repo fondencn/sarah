@@ -56,9 +56,9 @@ namespace Sarah.EventProcessing
 
             foreach(var queueName in _exchangeNames.Values)
             {
-                await _channel.ExchangeDeclareAsync(exchange: queueName, type: ExchangeType.Direct);
+                await _channel.ExchangeDeclareAsync(exchange: queueName, type: ExchangeType.Topic);
                 await _channel.QueueDeclareAsync(queue: queueName, durable: false, exclusive: false, autoDelete: true, arguments: null);
-                await _channel.QueueBindAsync(queue: queueName, exchange: queueName, routingKey: "");    
+                await _channel.QueueBindAsync(queue: queueName, exchange: queueName, routingKey: "#");    
             }
       
         }
@@ -196,7 +196,7 @@ namespace Sarah.EventProcessing
             {
                 await _channel.BasicPublishAsync(
                     exchange: queueName, 
-                    routingKey: "",
+                    routingKey: queueName,
                     mandatory: true,  
                     body: body,
                     cancellationToken);

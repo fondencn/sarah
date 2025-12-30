@@ -1,0 +1,6 @@
+@Sarah.Persons.WebApi_HostAddress = http://localhost:5079
+
+GET {{Sarah.Persons.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
