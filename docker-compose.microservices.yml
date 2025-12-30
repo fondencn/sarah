@@ -1,0 +1,249 @@
+version: '3.8'
+
+services:
+  # Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+    ports:
+      - "8443:8443"
+      - "8080:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    command: start-dev
+    networks:
+      - sarah-network
+
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Microservices
+  deviceservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.DeviceService.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5001:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  personsservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Persons.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5002:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  geofencesservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Geofences.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5003:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  eventprocessingservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.EventProcessing.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5004:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  monitoringservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Monitoring.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5005:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  rulesservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Rules.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5006:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.API.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - DeviceService__Url=http://deviceservice:8080
+      - PersonsService__Url=http://personsservice:8080
+      - GeofencesService__Url=http://geofencesservice:8080
+      - EventProcessingService__Url=http://eventprocessingservice:8080
+      - MonitoringService__Url=http://monitoringservice:8080
+      - RulesService__Url=http://rulesservice:8080
+    ports:
+      - "5000:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+      - deviceservice
+      - personsservice
+      - geofencesservice
+      - eventprocessingservice
+      - monitoringservice
+      - rulesservice
+    networks:
+      - sarah-network
+
+  locationserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-location-server
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+    ports:
+      - "5010:8080"
+    depends_on:
+      - keycloak
+    networks:
+      - sarah-network
+
+  speechserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-speech-server
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5011:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  # Frontend
+  sarah-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-client
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://apigateway:8080
+    ports:
+      - "4200:4200"
+    depends_on:
+      - apigateway
+    networks:
+      - sarah-network
+
+networks:
+  sarah-network:
+    driver: bridge
+
+volumes:
+  keycloak-data:
+  rabbitmq-data:
