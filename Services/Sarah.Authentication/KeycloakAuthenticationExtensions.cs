@@ -13,8 +13,25 @@ namespace Sarah.Authentication;
 /// </summary>
 public static class KeycloakAuthenticationExtensions
 {
-    private static HttpClient? _sharedHttpClient;
-    private static readonly object _lock = new object();
+    // Lazy initialization ensures thread-safe singleton creation
+    private static readonly Lazy<HttpClient> _httpClientDev = new Lazy<HttpClient>(() =>
+    {
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+        var client = new HttpClient(handler);
+        client.Timeout = TimeSpan.FromSeconds(30); // Prevent indefinite blocking
+        return client;
+    });
+
+    private static readonly Lazy<HttpClient> _httpClientProd = new Lazy<HttpClient>(() =>
+    {
+        var client = new HttpClient();
+        client.Timeout = TimeSpan.FromSeconds(30); // Prevent indefinite blocking
+        return client;
+    });
 
     /// <summary>
     /// Adds Keycloak JWT Bearer authentication to the service collection
@@ -24,31 +41,8 @@ public static class KeycloakAuthenticationExtensions
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
-        // Ensure we have a shared HttpClient (singleton pattern to avoid socket exhaustion)
-        if (_sharedHttpClient == null)
-        {
-            lock (_lock)
-            {
-                if (_sharedHttpClient == null)
-                {
-                    if (environment.IsDevelopment())
-                    {
-                        // In Development, allow self-signed certificates for local Keycloak
-                        var handler = new HttpClientHandler
-                        {
-                            ServerCertificateCustomValidationCallback = 
-                                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                        };
-                        _sharedHttpClient = new HttpClient(handler);
-                    }
-                    else
-                    {
-                        // In production, use default certificate validation
-                        _sharedHttpClient = new HttpClient();
-                    }
-                }
-            }
-        }
+        // Select appropriate HttpClient based on environment
+        var httpClient = environment.IsDevelopment() ? _httpClientDev.Value : _httpClientProd.Value;
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -73,13 +67,23 @@ public static class KeycloakAuthenticationExtensions
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
                     {
-                        // Use the shared HttpClient to avoid resource leaks
+                        // Use the shared HttpClient with timeout to avoid resource leaks
                         var certUri = authority + "/protocol/openid-connect/certs";
                         
                         // Note: Using .Result here is a limitation of the synchronous IssuerSigningKeyResolver
                         // The signing keys are cached by the JWT Bearer middleware, so this is called infrequently
-                        var jwks = _sharedHttpClient.GetStringAsync(certUri).Result;
-                        return new JsonWebKeySet(jwks).GetSigningKeys();
+                        // Timeout is configured on HttpClient to prevent indefinite blocking
+                        try
+                        {
+                            var jwks = httpClient.GetStringAsync(certUri).Result;
+                            return new JsonWebKeySet(jwks).GetSigningKeys();
+                        }
+                        catch (AggregateException ex) when (ex.InnerException is TaskCanceledException)
+                        {
+                            throw new InvalidOperationException(
+                                $"Timeout retrieving JWKS from {certUri}. Ensure Keycloak is accessible.", 
+                                ex.InnerException);
+                        }
                     },
                     NameClaimType = "preferred_username"
                 };
