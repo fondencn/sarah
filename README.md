@@ -148,62 +148,80 @@ All services implement JWT bearer token authentication validated against Keycloa
 
 ### Running with Docker Compose (Recommended)
 
+Docker Compose provides the easiest way to run the entire Sarah ecosystem with all microservices, Keycloak, and RabbitMQ.
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/fondencn/sarah.git
    cd sarah
    ```
 
-2. Create configuration secrets:
-   ```bash
-   cp Sarah.Server/appsettings.json Sarah.Server/appsettings.secrets.json
-   # Edit appsettings.secrets.json with your configuration
-   ```
-
-3. Start all services:
+2. Start all services:
    ```bash
    docker-compose -f docker-compose.microservices.yml up --build
    ```
 
-4. Access the services:
-   - **Frontend**: https://localhost:4200
+3. Wait for all services to start (Keycloak takes ~30 seconds on first run)
+
+4. Configure Keycloak (first time only):
+   - Open Keycloak Admin Console: http://localhost:8080
+   - Login with `admin` / `admin`
+   - Create a new realm named `sarah-realm`
+   - Create a client named `sarah-client`
+   - Set redirect URIs to `http://localhost:4200/*`
+   - Enable Direct Access Grants
+
+5. Access the services:
+   - **Frontend**: http://localhost:4200
    - **API Gateway**: http://localhost:5000
+   - **Device Service**: http://localhost:5001
+   - **Persons Service**: http://localhost:5002
+   - **Geofences Service**: http://localhost:5003
+   - **Event Processing Service**: http://localhost:5004
+   - **Monitoring Service**: http://localhost:5005
+   - **Rules Service**: http://localhost:5006
+   - **Location Server**: http://localhost:5010
+   - **Speech Server**: http://localhost:5011
    - **Keycloak Admin**: http://localhost:8080 (admin/admin)
    - **RabbitMQ Management**: http://localhost:15672 (guest/guest)
 
-### Running with .NET Aspire (Development)
-
-1. Install Aspire workload:
+6. Stop all services:
    ```bash
-   dotnet workload install aspire
+   docker-compose -f docker-compose.microservices.yml down
    ```
 
-2. Run the AppHost:
+### Running with .NET Aspire (Experimental)
+
+> **Note**: .NET Aspire workload has been deprecated in favor of NuGet packages. The Aspire AppHost is included for orchestration of infrastructure services (Keycloak, RabbitMQ) but full service integration is in progress.
+
+1. Run the AppHost:
    ```bash
    cd Sarah.AppHost
    dotnet run
    ```
 
-3. Access the Aspire dashboard to manage and monitor all services
+2. The Aspire dashboard will start and launch Keycloak and RabbitMQ containers
+
+3. Services can then be run individually against these infrastructure components
 
 ### Manual Setup (Development)
 
+For development, you may want to run services individually:
+
 1. Start infrastructure services:
    ```bash
-   docker-compose up keycloak rabbitmq
+   docker-compose -f docker-compose.microservices.yml up keycloak rabbitmq
    ```
 
-2. Configure Keycloak:
-   - Create realm: `sarah-realm`
-   - Create client: `sarah-client`
-   - Configure redirect URIs
+2. Configure Keycloak as described above
 
-3. Run microservices:
+3. Run microservices individually:
    ```bash
    # Each in a separate terminal
    cd Microservices/Sarah.DeviceService.WebApi && dotnet run
    cd Microservices/Sarah.Persons.WebApi && dotnet run
-   # ... repeat for other services
+   cd Microservices/Sarah.API.WebApi && dotnet run
+   # ... repeat for other services as needed
    ```
 
 4. Run frontend:
@@ -212,6 +230,8 @@ All services implement JWT bearer token authentication validated against Keycloa
    npm install
    npm start
    ```
+
+5. Access frontend at http://localhost:4200
 
 ## Configuration
 

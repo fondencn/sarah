@@ -58,6 +58,8 @@ namespace Sarah.EventProcessing
             {
                 await _channel.ExchangeDeclareAsync(exchange: queueName, type: ExchangeType.Topic);
                 await _channel.QueueDeclareAsync(queue: queueName, durable: false, exclusive: false, autoDelete: true, arguments: null);
+                // Bind with wildcard '#' to receive all messages for this event type
+                // Each queue is specific to an event type, so all messages in that exchange are relevant
                 await _channel.QueueBindAsync(queue: queueName, exchange: queueName, routingKey: "#");    
             }
       
