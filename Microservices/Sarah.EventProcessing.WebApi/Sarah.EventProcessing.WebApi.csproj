@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Services\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\..\Services\Sarah.EventProcessing\Sarah.EventProcessing.csproj" />
+    <ProjectReference Include="..\..\Services\Sarah.API\Sarah.API.csproj" />
   </ItemGroup>
 
 </Project>

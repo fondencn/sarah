@@ -1,6 +1,0 @@
-@Sarah.API.WebApi_HostAddress = http://localhost:5047
-
-GET {{Sarah.API.WebApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

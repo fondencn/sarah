@@ -158,38 +158,6 @@ services:
     networks:
       - sarah-network
 
-  apigateway:
-    build:
-      context: .
-      dockerfile: Microservices/Sarah.API.WebApi/Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
-      - Jwt__Audience=account
-      - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
-      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
-      - DeviceService__Url=http://deviceservice:8080
-      - PersonsService__Url=http://personsservice:8080
-      - GeofencesService__Url=http://geofencesservice:8080
-      - EventProcessingService__Url=http://eventprocessingservice:8080
-      - MonitoringService__Url=http://monitoringservice:8080
-      - RulesService__Url=http://rulesservice:8080
-    ports:
-      - "5000:8080"
-    depends_on:
-      - keycloak
-      - rabbitmq
-      - deviceservice
-      - personsservice
-      - geofencesservice
-      - eventprocessingservice
-      - monitoringservice
-      - rulesservice
-    networks:
-      - sarah-network
-
   locationserver:
     build:
       context: .
@@ -232,11 +200,11 @@ services:
       dockerfile: Dockerfile.sarah-client
     environment:
       - NODE_ENV=production
-      - API_URL=http://apigateway:8080
+      - API_URL=http://deviceservice:8080
     ports:
       - "4200:4200"
     depends_on:
-      - apigateway
+      - deviceservice
     networks:
       - sarah-network
 
