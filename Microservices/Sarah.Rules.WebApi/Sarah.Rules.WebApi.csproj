@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Services\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\..\Services\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\Sarah.DeviceService.WebApi\Sarah.DeviceService.WebApi.csproj" />
   </ItemGroup>
 
 </Project>
