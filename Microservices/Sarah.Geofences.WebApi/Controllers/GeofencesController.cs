@@ -39,7 +39,7 @@ public class GeofencesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving current geofence for position {Latitude}, {Longitude}", latitude, longitude);
+            _logger.LogError(ex, "Error retrieving current geofence for position (coordinates redacted for privacy)");
             return StatusCode(500, "Internal server error");
         }
     }
