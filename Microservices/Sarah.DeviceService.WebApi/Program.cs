@@ -1,10 +1,20 @@
 using Sarah.Authentication;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using Sarah.DeviceService.WebApi.Data;
+using Sarah.DeviceService.WebApi.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
+
+// Configure Entity Framework Core with PostgreSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register repositories
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -47,6 +57,21 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Apply database migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

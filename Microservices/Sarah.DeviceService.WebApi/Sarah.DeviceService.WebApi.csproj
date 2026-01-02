@@ -9,6 +9,12 @@
   <ItemGroup>
     <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
     <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
