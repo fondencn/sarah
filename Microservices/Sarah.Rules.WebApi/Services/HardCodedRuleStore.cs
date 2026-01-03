@@ -1,9 +1,9 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.DeviceService.Model.Animations;
 using Sarah.Logging;
 using Sarah.Rules.Actions;
+using Sarah.Rules.Clients;
 using Sarah.Rules.Conditions;
 using System;
 using System.Collections.Generic;
@@ -22,13 +22,14 @@ namespace Sarah.Rules
         private readonly IPersonService _persons;
         private readonly IEmailNotifier _emails;
         private readonly IFerienInfoProvider _ferien;
+        private readonly IDeviceServiceClient _deviceServiceClient;
         private List<Rule> _rules;
         private readonly IWeatherProvider _weather;
 
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, IEventProcessingService events, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien)
+        public HardCodedRuleStore(IWeatherProvider weather, IEventProcessingService events, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient)
         {
             this._events= events;
             this._devices = devices;
@@ -36,6 +37,7 @@ namespace Sarah.Rules
             this._persons = persons;
             this._emails = email;
             this._ferien = ferien;
+            this._deviceServiceClient = deviceServiceClient;
             this.CreateRules();
         }
 
@@ -181,7 +183,7 @@ namespace Sarah.Rules
                         new SendMailAction("c.fonden@die-rooter.de;h.fonden@die-rooter.de", "Tür Haustüre offen", "Die Haustüre wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails),
                         new SayAction("Die die Haustüre ist offen, obwohl keine bekannte Person daheim ist. Alarm wird ausgelöst und Kamer wird aktiviert. Bilder werden an die Cloud übertragen.", _events, SpeechVolume.VeryLoud), 
                         new StartAudioAction("alert1.wav", "", _events),
-                        new StartSceneAction(typeof(RedAlert))
+                        new StartSceneAction("RedAlert", _deviceServiceClient)
                     ),
                 Name = "Roter Alarm und Email an c.fonden@die-rooter.de;h.fonden@die-rooter.de wenn die Haustüre offen und keiner zu Hause ist"
             });
@@ -193,7 +195,7 @@ namespace Sarah.Rules
                     new SomeOnePresentCondition(_persons),
                     new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Geschlossen }),
                 Action =  new CombinedAction(
-                    new StopSceneAction(typeof(RedAlert)),
+                    new StopSceneAction("RedAlert", _deviceServiceClient),
                     new StopAudioAction("", _events)
                 ),
                 Name = "Roten Alarm anhalten wenn Haustüre geschlossen"
@@ -445,7 +447,7 @@ namespace Sarah.Rules
                     ,
                 Action = new CombinedAction(
                     new TaskRuleAction(() => CreateGoodMorningWithCommute()),
-                    new StartSceneAction(typeof(Sunrise))
+                    new StartSceneAction("Sunrise", _deviceServiceClient)
                 ),
                 Name = "Papa aufwecken: Ansage Pendelzeit Schule 6:15 Uhr"
             });

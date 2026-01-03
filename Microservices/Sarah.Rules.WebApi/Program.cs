@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Repositories;
+using Sarah.Rules.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// Register HTTP client for DeviceService communication
+builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice:5001";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Add services to the container.
 builder.Services.AddControllers();

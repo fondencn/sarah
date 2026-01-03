@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.DeviceService.Model.Animations;
+using Sarah.Rules.Clients;
+using Sarah.Rules.DTOs.DeviceCommands;
 using System;
 using System.Threading.Tasks;
 
@@ -7,19 +8,20 @@ namespace Sarah.Rules.Actions
 {
     public class StartSceneAction : RuleAction
     {
-        private readonly Type _sceneType;
-
+        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly string _sceneTypeName;
         private RuleCondition _delayCondition;
-
         private TimeSpan _delay;
 
-        public StartSceneAction(Type sceneType) : this(sceneType, TimeSpan.Zero, null)
+        public StartSceneAction(string sceneTypeName, IDeviceServiceClient deviceServiceClient) 
+            : this(sceneTypeName, TimeSpan.Zero, null, deviceServiceClient)
         {
         }
 
-        public StartSceneAction(Type sceneType, TimeSpan delay,  RuleCondition delayCondition)
+        public StartSceneAction(string sceneTypeName, TimeSpan delay, RuleCondition delayCondition, IDeviceServiceClient deviceServiceClient)
         {
-            this._sceneType = sceneType;
+            this._deviceServiceClient = deviceServiceClient;
+            this._sceneTypeName = sceneTypeName;
             this._delayCondition = delayCondition;
             this._delay = delay;
         }
@@ -30,8 +32,14 @@ namespace Sarah.Rules.Actions
             if (this._delayCondition != null && !this._delayCondition.Evaluate(sourceEvent))
             {
                 return;
-            }   
-            Scene.Start(this._sceneType);
+            }
+            
+            var command = new StartSceneCommand
+            {
+                SceneTypeName = _sceneTypeName
+            };
+            
+            await _deviceServiceClient.StartSceneAsync(command);
         }
     }
 }

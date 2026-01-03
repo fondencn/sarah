@@ -1,17 +1,16 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces.Services;
-using Sarah.DeviceService.Model.Animations;
-using System.Linq;
+using Sarah.Rules.Clients;
+using Sarah.Rules.DTOs.DeviceCommands;
 
 namespace Sarah.Rules.Actions
 {
     public class BlinkAction : RuleAction
     {
-        private readonly IDeviceService _devices;
+        private readonly IDeviceServiceClient _deviceServiceClient;
 
-        public BlinkAction(byte nodeId, int count, IDeviceService devices)
+        public BlinkAction(byte nodeId, int count, IDeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.BlinkCount = count;
             this.NodeId = nodeId;
         }
@@ -19,11 +18,15 @@ namespace Sarah.Rules.Actions
         public int BlinkCount { get; set; }
         public byte NodeId { get; set; }
 
-        public override void Execute(NetworkEvent sourceEvent)
+        public override async void Execute(NetworkEvent sourceEvent)
         {
-            BlinkAnimation anim = new BlinkAnimation(this._devices.Lamps.First(item => item.NodeID == this.NodeId));
-            anim.BlinkCount = this.BlinkCount;
-            anim.Start();
+            var command = new BlinkAnimationCommand
+            {
+                NodeId = this.NodeId,
+                BlinkCount = this.BlinkCount
+            };
+            
+            await _deviceServiceClient.ExecuteBlinkAnimationAsync(command);
         }
     }
 }

@@ -1,20 +1,29 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.DeviceService.Model.Animations;
+using Sarah.Rules.Clients;
+using Sarah.Rules.DTOs.DeviceCommands;
 using System;
 
 namespace Sarah.Rules.Actions
 {
     public class StopSceneAction : RuleAction
     {
-        private readonly Type _sceneType;
-        public StopSceneAction(Type sceneType)
+        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly string _sceneTypeName;
+        
+        public StopSceneAction(string sceneTypeName, IDeviceServiceClient deviceServiceClient)
         {
-            this._sceneType = sceneType;
+            this._deviceServiceClient = deviceServiceClient;
+            this._sceneTypeName = sceneTypeName;
         }
 
-        public override void Execute(NetworkEvent sourceEvent)
+        public override async void Execute(NetworkEvent sourceEvent)
         {
-            Scene.Stop(this._sceneType);
+            var command = new StopSceneCommand
+            {
+                SceneTypeName = _sceneTypeName
+            };
+            
+            await _deviceServiceClient.StopSceneAsync(command);
         }
     }
 }
