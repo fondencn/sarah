@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sarah.API.Interfaces.Services;
+using Sarah.Rules.WebApi.DTOs;
 
 namespace Sarah.Rules.WebApi.Controllers;
 
@@ -22,6 +23,21 @@ public class RulesController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetStatus()
     {
-        return Ok(new { status = "running", service = "RuleService" });
+        try
+        {
+            var status = new RuleStatusDto
+            {
+                Status = "Running",
+                ActiveRules = 0, // RuleService doesn't expose rule count in interface
+                LastExecution = DateTime.UtcNow
+            };
+            
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting rules status");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
     }
 }

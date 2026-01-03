@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
+using Sarah.Monitoring.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// Register HTTP client for Rules Service communication
+builder.Services.AddHttpClient<IRulesServiceClient, RulesServiceClient>(client =>
+{
+    var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://rules:5006";
+    client.BaseAddress = new Uri(rulesServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
