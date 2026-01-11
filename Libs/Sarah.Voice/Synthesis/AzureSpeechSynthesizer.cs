@@ -127,7 +127,12 @@ namespace Sarah.Voice.Synthesis
             }
             else
             {
-                _logger.LogDebug("SPEECH: Already Speaking, ommitting \"{Text}\"", text);
+                // Sanitize user-provided text before logging to prevent log forging via line breaks
+                var sanitizedText = text?
+                    .Replace("\r\n", " ")
+                    .Replace("\n", " ")
+                    .Replace("\r", " ");
+                _logger.LogDebug("SPEECH: Already Speaking, ommitting \"{Text}\"", sanitizedText);
             }
         }
 
