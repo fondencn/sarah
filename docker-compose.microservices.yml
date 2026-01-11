@@ -1,0 +1,362 @@
+version: '3.8'
+
+services:
+  # Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+    ports:
+      - "8443:8443"
+      - "8080:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    command: start-dev
+    networks:
+      - sarah-network
+
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # PostgreSQL Databases (one per microservice)
+  postgres-devices:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=devicesdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-devices-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-persons:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=personsdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-persons-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-geofences:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=geofencesdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-geofences-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-events:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=eventsdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-events-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-monitoring:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=monitoringdb
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-monitoring-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-rules:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=rulesdb
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-rules-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Microservices
+  deviceservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.DeviceService.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-devices;Database=devicesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres-devices:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  personsservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Persons.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-persons;Database=personsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5002:8080"
+    depends_on:
+      postgres-persons:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  geofencesservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Geofences.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-geofences;Database=geofencesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5003:8080"
+    depends_on:
+      postgres-geofences:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  eventprocessingservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.EventProcessing.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-events;Database=eventsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5004:8080"
+    depends_on:
+      postgres-events:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  monitoringservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Monitoring.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-monitoring;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5005:8080"
+    depends_on:
+      postgres-monitoring:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  rulesservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Rules.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+      - ConnectionStrings__DefaultConnection=Host=postgres-rules;Database=rulesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5006:8080"
+    depends_on:
+      postgres-rules:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+
+  locationserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-location-server
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+    ports:
+      - "5010:8080"
+    depends_on:
+      - keycloak
+    networks:
+      - sarah-network
+
+  speechserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-speech-server
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5011:8080"
+    depends_on:
+      - keycloak
+      - rabbitmq
+    networks:
+      - sarah-network
+
+  # Frontend
+  sarah-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.sarah-client
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://deviceservice:8080
+    ports:
+      - "4200:4200"
+    depends_on:
+      - deviceservice
+    networks:
+      - sarah-network
+
+networks:
+  sarah-network:
+    driver: bridge
+
+volumes:
+  keycloak-data:
+  rabbitmq-data:
+  postgres-devices-data:
+  postgres-persons-data:
+  postgres-geofences-data:
+  postgres-events-data:
+  postgres-monitoring-data:
+  postgres-rules-data:
