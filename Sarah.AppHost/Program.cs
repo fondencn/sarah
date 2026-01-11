@@ -43,11 +43,9 @@ var postgresRules = builder.AddPostgres("postgres-rules")
     .WithLifetime(ContainerLifetime.Persistent)
     .AddDatabase("rulesdb");
 
-// Note: Microservice projects would be added here when using Aspire with project references
-// Example (commented out until projects are configured for Aspire):
-// var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
-//     .WithReference(postgresDevices)
-//     .WithReference(keycloak)
-//     .WithReference(rabbitmq);
+var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
+    .WithReference(postgresDevices)
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
 
 builder.Build().Run();

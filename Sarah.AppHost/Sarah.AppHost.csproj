@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.1">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -21,9 +22,8 @@
     <ProjectReference Include="..\Microservices\Sarah.EventProcessing.WebApi\Sarah.EventProcessing.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
-    <ProjectReference Include="..\Microservices\Sarah.API.WebApi\Sarah.API.WebApi.csproj" />
-    <ProjectReference Include="..\Microservices\Sarah.LocationServer\Sarah.LocationServer.csproj" />
-    <ProjectReference Include="..\Microservices\Sarah.SpeechServer\Sarah.SpeechServer.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.LocationServer.WebApi\Sarah.LocationServer.WebApi.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />
   </ItemGroup>
 
 </Project>
