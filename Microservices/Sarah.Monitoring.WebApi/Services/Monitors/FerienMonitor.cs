@@ -1,6 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Ical.Net;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
@@ -10,7 +10,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Stellt Daten für Schulferien für das System bereit
     /// </summary>
-    public class FerienMonitor (IConfiguration _config) : IFerienInfoProvider, ICanSelfTest, IMonitor
+    public class FerienMonitor (IConfiguration _config, ILogger<FerienMonitor> _logger) : IFerienInfoProvider, ICanSelfTest, IMonitor
     {
         /// <summary>
         /// Die bekannten Schulferien als vereinheitlichte Liste
@@ -38,7 +38,7 @@ namespace Sarah.Monitoring.Monitors
         {
             string iCalFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "/", _config["iCalFolder"] ?? "");
             FerienDateien.Instance.Load(iCalFolder);
-            Logger.Instance.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
+            _logger.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
             return Task.CompletedTask;
         }
 

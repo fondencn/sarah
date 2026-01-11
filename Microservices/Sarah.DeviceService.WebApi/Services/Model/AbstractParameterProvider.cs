@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using ZWave;
 using ZWave.Channel.Protocol;
 using ZWave.CommandClasses;
@@ -40,12 +40,12 @@ namespace Sarah.DeviceService.Model
             }
             catch (TransmissionException tEx)
             {
-                Logger.Instance.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
+                // _logger?.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht ausgelesen werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Error reading parameters: " + ex.Message);
+                // _logger?.LogDebug("Error reading parameters: " + ex.Message);
                 throw;
             }
 
@@ -62,12 +62,12 @@ namespace Sarah.DeviceService.Model
             }
             catch (TransmissionException tEx)
             {
-                Logger.Instance.LogException("Error WRITING parameters, device is sleeping or not reachable", tEx);
+                // _logger?.LogError("Error WRITING parameters, device is sleeping or not reachable", tEx);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht gesendet werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("Error reading parameters ", ex);
+                // _logger?.LogError("Error reading parameters ", ex);
                 throw;
             }
         }
@@ -92,12 +92,12 @@ namespace Sarah.DeviceService.Model
             }
             catch (TransmissionException tEx)
             {
-                Logger.Instance.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
+                // _logger?.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht ausgelesen werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Error reading parameters: " + ex.Message);
+                // _logger?.LogDebug("Error reading parameters: " + ex.Message);
                 throw;
             }
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using ZWave.CommandClasses;
 using ZWave;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 
@@ -75,7 +75,7 @@ namespace Sarah.DeviceService.Model
                     throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
                 }
 
-                Logger.Instance.LogDebug("Initializing new Smokesensor for node " + this.NodeID + " ...");
+                _logger?.LogDebug("Initializing new Smokesensor for node " + this.NodeID + " ...");
 
                 var basicCmd = node.GetCommandClass<Basic>();
                 basicCmd.Changed += BasicCmd_Changed;
@@ -93,7 +93,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("SmokeSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
+                _logger?.LogError("SmokeSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
             }
 
             return Task.CompletedTask;
@@ -136,19 +136,19 @@ namespace Sarah.DeviceService.Model
 
         private void BattCmd_Changed(object sender, ReportEventArgs<BatteryReport> e)
         {
-            Logger.Instance.LogDebug("Battery value " + e.Report.Value + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Battery value " + e.Report.Value + " from node " + this.NodeID + " received");
             this.Battery = new SensorData(e.Report.Value, "%");
         }
 
         private void BasicCmd_Changed(object sender, ReportEventArgs<BasicReport> e)
         {
-            Logger.Instance.LogDebug("Basic value " + e.Report.CurrentValue + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Basic value " + e.Report.CurrentValue + " from node " + this.NodeID + " received");
             /* Momentan nichts weiter implementiert */
         }
 
         private void AlarmCmd_Changed(object sender, ReportEventArgs<AlarmReport> e)
         {
-            Logger.Instance.LogDebug("Sensor Alarm " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Sensor Alarm " + e.Report.Type + " from node " + this.NodeID + " received");
             this.Alarm = new SensorData(e.Report.Level, (e.Report.Level > 0 ? "🚨" : "") + (e.Report.Level > 0 ? "(" + e.Report.Type.ToString() + " Alarm)" : ""));
 
 
@@ -166,14 +166,14 @@ namespace Sarah.DeviceService.Model
 
         private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
-            Logger.Instance.LogDebug("Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
             if (e.Report.Type == SensorType.Temperature)
             {
                 this.Temperature = new SensorData(e.Report.Value, e.Report.Unit);
             }
             else
             {
-                Logger.Instance.LogError("UNKNOWN Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+                _logger?.LogError("UNKNOWN Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
             }
         }
     }

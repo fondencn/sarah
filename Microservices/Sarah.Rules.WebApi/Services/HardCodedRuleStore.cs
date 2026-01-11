@@ -1,14 +1,10 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
 using Sarah.Rules.Actions;
 using Sarah.Rules.Clients;
 using Sarah.Rules.Conditions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Sarah.Rules
 {
@@ -26,11 +22,14 @@ namespace Sarah.Rules
         private List<Rule> _rules;
         private readonly IWeatherProvider _weather;
 
+        private readonly ILogger<HardCodedRuleStore> _logger;
+
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, IEventProcessingService events, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient)
+        public HardCodedRuleStore(IWeatherProvider weather, IEventProcessingService events, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient, ILogger<HardCodedRuleStore> logger)
         {
+            this._logger = logger;
             this._events= events;
             this._devices = devices;
             this._weather = weather;
@@ -169,7 +168,7 @@ namespace Sarah.Rules
                     new NoOnePresentCondition(_persons),
                     new DoorSensorCondition(2, _devices) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
-                        new SendMailAction("c.fonden@die-rooter.de", "Tür Arbeitszimmer offen", "Die Türe im Arbeitszimmer wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails),
+                        new SendMailAction("c.fonden@die-rooter.de", "Tür Arbeitszimmer offen", "Die Türe im Arbeitszimmer wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
                         new SayAction("Die Türe im Arbeitszimmer ist offen, obwohl keine bekannte Person daheim ist.", _events)
                     ),
                 Name = "Email an c.fonden@die-rooter.de wenn Terassentür im Arbeitszimmer offen und keiner zu Hause"
@@ -180,7 +179,7 @@ namespace Sarah.Rules
                     new NoOnePresentCondition(_persons),
                     new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
-                        new SendMailAction("c.fonden@die-rooter.de;h.fonden@die-rooter.de", "Tür Haustüre offen", "Die Haustüre wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails),
+                        new SendMailAction("c.fonden@die-rooter.de;h.fonden@die-rooter.de", "Tür Haustüre offen", "Die Haustüre wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
                         new SayAction("Die die Haustüre ist offen, obwohl keine bekannte Person daheim ist. Alarm wird ausgelöst und Kamer wird aktiviert. Bilder werden an die Cloud übertragen.", _events, SpeechVolume.VeryLoud), 
                         new StartAudioAction("alert1.wav", "", _events),
                         new StartSceneAction("RedAlert", _deviceServiceClient)
@@ -208,7 +207,7 @@ namespace Sarah.Rules
                     new PresenceCondition(13, true, _devices),
                     new LuminanceSmallerThanCondition(13, 40, _devices)
                 ),
-                Action = new SetLampColorAndBrightnessAction(14, 255, "#FFBC1F", _devices),
+                Action = new SetLampColorAndBrightnessAction(14, 255, "#FFBC1F", _devices, _logger),
                 Name = "Lampe 14 an wenn jemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
@@ -249,7 +248,7 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new PresenceCondition(13, false, _devices),
-                Action = new SetLampColorAndBrightnessAction(14, 0, null, _devices),
+                Action = new SetLampColorAndBrightnessAction(14, 0, null, _devices, _logger),
                 Name = "Lampe 14 aus wenn niemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
@@ -328,8 +327,8 @@ namespace Sarah.Rules
                 Condition = new AlertCondition(38, _devices),
                 Action = new CombinedAction
                 (
-                    new SendMailAction("c.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!!!", _emails),
-                    new SendMailAction("h.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!", _emails),
+                    new SendMailAction("c.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!!!", _emails, _logger),
+                    new SendMailAction("h.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!", _emails, _logger),
                     new SayAction("Achtung, Rauchmelder 38 meldet Feueralarm!", _events)
                 ),
                 Name = "E-Mail bei Feueralarm Node 38"
@@ -358,7 +357,7 @@ namespace Sarah.Rules
                         text = $"{evt.PersonName} ist nun unterwegs";
                     }
                     _events.PublishSay(new SayEvent(text));
-                }),
+                }, _logger),
                 Name = "Sprachausgabe beim betreten oder verlassen eines GeoFence-Bereichs"
             });
         }
@@ -429,7 +428,7 @@ namespace Sarah.Rules
             //            }
             //            catch (Exception ex)
             //            {
-            //                Logger.Instance.LogException(ex);
+            //                _logger.LogError(ex, "Error in traffic sensors");
             //                NotificationEngine.Instance.Voice.Say("Meine Verkehrssensoren sind leider gestört. ");
             //            }
             //        }
@@ -437,24 +436,10 @@ namespace Sarah.Rules
             //    Name = "Ansage Pendelzeit 7:15 Uhr"
             //});
 
-
-            this._rules.Add(new Rule()
-            {
-                Condition = //new CombinedCondition(0, ConditionOperator.AND,
-                    new TimerCondition(new TimerRecurrence() { Hour = 6, Minute = 15, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag })
-                    //new IsBeforeSunriseCondition(this._weather, 0) // Nur wenn vor Sonnenaufgang
-                    //)
-                    ,
-                Action = new CombinedAction(
-                    new TaskRuleAction(() => CreateGoodMorningWithCommute()),
-                    new StartSceneAction("Sunrise", _deviceServiceClient)
-                ),
-                Name = "Papa aufwecken: Ansage Pendelzeit Schule 6:15 Uhr"
-            });
             this._rules.Add(new Rule()
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 6, Minute = 45, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                Action =  new SetLampColorAndBrightnessAction(24, 0, "#FFFFFF", _devices),
+                Action =  new SetLampColorAndBrightnessAction(24, 0, "#FFFFFF", _devices, _logger),
                 Name = "Lampe Wohnzimmer um 6:45 Uhr aus machen"
             });
 
@@ -462,7 +447,7 @@ namespace Sarah.Rules
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 12, Minute = 0, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "#FF0000", _devices),
+                    new SetLampColorAndBrightnessAction(14, 255, "#FF0000", _devices, _logger),
                     new SayAction("Es ist Zeit für die Mittagspause.", "speaker1", _events)
                     ),
                 Name = "Erinnerung an Mittagspause"
@@ -477,7 +462,7 @@ namespace Sarah.Rules
                     new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 0, "#FFFFFF", _devices),
+                    new SetLampColorAndBrightnessAction(14, 0, "#FFFFFF", _devices, _logger),
                     new SayAction("Es ist Zeit zum weiter arbeiten", "speaker1", _events)
                     ),
                 Name = "Erinnerung an Ende der Mittagspause"
@@ -490,7 +475,7 @@ namespace Sarah.Rules
                     new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "#0000FF", _devices),
+                    new SetLampColorAndBrightnessAction(14, 255, "#0000FF", _devices, _logger),
                     new SayAction("Es ist Zeit fürs Daily", "speaker1", _events)
                     ),
                 Name = "Erinnerung Daily 8:00"
@@ -503,7 +488,7 @@ namespace Sarah.Rules
                     new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "00FF00", _devices),
+                    new SetLampColorAndBrightnessAction(14, 255, "00FF00", _devices, _logger),
                     new SayAction("Das Daily sollte nun zu Ende sein!", "speaker1", _events)
                     ),
                 Name = "Erinnerung Daily 8:20"
@@ -512,50 +497,11 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 8, Minute = 21, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                Action = new SetLampColorAndBrightnessAction(14, 0, "FFFFFF", _devices),
+                Action = new SetLampColorAndBrightnessAction(14, 0, "FFFFFF", _devices, _logger),
                 Name = "Erinnerung Daily 8:21->Lampe aus"
             });
         }
 
-        private async Task CreateGoodMorningWithCommute()
-        {
-            try
-            {
-                //string from = "Kastanienallee 25, 71638 Ludwigsburg";
-                //string to = "Osterholzallee 144, 71636 Ludwigsburg";
-                //string to = "Kaiserstraße 14, 71636 Ludwigsburg";
-                //IRouteInfo route = await NotificationEngine.Instance.Geo.GetRouteInfo(from, to);
-                //IRouteInfo route = await NotificationEngine.Instance.Geo.GetRouteInfoAzure(from, to);
-
-                DateTime now = DateTime.Now;
-                string text =  Greeting.Current + ", es ist " + now.ToString("HH:mm") + " Uhr. " + 
-                    "Es ist Zeit, aufzustehen. ";
-                    // + "Die Fahrtzeit zur Schule beträgt gerade "
-                    // + Math.Round(route.Duration.TotalMinutes, 0) + " Minuten. "
-                    // + route.TrafficCongestion;
-
-                //route = await NotificationEngine.Instance.Geo.GetRouteInfo(from, to, TravelType.Walking);
-
-                //text += ". Zu Fuß dauert es "
-                //    + Math.Round(route.Duration.TotalMinutes, 0) + " Minuten. "
-                //    + route.TrafficCongestion+ ". ";route = await NotificationEngine.Instance.Geo.GetRouteInfo(from, to, TravelType.Walking);
-
-                // route = await NotificationEngine.Instance.Geo.GetRouteInfo(from, to, TravelType.Bicycle);
-                // text += ". Mit dem Rad dauert es "
-                //     + Math.Round(route.Duration.TotalMinutes, 0) + " Minuten. "
-                //     + route.TrafficCongestion + ". ";
-
-                text += _weather.GetWeatherForecastStringForToday();
-                text += " " + _weather.GetWeatherWarningString();
-
-                await _events.PublishSay(new SayEvent(text));
-            }
-            catch (Exception ex)
-            {
-                Logger.Instance.LogException(ex);
-                await _events.PublishSay(new SayEvent("Meine Verkehrssensoren sind leider gestört. "));
-            }
-        }
 
         private void AddLukasStundenplanRules()
         {

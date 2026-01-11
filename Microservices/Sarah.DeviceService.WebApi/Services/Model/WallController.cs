@@ -3,7 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -50,7 +50,7 @@ namespace Sarah.DeviceService.Model
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             Node node = deviceService.GetNode(this.NodeID) as Node;
-            Logger.Instance.LogDebug("Initialize Node " + this.NodeID + " as " +  this.Name );
+            _logger?.LogDebug("Initialize Node " + this.NodeID + " as " +  this.Name );
 
             if (node != null)
             {
@@ -67,7 +67,7 @@ namespace Sarah.DeviceService.Model
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogDebug(ex.Message);
+                    _logger?.LogDebug(ex.Message);
                 }
 
 
@@ -81,7 +81,7 @@ namespace Sarah.DeviceService.Model
                 //catch (Exception ex)
                 //{
 
-                //    Logger.Instance.LogDebug(ex.Message);
+                //    _logger?.LogDebug(ex.Message);
                 //}
 
                 //try
@@ -94,7 +94,7 @@ namespace Sarah.DeviceService.Model
                 //catch (Exception ex)
                 //{
 
-                //    Logger.Instance.LogDebug(ex.Message);
+                //    _logger?.LogDebug(ex.Message);
                 //}
 
 
@@ -103,11 +103,11 @@ namespace Sarah.DeviceService.Model
 
                 //    var switchBin = node.GetCommandClass<SwitchBinary>();
                 //    var switchBinReport = await switchBin.Get();
-                //    Logger.Instance.LogDebug("switchBinReport.Value: " + switchBinReport.Value);
+                //    _logger?.LogDebug("switchBinReport.Value: " + switchBinReport.Value);
                 //}
                 //catch (Exception ex)
                 //{
-                //    Logger.Instance.LogDebug(ex.Message);
+                //    _logger?.LogDebug(ex.Message);
                 //}
             }
             return Task.CompletedTask;
@@ -122,7 +122,7 @@ namespace Sarah.DeviceService.Model
 
         private async void OnCentralSceneChanged(object sender, ReportEventArgs<CentralSceneReport> e)
         {
-            Logger.Instance.LogDebug($"CentralScene report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"CentralScene report of Node {e.Report.Node:D3} changed to [{e.Report}]");
 
             this.LastUsage = DateTime.Now;
             this.LastSceneId = e.Report.SceneNumber;

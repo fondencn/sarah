@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
@@ -24,9 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Services\Sarah.API\Sarah.API.csproj" />
-    <ProjectReference Include="..\..\Services\Sarah.Logging\Sarah.Logging.csproj" />
-    <ProjectReference Include="..\..\Services\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.API\Sarah.API.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.Authentication\Sarah.Authentication.csproj" />
   </ItemGroup>
 
 </Project>

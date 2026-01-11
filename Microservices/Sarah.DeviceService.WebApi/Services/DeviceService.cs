@@ -1,6 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.Model;
 using Sarah.DeviceService.Model.Extensions;
 using Sarah.DeviceService.Model.ParameterProviders;
@@ -24,16 +24,18 @@ namespace Sarah.DeviceService
         private readonly IConfiguration _configuration;
         private readonly INodeFactory _nodeFactory;
         private readonly IEventProcessingService _events;
+        private readonly ILogger<DeviceService> _logger;
 
 
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events, ILogger<DeviceService> logger)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
             this._events = events;
+            this._logger = logger;
         }
 
 
@@ -108,12 +110,11 @@ namespace Sarah.DeviceService
         {
             try
             {
-                Logger.Instance.LogDebugAsInfo = true;
                 if (SerialPortName == null)
                 {
                     throw new InvalidOperationException("Missing configuration for ZWave serial port");
                 }
-                Logger.Instance.LogInfo("Starting Controller on serial port " + SerialPortName);
+                _logger?.LogInformation("Starting Controller on serial port " + SerialPortName);
                 ISerialPort serialPort;
                 try
                 {
@@ -128,8 +129,8 @@ namespace Sarah.DeviceService
                 {
                     serialPort = null;
                     this.StatusMessage = ex.Message;
-                    Logger.Instance.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
-                    Logger.Instance.LogException(ex);
+                    _logger?.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
+                    _logger?.LogError(ex, "An error occurred");
                 }
 
 
@@ -158,7 +159,7 @@ namespace Sarah.DeviceService
                         this.StatusMessage = "OK - ZWave Network with HomeID " + (homeid) + ", ControllerVersion=" + (controllerversion);
                     } catch (Exception ex)
                     {
-                        Logger.Instance.LogException(ex);
+                        _logger?.LogError(ex, "An error occurred");
                         this.StatusMessage = "OK - ZWave Network with unkown HomeID (" + ex.Message + " )";
                     }
                 }
@@ -175,19 +176,19 @@ namespace Sarah.DeviceService
                     this.Controller = null;
                 }
                 this.Nodes = null;
-                Logger.Instance.LogDebug(ex.Message);
+                _logger?.LogDebug(ex.Message);
                 this.StatusMessage = ex.Message;
             } 
             finally
             {
-                Logger.Instance.LogInfo("DeviceService started.");
-                Logger.Instance.LogDebugAsInfo = false;
+                _logger?.LogInformation("DeviceService started.");
+                // _logger?.LogInformation = false;
             }
         }
 
         private void Controller_Error(object sender, ZWave.ErrorEventArgs e)
         {
-            Logger.Instance.LogError("Controller_Error: " + e.Error?.Message);
+            _logger?.LogError("Controller_Error: " + e.Error?.Message);
         }
 
         private Task UpdateTask { get; set; }
@@ -199,7 +200,7 @@ namespace Sarah.DeviceService
         /// <returns>Task</returns>
         private async Task UpdateNodeList()
         {
-            Logger.Instance.LogDebug("Updating NodeList...");
+            _logger?.LogDebug("Updating NodeList...");
             this.StatusMessage = "Verbundene Geräte werden Initialisiert...";
             // get the included nodes
             if (this.Controller != null)
@@ -217,12 +218,12 @@ namespace Sarah.DeviceService
                     NetworkElement nodeElement = _nodeFactory.CreateByNodeId(n.NodeID);
                     if (nodeElement == null)
                     {
-                        Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
+                        _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
                         networkElements.Add(new UnknownElement(n.NodeID, this._events));
                     }
                     else
                     {
-                        Logger.Instance.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
+                        _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
                         networkElements.Add(nodeElement);
                     }
                     await nodeElement.InitializeAsync(this, _configuration);
@@ -235,12 +236,12 @@ namespace Sarah.DeviceService
                 NetworkElement nodeElement = _nodeFactory.CreateByNodeId(nodeId);
                 if (nodeElement == null)
                 {
-                    Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
+                    _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
                     networkElements.Add(new UnknownElement(nodeId, this._events));
                 }
                 else
                 {
-                    Logger.Instance.LogDebug("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
+                    _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
                     networkElements.Add(nodeElement);
                     await nodeElement.InitializeAsync(this, _configuration);
                 }
@@ -255,7 +256,7 @@ namespace Sarah.DeviceService
                 throw new InvalidOperationException("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert (ist=" + this.NetworkElements.Count + ", Soll=" + this.Nodes.Count() + ")");
             }
 
-            Logger.Instance.LogInfo("UpdateNodeList done for " + this.NetworkElements.Count + " nodes.");
+            _logger?.LogInformation("UpdateNodeList done for " + this.NetworkElements.Count + " nodes.");
         }
 
         /// <summary>
@@ -348,7 +349,7 @@ namespace Sarah.DeviceService
             Node n = this.Nodes?.FirstOrDefault(item => item.NodeID == nodeid);
             if (n == null)
             {
-                Logger.Instance.LogWarning("GetNode(" + nodeid + "): nicht gefunden!");
+                _logger?.LogWarning("GetNode(" + nodeid + "): nicht gefunden!");
             }
             return n;
         }
@@ -384,7 +385,7 @@ namespace Sarah.DeviceService
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogException(ex);
+                    _logger?.LogError(ex, "An error occurred");
                     return null;
                 }
             }
@@ -394,7 +395,7 @@ namespace Sarah.DeviceService
             Node n = GetNodeInternal(nodeID);
             if (n == null)
             {
-                Logger.Instance.LogError("SetAssociationGroup: ZWAVE Node " + nodeID + " nicht gefunden");
+                _logger?.LogError("SetAssociationGroup: ZWAVE Node " + nodeID + " nicht gefunden");
             }
             else
             {
@@ -423,7 +424,7 @@ namespace Sarah.DeviceService
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogException(ex);
+                    _logger?.LogError(ex, "An error occurred");
                 }
             }
         }
@@ -477,8 +478,8 @@ namespace Sarah.DeviceService
             {
                 byte[] neighborIds = el.GetNeighbors(this).Result;
                 adjacentNodesMatrix.Add(el.NodeID, neighborIds);
-                Logger.Instance.LogDebug(el.NodeID + "\t|\t" + String.Join(" | ", neighborIds));
-                Logger.Instance.LogDebug("--------------------------------------------------------");
+                _logger?.LogDebug(el.NodeID + "\t|\t" + String.Join(" | ", neighborIds));
+                _logger?.LogDebug("--------------------------------------------------------");
             }
 
             byte controllerId = this.Controllers.First().NodeID;

@@ -3,7 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Text;
@@ -211,7 +211,7 @@ namespace Sarah.DeviceService.Model
                 //    }
                 //    catch (Exception ex)
                 //    {
-                //        Logger.Instance.LogDebug(ex.Message);
+                //        _logger?.LogDebug(ex.Message);
                 //    }
                 //}
 
@@ -223,7 +223,7 @@ namespace Sarah.DeviceService.Model
         }
         private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
-            Logger.Instance.LogDebug("Door-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Door-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
 
             switch (e.Report.Type)
             {
@@ -231,7 +231,7 @@ namespace Sarah.DeviceService.Model
                     this.Temperature = new SensorData(e.Report.Value, e.Report.Unit);
                     break;
                 default:
-                    Logger.Instance.LogWarning("WARNING: Door-Sensor Data with unknown type " + e.Report.Type + " from node " + this.NodeID + " received");
+                    _logger?.LogWarning("WARNING: Door-Sensor Data with unknown type " + e.Report.Type + " from node " + this.NodeID + " received");
                     break;
             }
 
@@ -239,7 +239,7 @@ namespace Sarah.DeviceService.Model
 
         private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
         {
-            Logger.Instance.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             if (e.Report.CurrentValue == 0)
             {
                 this.State = DoorSensorState.Geschlossen;
@@ -252,7 +252,7 @@ namespace Sarah.DeviceService.Model
 
         private void OnSensorBinaryChanged(object sender, ReportEventArgs<SensorBinaryReport> e)
         {
-            Logger.Instance.LogDebug($"SensorBinary report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"SensorBinary report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             if (e.Report.Value)
             {
                 this.State = DoorSensorState.Geschlossen;

@@ -1,7 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -49,7 +49,7 @@ namespace Sarah.DeviceService.Model
         }
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            Logger.Instance.LogInfo("Wifi Lamp " +
+            _logger?.LogInformation("Wifi Lamp " +
                  this.Hostname + ": start polling status...");
             CancellationTokenSource cts = new CancellationTokenSource();
             this._UpdateSensorDataCancellationTokenSource = cts;
@@ -109,7 +109,7 @@ namespace Sarah.DeviceService.Model
             {
                 if (!ex.Message.Contains("No route to host"))
                 {
-                    Logger.Instance.LogException("Fehler beim Status Abfrage der Wifi Lampe " + this.Hostname, ex);
+                    _logger?.LogError("Fehler beim Status Abfrage der Wifi Lampe " + this.Hostname, ex);
                 }
             }
         }

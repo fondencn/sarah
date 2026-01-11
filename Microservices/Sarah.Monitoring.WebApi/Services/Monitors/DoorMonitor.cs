@@ -1,4 +1,4 @@
-﻿using Sarah.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
@@ -12,7 +12,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -88,7 +88,7 @@ namespace Sarah.Monitoring.Monitors
             if (!this.IsRunning)
             {
                 await _events.SubscribeNetworkEventAsync(this);
-                Logger.Instance.LogDebug("DoorMonitor gestartet.");
+                _logger.LogDebug("DoorMonitor gestartet.");
                 this.IsRunning = true;
             }
         }
@@ -138,7 +138,7 @@ namespace Sarah.Monitoring.Monitors
                                     associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
                                 }
 
-                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this, _weather));
+                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this, _weather, _logger));
                             }
                         }
                         else
@@ -157,7 +157,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogError("Fehler beim Aktualisieren der Türzustände: " + ex.Message);
+                _logger.LogError("Fehler beim Aktualisieren der Türzustände: " + ex.Message);
             }
         }
 
@@ -233,6 +233,7 @@ namespace Sarah.Monitoring.Monitors
             private readonly IDeviceService _devices;
             private readonly DoorMonitor _doorMonitor;
             private readonly IWeatherProvider _weather;
+            private readonly ILogger<DoorMonitor> _logger;
 
             /// <summary>
             /// Der Türsensor
@@ -284,13 +285,14 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room? room, IDBService db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather)
+            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room? room, IDBService db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
             {
                 this._db = db;
                 this._events = events;
                 this._devices = devices;
                 this._doorMonitor = doorMonitor;
                 this._weather = weather;
+                this._logger = logger;
                 this.Device = device;
                 this.Room = room;
                 this.SensorThreshold = sensorThreshold;
@@ -317,7 +319,7 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             public void Cancel()
             {
-                Logger.Instance.LogDebug("Beende überwachung der Tür/Fenster: " + this.Device.Name + "... ");
+                _logger.LogDebug("Beende überwachung der Tür/Fenster: " + this.Device.Name + "... ");
                 this.UpdateCancellationTokenSource.Cancel();
             }
 
@@ -327,7 +329,7 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             private async void Tick()
             {
-                Logger.Instance.LogDebug("Starte überwachung der geöffneten Tür/Fenster: " + this.Device.Name + "... ");
+                _logger.LogDebug("Starte überwachung der geöffneten Tür/Fenster: " + this.Device.Name + "... ");
                 int lastMinutes = -1;
                 TimeSpan waitTime = this.SensorThreshold;
                 bool isInitialLoop = true;

@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,7 +80,7 @@ namespace Sarah.DeviceService.Model.Animations
 
         private static Type FindScene(string sceneTypeName)
         {
-            Logger.Instance.LogDebug("FindScene " + (sceneTypeName ?? "(null)"));
+            // Console.WriteLine("FindScene " + (sceneTypeName ?? "(null)"));
             string cleanedSceneName = sceneTypeName.Trim(',', ' ', '.');
             Type sceneType = KnownScenes.FirstOrDefault(item => String.Equals(item.Name, sceneTypeName, StringComparison.OrdinalIgnoreCase));
             if(sceneType == null)

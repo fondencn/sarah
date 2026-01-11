@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Service;
 using Sarah.Data.Models;
 using Sarah.API.Extensions;
@@ -18,8 +18,21 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachungsdienst für die Luftqualität in Räumen
     /// </summary>
-    internal class AirQualityMonitor(IDBService _db, IEventProcessingService _events, IDeviceService _devices) : ICanSelfTest, INetworkEventSubscriber, IMonitor
+    internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
+        private readonly IDBService _db;
+        private readonly IEventProcessingService _events;
+        private readonly IDeviceService _devices;
+        private readonly ILogger<AirQualityMonitor> _logger;
+
+        public AirQualityMonitor(IDBService db, IEventProcessingService events, IDeviceService devices, ILogger<AirQualityMonitor> logger)
+        {
+            _db = db;
+            _events = events;
+            _devices = devices;
+            _logger = logger;
+        }
+
         private bool IsRunning { get; set; }
         private DateTime LastUpdate { get; set; }
 
@@ -56,7 +69,7 @@ namespace Sarah.Monitoring.Monitors
         {
             _events.SubscribeNetworkEventAsync(this);
             this.IsRunning = true;
-            Logger.Instance.LogDebug("AirQualityMonitor gestartet und als Provider registriert.");
+            _logger.LogDebug("AirQualityMonitor gestartet und als Provider registriert.");
 
             return Task.CompletedTask;
         }
@@ -95,7 +108,7 @@ namespace Sarah.Monitoring.Monitors
                         {
                             if (!this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
                             {
-                                this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(device, room, _devices, _events));
+                                this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(device, room, _devices, _events, _logger));
                             }
                         }
                         else
@@ -123,7 +136,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogError("Fehler beim Aktualisieren der Luftqualitätszustände: " + ex.Message);
+                _logger.LogError("Fehler beim Aktualisieren der Luftqualitätszustände: " + ex.Message);
             }
         }
 
@@ -171,16 +184,18 @@ namespace Sarah.Monitoring.Monitors
 
             private readonly IDeviceService _devices;
             private readonly IEventProcessingService _events;
+            private readonly ILogger<AirQualityMonitor> _logger;
 
             public DeviceInfo Device { get; private set; }
             public Room? Room { get; private set; }
             private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
             private Task? Task { get; set; }
 
-            public SurveillanceTask(DeviceInfo device, Room? room, IDeviceService devices, IEventProcessingService events)
+            public SurveillanceTask(DeviceInfo device, Room? room, IDeviceService devices, IEventProcessingService events, ILogger<AirQualityMonitor> logger)
             {
                 this._devices = devices;
                 this._events = events;
+                this._logger = logger;
                 this.Device = device;
                 this.Room = room;
 
@@ -199,7 +214,7 @@ namespace Sarah.Monitoring.Monitors
 
             public void Cancel()
             {
-                Logger.Instance.LogDebug("Beende überwachung der Luftqualität: " + this.Device.Name + "... ");
+                _logger.LogDebug("Beende überwachung der Luftqualität: " + this.Device.Name + "... ");
                 this.UpdateCancellationTokenSource?.Cancel();
             }
 
@@ -207,7 +222,7 @@ namespace Sarah.Monitoring.Monitors
             {
                 try
                 {
-                    Logger.Instance.LogDebug("Starte überwachung der Luftqualität: " + this.Device.Name + "... ");
+                    _logger.LogDebug("Starte überwachung der Luftqualität: " + this.Device.Name + "... ");
 
                     while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
@@ -259,7 +274,7 @@ namespace Sarah.Monitoring.Monitors
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogException(ex);
+                    _logger.LogError(ex, "An error occurred");
                 }
             }
         }

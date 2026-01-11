@@ -1,4 +1,4 @@
-﻿using Sarah.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
@@ -110,14 +110,14 @@ namespace Sarah.Ttn
 
         public Task HandleApplicationMessageProcessedAsync(ApplicationMessageProcessedEventArgs eventArgs)
         {
-            Logger.Instance.LogDebug("HandleApplicationMessageProcessedAsync");
+            // _logger?.LogDebug("HandleApplicationMessageProcessedAsync");
 
             return Task.CompletedTask;
         }
 
         public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            Logger.Instance.LogDebug("HandleApplicationMessageReceivedAsync");
+            // _logger?.LogDebug("HandleApplicationMessageReceivedAsync");
             string topic = eventArgs.ApplicationMessage.Topic;
             string contentString = eventArgs.ApplicationMessage.ConvertPayloadToString();
             TtnMessage deserializedMessage = JsonConvert.DeserializeObject<TtnMessage>(contentString);

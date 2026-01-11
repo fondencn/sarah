@@ -11,18 +11,20 @@ namespace Sarah.Rules.Actions
     public class ActionRuleAction : RuleAction
     {
         private Action<NetworkEvent> ExecuteAction { get; }
+        private readonly ILogger _logger;
 
         /// <summary>
         /// ctor
         /// </summary>
         /// <param name="executeAction">Callback der bei Execute aufgerufen wird</param>
-        public ActionRuleAction(Action<NetworkEvent> executeAction)
+        public ActionRuleAction(Action<NetworkEvent> executeAction, ILogger logger)
         {
             if(executeAction == null)
             {
                 throw new ArgumentNullException(nameof(executeAction));
             }
             this.ExecuteAction = executeAction;
+            this._logger = logger;
         }
 
 
@@ -37,7 +39,7 @@ namespace Sarah.Rules.Actions
             } 
             catch (Exception ex)
             {
-                Logging.Logger.Instance.LogException("Fehler beim Ausführen einer ActionRuleAction: " , ex);
+                _logger.LogError("Fehler beim Ausführen einer ActionRuleAction: " , ex);
             }
         }
     }
@@ -49,18 +51,20 @@ namespace Sarah.Rules.Actions
     public class TaskRuleAction : RuleAction
     {
         private Func<Task> TaskFactory { get; }
+        private readonly ILogger _logger;
 
         /// <summary>
         /// ctor
         /// </summary>
         /// <param name="executeAction">Callback der bei Execute aufgerufen wird</param>
-        public TaskRuleAction(Func<Task> taskFactory)
+        public TaskRuleAction(Func<Task> taskFactory, ILogger logger)
         {
             if (taskFactory == null)
             {
                 throw new ArgumentNullException(nameof(taskFactory));
             }
             this.TaskFactory = taskFactory;
+            this._logger = logger;
         }
 
 
@@ -76,7 +80,7 @@ namespace Sarah.Rules.Actions
             }
             catch (Exception ex)
             {
-                Logging.Logger.Instance.LogException("Fehler beim Ausführen einer TaskRuleAction: ", ex);
+                _logger.LogError("Fehler beim Ausführen einer TaskRuleAction: ", ex);
             }
         }
     }

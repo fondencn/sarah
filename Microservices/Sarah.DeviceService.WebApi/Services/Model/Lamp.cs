@@ -2,7 +2,7 @@
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -103,7 +103,7 @@ namespace Sarah.DeviceService.Model
 
         private void OnMeterChanged(object sender, ReportEventArgs<MeterReport> e)
         {
-            Logger.Instance.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}]");
+            _logger?.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}]");
             this.Meter = e.Report.Value.ToString() + e.Report.Unit;
         }
 
@@ -134,7 +134,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Lamp SetBrightness Exception: " + ex.Message);
+                _logger?.LogDebug("Lamp SetBrightness Exception: " + ex.Message);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
+                _logger?.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
             }
         }
 
@@ -208,7 +208,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
+                _logger?.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
             }
         }
         /// <summary>
@@ -297,7 +297,7 @@ namespace Sarah.DeviceService.Model
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
+                    _logger?.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
                 }
             }
         }

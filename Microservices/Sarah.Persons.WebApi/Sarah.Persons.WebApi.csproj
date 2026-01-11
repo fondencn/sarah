@@ -16,9 +16,8 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Services\Sarah.API\Sarah.API.csproj" />
-    <ProjectReference Include="..\..\Services\Sarah.Logging\Sarah.Logging.csproj" />
-    <ProjectReference Include="..\..\Services\Sarah.Data\Sarah.Data.csproj" />
-    <ProjectReference Include="..\..\Services\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.API\Sarah.API.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.Data\Sarah.Data.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.Authentication\Sarah.Authentication.csproj" />
   </ItemGroup>
 </Project>

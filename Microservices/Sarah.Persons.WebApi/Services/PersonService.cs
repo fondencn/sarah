@@ -18,20 +18,22 @@ namespace Sarah.Persons
         private readonly IDeviceService _devices;
         private readonly IGeoFenceService _geoFenceService;
         private readonly IConfiguration _config;
+        private readonly HomeNetworkService _homeNetworkService;
 
-        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService, IConfiguration config)
+        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService, IConfiguration config, HomeNetworkService homenet)
         {
             _logger = logger;
             _database = database;
             _devices = deviceService;
             _geoFenceService = geoFenceService;
             _config = config;
+            _homeNetworkService = homenet;
         }
 
 
         public async Task<IEnumerable<IPerson>> GetAllPersonsAsync()
         {
-            await HomeNetwork.Instance.Initialize(this._config);
+            await _homeNetworkService.Initialize(this._config);
 
             var persons = await _database.Persons
                 .ToListAsync();
@@ -44,7 +46,7 @@ namespace Sarah.Persons
 
         public async Task<IPerson?> GetPersonByIdAsync(long id)
         {
-            await HomeNetwork.Instance.Initialize(this._config);
+            await _homeNetworkService.Initialize(this._config);
 
             var person = await _database.Persons
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -115,8 +117,8 @@ namespace Sarah.Persons
 
         public async Task <string[]> GetMobilePhones()
         {
-            await HomeNetwork.Instance.Initialize(this._config);
-            return HomeNetwork.Instance.KnownHosts?
+            await _homeNetworkService.Initialize(this._config);
+            return _homeNetworkService.KnownHosts?
                 .Where (item => item.IsConnected)
                 .Select(item => item.Hostname).ToArray() ?? [];
         }
@@ -134,7 +136,7 @@ namespace Sarah.Persons
             // Prüfen ob Mobiltelefon der Person zu Hause ist
             if(p.MobilePhoneHostname != null) 
             {
-                var device = HomeNetwork.Instance.KnownHosts?.FirstOrDefault(item => item.Hostname == p.MobilePhoneHostname);
+                var device = _homeNetworkService.KnownHosts?.FirstOrDefault(item => item.Hostname == p.MobilePhoneHostname);
                 if(device != null) 
                 {
                     p.IsAtHome = device.IsConnected;

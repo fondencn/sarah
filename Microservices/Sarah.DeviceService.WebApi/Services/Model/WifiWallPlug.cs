@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Business;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Net.Http;
@@ -44,7 +44,7 @@ namespace Sarah.DeviceService.Model
 
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            Logger.Instance.LogInfo("Wifi WallPlug " +
+            _logger?.LogInformation("Wifi WallPlug " +
                  this.Hostname + ": start polling status...");
                 
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -82,7 +82,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("Fehler beim Setzen des Zustandes der Wifi Steckdose " + this.Hostname + " auf " + newState + ", Uri war " + uri, ex);
+                _logger?.LogError("Fehler beim Setzen des Zustandes der Wifi Steckdose " + this.Hostname + " auf " + newState + ", Uri war " + uri, ex);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Sarah.DeviceService.Model
             {
                 if (!ex.Message.Contains("No route to host"))
                 {
-                    Logger.Instance.LogException("Fehler beim Status Abfrage der Wifi Steckdose " + this.Hostname, ex);
+                    _logger?.LogError("Fehler beim Status Abfrage der Wifi Steckdose " + this.Hostname, ex);
                 }
             }
         }

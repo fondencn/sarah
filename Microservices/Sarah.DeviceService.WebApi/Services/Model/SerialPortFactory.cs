@@ -1,4 +1,4 @@
-﻿using Sarah.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
@@ -100,7 +100,7 @@ namespace Sarah.DeviceService.Model
         //        }
         //        catch (Exception ex)
         //        {
-        //            Logger.Instance.LogDebug(ex.Message);
+        //            _logger?.LogDebug(ex.Message);
         //            await Task.Delay(1000);
         //        }
         //    }
@@ -125,7 +125,7 @@ namespace Sarah.DeviceService.Model
         //        }
         //        catch (Exception ex)
         //        {
-        //            Logger.Instance.LogDebug(ex.Message);
+        //            _logger?.LogDebug(ex.Message);
 
         //            await Task.Delay(1000);
         //        }

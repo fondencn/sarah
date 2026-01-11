@@ -3,7 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -221,7 +221,7 @@ namespace Sarah.DeviceService.Model
                 {
                     throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
                 }
-                Logger.Instance.LogDebug("Initializing new Multisensor for node " + this.NodeID + " ...");
+                _logger?.LogDebug("Initializing new Multisensor for node " + this.NodeID + " ...");
 
                 var basicCmd = node.GetCommandClass<Basic>();
                 basicCmd.Changed += BasicCmd_Changed;
@@ -265,7 +265,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("MulitSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
+                _logger?.LogError("MulitSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
             }
 
 
@@ -282,7 +282,7 @@ namespace Sarah.DeviceService.Model
             //}
             //catch (Exception ex)
             //{
-            //    Logger.Instance.LogDebug("Could not determine supported sensors for node " + this.NodeID + ": " + ex.Message);
+            //    _logger?.LogDebug("Could not determine supported sensors for node " + this.NodeID + ": " + ex.Message);
             //}
 
 
@@ -302,7 +302,7 @@ namespace Sarah.DeviceService.Model
             //}
             //catch (Exception ex)
             //{
-            //    Logger.Instance.LogDebug(ex.Message);
+            //    _logger?.LogDebug(ex.Message);
             //}
 
 
@@ -330,7 +330,7 @@ namespace Sarah.DeviceService.Model
             //}
             //catch (Exception ex)
             //{
-            //    Logger.Instance.LogDebug(ex.Message);
+            //    _logger?.LogDebug(ex.Message);
             //}
 
             return Task.CompletedTask;
@@ -357,14 +357,14 @@ namespace Sarah.DeviceService.Model
 
         private void BattCmd_Changed(object sender, ReportEventArgs<BatteryReport> e)
         {
-            Logger.Instance.LogDebug("Battery value " + e.Report.Value + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Battery value " + e.Report.Value + " from node " + this.NodeID + " received");
 
             this.Battery = new SensorData(e.Report.Value, "%");
         }
 
         private void BasicCmd_Changed(object sender, ReportEventArgs<BasicReport> e)
         {
-            Logger.Instance.LogDebug("Basic value " + e.Report.CurrentValue + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Basic value " + e.Report.CurrentValue + " from node " + this.NodeID + " received");
 
             if (e.Report.CurrentValue > 0)
             {
@@ -385,14 +385,14 @@ namespace Sarah.DeviceService.Model
 
         private void AlarmCmd_Changed(object sender, ReportEventArgs<SensorAlarmReport> e)
         {
-            Logger.Instance.LogDebug("Sensor Alarm " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Sensor Alarm " + e.Report.Type + " from node " + this.NodeID + " received");
             this.Alarm = new SensorData(e.Report.Level, (e.Report.Level > 0 ? "🚨" : "") + (e.Report.Level > 0 ? "(" + e.Report.Type.ToString() + " Alarm)" : ""));
 
         }
 
         private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
-            Logger.Instance.LogDebug("Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
             if (e.Report.Type == SensorType.Temperature)
             {
                 this.Temperature = new SensorData(e.Report.Value, e.Report.Unit);
@@ -423,7 +423,7 @@ namespace Sarah.DeviceService.Model
             }
             else
             {
-                Logger.Instance.LogError("UNKNOWN Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+                _logger?.LogError("UNKNOWN Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
                 this.Unknown = new SensorData(e.Report.Value, " (" + e.Report.Type.ToString() + " in " + e.Report.Unit + ")");
             }
         }

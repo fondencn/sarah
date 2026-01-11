@@ -3,11 +3,11 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
 using Sarah.Data.Models;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor(IDBService _db, IEventProcessingService _events) : ICanSelfTest, IMonitor
+    public class PersonMonitor(IDBService _db, IEventProcessingService _events, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 
@@ -50,7 +50,7 @@ namespace Sarah.Monitoring.Monitors
             }, cts.Token);
 
 
-            Logger.Instance.LogDebug("PersonMonitor gestartet.");
+            _logger.LogDebug("PersonMonitor gestartet.");
 
             return Task.CompletedTask;
         }
@@ -103,7 +103,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Fehler beim Aktualisieren der Personenzustände: " + ex.Message);
+                _logger.LogDebug("Fehler beim Aktualisieren der Personenzustände: " + ex.Message);
             }
         }
 

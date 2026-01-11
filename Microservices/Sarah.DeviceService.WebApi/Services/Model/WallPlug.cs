@@ -3,7 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
 using System.Threading;
@@ -189,11 +189,11 @@ public class ZWaveWallPlug : WallPlug
                 Node node = _deviceService.GetNode(this.NodeID) as Node;
                 var switchBin = node.GetCommandClass<SwitchBinary>();
                 await switchBin.Set(newState);
-                Logger.Instance.LogDebug("switchBinReport.Value SET To: " + newState);
+                _logger?.LogDebug("switchBinReport.Value SET To: " + newState);
 
                 /* Zustand überprüfen */
                 var switchBinReport = await switchBin.Get();
-                Logger.Instance.LogDebug("switchBinReport.Value: " + switchBinReport.CurrentValue);
+                _logger?.LogDebug("switchBinReport.Value: " + switchBinReport.CurrentValue);
                 this.IsOn = switchBinReport.CurrentValue.GetValueOrDefault(false);
 
                 /* Anliegende Leistung abfragen */
@@ -201,7 +201,7 @@ public class ZWaveWallPlug : WallPlug
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug(ex.Message);
+                _logger?.LogDebug(ex.Message);
             }
 
 
@@ -220,7 +220,7 @@ public class ZWaveWallPlug : WallPlug
                 var meterReport = await meter.Get(ElectricMeterScale.kWh);
                 if (meterReport != null)
                 {
-                    Logger.Instance.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
+                    _logger?.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
                     this.SetMeter(new SensorData(meterReport.Value, meterReport.Unit));
                 }
 
@@ -228,12 +228,12 @@ public class ZWaveWallPlug : WallPlug
                 meterReport = await meter.Get(ElectricMeterScale.W);
                 if (meterReport != null)
                 {
-                    Logger.Instance.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
+                    _logger?.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
                     this.SetMeter(new SensorData(meterReport.Value, meterReport.Unit));
                 }
 
                 //meterReport = await meter.Get(ElectricMeterScale.kVAh);
-                //Logger.Instance.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
+                //_logger?.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
                 //this.SetMeter(new SensorData(meterReport.Value, meterReport.Unit));
 
 
@@ -244,14 +244,14 @@ public class ZWaveWallPlug : WallPlug
                     meterReport = await meter.Get(ElectricMeterScale.A);
                     if (meterReport != null)
                     {
-                        Logger.Instance.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
+                        _logger?.LogDebug("meterReport.Value: " + meterReport.Value + meterReport.Unit + " (Type " + meterReport.Type + ")");
                         this.SetMeter(new SensorData(meterReport.Value, meterReport.Unit));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Fehler beim Abfragen des Wallplug-Meters für Node " + this.NodeID + ": " + ex.Message);
+                _logger?.LogDebug("Fehler beim Abfragen des Wallplug-Meters für Node " + this.NodeID + ": " + ex.Message);
             }
         }
 
@@ -283,7 +283,7 @@ public class ZWaveWallPlug : WallPlug
                 }
                 else
                 {
-                    Logger.Instance.LogDebug("WallPlug: Unbekannter Leistungswert " + sensorData.Unit);
+                    _logger?.LogDebug("WallPlug: Unbekannter Leistungswert " + sensorData.Unit);
                 }
             }
             LastMeterReport = DateTime.Now;
@@ -317,7 +317,7 @@ public class ZWaveWallPlug : WallPlug
         {
             this._deviceService = deviceService;
             Node node = deviceService.GetNode(this.NodeID) as Node;
-            Logger.Instance.LogDebug("Initialize Node " + this.NodeID + " as " + this.Name);
+            _logger?.LogDebug("Initialize Node " + this.NodeID + " as " + this.Name);
 
             if (node != null)
             {
@@ -356,7 +356,7 @@ public class ZWaveWallPlug : WallPlug
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogDebug(ex.Message);
+                    _logger?.LogDebug(ex.Message);
                 }
 
                 try
@@ -364,12 +364,12 @@ public class ZWaveWallPlug : WallPlug
 
                     var switchBin = node.GetCommandClass<SwitchBinary>();
                     var switchBinReport = await switchBin.Get();
-                    Logger.Instance.LogDebug("switchBinReport.Value: " + switchBinReport.CurrentValue);
+                    _logger?.LogDebug("switchBinReport.Value: " + switchBinReport.CurrentValue);
                     this.IsOn = switchBinReport.CurrentValue.GetValueOrDefault(false);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogDebug(ex.Message);
+                    _logger?.LogDebug(ex.Message);
                 }
 
                 CancellationTokenSource cts = new CancellationTokenSource();
@@ -395,24 +395,24 @@ public class ZWaveWallPlug : WallPlug
 
         private void OnMeterChanged(object sender, ReportEventArgs<MeterReport> e)
         {
-            Logger.Instance.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}] ({e.Report.Type})");
+            _logger?.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}] ({e.Report.Type})");
             this.SetMeter(new SensorData(e.Report.Value, e.Report.Unit));
         }
 
         private void Node_MessageReceived(object sender, EventArgs e)
         {
-            //Logger.Instance.LogDebug("Node " + this.NodeID + " Message received");
+            //_logger?.LogDebug("Node " + this.NodeID + " Message received");
         }
 
         private void Node_UnknownCommandReceived(object sender, global::ZWave.Channel.NodeEventArgs e)
         {
-            Logger.Instance.LogWarning("Node " + this.NodeID + " UNKNOWN COMMAND received");
+            _logger?.LogWarning("Node " + this.NodeID + " UNKNOWN COMMAND received");
 
         }
 
         private void OnSwitchBinChanged(object sender, ReportEventArgs<SwitchBinaryReport> e)
         {
-            Logger.Instance.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue.GetValueOrDefault(false);
         }
 
@@ -420,13 +420,13 @@ public class ZWaveWallPlug : WallPlug
 
         private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
         {
-            Logger.Instance.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             /* Für Popp Wallcontroller kmmt hier eine Basic Notification an die Association Group 1 (Lifeline) */
             this.IsOn = e.Report.CurrentValue != 0;
         }
         private void OnSwitchMultiChanged(object sender, ReportEventArgs<SwitchMultiLevelReport> e)
         {
-            Logger.Instance.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
+            _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue != 0;
         }
 

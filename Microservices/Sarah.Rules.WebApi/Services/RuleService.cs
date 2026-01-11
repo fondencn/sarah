@@ -2,15 +2,8 @@
 using Sarah.API.Extensions;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
-using Sarah.Rules;
 using Sarah.Rules.Conditions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sarah.Rules
 {
@@ -39,17 +32,20 @@ namespace Sarah.Rules
         /// </summary>
         private TimerEngine Timers { get; } 
 
+        private readonly ILogger _logger;
+
         /// <summary>
         /// Alle Regel-Quellen
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(IEventProcessingService events, IDeviceService devices) 
+        public RuleService(IEventProcessingService events, IDeviceService devices, ILogger logger) 
         { 
             this._events = events;
             this._devices = devices;
             this._events .SubscribeNetworkEventAsync(this).Wait();
-            this.Timers = new TimerEngine(events);
+            this.Timers = new TimerEngine(events, logger);
+            this._logger = logger;
         }
 
         private object _evaluateRulesLock = new object();
@@ -75,8 +71,8 @@ namespace Sarah.Rules
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.LogDebug("RuleEngine: Error while evaluating rule " + rule.Name + ": " + ex.Message);
-                        Logger.Instance.LogDebug(ex.StackTrace);
+                        _logger.LogDebug("RuleEngine: Error while evaluating rule " + rule.Name + ": " + ex.Message);
+                        _logger.LogDebug(ex.StackTrace);
                     }
                 }
             }
@@ -89,7 +85,7 @@ namespace Sarah.Rules
                 Log.Clear();
             }
             Log.Insert(0, DateTime.Now + "\t" + msg + Environment.NewLine); //Neuestes oben
-            Logger.Instance.LogInfo(msg);
+            _logger.LogInformation(msg);
 
             // Man muss Dinge auch aussprechen dürfen!
             //Notifications.NotificationEngine.Instance.Voice?.Say(msg);
@@ -135,13 +131,13 @@ namespace Sarah.Rules
                         if (timerCondition.DateTime.IsInFuture()) //nur Timer aktivieren, die mindestens 5 sekunden in der Zukunft liegen
                         {
                             this.Timers.Register(timerCondition.DateTime);
-                            Logger.Instance.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.DateTime + " (one shot)");
+                            _logger.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.DateTime + " (one shot)");
                         }
                     }
                     else
                     {
                         this.Timers.Register(timerCondition.Recurrence);
-                        Logger.Instance.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.Recurrence.GetNext() + " (recurring)");
+                        _logger.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.Recurrence.GetNext() + " (recurring)");
 
                     }
                 }
@@ -178,13 +174,15 @@ namespace Sarah.Rules
             /// Alle registrierten Timer-Ereignisse
             /// </summary>
             private List<RecurrenceTimer> RegisteredRecurrences { get; } = new List<RecurrenceTimer>();
+            private readonly ILogger _logger;
 
             /// <summary>
             ///
             /// </summary>
-            public TimerEngine(IEventProcessingService events)
+            public TimerEngine(IEventProcessingService events, ILogger logger)
             {
                 this._events = events;
+                this._logger = logger;
                 _RecreateTimersTimer = new Timer(RecreateTimer_Tick, null, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
             }
 
@@ -220,11 +218,11 @@ namespace Sarah.Rules
             {
                 if (recurrence.Until.HasValue && !recurrence.Until.Value.IsInFuture())
                 {
-                    Logger.Instance.LogDebug("recurrence.until ist in Vergangenheit -> übersprungen");
+                    _logger.LogDebug("recurrence.until ist in Vergangenheit -> übersprungen");
                 }
                 else
                 {
-                    RecurrenceTimer rt = new RecurrenceTimer(recurrence);
+                    RecurrenceTimer rt = new RecurrenceTimer(recurrence, _logger);
                     rt.Tick += recurrence_elapsed;
                     this.RegisteredRecurrences.Add(rt);
                 }
@@ -234,7 +232,7 @@ namespace Sarah.Rules
             {
                 if (occurance.IsInFuture())
                 {
-                    RecurrenceTimer rt = new RecurrenceTimer(occurance);
+                    RecurrenceTimer rt = new RecurrenceTimer(occurance, _logger);
                     rt.Tick += recurrence_elapsed;
                     this.RegisteredRecurrences.Add(rt);
                 }
@@ -266,19 +264,22 @@ namespace Sarah.Rules
                 private Timer _timer;
 
                 public bool IsTimerCreated => this._timer != null;
+                private ILogger _logger;
 
-                public RecurrenceTimer(TimerRecurrence recurrenceDefinition)
+                public RecurrenceTimer(TimerRecurrence recurrenceDefinition, ILogger logger)
                 {
                     this.RecurrenceDefinition = recurrenceDefinition;
                     this.OccuresOnceDate = null;
                     this.CreateTimer();
+                    this._logger = logger;
                 }
 
-                public RecurrenceTimer(DateTime occurance)
+                public RecurrenceTimer(DateTime occurance, ILogger logger)
                 {
                     this.RecurrenceDefinition = null;
                     this.OccuresOnceDate = occurance;
                     this.CreateTimer();
+                    this._logger = logger;
                 }
 
                 /// <summary>
@@ -313,12 +314,12 @@ namespace Sarah.Rules
                     }
                     else if (dueTime.TotalMilliseconds >= (Int32.MaxValue - 2))
                     {
-                        Logger.Instance.LogWarning("Timer zu weit in der Zukunft -> wird nicht gestartet");
+                        _logger.LogWarning("Timer zu weit in der Zukunft -> wird nicht gestartet");
                         return null;
                     }
                     else
                     {
-                        Logger.Instance.LogWarning("Timer läge in der Vergangenheit -> wird nicht gestartet");
+                        _logger.LogWarning("Timer läge in der Vergangenheit -> wird nicht gestartet");
                         return null;
                     }
                 }
@@ -332,7 +333,7 @@ namespace Sarah.Rules
                         DateTime next = this.RecurrenceDefinition.GetNext();
                         if (this.RecurrenceDefinition.Until.HasValue && this.RecurrenceDefinition.Until.Value < next)
                         {
-                            Logger.Instance.LogDebug("Recurrence abgebrochen, da Unil in Vergangenheit liegt");
+                            _logger.LogDebug("Recurrence abgebrochen, da Unil in Vergangenheit liegt");
                         }
                         else
                         {

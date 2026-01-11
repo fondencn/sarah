@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="10.0.0" />
-    <PackageReference Include="Aspire.Hosting.Keycloak" Version="10.0.0" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="10.0.0" />
-    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="10.0.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.1.0-preview.1.25616.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,8 +22,8 @@
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.API.WebApi\Sarah.API.WebApi.csproj" />
-    <ProjectReference Include="..\Sarah.LocationServer\Sarah.LocationServer.csproj" />
-    <ProjectReference Include="..\Sarah.SpeechServer\Sarah.SpeechServer.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.LocationServer\Sarah.LocationServer.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.SpeechServer\Sarah.SpeechServer.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,10 +4,11 @@
 // using System.Globalization;
 // using System.Net;
 // using System.Net.Http.Headers;
+// using Microsoft.Extensions.Logging;
 
 // namespace Sarah.Monitoring.Monitors
 // {
-//     public class CoronaMonitor (IEventProcessingService _events): IDeseaseStatsProvider, ICanSelfTest, IMonitor
+//     public class CoronaMonitor (IEventProcessingService _events, ILogger<CoronaMonitor> _logger): IDeseaseStatsProvider, ICanSelfTest, IMonitor
 //     {
 //         public string DeseaseName => "Corona";
 
@@ -161,7 +162,7 @@
 //             /* Als Krankheitendienst registrieren */
 //             NotificationEngine.Instance.Deseases = this;
 
-//             Logger.Instance.LogDebug("CoronaMonitor gestartet und als Provider registriert.");
+//             _logger.LogDebug("CoronaMonitor gestartet und als Provider registriert.");
 
 //             return Task.CompletedTask;
 //         }
@@ -246,7 +247,7 @@
 //                         {
 //                             /* Keine Termine verfügbar */
 //                             this.IsImpftermine_Ludwigsburg_Available = false;
-//                             Logger.Instance.LogInfo("Impftermine KIZ LB aktualisiert: Keine Termine verfügbar");
+//                             _logger.LogInformation("Impftermine KIZ LB aktualisiert: Keine Termine verfügbar");
 
 //                         }
 //                         else
@@ -254,14 +255,14 @@
 //                             /* Termine verfügbar */
 //                             this.IsImpftermine_Ludwigsburg_Available = true;
 
-//                             Logger.Instance.LogInfo("Impftermine KIZ LB aktualisiert: Es sind Termine verfügbar");
+//                             _logger.LogInformation("Impftermine KIZ LB aktualisiert: Es sind Termine verfügbar");
 //                         }
 //                     }
 //                 }
 //             }
 //             catch (Exception ex)
 //             {
-//                 Logger.Instance.LogException("Fehler beim Pollen der Impftermine", ex);
+//                 _logger.LogError("Fehler beim Pollen der Impftermine", ex);
 //                 this.Impftermine_Ludwigsburg = ex.Message;
 //             }
 //         }
@@ -304,7 +305,7 @@
 //             }
 //             catch (Exception ex)
 //             {
-//                 Logger.Instance.LogException("Fehler beim Laden der Coronadaten von gstern", ex);
+//                 _logger.LogError("Fehler beim Laden der Coronadaten von gstern", ex);
 //             }
 //         }
 
@@ -327,7 +328,7 @@
 //             }
 //             catch (Exception ex)
 //             {
-//                 Logger.Instance.LogException("Fehler beim Speichern der Coronadaten in der Verlaufsdatenbank", ex);
+//                 _logger.LogError("Fehler beim Speichern der Coronadaten in der Verlaufsdatenbank", ex);
 //             }
 //         }
 
@@ -427,12 +428,12 @@
 
 //                     CoronaInfos currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<CoronaInfos>(json);
 //                     this.CurrentCoronaInfos = currentWeather;
-//                     Logger.Instance.LogInfo("Coronadaten aktualisiert.");
+//                     _logger.LogInformation("Coronadaten aktualisiert.");
 //                 }
 //             }
 //             catch (Exception ex)
 //             {
-//                 Logger.Instance.LogException("Fehler beim Aktualisieren der Coronadaten", ex);
+//                 _logger.LogError("Fehler beim Aktualisieren der Coronadaten", ex);
 //             }
 //         }
 

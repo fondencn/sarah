@@ -1,9 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-
+﻿
 namespace Sarah.Persons
 {
-    internal class HomeNetworkHost
+    public class HomeNetworkHost
     {
         private bool _isConnected;
 

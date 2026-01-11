@@ -3,7 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -146,7 +146,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Logger.Instance.LogDebug("Initializing new Thermo for node " + this.NodeID + " ...");
+                _logger?.LogDebug("Initializing new Thermo for node " + this.NodeID + " ...");
                 this._deviceService = deviceService;
                 Node n = deviceService.GetNode(this.NodeID) as Node;
 
@@ -176,9 +176,9 @@ namespace Sarah.DeviceService.Model
 
                     //global::ZWave.CommandClasses.Version verCmd =  n.GetCommandClass<global::ZWave.CommandClasses.Version>();
                     //VersionReport verReport = await verCmd.Get();
-                    //Logger.Instance.LogDebug("ThermoElement " + this.NodeID + " Library Version: " + verReport.Library);
-                    //Logger.Instance.LogDebug("ThermoElement " + this.NodeID + " Application Version: " + verReport.Application);
-                    //Logger.Instance.LogDebug("ThermoElement " + this.NodeID + " Protocol Version: " + verReport.Protocol);
+                    //_logger?.LogDebug("ThermoElement " + this.NodeID + " Library Version: " + verReport.Library);
+                    //_logger?.LogDebug("ThermoElement " + this.NodeID + " Application Version: " + verReport.Application);
+                    //_logger?.LogDebug("ThermoElement " + this.NodeID + " Protocol Version: " + verReport.Protocol);
 
                     /*
                      * ThermoElement 5 Library Version: 3
@@ -209,13 +209,13 @@ namespace Sarah.DeviceService.Model
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.LogDebug(ex.Message);
+                        _logger?.LogDebug(ex.Message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("ThermoElement::InitializeAsync: ", ex);
+                _logger?.LogError("ThermoElement::InitializeAsync: ", ex);
             }
 
             return Task.CompletedTask;
@@ -247,7 +247,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("Error update thermo sensors: " + ex.Message);
+                _logger?.LogDebug("Error update thermo sensors: " + ex.Message);
             }
         }
 
@@ -268,7 +268,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("SetTemperature" , ex);
+                _logger?.LogError("SetTemperature" , ex);
                 throw;
             }
         }
@@ -294,14 +294,14 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogException("SetLevel" , ex);
+                _logger?.LogError("SetLevel" , ex);
                 throw;
             }
         }
 
         private void OnSetpointChanged(object sender, ReportEventArgs<ThermostatSetpointReport> e)
         {
-            Logger.Instance.LogDebug("ThermostatSetpoint " + e.Report.Value + e.Report.Unit + " event from node " + e.Report.Node.NodeID + " (Scale=" + e.Report.Scale + ", Type=" + e.Report.Type + ")");
+            _logger?.LogDebug("ThermostatSetpoint " + e.Report.Value + e.Report.Unit + " event from node " + e.Report.Node.NodeID + " (Scale=" + e.Report.Scale + ", Type=" + e.Report.Type + ")");
             switch (e.Report.Type)
             {
                 case ThermostatSetpointType.Heating:
@@ -309,14 +309,14 @@ namespace Sarah.DeviceService.Model
                     SetBasicValue(99);
                     break;
                 default:
-                    Logger.Instance.LogWarning("WARNING: ThermoElement received unknown setpoint type " + e.Report.Type + " (ignored)!");
+                    _logger?.LogWarning("WARNING: ThermoElement received unknown setpoint type " + e.Report.Type + " (ignored)!");
                     break;
             }
         }
 
         private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
         {
-            Logger.Instance.LogDebug("Basic report value" + e.Report.CurrentValue + " from node " + e.Report.Node.NodeID);
+            _logger?.LogDebug("Basic report value" + e.Report.CurrentValue + " from node " + e.Report.Node.NodeID);
             SetBasicValue(e.Report.CurrentValue);
         }
 
@@ -344,7 +344,7 @@ namespace Sarah.DeviceService.Model
 
         private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
-            Logger.Instance.LogDebug("Thermo-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
+            _logger?.LogDebug("Thermo-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
 
             switch(e.Report.Type)
             {
@@ -352,7 +352,7 @@ namespace Sarah.DeviceService.Model
                     this.Temperature = new SensorData(e.Report.Value, e.Report.Unit);
                     break;
                 default:
-                    Logger.Instance.LogWarning("WARNING: Thermo-Sensor Data with unknown type " + e.Report.Type + " from node " + this.NodeID + " received");
+                    _logger?.LogWarning("WARNING: Thermo-Sensor Data with unknown type " + e.Report.Type + " from node " + this.NodeID + " received");
                     break;
             }
 

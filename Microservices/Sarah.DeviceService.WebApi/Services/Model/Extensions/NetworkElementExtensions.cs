@@ -1,4 +1,4 @@
-﻿using Sarah.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace Sarah.DeviceService.Model.Extensions
             if (n != null)
             {
                 await n.RemoveFailedNode();
-                Logger.Instance.LogDebug("RemoveFailedNodee for Node " + el.NodeID);
+                // Console.WriteLine("RemoveFailedNodee for Node " + el.NodeID);
             }
         }
 
@@ -37,7 +37,7 @@ namespace Sarah.DeviceService.Model.Extensions
             if (n != null)
             {
                 NeighborUpdateStatus res = await n.RequestNeighborUpdate();
-                Logger.Instance.LogDebug("Neighbor Update for Node " + el.NodeID + ": " + res);
+                // Console.WriteLine("Neighbor Update for Node " + el.NodeID + ": " + res);
                 return res.ToString();
             }
             else
@@ -56,7 +56,7 @@ namespace Sarah.DeviceService.Model.Extensions
             if (n != null)
             {
                 HealNetworkStatus res = await n.HealNodeNetwork();
-                Logger.Instance.LogDebug("Healing Network for Node " + el.NodeID + ": " + res);
+                // Console.WriteLine("Healing Network for Node " + el.NodeID + ": " + res);
                 return res.ToString();
             }
             else

@@ -1,7 +1,8 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 // Add Keycloak IDP
-var keycloak = builder.AddKeycloak("keycloak", port: 8443)
+
+var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 

@@ -1,7 +1,7 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Sarah.Logging;
+using Microsoft.Extensions.Logging;
 using Sarah.Ttn;
 using System;
 using System.Collections.Generic;
@@ -157,12 +157,12 @@ namespace Sarah.DeviceService.Model
         {
             if (e)
             {
-                Logger.Instance.LogDebug("TTN Connected: Device " + this.TtnDeviceId);
+                _logger?.LogDebug("TTN Connected: Device " + this.TtnDeviceId);
                 this.IsTtnConnected = true;
             }
             else
             {
-                Logger.Instance.LogDebug("TTN Disconnected: Device " + this.TtnDeviceId);
+                _logger?.LogDebug("TTN Disconnected: Device " + this.TtnDeviceId);
                 this.IsTtnConnected = false;
             }
         }
@@ -171,12 +171,12 @@ namespace Sarah.DeviceService.Model
         {
             if (topic.Contains(this.TtnDeviceId)) // nur auf eigene Messages hören
             {
-                Logger.Instance.LogDebug("OnTtnMessageReceived Topic" + topic);
+                _logger?.LogDebug("OnTtnMessageReceived Topic" + topic);
                 if (msg.uplink_message != null && msg.uplink_message.frm_payload != null)
                 {
                     string payloadBase64 = msg.uplink_message.frm_payload;
                     var deserializedDeviceData = this.Parser.Parse(payloadBase64);
-                    Logger.Instance.LogDebug("OnTtnMessageReceived DataId" + deserializedDeviceData.DataId);
+                    _logger?.LogDebug("OnTtnMessageReceived DataId" + deserializedDeviceData.DataId);
 
                     if(deserializedDeviceData != null)
                     {

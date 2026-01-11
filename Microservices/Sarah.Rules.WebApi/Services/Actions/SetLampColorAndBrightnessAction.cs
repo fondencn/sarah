@@ -1,6 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces.Services;
-using Sarah.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,15 +12,18 @@ namespace Sarah.Rules.Actions
         private byte TargetNodeId { get; set; }
         private byte Brightness { get; set; }
         private string Color { get; set; }
+        private readonly ILogger _logger;
 
 
-        public SetLampColorAndBrightnessAction(byte targetNodeId, byte brightness, string color, IDeviceService devices) : base()
+        public SetLampColorAndBrightnessAction(byte targetNodeId, byte brightness, string color, IDeviceService devices, ILogger logger) : base()
         {
             this._devices = devices;
             this.TargetNodeId = targetNodeId;
             this.Brightness = brightness;
             this.Color = color;
+            this._logger = logger;
         }
+        
 
         public override async void Execute(NetworkEvent sourceEvent)
         {
@@ -40,7 +42,7 @@ namespace Sarah.Rules.Actions
             }
             catch (Exception ex)
             {
-                Logger.Instance.LogDebug("EXCEPTION in SetLampColorAndBrightnessAction::Execute: " + ex.Message);
+                _logger.LogDebug("EXCEPTION in SetLampColorAndBrightnessAction::Execute: " + ex.Message);
             }
         }
     }
