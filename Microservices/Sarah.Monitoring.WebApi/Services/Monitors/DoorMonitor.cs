@@ -157,7 +157,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Aktualisieren der Türzustände: " + ex.Message);
+                _logger.LogError(ex, "Fehler beim Aktualisieren der Türzustände");
             }
         }
 
@@ -319,7 +319,7 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             public void Cancel()
             {
-                _logger.LogDebug("Beende überwachung der Tür/Fenster: " + this.Device.Name + "... ");
+                _logger.LogDebug("Beende überwachung der Tür/Fenster: {DeviceName}...", this.Device.Name);
                 this.UpdateCancellationTokenSource.Cancel();
             }
 
@@ -329,7 +329,7 @@ namespace Sarah.Monitoring.Monitors
             /// </summary>
             private async void Tick()
             {
-                _logger.LogDebug("Starte überwachung der geöffneten Tür/Fenster: " + this.Device.Name + "... ");
+                _logger.LogDebug("Starte überwachung der geöffneten Tür/Fenster: {DeviceName}...", this.Device.Name);
                 int lastMinutes = -1;
                 TimeSpan waitTime = this.SensorThreshold;
                 bool isInitialLoop = true;

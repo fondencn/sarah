@@ -103,7 +103,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Fehler beim Aktualisieren der Personenzustände: " + ex.Message);
+                _logger.LogDebug("Fehler beim Aktualisieren der Personenzustände: {ErrorMessage}", ex.Message);
             }
         }
 

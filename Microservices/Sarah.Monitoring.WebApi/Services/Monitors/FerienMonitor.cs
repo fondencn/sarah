@@ -38,7 +38,7 @@ namespace Sarah.Monitoring.Monitors
         {
             string iCalFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "/", _config["iCalFolder"] ?? "");
             FerienDateien.Instance.Load(iCalFolder);
-            _logger.LogDebug((FerienDateien.Instance.Items?.Count ?? 0) + " Ferienelemente geladen.");
+            _logger.LogDebug("{FerienElementCount} Ferienelemente geladen.", FerienDateien.Instance.Items?.Count ?? 0);
             return Task.CompletedTask;
         }
 

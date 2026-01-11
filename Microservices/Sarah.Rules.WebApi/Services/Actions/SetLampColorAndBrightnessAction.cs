@@ -42,7 +42,7 @@ namespace Sarah.Rules.Actions
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("EXCEPTION in SetLampColorAndBrightnessAction::Execute: " + ex.Message);
+                _logger.LogDebug("EXCEPTION in SetLampColorAndBrightnessAction::Execute: {ErrorMessage}", ex.Message);
             }
         }
     }

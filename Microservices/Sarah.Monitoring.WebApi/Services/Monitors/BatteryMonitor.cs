@@ -141,7 +141,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Battery Warnings ", ex);
+                _logger.LogError(ex, "Battery Warnings");
             }
         }
 
@@ -170,8 +170,8 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim aktualisieren der Batterieinfos", ex);
-                _logger.LogWarning(ex.StackTrace);
+                _logger.LogError(ex, "Fehler beim aktualisieren der Batterieinfos");
+                _logger.LogWarning("StackTrace: {StackTrace}", ex.StackTrace);
             }
         }
 

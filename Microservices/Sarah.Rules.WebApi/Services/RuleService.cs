@@ -71,8 +71,8 @@ namespace Sarah.Rules
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogDebug("RuleEngine: Error while evaluating rule " + rule.Name + ": " + ex.Message);
-                        _logger.LogDebug(ex.StackTrace);
+                        _logger.LogDebug("RuleEngine: Error while evaluating rule {RuleName}: {ErrorMessage}", rule.Name, ex.Message);
+                        _logger.LogDebug("StackTrace: {StackTrace}", ex.StackTrace);
                     }
                 }
             }
@@ -85,7 +85,7 @@ namespace Sarah.Rules
                 Log.Clear();
             }
             Log.Insert(0, DateTime.Now + "\t" + msg + Environment.NewLine); //Neuestes oben
-            _logger.LogInformation(msg);
+            _logger.LogInformation("{Message}", msg);
 
             // Man muss Dinge auch aussprechen dürfen!
             //Notifications.NotificationEngine.Instance.Voice?.Say(msg);
@@ -131,13 +131,13 @@ namespace Sarah.Rules
                         if (timerCondition.DateTime.IsInFuture()) //nur Timer aktivieren, die mindestens 5 sekunden in der Zukunft liegen
                         {
                             this.Timers.Register(timerCondition.DateTime);
-                            _logger.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.DateTime + " (one shot)");
+                            _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {TickTime} (one shot)", rule.Name, timerCondition.DateTime);
                         }
                     }
                     else
                     {
                         this.Timers.Register(timerCondition.Recurrence);
-                        _logger.LogDebug("RecurrenceTimer for " + rule.Name + " ticks at " + timerCondition.Recurrence.GetNext() + " (recurring)");
+                        _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {NextTick} (recurring)", rule.Name, timerCondition.Recurrence.GetNext());
 
                     }
                 }

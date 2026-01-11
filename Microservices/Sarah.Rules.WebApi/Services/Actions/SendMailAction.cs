@@ -33,7 +33,7 @@ namespace Sarah.Rules.Actions
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Fehler beim behandeln einer Emailregel: " + ex.Message);
+                _logger.LogDebug("Fehler beim behandeln einer Emailregel: {ErrorMessage}", ex.Message);
             }
         }
     }

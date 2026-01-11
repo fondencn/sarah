@@ -74,7 +74,7 @@ namespace Sarah.Persons
             await _database.Persons.AddAsync(personEntity);
             await _database.SaveChangesAsync();
 
-            _logger.LogInformation($"Person {person.Name} added successfully.");
+            _logger.LogInformation("Person {PersonName} added successfully.", person.Name);
         }
 
         public async Task DeletePersonAsync(long id)
@@ -88,7 +88,7 @@ namespace Sarah.Persons
             _database.Persons.Remove(person);
             await _database.SaveChangesAsync();
 
-            _logger.LogInformation($"Person with ID {id} deleted successfully.");
+            _logger.LogInformation("Person with ID {PersonId} deleted successfully.", id);
         }
 
         public async Task UpdatePersonAsync(IPerson person)
@@ -112,7 +112,7 @@ namespace Sarah.Persons
             _database.Persons.Update(personEntity);
             await _database.SaveChangesAsync();
 
-            _logger.LogInformation($"Person {person.Name} updated successfully.");
+            _logger.LogInformation("Person {PersonName} updated successfully.", person.Name);
         }
 
         public async Task <string[]> GetMobilePhones()

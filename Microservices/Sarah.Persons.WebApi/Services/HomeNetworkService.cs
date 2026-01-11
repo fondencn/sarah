@@ -136,7 +136,7 @@ namespace Sarah.Persons
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Laden der Verbundenen Heimnetzgeräte (LAN/WIFI) {Exception}", ex);
+                _logger.LogError(ex, "Fehler beim Laden der Verbundenen Heimnetzgeräte (LAN/WIFI)");
             }
         }
 

@@ -38,7 +38,8 @@ namespace Sarah.LocationServer.Controllers
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8604 // Dereference of a possibly null reference.
                  LocationServiceEntries.Instance.Add(item);
-                 _logger.LogInformation($"AddLocation {item.DeviceName} {item.PersonName} Bat={item.Battery} Lon={item.Longtitude} Lat={item.Latitude} ");
+                 _logger.LogInformation("AddLocation {DeviceName} {PersonName} Bat={Battery} Lon={Longitude} Lat={Latitude}", 
+                     item.DeviceName, item.PersonName, item.Battery, item.Longtitude, item.Latitude);
                  return Task.CompletedTask;
              });
 

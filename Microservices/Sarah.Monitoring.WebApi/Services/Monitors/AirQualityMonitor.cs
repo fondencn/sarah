@@ -136,7 +136,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Aktualisieren der Luftqualitätszustände: " + ex.Message);
+                _logger.LogError(ex, "Fehler beim Aktualisieren der Luftqualitätszustände");
             }
         }
 
@@ -214,7 +214,7 @@ namespace Sarah.Monitoring.Monitors
 
             public void Cancel()
             {
-                _logger.LogDebug("Beende überwachung der Luftqualität: " + this.Device.Name + "... ");
+                _logger.LogDebug("Beende überwachung der Luftqualität: {DeviceName}...", this.Device.Name);
                 this.UpdateCancellationTokenSource?.Cancel();
             }
 
@@ -222,7 +222,7 @@ namespace Sarah.Monitoring.Monitors
             {
                 try
                 {
-                    _logger.LogDebug("Starte überwachung der Luftqualität: " + this.Device.Name + "... ");
+                    _logger.LogDebug("Starte überwachung der Luftqualität: {DeviceName}...", this.Device.Name);
 
                     while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {

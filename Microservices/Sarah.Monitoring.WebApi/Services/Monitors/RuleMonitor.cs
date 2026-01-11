@@ -176,7 +176,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim deaktiveren alter Erinnerungen", ex);
+                _logger.LogError(ex, "Fehler beim deaktiveren alter Erinnerungen");
             }
         }
 
@@ -205,7 +205,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim deaktiveren alter Erinnerungen", ex);
+                _logger.LogError(ex, "Fehler beim deaktiveren alter Erinnerungen");
             }
         }
 

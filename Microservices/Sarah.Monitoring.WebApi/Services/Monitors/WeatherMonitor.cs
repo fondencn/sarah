@@ -157,7 +157,7 @@ namespace Sarah.Monitoring.Monitors
                     string json = await response.Content.ReadAsStringAsync();
                     Root forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<Root>(json)!;
                     this.WeatherForecast = forecast;
-                    _logger.LogInformation("Wettervorhersage für " + forecast?.city?.name + " aktualisiert (" + forecast?.cnt + " Elemente): " + forecast?.message);
+                    _logger.LogInformation("Wettervorhersage für {CityName} aktualisiert ({ForecastCount} Elemente): {Message}", forecast?.city?.name, forecast?.cnt, forecast?.message);
                     //NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
                 }
             }
@@ -183,7 +183,7 @@ namespace Sarah.Monitoring.Monitors
                     string json = await response.Content.ReadAsStringAsync();
                     WeatherForecast currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<WeatherForecast>(json)!;
                     this.CurrentWeather = currentWeather;
-                    _logger.LogInformation("Aktuelles Wetter für " + currentWeather.name + " aktualisiert: " + currentWeather.DisplayText);
+                    _logger.LogInformation("Aktuelles Wetter für {CityName} aktualisiert: {DisplayText}", currentWeather.name, currentWeather.DisplayText);
                     if (currentWeather.main != null)
                     {
                         await _events.PublishOutDoorTemperatureChangedEventAsync(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
@@ -229,7 +229,7 @@ namespace Sarah.Monitoring.Monitors
                     .ToList();
                 foreach (DwdWarning kitemToRemove in itemsToRemove)
                 {
-                    _logger.LogInformation("Entfernte Wetterwarnung: " + kitemToRemove.GetOutputString());
+                    _logger.LogInformation("Entfernte Wetterwarnung: {WarningOutput}", kitemToRemove.GetOutputString());
                     this.CurrentLocalWeatherWarnings.Remove(kitemToRemove);
                 }
 
@@ -247,7 +247,7 @@ namespace Sarah.Monitoring.Monitors
                     str += "End: " + entry.EndDate + Environment.NewLine;
                     str += "instruction: " + entry.instruction + Environment.NewLine;
                     str += "LastWarn: " + entry.LastWarn + Environment.NewLine;
-                    _logger.LogInformation(str);
+                    _logger.LogInformation("{WarningMessage}", str);
                     if(entry.@event != null) 
                     {
                         await _events.PublishWeatherWarningEventAsync(new WeatherWarningEvent(entry.@event));
@@ -305,7 +305,7 @@ namespace Sarah.Monitoring.Monitors
                 string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
                     + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
                 await _events.PublishSay(new SayEvent(warnMessage));
-                _logger.LogInformation(warnMessage);
+                _logger.LogInformation("{WarnMessage}", warnMessage);
             }
         }
 

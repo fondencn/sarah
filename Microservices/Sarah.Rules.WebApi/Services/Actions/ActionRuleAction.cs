@@ -39,7 +39,7 @@ namespace Sarah.Rules.Actions
             } 
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Ausführen einer ActionRuleAction: " , ex);
+                _logger.LogError(ex, "Fehler beim Ausführen einer ActionRuleAction");
             }
         }
     }
@@ -80,7 +80,7 @@ namespace Sarah.Rules.Actions
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Ausführen einer TaskRuleAction: ", ex);
+                _logger.LogError(ex, "Fehler beim Ausführen einer TaskRuleAction");
             }
         }
     }
