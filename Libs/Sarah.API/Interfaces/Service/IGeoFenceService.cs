@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces;
 
 namespace Sarah.API.Interfaces.Services
 {
@@ -7,5 +7,6 @@ namespace Sarah.API.Interfaces.Services
     {
         IGeoFence? GetCurrent(LocatorPosition pos);
         IGeoFence GetZuhause();
+        IEnumerable<IGeoFence> GetAll();
     }
 }

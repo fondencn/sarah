@@ -109,5 +109,7 @@ namespace Sarah.Geofences
             => pos == null ? null : All.FirstOrDefault(item => item.IsWithin(pos));
 
         public IGeoFence GetZuhause() => Zuhause;
+
+        public IEnumerable<IGeoFence> GetAll() => All;
     }
 }

@@ -59,6 +59,21 @@ public class GeofencesController : ControllerBase
         }
     }
 
+    [HttpGet]
+    public IActionResult GetAll()
+    {
+        try
+        {
+            var geofences = _geoFenceService.GetAll();
+            return Ok(geofences);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all geofences");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("status")]
     [AllowAnonymous]
     public IActionResult GetStatus()

@@ -21,7 +21,6 @@ var postgres = builder.AddPostgres("postgres")
 
 var postgresDevices = postgres.AddDatabase("devicesdb");
 var postgresPersons = postgres.AddDatabase("personsdb");
-var postgresGeofences = postgres.AddDatabase("geofencesdb");
 var postgresEvents = postgres.AddDatabase("eventsdb");
 var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
@@ -41,7 +40,6 @@ var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personss
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
-    .WithReference(postgresGeofences, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq);
 
@@ -60,12 +58,6 @@ var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("mo
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
     .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresRules, "PostgresConnection")
-    .WithReference(keycloak)
-    .WithReference(rabbitmq);
-
-// Add LocationServer and SpeechServer (may not need separate databases)
-var locationServer = builder.AddProject<Projects.Sarah_LocationServer_WebApi>("locationserver")
-    .WithHttpsEndpoint(port: 5007, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
     .WithReference(rabbitmq);
 
