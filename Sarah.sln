@@ -39,9 +39,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Messaging.RabbitMQ", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Authentication", "Libs\Sarah.Authentication\Sarah.Authentication.csproj", "{5070256A-C750-4DE6-94DD-275A8C3946DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServer", "Microservices\Sarah.LocationServer.WebApi\Sarah.LocationServer.csproj", "{6E39DEC3-9D4B-49AF-BFB0-B8D783DD326B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.LocationServer.WebApi", "Microservices\Sarah.LocationServer.WebApi\Sarah.LocationServer.WebApi.csproj", "{6E39DEC3-9D4B-49AF-BFB0-B8D783DD326B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeechServer", "Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.csproj", "{BB77C29C-2713-48BE-AFB5-C82892C7D439}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeechServer.WebApi", "Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj", "{BB77C29C-2713-48BE-AFB5-C82892C7D439}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Libs\Sarah.Data\Sarah.Data.csproj", "{7C0BA868-623C-4935-91C7-8B0B40E8BF04}"
 EndProject

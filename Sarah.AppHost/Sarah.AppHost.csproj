@@ -1,11 +1,14 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.1">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.0.0" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <DcpDir>$(HOME)/.nuget/packages/aspire.hosting.orchestration.linux-arm64/13.0.0/tools/</DcpDir>
+    <AspireDashboardDir>$(HOME)/.nuget/packages/aspire.dashboard.sdk.linux-arm64/13.0.0/tools/</AspireDashboardDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +27,7 @@
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.LocationServer.WebApi\Sarah.LocationServer.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />
+    <ProjectReference Include="..\sarah.client\sarah.client.esproj" />
   </ItemGroup>
 
 </Project>
