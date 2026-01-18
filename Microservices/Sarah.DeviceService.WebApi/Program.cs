@@ -3,6 +3,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.Data.Repositories;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.DeviceService.WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// Register RabbitMQ client
+builder.Services.AddSingleton<RabbitMQClient>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<RabbitMQClient>>();
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    return new RabbitMQClient(logger, configuration);
+});
+
+// Register NetworkElementPublisher
+builder.Services.AddSingleton<NetworkElementPublisher>();
 
 // Add services to the container.
 builder.Services.AddControllers();

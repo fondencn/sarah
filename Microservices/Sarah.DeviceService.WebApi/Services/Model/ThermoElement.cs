@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace Sarah.DeviceService.Model
         private SensorData _Temperature;
         private SensorData _battery;
         private SensorData _basic;
+        private readonly NetworkElementPublisher _publisher;
 
 
         private Task UpdateTask { get; set; }
@@ -42,7 +44,7 @@ namespace Sarah.DeviceService.Model
                 if (_TemperatureSetpoint != value)
                 {
                     _TemperatureSetpoint = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _TemperatureSetpoint?.Value.ToString()));
+                    _publisher.ReportEvent(this, nameof(TemperatureSetpoint), _TemperatureSetpoint?.Value.ToString());
                 }
             }
         }
@@ -55,7 +57,7 @@ namespace Sarah.DeviceService.Model
                 if (_Temperature != value)
                 {
                     _Temperature = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _Temperature?.Value.ToString()));
+                    _publisher.ReportEvent(this, nameof(Temperature), _Temperature?.Value.ToString());
                 }
             }
         }
@@ -70,7 +72,7 @@ namespace Sarah.DeviceService.Model
                 if (_basic != value)
                 {
                     _basic = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _basic?.Value.ToString()));
+                    _publisher.ReportEvent(this, nameof(Basic), _basic?.Value.ToString());
                 }
             }
         }
@@ -85,7 +87,7 @@ namespace Sarah.DeviceService.Model
                 if (_battery != value)
                 {
                     _battery = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _battery?.Value.ToString()));
+                    _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString());
                 }
             }
         }
@@ -127,8 +129,9 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public ThermoElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public ThermoElement(byte nodeid, NetworkElementPublisher publisher, ILogger<ThermoElement>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
         /// <summary>

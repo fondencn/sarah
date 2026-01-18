@@ -3,6 +3,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class Lamp : NetworkElement, ILamp
     {
+        private readonly NetworkElementPublisher _publisher;
         private byte _brightness;
         private string _color;
         private string _meter;
@@ -41,7 +43,7 @@ namespace Sarah.DeviceService.Model
         public byte Brightness
         {
             get => _brightness;
-            private set { if (_brightness != value) { _brightness = value; ReportEvent(new NetworkEvent<byte>(this.NodeID, value)); } }
+            private set { if (_brightness != value) { _brightness = value; _publisher.ReportEvent(this, nameof(Brightness), value); } }
         }
 
         /// <summary>
@@ -50,14 +52,14 @@ namespace Sarah.DeviceService.Model
         public string Color
         {
             get => _color;
-            private set { if (_color != value) { _color = value; if (value != "?") { ReportEvent(new NetworkEvent<string>(this.NodeID, value)); } } }
+            private set { if (_color != value) { _color = value; if (value != "?") { _publisher.ReportEvent(this, nameof(Color), value); } } }
         }
 
 
         /// <summary>
         /// Meter
         /// </summary>
-        public string Meter { get => _meter; private set { if (!String.Equals(_meter, value)) { _meter = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value)); } } }
+        public string Meter { get => _meter; private set { if (!String.Equals(_meter, value)) { _meter = value; _publisher.ReportEvent(this, nameof(Meter), value); } } }
 
         /// <summary>
         /// Letzte Änderungszeitpunkt
@@ -72,8 +74,9 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public Lamp(byte nodeid, LampColorModes mode, IEventProcessingService events) : base(nodeid, events)
+        public Lamp(byte nodeid, LampColorModes mode, NetworkElementPublisher publisher, ILogger<Lamp>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
             this.ColorMode = mode;
         }
 

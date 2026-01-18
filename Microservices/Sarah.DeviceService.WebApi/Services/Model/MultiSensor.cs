@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,6 +24,7 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class MultiSensor : NetworkElement, ITemperatureSensor, IBatterySensor, IMultiSensor
     {
+        private readonly NetworkElementPublisher _publisher;
         private SensorData _temperature;
         private SensorData _luminance;
         private SensorData _alarm;
@@ -45,19 +47,19 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Temperatur
         /// </summary>
-        public SensorData Temperature { get => _temperature; private set { if (_temperature != value) { _temperature = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Temperature { get => _temperature; private set { if (_temperature != value) { _temperature = value; _publisher.ReportEvent(this, nameof(Temperature), value?.ToString()); } } }
         /// <summary>
         /// Helligkeit
         /// </summary>
-        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; _publisher.ReportEvent(this, nameof(Luminance), value?.ToString()); } } }
         /// <summary>
         /// Bewegungsalarm / Tamper
         /// </summary>
-        public SensorData Alarm { get => _alarm; private set { if (_alarm != value) { _alarm = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Alarm { get => _alarm; private set { if (_alarm != value) { _alarm = value; _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); } } }
         /// <summary>
         /// Catch-All für unbekannte Sensordaten
         /// </summary>
-        public SensorData Unknown { get => _unknown; private set { if (_unknown != value) { _unknown = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Unknown { get => _unknown; private set { if (_unknown != value) { _unknown = value; _publisher.ReportEvent(this, nameof(Unknown), value?.ToString()); } } }
         /// <summary>
         /// Bewegung
         /// </summary>
@@ -69,7 +71,7 @@ namespace Sarah.DeviceService.Model
                 if (_presence?.Value != value?.Value)
                 {
                     _presence = value;
-                    ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString()));
+                    _publisher.ReportEvent(this, nameof(Presence), value?.ToString());
 
                     if (_presence.Value > 0)
                     {
@@ -86,32 +88,32 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Ladezustand der Batterie des Gerätes
         /// </summary>
-        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
 
         /// <summary>
         /// Luftfeutchtigkeit
         /// </summary>
-        public SensorData RelativeHumidity { get => _relativeHumidity; private set { if (_relativeHumidity != value) { _relativeHumidity = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData RelativeHumidity { get => _relativeHumidity; private set { if (_relativeHumidity != value) { _relativeHumidity = value; _publisher.ReportEvent(this, nameof(RelativeHumidity), value?.ToString()); } } }
 
         /// <summary>
         /// Taupunkt / Kondensatpunkt
         /// </summary>
-        public SensorData DewPoint { get => _dewPoint; private set { if (_dewPoint != value) { _dewPoint = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData DewPoint { get => _dewPoint; private set { if (_dewPoint != value) { _dewPoint = value; _publisher.ReportEvent(this, nameof(DewPoint), value?.ToString()); } } }
 
         /// <summary>
         /// C02
         /// </summary>
-        public SensorData CO2 { get => _cO2; private set { if (_cO2 != value) { _cO2 = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData CO2 { get => _cO2; private set { if (_cO2 != value) { _cO2 = value; _publisher.ReportEvent(this, nameof(CO2), value?.ToString()); } } }
 
         /// <summary>
         /// Feuchtigkeit
         /// </summary>
-        public SensorData Moisture { get => _moisture; private set { if (_moisture != value) { _moisture = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Moisture { get => _moisture; private set { if (_moisture != value) { _moisture = value; _publisher.ReportEvent(this, nameof(Moisture), value?.ToString()); } } }
 
         /// <summary>
         /// Flüchtige Organische Stoffe
         /// </summary>
-        public SensorData VolatileOrganicCompounds { get => _volatileOrganicCompounds; private set { if (_volatileOrganicCompounds != value) { _volatileOrganicCompounds = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData VolatileOrganicCompounds { get => _volatileOrganicCompounds; private set { if (_volatileOrganicCompounds != value) { _volatileOrganicCompounds = value; _publisher.ReportEvent(this, nameof(VolatileOrganicCompounds), value?.ToString()); } } }
 
 
         private readonly Dictionary<AirQualitityLevel, string> _ColorsByWarnLevel = new System.Collections.Generic.Dictionary<AirQualitityLevel, string>()
@@ -193,8 +195,9 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public MultiSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public MultiSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<MultiSensor>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
         /// <summary>

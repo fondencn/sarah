@@ -3,6 +3,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Microsoft.Extensions.Logging;
 using Sarah.Ttn;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,6 +20,7 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class LoraWanGpsTracker : NetworkElement, IDisposable, IGPSTracker, IBatterySensor
     {
+        private readonly NetworkElementPublisher _publisher;
         private string Ttn_cf_ApiKey {get; set;}
         private string TtnApiKey_SarahApiKey {get; set; }
         private const string TtnAppName = "sarah-lorawan";
@@ -26,8 +28,8 @@ namespace Sarah.DeviceService.Model
         private const string TtnHostname = "eu1.cloud.thethings.network";
         private const int TtnPort = 8883;
         private readonly TtnClient _ttn;
-        private SensorData _battery = null;
-        private LocatorPosition _position = null;
+        private SensorData? _battery = null;
+        private LocatorPosition? _position = null;
         private SensorData _isButtonPressed;
         private const int MAX_POSITION_TRACE_ENTRIES = 50;
         private readonly Queue<LocatorPosition> _PositionTrace = new Queue<LocatorPosition>();
@@ -62,13 +64,13 @@ namespace Sarah.DeviceService.Model
         /// </summary>
         public SensorData Battery
         {
-            get { return _battery; }
+            get { return _battery ?? SensorData.Empty; }
             set
             {
                 if (_battery != value)
                 {
                     _battery = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _battery?.Value.ToString(CultureInfo.CurrentCulture)));
+                    _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -84,7 +86,7 @@ namespace Sarah.DeviceService.Model
                 if (_isButtonPressed != value)
                 {
                     _isButtonPressed = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _isButtonPressed?.Value.ToString(CultureInfo.CurrentCulture)));
+                    _publisher.ReportEvent(this, nameof(IsButtonPressed), _isButtonPressed?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -100,8 +102,8 @@ namespace Sarah.DeviceService.Model
                 if (_position != value)
                 {
                     _position = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _position?.Longtitude?.Value.ToString(CultureInfo.CurrentCulture), "Longtitude"));
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _position?.Latitude?.Value.ToString(CultureInfo.CurrentCulture), "Latitude"));
+                    _publisher.ReportEvent(this, "Longtitude", _position?.Longtitude?.Value.ToString(CultureInfo.CurrentCulture));
+                    _publisher.ReportEvent(this, "Latitude", _position?.Latitude?.Value.ToString(CultureInfo.CurrentCulture));
 
                     if (value.IsValid)
                     {
@@ -144,8 +146,9 @@ namespace Sarah.DeviceService.Model
 
         private ITTNPayloadParser Parser { get; }
 
-        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId, IEventProcessingService events) : base(nodeid, events)
+        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId, NetworkElementPublisher publisher, ILogger<LoraWanGpsTracker>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
             this.TtnDeviceId = ttnDeviceId;
             this.Parser = new SenseCapTTNParser(); // TODO: Make configurable if more devices get integrated
             this._ttn = new TtnClient(TtnAppName);

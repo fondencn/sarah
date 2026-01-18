@@ -1,21 +1,17 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using ZWave.CommandClasses;
 using ZWave;
-using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Services;
-using Microsoft.Extensions.Configuration;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.Model
 {
-    public class SmokeSensor : NetworkElement, ISmokeSensor, IBatterySensor, ITemperatureSensor
+    public partial class SmokeSensor : NetworkElement, ISmokeSensor, IBatterySensor, ITemperatureSensor
     {
+        private readonly NetworkElementPublisher _publisher;
         private DateTime LastUpdate { get; set; } = DateTime.MinValue;
         private SensorData _temperature;
         private SensorData _battery;
@@ -24,36 +20,37 @@ namespace Sarah.DeviceService.Model
         private SensorData _overHeatDetected;
 
 
-        public SmokeSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public SmokeSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<SmokeSensor>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
         public SensorData Temperature
         {
             get => _temperature;
-            private set { if (_temperature != value) { _temperature = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); LastUpdate = DateTime.Now; } }
+            private set { if (_temperature != value) { _temperature = value; _publisher.ReportEvent(this, nameof(Temperature), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData Battery
         {
             get => _battery;
-            private set { if (_battery != value) { _battery = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); LastUpdate = DateTime.Now; } }
+            private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData IsSmokeDetected
         {
             get => _smokeDetected;
-            private set { if (_smokeDetected != value) { _smokeDetected = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); LastUpdate = DateTime.Now; } }
+            private set { if (_smokeDetected != value) { _smokeDetected = value; _publisher.ReportEvent(this, nameof(IsSmokeDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData IsOverheatingDetected
         {
             get => _overHeatDetected;
-            private set { if (_overHeatDetected != value) { _overHeatDetected = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); LastUpdate = DateTime.Now; } }
+            private set { if (_overHeatDetected != value) { _overHeatDetected = value; _publisher.ReportEvent(this, nameof(IsOverheatingDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
         public SensorData Alarm { 
             get => _alarm; 
-            private set { if (_alarm != value) { _alarm = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); LastUpdate = DateTime.Now; } } 
+            private set { if (_alarm != value) { _alarm = value; _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); LastUpdate = DateTime.Now; } } 
         }
 
 

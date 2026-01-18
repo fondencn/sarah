@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
-using Sarah.API.Interfaces;
-using Sarah.API.Interfaces.Service;
+﻿using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Sarah.Monitoring.WebApi.Data;
@@ -13,6 +9,10 @@ namespace Sarah.Monitoring;
 
 public class MonitoringService (ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
 {
+    public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
+
+    public IFerienInfoProvider Ferien => this.Monitors.OfType<IFerienInfoProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IFerienInfoProvider monitor available");
+
     private  IMonitor[] Monitors {get; set;} = Array.Empty<IMonitor>();
 
     public Task Start()

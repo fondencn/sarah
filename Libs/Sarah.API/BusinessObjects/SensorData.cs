@@ -9,6 +9,9 @@ namespace Sarah.API.Business
     /// </summary>
     public class SensorData : IEquatable<SensorData>
     {
+
+        public static SensorData Empty { get; } = new SensorData(0.0f, "?");
+
         /// <summary>
         /// Sensorwert
         /// </summary>

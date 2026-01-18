@@ -4,6 +4,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using System.Threading.Tasks;
 using ZWave;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.Model
 {
@@ -13,7 +14,7 @@ namespace Sarah.DeviceService.Model
         public override string ClassDescription => this._genericType;
 
 
-        public DefectElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public DefectElement(byte nodeid, NetworkElementPublisher publisher, ILogger<DefectElement>? logger = null) : base(nodeid, logger)
         {
 
         }

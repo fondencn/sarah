@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Globalization;
 using System.Text;
@@ -18,6 +19,7 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class DoorSensor : NetworkElement, IDoorSensor
     {
+        private readonly NetworkElementPublisher _publisher;
         private SensorData _battery;
         private SensorData _Temperature;
         private DoorSensorState _state;
@@ -79,7 +81,7 @@ namespace Sarah.DeviceService.Model
                 if (_Temperature != value)
                 {
                     _Temperature = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _Temperature?.Value.ToString(CultureInfo.CurrentCulture)));
+                    _publisher.ReportEvent(this, nameof(Temperature), _Temperature?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -126,7 +128,7 @@ namespace Sarah.DeviceService.Model
                 {
                     this.LastStateChanged = DateTime.Now;
                     this._state = value;
-                    ReportEvent(new NetworkEvent<DoorSensorState>(this.NodeID, value));
+                    _publisher.ReportEvent(this, nameof(State), value);
 
                     if(value == DoorSensorState.Offen)
                     {
@@ -153,7 +155,7 @@ namespace Sarah.DeviceService.Model
                 if (_battery != value)
                 {
                     _battery = value;
-                    this.ReportEvent(new NetworkEvent<string>(this.NodeID, _battery?.Value.ToString(CultureInfo.CurrentCulture)));
+                    _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -163,8 +165,9 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid">ZWave Node ID</param>
-        public DoorSensor(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public DoorSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<DoorSensor>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
         /// <summary>

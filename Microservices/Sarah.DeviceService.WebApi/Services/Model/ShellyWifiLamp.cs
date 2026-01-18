@@ -3,6 +3,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,12 @@ namespace Sarah.DeviceService.Model
 {
     public class ShellyWifiLamp : NetworkElement, ILamp
     {
-        private byte _brightness;
-        private string _color;
-        private SensorData _meter;
+        private readonly NetworkElementPublisher _publisher;
+        private byte _brightness = 0;
+        private string _color = "";
+        private SensorData _meter = SensorData.Empty;
         private Task _updateSensorDataTask;
-        private CancellationTokenSource _UpdateSensorDataCancellationTokenSource;
+        private CancellationTokenSource? _UpdateSensorDataCancellationTokenSource =  null;
 
 
         public string Hostname { get; }
@@ -31,8 +33,9 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public ShellyWifiLamp(byte nodeid, string ipOrHostname, IEventProcessingService events) : base(nodeid, events)
+        public ShellyWifiLamp(byte nodeid, string ipOrHostname, NetworkElementPublisher publisher, ILogger<ShellyWifiLamp>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
             this.Hostname = ipOrHostname;
         }
 
@@ -44,7 +47,7 @@ namespace Sarah.DeviceService.Model
         {
             if (this._updateSensorDataTask != null && this._updateSensorDataTask.Status == TaskStatus.Running)
             {
-                this._UpdateSensorDataCancellationTokenSource.Cancel();
+                this._UpdateSensorDataCancellationTokenSource?.Cancel();
             }
         }
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
@@ -120,7 +123,7 @@ namespace Sarah.DeviceService.Model
         public byte Brightness
         {
             get => _brightness;
-            private set { if (_brightness != value) { _brightness = value; ReportEvent(new NetworkEvent<byte>(this.NodeID, value)); } }
+            private set { if (_brightness != value) { _brightness = value; _publisher.ReportEvent(this, nameof(Brightness), value); } }
         }
 
         /// <summary>
@@ -129,14 +132,14 @@ namespace Sarah.DeviceService.Model
         public string Color
         {
             get => _color;
-            private set { if (_color != value) { _color = value; if (value != "?") { ReportEvent(new NetworkEvent<string>(this.NodeID, value)); } } }
+            private set { if (_color != value) { _color = value; if (value != "?") { _publisher.ReportEvent(this, nameof(Color), value); } } }
         }
 
 
         /// <summary>
         /// Meter
         /// </summary>
-        public SensorData Meter { get => _meter; private set { if (_meter != value) { _meter = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Meter { get => _meter; private set { if (_meter != value) { _meter = value; _publisher.ReportEvent(this, nameof(Meter), value?.ToString()); } } }
 
         /// <summary>
         /// Letzte Änderungszeitpunkt
@@ -145,7 +148,7 @@ namespace Sarah.DeviceService.Model
         public override bool? IsActive => this.Brightness > 0;
         public LampColorModes ColorMode => LampColorModes.RGBWW;
 
-        public Animation CurrentAnimation { get; set; }
+        public Animation? CurrentAnimation { get; set; }
 
 
         public override string ClassDescription => "Lampe";
@@ -213,12 +216,12 @@ namespace Sarah.DeviceService.Model
         public class Light
         {
             public bool ison { get; set; }
-            public string source { get; set; }
+            public string? source { get; set; }
             public bool has_timer { get; set; }
             public int timer_started { get; set; }
             public int timer_duration { get; set; }
             public int timer_remaining { get; set; }
-            public string mode { get; set; }
+            public string? mode { get; set; }
             public byte red { get; set; }
             public byte green { get; set; }
             public byte blue { get; set; }
@@ -235,7 +238,7 @@ namespace Sarah.DeviceService.Model
             public float power { get; set; }
             public bool is_valid { get; set; }
             public int timestamp { get; set; }
-            public List<double> counters { get; set; }
+            public List<double>? counters { get; set; }
             public int total { get; set; }
         }
 
