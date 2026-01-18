@@ -4,6 +4,8 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Rules.Conditions;
 using System.Text;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Rules
 {
@@ -13,7 +15,7 @@ namespace Sarah.Rules
     public sealed class RuleService : IRuleService, INetworkEventSubscriber, IDisposable
     {
         private readonly IDeviceService _devices;
-        private readonly IEventProcessingService _events;
+        private readonly RabbitMQClient _rabbitMQ;
 
 
 
@@ -39,12 +41,11 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(IEventProcessingService events, IDeviceService devices, ILogger logger) 
+        public RuleService(IDeviceService devices, RabbitMQClient rabbitMQ, ILogger logger) 
         { 
-            this._events = events;
             this._devices = devices;
-            this._events .SubscribeNetworkEventAsync(this).Wait();
-            this.Timers = new TimerEngine(events, logger);
+            this._rabbitMQ = rabbitMQ;
+            this.Timers = new TimerEngine(rabbitMQ, logger);
             this._logger = logger;
         }
 
@@ -168,21 +169,20 @@ namespace Sarah.Rules
         /// </summary>
         private sealed class TimerEngine : IDisposable
         {
-            private readonly IEventProcessingService _events;
-
             /// <summary>
             /// Alle registrierten Timer-Ereignisse
             /// </summary>
             private List<RecurrenceTimer> RegisteredRecurrences { get; } = new List<RecurrenceTimer>();
             private readonly ILogger _logger;
+            private readonly RabbitMQClient _rabbitMQ;
 
             /// <summary>
             ///
             /// </summary>
-            public TimerEngine(IEventProcessingService events, ILogger logger)
+            public TimerEngine(RabbitMQClient rabbitMQ, ILogger logger)
             {
-                this._events = events;
                 this._logger = logger;
+                this._rabbitMQ = rabbitMQ;
                 _RecreateTimersTimer = new Timer(RecreateTimer_Tick, null, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
             }
 
@@ -238,9 +238,10 @@ namespace Sarah.Rules
                 }
             }
 
-            private void recurrence_elapsed(object sender, EventArgs e)
+            private async void recurrence_elapsed(object sender, EventArgs e)
             {
-                _events.PublishTimerEventAsync(new TimerEvent(0, "TimerEngine"));
+                var message = new TimerEventMessage(0);
+                await _rabbitMQ.PublishAsync(message);
             }
 
             /// <summary>

@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Monitoring.Clients;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.API.Interfaces.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,18 @@ builder.Services.AddHttpClient<IRulesServiceClient, RulesServiceClient>(client =
     client.BaseAddress = new Uri(rulesServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+
+// Register RabbitMQ client
+builder.Services.AddSingleton(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<RabbitMQClient>>();
+    return new RabbitMQClient(logger, builder.Configuration);
+});
+
+// Register MonitoringService as a hosted background service
+builder.Services.AddHostedService<Sarah.Monitoring.MonitoringService>();
+builder.Services.AddSingleton<IMonitoringService>(sp => 
+    sp.GetServices<IHostedService>().OfType<Sarah.Monitoring.MonitoringService>().First());
 
 // Add services to the container.
 builder.Services.AddControllers();

@@ -13,10 +13,12 @@ using Sarah.API.Interfaces.Services;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Entities;
 using Sarah.API.Extensions;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(ApplicationDbContext _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
+    internal class BatteryMonitor(ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
@@ -78,7 +80,7 @@ namespace Sarah.Monitoring.Monitors
                 if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
                 UpdateCurrentBatteryStats();
-                RaiseWarningsIfNecessary();
+                await RaiseWarningsIfNecessary();
             }
         }
 
@@ -104,7 +106,7 @@ namespace Sarah.Monitoring.Monitors
             return sbWarnings.ToString();
         }
 
-        private void RaiseWarningsIfNecessary()
+        private async Task RaiseWarningsIfNecessary()
         {
             try
             {
@@ -133,7 +135,7 @@ namespace Sarah.Monitoring.Monitors
                     {
                         sbWarnings.Insert(0, "Achtung, Ladezustand kritisch: " + Environment.NewLine);
                         _logger.LogWarning(sbWarnings.ToString());
-                        _events.PublishSay(new SayEvent(sbWarnings.ToString(), ""));
+                        await _rabbitMQ.PublishAsync(new SayMessage(sbWarnings.ToString(), ""));
                     }
 
                     _lastWarning = DateTime.Now;

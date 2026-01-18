@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 
 namespace Sarah.API.BusinessObjects
 {
@@ -34,10 +34,15 @@ namespace Sarah.API.BusinessObjects
             Rule? r = null;
             if (value?.Any() == true)
             {
-                BinaryFormatter serializer = new BinaryFormatter();
-                using (MemoryStream ms = new MemoryStream(value))
+                try
                 {
-                    r = (Rule)serializer.Deserialize(ms);
+                    string json = Encoding.UTF8.GetString(value);
+                    r = JsonSerializer.Deserialize<Rule>(json);
+                }
+                catch
+                {
+                    // If JSON deserialization fails, return null
+                    r = null;
                 }
             }
             return r;
@@ -45,14 +50,8 @@ namespace Sarah.API.BusinessObjects
 
         public byte[] Serialize()
         {
-            byte[] buffer;
-            BinaryFormatter serializer = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                serializer.Serialize(ms, this);
-                ms.Flush();
-                buffer = ms.ToArray();
-            }
+            string json = JsonSerializer.Serialize(this);
+            byte[] buffer = Encoding.UTF8.GetBytes(json);
             return buffer;
         }
     }

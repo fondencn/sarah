@@ -7,6 +7,8 @@ using Sarah.Monitoring.WebApi.Extensions;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Microsoft.EntityFrameworkCore;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -14,7 +16,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (ApplicationDbContext _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor (ApplicationDbContext _db, IDeviceService _devices, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -85,14 +87,14 @@ namespace Sarah.Monitoring.Monitors
         /// Startet alle Überwachungsfunktionen für Türsensoren
         /// </summary>
         /// <returns></returns>
-        public async Task Start()
+        public Task Start()
         {
             if (!this.IsRunning)
             {
-                await _events.SubscribeNetworkEventAsync(this);
                 _logger.LogDebug("DoorMonitor gestartet.");
                 this.IsRunning = true;
             }
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -140,7 +142,7 @@ namespace Sarah.Monitoring.Monitors
                                     associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
                                 }
 
-                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _events, _devices, this, _weather, _logger));
+                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _db, warnAtOpen, associatedHeatings, _rabbitMQ, _devices, this, _weather, _logger));
                             }
                         }
                         else
@@ -231,7 +233,7 @@ namespace Sarah.Monitoring.Monitors
         private class SurveillanceTask
         {
             private readonly ApplicationDbContext _db;
-            private readonly IEventProcessingService _events;
+            private readonly RabbitMQClient _rabbitMQ;
             private readonly IDeviceService _devices;
             private readonly DoorMonitor _doorMonitor;
             private readonly IWeatherProvider _weather;
@@ -287,10 +289,10 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfoEntity device, TimeSpan sensorThreshold, RoomEntity? room, ApplicationDbContext db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
+            public SurveillanceTask(DeviceInfoEntity device, TimeSpan sensorThreshold, RoomEntity? room, ApplicationDbContext db, bool warnAtOpen, byte[]? associatedHeatings, RabbitMQClient rabbitMQ, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
             {
                 this._db = db;
-                this._events = events;
+                this._rabbitMQ = rabbitMQ;
                 this._devices = devices;
                 this._doorMonitor = doorMonitor;
                 this._weather = weather;
@@ -342,7 +344,7 @@ namespace Sarah.Monitoring.Monitors
                 {
                     if (this.WarnAtOpen && isInitialLoop)
                     {
-                        await _events.PublishSay(new SayEvent(artikel + " " + this.Device.Name + " wurde geöffnet."));
+                        await _rabbitMQ.PublishAsync(new SayMessage(artikel + " " + this.Device.Name + " wurde geöffnet."));
                         isInitialLoop = false;
                     }
 
@@ -477,12 +479,12 @@ namespace Sarah.Monitoring.Monitors
                                 if (DoorMonitor.WarnLouderNodeIds.Contains(this.Device.NodeID))
                                 {
                                     /* Bei der Haustüre Lautere Sprachausgabe */
-                                    await _events.PublishSay(new SayEvent(sayMsg, vol: SpeechVolume.VeryLoud));
+                                    await _rabbitMQ.PublishAsync(new SayMessage(sayMsg, "", Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud));
                                 } 
                                 else 
                                 {
                                     /* Normale Sprachausgabe */
-                                    await _events.PublishSay(new SayEvent(sayMsg));
+                                    await _rabbitMQ.PublishAsync(new SayMessage(sayMsg));
                                 }
                             }
                         }
@@ -541,7 +543,7 @@ namespace Sarah.Monitoring.Monitors
                                 + String.Join(" und ", heatingMsg);
                         }
 
-                        await _events.PublishSay(new SayEvent(sayMsg));
+                        await _rabbitMQ.PublishAsync(new SayMessage(sayMsg));
 
                         //Ende der Taskausführung!
                         break;

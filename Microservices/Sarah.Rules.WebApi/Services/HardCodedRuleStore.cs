@@ -5,6 +5,7 @@ using Sarah.Rules.Actions;
 using Sarah.Rules.Clients;
 using Sarah.Rules.Conditions;
 using Microsoft.Extensions.Logging;
+using Sarah.Messaging.RabbitMQ;
 
 namespace Sarah.Rules
 {
@@ -13,7 +14,7 @@ namespace Sarah.Rules
     /// </summary>
     public class HardCodedRuleStore : IRuleStore
     {
-        private readonly IEventProcessingService _events;
+        private readonly RabbitMQClient _rabbitMQ;
         private readonly IDeviceService _devices;
         private readonly IPersonService _persons;
         private readonly IEmailNotifier _emails;
@@ -27,10 +28,10 @@ namespace Sarah.Rules
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, IEventProcessingService events, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient, ILogger<HardCodedRuleStore> logger)
+        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient, ILogger<HardCodedRuleStore> logger)
         {
             this._logger = logger;
-            this._events= events;
+            this._rabbitMQ = rabbitMQ;
             this._devices = devices;
             this._weather = weather;
             this._persons = persons;
@@ -88,19 +89,19 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new TrackerButtonPressedCondition(247, _devices),
-                Action = new SayAction("Warnung: Lukas hat den SOS Knopf seines Trackers gedrückt.", _events),
+                Action = new SayAction("Warnung: Lukas hat den SOS Knopf seines Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 247 gedrückt wurde"
             });
             this._rules.Add(new Rule()
             {
                 Condition = new TrackerButtonPressedCondition(246, _devices),
-                Action = new SayAction("Warnung: Christian hat den SOS Knopf seines Trackers gedrückt.", _events),
+                Action = new SayAction("Warnung: Christian hat den SOS Knopf seines Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 246 gedrückt wurde"
             });
             this._rules.Add(new Rule()
             {
                 Condition = new TrackerButtonPressedCondition(245, _devices),
-                Action = new SayAction("Warnung: Hannah hat den SOSKnopf ihres Trackers gedrückt.", _events),
+                Action = new SayAction("Warnung: Hannah hat den SOSKnopf ihres Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 245 gedrückt wurde"
             });
         }
@@ -169,7 +170,7 @@ namespace Sarah.Rules
                     new DoorSensorCondition(2, _devices) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
                         new SendMailAction("c.fonden@die-rooter.de", "Tür Arbeitszimmer offen", "Die Türe im Arbeitszimmer wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
-                        new SayAction("Die Türe im Arbeitszimmer ist offen, obwohl keine bekannte Person daheim ist.", _events)
+                        new SayAction("Die Türe im Arbeitszimmer ist offen, obwohl keine bekannte Person daheim ist.", _rabbitMQ)
                     ),
                 Name = "Email an c.fonden@die-rooter.de wenn Terassentür im Arbeitszimmer offen und keiner zu Hause"
             });
@@ -180,8 +181,8 @@ namespace Sarah.Rules
                     new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
                         new SendMailAction("c.fonden@die-rooter.de;h.fonden@die-rooter.de", "Tür Haustüre offen", "Die Haustüre wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
-                        new SayAction("Die die Haustüre ist offen, obwohl keine bekannte Person daheim ist. Alarm wird ausgelöst und Kamer wird aktiviert. Bilder werden an die Cloud übertragen.", _events, SpeechVolume.VeryLoud), 
-                        new StartAudioAction("alert1.wav", "", _events),
+                        new SayAction("Die die Haustüre ist offen, obwohl keine bekannte Person daheim ist. Alarm wird ausgelöst und Kamer wird aktiviert. Bilder werden an die Cloud übertragen.", _rabbitMQ, Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud), 
+                        new StartAudioAction("alert1.wav", "", _rabbitMQ),
                         new StartSceneAction("RedAlert", _deviceServiceClient)
                     ),
                 Name = "Roter Alarm und Email an c.fonden@die-rooter.de;h.fonden@die-rooter.de wenn die Haustüre offen und keiner zu Hause ist"
@@ -195,7 +196,7 @@ namespace Sarah.Rules
                     new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Geschlossen }),
                 Action =  new CombinedAction(
                     new StopSceneAction("RedAlert", _deviceServiceClient),
-                    new StopAudioAction("", _events)
+                    new StopAudioAction("", _rabbitMQ)
                 ),
                 Name = "Roten Alarm anhalten wenn Haustüre geschlossen"
             });
@@ -217,7 +218,7 @@ namespace Sarah.Rules
                 Condition = new CombinedCondition(13, ConditionOperator.AND,
                     new PredicateCondition(13, id => DateTime.Now.Hour >= 7 && DateTime.Now.Hour < 10),
                     new PresenceCondition(13, true, _devices)),
-                Action = new SayOnceAction(CreateGreetingStringExpr("Christian"), "speaker1", _events, TimeSpan.FromHours(23)),
+                Action = new SayOnceAction(CreateGreetingStringExpr("Christian"), "speaker1", _rabbitMQ, TimeSpan.FromHours(23)),
                 Name = "Morgens Guten morgen sagen wenn jemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
@@ -255,13 +256,13 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new WallPlugPowerOffCondition(251, _devices),
-                Action =  new SayAction("Der Wäschetrockner ist fertig.", _events),
+                Action =  new SayAction("Der Wäschetrockner ist fertig.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Leistung an Node 251 (Trockner) abfällt"
             });
             this._rules.Add(new Rule()
             {
                 Condition = new WallPlugPowerOffCondition(252, _devices),
-                Action = new SayAction("Die Waschmaschine ist fertig.", _events),
+                Action = new SayAction("Die Waschmaschine ist fertig.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Leistung an Node 252 (Waschmaschine) abfällt"
             });
             //this._rules.Add(new Rule()
@@ -282,7 +283,7 @@ namespace Sarah.Rules
                 Action = new CombinedAction(
                     //new SendMailAction("c.fonden@die-rooter.de", "☕ Kaffee ist fertig", "Die Steckdose der Kaffeemaschine meldet, dass die Leistung abgefallen ist."),
                     new WallPlugOffAction(20, _devices),
-                    new SayAction("Der Kaffee ist fertig.", _events)
+                    new SayAction("Der Kaffee ist fertig.", _rabbitMQ)
                     ),
                 Name = "Kaffeemaschine: Sprachausgabe und Node 20 ausschalten, wenn Leistung an Node 20 abfällt"
             });
@@ -307,7 +308,7 @@ namespace Sarah.Rules
                         new PersonPresenceChangedCondition("Christian", true)),
                 Action = new CombinedAction(
                     new WallPlugOnAction(20, _devices),
-                    new SayAction("Hallo Christian, ich schalte die Kaffeemaschine ein.", _events)
+                    new SayAction("Hallo Christian, ich schalte die Kaffeemaschine ein.", _rabbitMQ)
                     ),
                 Name = "Kaffeemaschine (Steckdose 20) einschalten wenn Christian nach Hause kommt (zwischen 7 und 11 Uhr)"
             });
@@ -318,7 +319,7 @@ namespace Sarah.Rules
                     new AirQualityCondition(31),  // Stinksensor arbeitszimmer
                     new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
                     ),
-                Action = new SayAirQualityAction(31, "", _events),
+                Action = new SayAirQualityAction(31, "", _rabbitMQ),
                 Name = "Luftqualität Stinksensor Sprachausgabe Arbeitszimmer (nur dort)"
             }); ;
 
@@ -329,7 +330,7 @@ namespace Sarah.Rules
                 (
                     new SendMailAction("c.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!!!", _emails, _logger),
                     new SendMailAction("h.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!", _emails, _logger),
-                    new SayAction("Achtung, Rauchmelder 38 meldet Feueralarm!", _events)
+                    new SayAction("Achtung, Rauchmelder 38 meldet Feueralarm!", _rabbitMQ)
                 ),
                 Name = "E-Mail bei Feueralarm Node 38"
             });
@@ -356,7 +357,7 @@ namespace Sarah.Rules
                     {
                         text = $"{evt.PersonName} ist nun unterwegs";
                     }
-                    _events.PublishSay(new SayEvent(text));
+                    _rabbitMQ.PublishAsync(new Sarah.Messaging.RabbitMQ.Messages.SayMessage(text)).Wait();
                 }, _logger),
                 Name = "Sprachausgabe beim betreten oder verlassen eines GeoFence-Bereichs"
             });
@@ -448,7 +449,7 @@ namespace Sarah.Rules
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 12, Minute = 0, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
                 Action = new CombinedAction(
                     new SetLampColorAndBrightnessAction(14, 255, "#FF0000", _devices, _logger),
-                    new SayAction("Es ist Zeit für die Mittagspause.", "speaker1", _events)
+                    new SayAction("Es ist Zeit für die Mittagspause.", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung an Mittagspause"
             });
@@ -463,7 +464,7 @@ namespace Sarah.Rules
                     ),
                 Action = new CombinedAction(
                     new SetLampColorAndBrightnessAction(14, 0, "#FFFFFF", _devices, _logger),
-                    new SayAction("Es ist Zeit zum weiter arbeiten", "speaker1", _events)
+                    new SayAction("Es ist Zeit zum weiter arbeiten", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung an Ende der Mittagspause"
             });
@@ -476,7 +477,7 @@ namespace Sarah.Rules
                     ),
                 Action = new CombinedAction(
                     new SetLampColorAndBrightnessAction(14, 255, "#0000FF", _devices, _logger),
-                    new SayAction("Es ist Zeit fürs Daily", "speaker1", _events)
+                    new SayAction("Es ist Zeit fürs Daily", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung Daily 8:00"
             });
@@ -489,7 +490,7 @@ namespace Sarah.Rules
                     ),
                 Action = new CombinedAction(
                     new SetLampColorAndBrightnessAction(14, 255, "00FF00", _devices, _logger),
-                    new SayAction("Das Daily sollte nun zu Ende sein!", "speaker1", _events)
+                    new SayAction("Das Daily sollte nun zu Ende sein!", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung Daily 8:20"
             });
