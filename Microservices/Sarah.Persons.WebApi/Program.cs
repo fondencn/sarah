@@ -31,6 +31,14 @@ builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Register HTTP client for GeoFence Service communication
+builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
+{
+    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice:5003";
+    client.BaseAddress = new Uri(geofenceServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 

@@ -222,30 +222,6 @@ services:
     networks:
       - sarah-network
 
-  eventprocessingservice:
-    build:
-      context: .
-      dockerfile: Microservices/Sarah.EventProcessing.WebApi/Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
-      - Jwt__Audience=account
-      - RabbitMQ__HostName=rabbitmq
-      - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=${RABBITMQ_USER:-guest}
-      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-guest}
-      - ConnectionStrings__DefaultConnection=Host=postgres-events;Database=eventsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "5004:8080"
-    depends_on:
-      postgres-events:
-        condition: service_healthy
-      keycloak:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - sarah-network
 
   monitoringservice:
     build:
@@ -297,20 +273,6 @@ services:
     networks:
       - sarah-network
 
-  locationserver:
-    build:
-      context: .
-      dockerfile: Dockerfile.sarah-location-server
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
-      - Jwt__Audience=account
-    ports:
-      - "5010:8080"
-    depends_on:
-      - keycloak
-    networks:
-      - sarah-network
 
   speechserver:
     build:

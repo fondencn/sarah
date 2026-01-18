@@ -16,6 +16,7 @@
     <ProjectReference Include="../../Libs/Sarah.DeviceServiceClient/Sarah.DeviceServiceClient.csproj" />
     <ProjectReference Include="../../Libs/Sarah.LEDService/Sarah.LEDService.csproj" />
     <ProjectReference Include="../../Libs/Sarah.Voice/Sarah.Voice.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.Messaging.RabbitMQ\Sarah.Messaging.RabbitMQ.csproj" />
   </ItemGroup>
 
 </Project>

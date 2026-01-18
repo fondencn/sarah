@@ -6,22 +6,13 @@ var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithLifetime(ContainerLifetime.Persistent);
 
 // Add RabbitMQ message broker
-var rabbitmq = builder.AddRabbitMQ("rabbitmq",
-              userName: builder.AddParameter("username", "guest", secret: true),
-              password: builder.AddParameter("password", "guest", secret: true))
-    .WithManagementPlugin()
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .PublishAsConnectionString();
+var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
-var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent);
+var postgres = builder.AddPostgres("postgres");
 
 var postgresDevices = postgres.AddDatabase("devicesdb");
 var postgresPersons = postgres.AddDatabase("personsdb");
-var postgresEvents = postgres.AddDatabase("eventsdb");
 var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
 
@@ -40,12 +31,6 @@ var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personss
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
-    .WithReference(keycloak)
-    .WithReference(rabbitmq);
-
-var eventProcessingService = builder.AddProject<Projects.Sarah_EventProcessing_WebApi>("eventprocessing")
-    .WithHttpsEndpoint(port: 5004, env: "ASPNETCORE_HTTPS_PORT")
-    .WithReference(postgresEvents, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq);
 

@@ -13,11 +13,4 @@ public static class WebAppExtensions
         var location = config["Location"] ?? "default-location";
         speechService.Initialize(location, true, true);
     }
-    public static Task UseSpeechEvents(this WebApplication app)
-    {
-        if (app == null) throw new ArgumentNullException(nameof(app));
-
-        var subscriber = app.Services.GetRequiredService<SpeechEventSubscriber>();
-        return subscriber.Initialize();
-    }
 }

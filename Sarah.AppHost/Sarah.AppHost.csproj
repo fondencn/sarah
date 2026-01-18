@@ -22,7 +22,7 @@
     <ProjectReference Include="..\Microservices\Sarah.DeviceService.WebApi\Sarah.DeviceService.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Persons.WebApi\Sarah.Persons.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Geofences.WebApi\Sarah.Geofences.WebApi.csproj" />
-    <ProjectReference Include="..\Microservices\Sarah.EventProcessing.WebApi\Sarah.EventProcessing.WebApi.csproj" />
+    
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />

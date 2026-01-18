@@ -18,20 +18,5 @@ namespace Sarah.API.Interfaces
         double? AverageTemperatureNext4Hours { get; }
     }
 
-    public class OutDoorTemperatureChangedEvent : NetworkEvent<double>
-    {
-        public OutDoorTemperatureChangedEvent(double newVal) : base(0, newVal, "OutDoorTemperature")
-        {
-        }
-    }
-
-    public class WeatherWarningEvent : NetworkEvent<string>
-    {
-        public WeatherWarningEvent(string newVal) : base(0, newVal, "WeatherWarning")
-        {
-        }
-    }
-
-
 
 }

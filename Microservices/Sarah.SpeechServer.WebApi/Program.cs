@@ -6,6 +6,7 @@ using Sarah.SpeechServer.Extensions;
 using Sarah.Voice;
 using Sarah.Voice.DeviceApi;
 using Services.Sarah.API.Interfaces.Service;
+using Sarah.Messaging.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
 builder.Services.AddSingleton<IDeviceServiceClient, DeviceServiceClient>();
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
-builder.Services.AddSingleton<SpeechEventSubscriber>();
+
+// Register RabbitMQ client and speech event subscriber
+builder.Services.AddSingleton<RabbitMQClient>();
+builder.Services.AddHostedService<SpeechEventSubscriber>();
 
 var app = builder.Build();
 
@@ -33,11 +37,6 @@ app.MapOpenApi();
 app.MapControllers();
 app.UseHttpsRedirection();
 app.UseSpeechService(app.Configuration);
-
-// Start the event processing service to establish RabbitMQ connection
-await app.Services.GetRequiredService<IEventProcessingService>().Start();
-
-await app.UseSpeechEvents();
 
 app.Run();
 

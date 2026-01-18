@@ -177,4 +177,30 @@ namespace Sarah.API.BusinessObjects
 
         public string TargetSpeaker { get; }
     }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn sich die Außentemperatur ändert
+    /// </summary>
+    public class OutDoorTemperatureChangedEvent : NetworkEvent
+    {
+        public OutDoorTemperatureChangedEvent(double newVal) : base(0, "OutDoorTemperatureChanged")
+        {
+            this.NewValue = newVal;
+        }
+
+        public double NewValue { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Wetterwarnung vorliegt
+    /// </summary>
+    public class WeatherWarningEvent : NetworkEvent
+    {
+        public WeatherWarningEvent(string newVal) : base(0, "WeatherWarning")
+        {
+            this.NewValue = newVal;
+        }
+
+        public string NewValue { get; }
+    }
 }
