@@ -25,7 +25,6 @@
     <ProjectReference Include="..\Microservices\Sarah.EventProcessing.WebApi\Sarah.EventProcessing.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
-    <ProjectReference Include="..\Microservices\Sarah.LocationServer.WebApi\Sarah.LocationServer.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />
     <ProjectReference Include="..\sarah.client\sarah.client.esproj" />
   </ItemGroup>
