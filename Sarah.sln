@@ -39,8 +39,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Authentication", "Lib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeechServer.WebApi", "Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj", "{BB77C29C-2713-48BE-AFB5-C82892C7D439}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Data", "Libs\Sarah.Data\Sarah.Data.csproj", "{7C0BA868-623C-4935-91C7-8B0B40E8BF04}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -241,18 +239,6 @@ Global
 		{BB77C29C-2713-48BE-AFB5-C82892C7D439}.Release|x64.Build.0 = Release|Any CPU
 		{BB77C29C-2713-48BE-AFB5-C82892C7D439}.Release|x86.ActiveCfg = Release|Any CPU
 		{BB77C29C-2713-48BE-AFB5-C82892C7D439}.Release|x86.Build.0 = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|x64.Build.0 = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Debug|x86.Build.0 = Debug|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|x64.ActiveCfg = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|x64.Build.0 = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|x86.ActiveCfg = Release|Any CPU
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -272,7 +258,6 @@ Global
 		{BB6FAE1E-F8D3-47AA-AE1B-7E093EC70F7B} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{5070256A-C750-4DE6-94DD-275A8C3946DF} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 		{BB77C29C-2713-48BE-AFB5-C82892C7D439} = {8A367DDA-5161-A942-4F09-60E4726C9306}
-		{7C0BA868-623C-4935-91C7-8B0B40E8BF04} = {281BBB2C-AE79-43DB-8D7D-C80A831A4B40}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B8296C09-7EB1-4CE8-9FF5-E182F5BB833A}

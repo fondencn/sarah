@@ -3,10 +3,11 @@ using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
+using Sarah.Monitoring.WebApi.Data;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IDBService _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory) : IMonitoringService
+public class MonitoringService (ApplicationDbContext _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory) : IMonitoringService
 {
     private  IMonitor[] Monitors {get; set;} = Array.Empty<IMonitor>();
 

@@ -7,24 +7,26 @@ using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Data.Models;
+using Sarah.Persons.WebApi.Data;
+using Sarah.Persons.WebApi.Data.Entities;
+using Sarah.Persons.WebApi.Clients;
 
-namespace Sarah.Persons
+namespace Sarah.Persons.WebApi.Services
 {
     public class PersonService : IPersonService
     {
         private readonly ILogger<PersonService> _logger;
-        private readonly IDBService _database;
-        private readonly IDeviceService _devices;
+        private readonly ApplicationDbContext _database;
+        private readonly IDeviceServiceClient _deviceServiceClient;
         private readonly IGeoFenceService _geoFenceService;
         private readonly IConfiguration _config;
         private readonly HomeNetworkService _homeNetworkService;
 
-        public PersonService(ILogger<PersonService> logger, IDBService database, IDeviceService deviceService, IGeoFenceService geoFenceService, IConfiguration config, HomeNetworkService homenet)
+        public PersonService(ILogger<PersonService> logger, ApplicationDbContext database, IDeviceServiceClient deviceServiceClient, IGeoFenceService geoFenceService, IConfiguration config, HomeNetworkService homenet)
         {
             _logger = logger;
             _database = database;
-            _devices = deviceService;
+            _deviceServiceClient = deviceServiceClient;
             _geoFenceService = geoFenceService;
             _config = config;
             _homeNetworkService = homenet;
@@ -65,10 +67,16 @@ namespace Sarah.Persons
             throw new ArgumentNullException(nameof(person));
             }
 
-            var personEntity = person as  PersonInfo;
+            var personEntity = person as PersonInfoEntity;
             if(personEntity == null) 
             {
-                throw new ArgumentException("Person is not of type PersonInfo", nameof(person));
+                // Create from interface
+                personEntity = new PersonInfoEntity
+                {
+                    Name = person.Name,
+                    GPSTrackerID = person.GPSTrackerID,
+                    MobilePhoneHostname = person.MobilePhoneHostname
+                };
             }
 
             await _database.Persons.AddAsync(personEntity);
@@ -115,25 +123,25 @@ namespace Sarah.Persons
             _logger.LogInformation("Person {PersonName} updated successfully.", person.Name);
         }
 
-        public async Task <string[]> GetMobilePhones()
+        public async Task<string[]> GetMobilePhones()
         {
             await _homeNetworkService.Initialize(this._config);
             return _homeNetworkService.KnownHosts?
-                .Where (item => item.IsConnected)
+                .Where(item => item.IsConnected)
                 .Select(item => item.Hostname).ToArray() ?? [];
         }
 
-        private async Task LoadLocationInfos(PersonInfo p)
+        private async Task LoadLocationInfos(PersonInfoEntity p)
         {
-            // Aktuelle GPS Tracker Position laden
+            // Load current GPS Tracker position
             if(p.GPSTrackerID > 0) 
             {
-               // var device = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID ==  p.GPSTrackerID);
-                var device = await _database.Devices.FirstOrDefaultAsync(item => item.Id == p.GPSTrackerID);
-                p.TrackerDeviceName = device?.Name??"";
+                // Call DeviceService via HTTP to get device info
+                var device = await _deviceServiceClient.GetDeviceByIdAsync(p.GPSTrackerID);
+                p.TrackerDeviceName = device?.Name ?? "";
             }
 
-            // Prüfen ob Mobiltelefon der Person zu Hause ist
+            // Check if person's mobile phone is at home
             if(p.MobilePhoneHostname != null) 
             {
                 var device = _homeNetworkService.KnownHosts?.FirstOrDefault(item => item.Hostname == p.MobilePhoneHostname);
@@ -142,12 +150,20 @@ namespace Sarah.Persons
                     p.IsAtHome = device.IsConnected;
                 }
 
-                var trackerDevice = _devices.GPSTrackers.FirstOrDefault(item => item.NodeID == p.GPSTrackerID);
-                if(trackerDevice != null) 
+                // Check GPS tracker position via DeviceService
+                if (p.GPSTrackerID != 0)
                 {
-                    var geofence = _geoFenceService.GetCurrent(trackerDevice.Position);
-                    p.IsAtHome |=  geofence== _geoFenceService.GetZuhause();
-                    p.CurrentGeoFence = geofence;   
+                    var trackerDevice = await _deviceServiceClient.GetGpsTrackerByNodeIdAsync(p.GPSTrackerID);
+                    if (trackerDevice?.Position != null && trackerDevice.Position.IsValid)
+                    {
+                        var position = new Sarah.API.BusinessObjects.LocatorPosition(
+                            new Sarah.API.Business.SensorData(trackerDevice.Position.Longitude, "°"),
+                            new Sarah.API.Business.SensorData(trackerDevice.Position.Latitude, "°"));
+                        
+                        var geofence = _geoFenceService.GetCurrent(position);
+                        p.IsAtHome |= geofence == _geoFenceService.GetZuhause();
+                        p.CurrentGeoFence = geofence;
+                    }
                 }
             }
         }

@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Ical.Net" Version="4.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
@@ -17,7 +18,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\Sarah.API\Sarah.API.csproj" />
-    <ProjectReference Include="..\..\Libs\Sarah.Data\Sarah.Data.csproj" />
     <ProjectReference Include="..\..\Libs\Sarah.Authentication\Sarah.Authentication.csproj" />
   </ItemGroup>
 </Project>

@@ -8,7 +8,9 @@ using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Service;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
+using Sarah.Monitoring.WebApi.Extensions;
 using Sarah.API.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +22,12 @@ namespace Sarah.Monitoring.Monitors
     /// </summary>
     internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
-        private readonly IDBService _db;
+        private readonly ApplicationDbContext _db;
         private readonly IEventProcessingService _events;
         private readonly IDeviceService _devices;
         private readonly ILogger<AirQualityMonitor> _logger;
 
-        public AirQualityMonitor(IDBService db, IEventProcessingService events, IDeviceService devices, ILogger<AirQualityMonitor> logger)
+        public AirQualityMonitor(ApplicationDbContext db, IEventProcessingService events, IDeviceService devices, ILogger<AirQualityMonitor> logger)
         {
             _db = db;
             _events = events;
@@ -84,7 +86,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceInfo? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
+                DeviceInfoEntity? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
 
                 if (device != null)
                 {
@@ -93,7 +95,7 @@ namespace Sarah.Monitoring.Monitors
                     if (sensor != null
                         && IsRelevantProperty(e.Property))
                     {
-                        Room? room;
+                        RoomEntity? room;
                         if (device.Id_Room.HasValue)
                         {
                             room = await _db.Rooms.FindAsync(device.Id_Room);
@@ -186,12 +188,12 @@ namespace Sarah.Monitoring.Monitors
             private readonly IEventProcessingService _events;
             private readonly ILogger<AirQualityMonitor> _logger;
 
-            public DeviceInfo Device { get; private set; }
-            public Room? Room { get; private set; }
+            public DeviceInfoEntity Device { get; private set; }
+            public RoomEntity? Room { get; private set; }
             private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
             private Task? Task { get; set; }
 
-            public SurveillanceTask(DeviceInfo device, Room? room, IDeviceService devices, IEventProcessingService events, ILogger<AirQualityMonitor> logger)
+            public SurveillanceTask(DeviceInfoEntity device, RoomEntity? room, IDeviceService devices, IEventProcessingService events, ILogger<AirQualityMonitor> logger)
             {
                 this._devices = devices;
                 this._events = events;

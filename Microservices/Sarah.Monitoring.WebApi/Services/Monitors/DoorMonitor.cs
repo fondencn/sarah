@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
+using Sarah.Monitoring.WebApi.Extensions;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +14,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IDBService _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor (ApplicationDbContext _db, IEventProcessingService _events, IDeviceService _devices, IWeatherProvider _weather, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -101,7 +103,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceInfo? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID  ==(long)changedNodeId);
+                DeviceInfoEntity? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID  ==(long)changedNodeId);
 
                 if (device != null)
                 {
@@ -121,7 +123,7 @@ namespace Sarah.Monitoring.Monitors
                             if (!this.CurrentOpenDoorTasks.Any(task => task.Device.NodeID == changedNodeId)
                                 && sensor.LastStateChanged.HasValue)
                             {
-                                Room? room;
+                                RoomEntity? room;
                                 if (device.Id_Room.HasValue)
                                 {
                                     room = await _db.Rooms.FindAsync(device.Id_Room);
@@ -228,7 +230,7 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         private class SurveillanceTask
         {
-            private readonly IDBService _db;
+            private readonly ApplicationDbContext _db;
             private readonly IEventProcessingService _events;
             private readonly IDeviceService _devices;
             private readonly DoorMonitor _doorMonitor;
@@ -238,12 +240,12 @@ namespace Sarah.Monitoring.Monitors
             /// <summary>
             /// Der Türsensor
             /// </summary>
-            public DeviceInfo Device { get; private set; }
+            public DeviceInfoEntity Device { get; private set; }
 
             /// <summary>
             /// zugeordneter Raum
             /// </summary>
-            public Room? Room { get; private set; }
+            public RoomEntity? Room { get; private set; }
 
             /// <summary>
             /// start-Zeit, ab wann gewarnt werden soll
@@ -285,7 +287,7 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceInfo device, TimeSpan sensorThreshold, Room? room, IDBService db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
+            public SurveillanceTask(DeviceInfoEntity device, TimeSpan sensorThreshold, RoomEntity? room, ApplicationDbContext db, bool warnAtOpen, byte[]? associatedHeatings, IEventProcessingService events, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
             {
                 this._db = db;
                 this._events = events;
@@ -500,11 +502,11 @@ namespace Sarah.Monitoring.Monitors
                         /* Wenn die gekoppelte Heizung bei öffnen an war, dann jetzt wieder einschalten */
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            List<DeviceInfo> heatingdeviceInfos = _db.Devices
+                            List<DeviceInfoEntity> heatingdeviceInfos = _db.Devices
                                 .ToList()
                                 .Where(d => this.AssociatedHeatings?.Contains(d.NodeID) == true)
                                 .ToList();
-                            List<Room> rooms = _db.Rooms
+                            List<RoomEntity> rooms = _db.Rooms
                                 .ToList()
                                 .Where(r => heatingdeviceInfos.Any(d => d.Id_Room == r.Id))
                                 .ToList();
@@ -512,8 +514,8 @@ namespace Sarah.Monitoring.Monitors
                             List<string> heatingMsg = new List<string>();
                             foreach(var origTemp in this.OriginalHeatingTemperatures)
                             {
-                                DeviceInfo heating = heatingdeviceInfos.First(item => item.NodeID == origTemp.Key);
-                                Room room = rooms.First(item => item.Id == heating.Id_Room);
+                                DeviceInfoEntity heating = heatingdeviceInfos.First(item => item.NodeID == origTemp.Key);
+                                RoomEntity room = rooms.First(item => item.Id == heating.Id_Room);
 
                                 bool isAnotherWindowOpen = _doorMonitor.GetWindowTrackingsForHeating(origTemp.Key)
                                     .Any(item => item.Device.Id != this.Device.Id);

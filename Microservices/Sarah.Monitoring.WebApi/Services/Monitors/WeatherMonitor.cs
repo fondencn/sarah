@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Sarah.Monitoring.BusinessObjects.OpenWeather.CurrentWeather;
 using Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace Sarah.Monitoring.Monitors
 {

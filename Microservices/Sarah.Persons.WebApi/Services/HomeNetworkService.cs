@@ -3,7 +3,7 @@ using PS.FritzBox.API.LANDevice;
 using System.Configuration;
 using Microsoft.Extensions.Configuration;
 
-namespace Sarah.Persons
+namespace Sarah.Persons.WebApi.Services
 {
     public class HomeNetworkService
     {

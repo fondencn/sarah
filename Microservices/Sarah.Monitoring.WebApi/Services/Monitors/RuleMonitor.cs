@@ -3,7 +3,8 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
 using Microsoft.Extensions.Logging;
 // using Sarah.Rules.Actions;
 // using Sarah.Rules.Conditions;
@@ -19,13 +20,13 @@ namespace Sarah.Monitoring.Monitors
         private readonly IRuleService _ruleService;
         private readonly IFerienInfoProvider _ferien;
         private readonly IEventProcessingService _events;
-        private readonly IDBService _db;
+        private readonly ApplicationDbContext _db;
         private readonly IDeviceService _devices;
         private readonly IDoorMonitor _doors;
         private readonly IWeatherProvider _weather;
         private readonly ILogger<RuleMonitor> _logger;
 
-        public RuleMonitor(IRuleService ruleService, IFerienInfoProvider ferien, IEventProcessingService events, IDBService db, IDeviceService devices, IDoorMonitor doors, IWeatherProvider weather, ILogger<RuleMonitor> logger)
+        public RuleMonitor(IRuleService ruleService, IFerienInfoProvider ferien, IEventProcessingService events, ApplicationDbContext db, IDeviceService devices, IDoorMonitor doors, IWeatherProvider weather, ILogger<RuleMonitor> logger)
         {
             _ruleService = ruleService;
             _ferien = ferien;

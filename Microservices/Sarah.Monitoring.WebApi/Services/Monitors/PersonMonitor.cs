@@ -2,12 +2,13 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor(IDBService _db, IEventProcessingService _events, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
+    public class PersonMonitor(ApplicationDbContext _db, IEventProcessingService _events, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 
@@ -59,7 +60,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                foreach (PersonInfo person in _db.Persons)
+                foreach (PersonInfoEntity person in _db.Persons)
                 {
                     if (person != null)
                     {
