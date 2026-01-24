@@ -12,7 +12,6 @@ public class ApplicationDbContext : DbContext
     
     // New schema-aligned entities from Sarah.Data migration
     public DbSet<DeviceInfoEntity> Devices { get; set; } = null!;
-    public DbSet<RoomEntity> Rooms { get; set; } = null!;
     public DbSet<DeviceTraceEntity> Traces { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,12 +30,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<DeviceInfoEntity>(entity =>
         {
             entity.ToTable("Devices");
-            entity.HasKey(e => e.Id);
-        });
-        
-        modelBuilder.Entity<RoomEntity>(entity =>
-        {
-            entity.ToTable("Rooms");
             entity.HasKey(e => e.Id);
         });
         

@@ -15,6 +15,7 @@ var postgresDevices = postgres.AddDatabase("devicesdb");
 var postgresPersons = postgres.AddDatabase("personsdb");
 var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
+var postgresRooms = postgres.AddDatabase("roomsdb");
 
 // Add microservices with their dependencies
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
@@ -33,6 +34,11 @@ var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geof
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
     .WithReference(rabbitmq);
+
+var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
+    .WithHttpsEndpoint(port: 5004, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(postgresRooms, "PostgresConnection")
+    .WithReference(keycloak);
 
 var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("monitoringservice")
     .WithHttpsEndpoint(port: 5005, env: "ASPNETCORE_HTTPS_PORT")
