@@ -10,12 +10,15 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
 using Sarah.API.Extensions;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(IDBService _db, IDeviceService _devices, IEventProcessingService _events, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
+    internal class BatteryMonitor(ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
@@ -77,7 +80,7 @@ namespace Sarah.Monitoring.Monitors
                 if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
                 UpdateCurrentBatteryStats();
-                RaiseWarningsIfNecessary();
+                await RaiseWarningsIfNecessary();
             }
         }
 
@@ -103,7 +106,7 @@ namespace Sarah.Monitoring.Monitors
             return sbWarnings.ToString();
         }
 
-        private void RaiseWarningsIfNecessary()
+        private async Task RaiseWarningsIfNecessary()
         {
             try
             {
@@ -132,7 +135,7 @@ namespace Sarah.Monitoring.Monitors
                     {
                         sbWarnings.Insert(0, "Achtung, Ladezustand kritisch: " + Environment.NewLine);
                         _logger.LogWarning(sbWarnings.ToString());
-                        _events.PublishSay(new SayEvent(sbWarnings.ToString(), ""));
+                        await _rabbitMQ.PublishAsync(new SayMessage(sbWarnings.ToString(), ""));
                     }
 
                     _lastWarning = DateTime.Now;
@@ -160,8 +163,8 @@ namespace Sarah.Monitoring.Monitors
                         if (!object.ReferenceEquals(sensor, null) && !object.ReferenceEquals(sensor.Battery, null))
                         {
                             float batteryPercentage = (sensor?.Battery?.Value).GetValueOrDefault();
-                            DeviceInfo? device = deviceInfos.FirstOrDefault(item => item.NodeID == sensor!.NodeID);
-                            Room? room = device != null ?  roomInfos.FirstOrDefault(item => item.Id == device.Id_Room) : null;
+                            DeviceInfoEntity? device = deviceInfos.FirstOrDefault(item => item.NodeID == sensor!.NodeID);
+                            RoomEntity? room = device != null ?  roomInfos.FirstOrDefault(item => item.Id == device.Id_Room) : null;
                             this.CurrentBatteryInfos.Add(new BatteryInfo(sensor!.NodeID, device?.Name + (room != null ? " im " + room.Name : String.Empty), batteryPercentage));
                         }
                     }

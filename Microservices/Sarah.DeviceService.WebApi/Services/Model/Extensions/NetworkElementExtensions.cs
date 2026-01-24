@@ -7,11 +7,54 @@ using System.Threading.Tasks;
 using ZWave;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces.Services;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.DeviceService.Model.Extensions
 {
     public static class NetworkElementExtensions
     {
+        /// <summary>
+        /// Reports a network event for this element by publishing a NetworkEventMessage to RabbitMQ
+        /// </summary>
+        /// <typeparam name="TValue">Type of the value</typeparam>
+        /// <param name="element">The network element</param>
+        /// <param name="rabbitMQ">RabbitMQ client instance</param>
+        /// <param name="propertyName">Name of the changed property</param>
+        /// <param name="newValue">The new value</param>
+        /// <returns>Task</returns>
+        public static async Task ReportEvent<TValue>(
+            this NetworkElement element, 
+            RabbitMQClient rabbitMQ, 
+            string propertyName, 
+            TValue? newValue)
+        {
+            var message = new NetworkEventMessage<TValue>
+            {
+                SourceNodeId = element.NodeID,
+                Property = propertyName,
+                NewValue = newValue
+            };
+
+            await rabbitMQ.PublishAsync(message);
+        }
+
+        /// <summary>
+        /// Reports a network event without a value
+        /// </summary>
+        /// <param name="element">The network element</param>
+        /// <param name="rabbitMQ">RabbitMQ client instance</param>
+        /// <param name="propertyName">Name of the changed property</param>
+        /// <returns>Task</returns>
+        public static async Task ReportEvent(
+            this NetworkElement element, 
+            RabbitMQClient rabbitMQ, 
+            string propertyName)
+        {
+            await element.ReportEvent<object>(rabbitMQ, propertyName, null);
+        }
+
+
         /// <summary>
         /// Entfernt den Knoten aus dem Netzwerk wenn er defekt ist
         /// </summary>

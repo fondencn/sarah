@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,6 +18,7 @@ namespace Sarah.DeviceService.Model
     {
 
         private SensorData _battery;
+        private readonly NetworkElementPublisher _publisher;
 
         /// <summary>
         /// Zeitpunkt der Letzten Aktivierung
@@ -36,11 +38,12 @@ namespace Sarah.DeviceService.Model
         /// Zustandsdaten für die Anzeige
         /// </summary>
         public override string StateInfo => "Letzte Aktivität: " + (LastUsage.HasValue ? LastUsage.Value.ToString() : "Unbekannt") + ", SceneId: " + LastSceneId + ", Batterie: " + Battery;
-        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
 
 
-        public WallController(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public WallController(byte nodeid, NetworkElementPublisher publisher, ILogger<WallController>? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
 
@@ -116,7 +119,7 @@ namespace Sarah.DeviceService.Model
 
         private Task OnClicked()
         {
-            this.ReportEvent(new ClickedEvent(this.NodeID, this.LastSceneId));
+            _publisher.ReportEvent(this, nameof(ClickedEvent), this.LastSceneId.ToString());
             return Task.CompletedTask;
         }
 

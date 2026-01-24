@@ -1,25 +1,27 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 using System;
 
 namespace Sarah.Rules.Actions
 {
     public class StartAudioAction : RuleAction
     {
-        private readonly IEventProcessingService _events;
+        private readonly RabbitMQClient _rabbitMQClient;
         protected string AudioFileName { get; }
         protected string Hostname { get; }
 
-        public StartAudioAction(string audioFileName, string hostname, IEventProcessingService events)
+        public StartAudioAction(string audioFileName, string hostname, RabbitMQClient rabbitMQClient)
         {
-            this._events = events;
+            this._rabbitMQClient = rabbitMQClient;
             this.AudioFileName = audioFileName;
             this.Hostname = hostname;
         }
 
         public override void Execute(NetworkEvent sourceEvent)
         {
-            _events.PublishStartPlayAudioEventAsync(new StartAudioEvent(this.AudioFileName, this.Hostname));
+            var message = new StartAudioMessage(this.AudioFileName, this.Hostname);
+            _rabbitMQClient.PublishAsync(message).Wait();
         }
     }
 }

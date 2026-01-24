@@ -1,53 +1,60 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 // Add Keycloak IDP
-
 var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
 // Add RabbitMQ message broker
-var rabbitmq = builder.AddRabbitMQ("rabbitmq")
-    .WithManagementPlugin()
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent);
+var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
-// Add PostgreSQL databases (one per microservice)
-var postgresDevices = builder.AddPostgres("postgres-devices")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("devicesdb");
+// Add single PostgreSQL instance with multiple databases
+var postgres = builder.AddPostgres("postgres");
 
-var postgresPersons = builder.AddPostgres("postgres-persons")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("personsdb");
+var postgresDevices = postgres.AddDatabase("devicesdb");
+var postgresPersons = postgres.AddDatabase("personsdb");
+var postgresMonitoring = postgres.AddDatabase("monitoringdb");
+var postgresRules = postgres.AddDatabase("rulesdb");
 
-var postgresGeofences = builder.AddPostgres("postgres-geofences")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("geofencesdb");
+// Add microservices with their dependencies
+var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
+    .WithHttpsEndpoint(port: 5001, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(postgresDevices, "PostgresConnection")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
 
-var postgresEvents = builder.AddPostgres("postgres-events")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("eventsdb");
+var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
+    .WithHttpsEndpoint(port: 5002, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(postgresPersons, "PostgresConnection")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
 
-var postgresMonitoring = builder.AddPostgres("postgres-monitoring")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("monitoringdb");
+var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
+    .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
 
-var postgresRules = builder.AddPostgres("postgres-rules")
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("rulesdb");
+var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("monitoringservice")
+    .WithHttpsEndpoint(port: 5005, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(postgresMonitoring, "PostgresConnection")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
 
-// Note: Microservice projects would be added here when using Aspire with project references
-// Example (commented out until projects are configured for Aspire):
-// var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
-//     .WithReference(postgresDevices)
-//     .WithReference(keycloak)
-//     .WithReference(rabbitmq);
+var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
+    .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(postgresRules, "PostgresConnection")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
+
+var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
+    .WithHttpsEndpoint(port: 5008, env: "ASPNETCORE_HTTPS_PORT")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq);
+
+// Add frontend (Angular client)
+var frontend = builder.AddProject<Projects.sarah_client>("frontend")
+    .WithHttpsEndpoint(port: 4200)
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();
+

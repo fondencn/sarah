@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Text;
 using System.Threading;
@@ -24,10 +25,11 @@ namespace Sarah.DeviceService.Model
         private SensorData _meter_W;
         private SensorData _meter_A;
         private DateTime _lastStateChange;
+        protected readonly NetworkElementPublisher _publisher;
 
-
-        protected WallPlug(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        protected WallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger? logger = null) : base(nodeid, logger)
         {
+            _publisher = publisher;
         }
 
         /// <summary>
@@ -53,17 +55,17 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Status des Schalters (an oder aus)
         /// </summary>
-        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; ReportEvent(new NetworkEvent<bool>(this.NodeID, value)); } } }
+        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _publisher.ReportEvent(this, nameof(IsOn), value); } } }
 
         /// <summary>
         /// Meter in Kilowattstunden
         /// </summary>
-        public SensorData Meter_kWh { get => _meter_kwh; protected set { if (_meter_kwh != value) { _meter_kwh = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Meter_kWh { get => _meter_kwh; protected set { if (_meter_kwh != value) { _meter_kwh = value; _publisher.ReportEvent(this, nameof(Meter_kWh), value?.ToString()); } } }
 
         /// <summary>
         /// Meter in 1000 Volt-Ampère-Stunden
         /// </summary>
-        public SensorData Meter_kVAh { get => _meter_kVAh; protected set { if (_meter_kVAh != value) { _meter_kVAh = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Meter_kVAh { get => _meter_kVAh; protected set { if (_meter_kVAh != value) { _meter_kVAh = value; _publisher.ReportEvent(this, nameof(Meter_kVAh), value?.ToString()); } } }
 
         /// <summary>
         /// Meter in Watt
@@ -93,14 +95,14 @@ namespace Sarah.DeviceService.Model
                     }
                 }
                 _meter_W = value;
-                ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString()));
+                _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
             }
         }
 
         /// <summary>
         /// Meter in Ampère
         /// </summary>
-        public SensorData Meter_A { get => _meter_A; protected set { if (_meter_A != value) { _meter_A = value; ReportEvent(new NetworkEvent<string>(this.NodeID, value?.ToString())); } } }
+        public SensorData Meter_A { get => _meter_A; protected set { if (_meter_A != value) { _meter_A = value; _publisher.ReportEvent(this, nameof(Meter_A), value?.ToString()); } } }
 
 
         /// <summary>
@@ -294,7 +296,7 @@ public class ZWaveWallPlug : WallPlug
         /// ctor
         /// </summary>
         /// <param name="nodeid">ID des ZWave Knotens</param>
-        public ZWaveWallPlug(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public ZWaveWallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger<ZWaveWallPlug>? logger = null) : base(nodeid, publisher, logger)
         {
         }
 

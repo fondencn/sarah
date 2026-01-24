@@ -3,6 +3,7 @@ using Sarah.API.Interfaces;
 using System.Threading.Tasks;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.Model
 {
@@ -12,7 +13,7 @@ namespace Sarah.DeviceService.Model
         public override string ClassDescription => this._genericType;
 
 
-        public UnknownElement(byte nodeid, IEventProcessingService events) : base(nodeid, events)
+        public UnknownElement(byte nodeid, NetworkElementPublisher publisher, ILogger<UnknownElement>? logger = null) : base(nodeid, logger)
         {
         }
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Libs/Sarah.API/Sarah.API.csproj" />
+    <ProjectReference Include="../../Libs/Sarah.DeviceServiceClient/Sarah.DeviceServiceClient.csproj" />
+    <ProjectReference Include="../../Libs/Sarah.LEDService/Sarah.LEDService.csproj" />
+    <ProjectReference Include="../../Libs/Sarah.Voice/Sarah.Voice.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.Messaging.RabbitMQ\Sarah.Messaging.RabbitMQ.csproj" />
+  </ItemGroup>
+
+</Project>

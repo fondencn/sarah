@@ -2,12 +2,15 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
 using Microsoft.Extensions.Logging;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor(IDBService _db, IEventProcessingService _events, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
+    public class PersonMonitor(ApplicationDbContext _db, RabbitMQClient _rabbitMQ, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 
@@ -59,7 +62,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                foreach (PersonInfo person in _db.Persons)
+                foreach (PersonInfoEntity person in _db.Persons)
                 {
                     if (person != null)
                     {
@@ -76,7 +79,7 @@ namespace Sarah.Monitoring.Monitors
                         if (changed)
                         {
                             ConnectionStatesByPersonId[person.Id] = currentState;
-                            await _events.PublishPersonAvailabilityAsync(new PersonAvailabilityEvent(person.Id, person?.Name ?? "", currentState));
+                            await _rabbitMQ.PublishAsync(new PersonAvailabilityMessage(person.Id, person?.Name ?? "", currentState));
                         }
 
                         /* Person ist nicht daheim -> Suchen, ob sie sich in einem GeoFence befindet oder im Vergleich zum letzten Mal einen Verlassen hat */
@@ -95,7 +98,7 @@ namespace Sarah.Monitoring.Monitors
                         {
                             /* GeoFence Der Person hat sich geändert -> Event auslösen! */
                             GeoFencesByPersonId[person.Id] = currentFence;
-                            await _events.PublishGeoFenceEventAsync(new PersonGeoFenceEvent(person.Id, person?.Name ?? "", currentFence, lastFence));
+                            await _rabbitMQ.PublishAsync(new PersonGeoFenceMessage(person.Id, person?.Name ?? "", currentFence?.Name, lastFence?.Name));
                         }
                     }
                 }

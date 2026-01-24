@@ -29,13 +29,26 @@ public class RabbitMQClient : IDisposable
     /// </summary>
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        var factory = new ConnectionFactory()
+        var factory = new ConnectionFactory();
+        
+        // Check if Aspire connection string is provided
+        var connectionString = _configuration.GetConnectionString("rabbitmq");
+        
+        if (!string.IsNullOrEmpty(connectionString))
         {
-            HostName = _configuration["RabbitMQ:HostName"] ?? "localhost",
-            Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = _configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = _configuration["RabbitMQ:Password"] ?? "guest"
-        };
+            // Use Aspire-provided connection string (format: amqp://username:password@hostname:port)
+            factory.Uri = new Uri(connectionString);
+            _logger.LogInformation("Using Aspire RabbitMQ connection string");
+        }
+        else
+        {
+            // Fall back to individual configuration values
+            factory.HostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
+            factory.Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672");
+            factory.UserName = _configuration["RabbitMQ:UserName"] ?? "guest";
+            factory.Password = _configuration["RabbitMQ:Password"] ?? "guest";
+            _logger.LogInformation("Using RabbitMQ configuration from appsettings");
+        }
 
         _connection = await factory.CreateConnectionAsync(cancellationToken);
         _channel = await _connection.CreateChannelAsync();

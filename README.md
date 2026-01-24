@@ -313,13 +313,11 @@ sarah/
 │   ├── Sarah.DeviceService.WebApi/
 │   ├── Sarah.Persons.WebApi/
 │   ├── Sarah.Geofences.WebApi/
-│   ├── Sarah.EventProcessing.WebApi/
 │   ├── Sarah.Monitoring.WebApi/
 │   └── Sarah.Rules.WebApi/
 ├── Services/                   # Shared service libraries
 │   ├── Sarah.API/              # Common API models
 │   ├── Sarah.DeviceService/    # Device logic
-│   ├── Sarah.EventProcessing/  # Event handling
 │   ├── Sarah.Data/             # Data access
 │   └── ...
 ├── Sarah.AppHost/              # .NET Aspire orchestration

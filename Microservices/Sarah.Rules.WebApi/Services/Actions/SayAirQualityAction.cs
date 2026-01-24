@@ -1,5 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,11 +9,11 @@ namespace Sarah.Rules.Actions
 {
     public class SayAirQualityAction : RuleAction
     {
-        protected readonly IEventProcessingService _events;
+        protected readonly RabbitMQClient _rabbitMQClient;
         
-        public SayAirQualityAction(int targetNodeId, string hostname, IEventProcessingService events)
+        public SayAirQualityAction(int targetNodeId, string hostname, RabbitMQClient rabbitMQClient)
         {
-            this._events = events;
+            this._rabbitMQClient = rabbitMQClient;
             TargetNodeId = targetNodeId;
             Hostname = hostname;
         }
@@ -26,7 +27,8 @@ namespace Sarah.Rules.Actions
 
             if (airEvent != null && airEvent.SourceNodeId == TargetNodeId)
             {
-                _events.PublishSay(new SayEvent(airEvent.Message, this.Hostname));
+                var message = new SayMessage(airEvent.Message, this.Hostname);
+                _rabbitMQClient.PublishAsync(message).Wait();
             }
         }
     }

@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Repositories;
 using Sarah.Rules.Clients;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Rules.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,7 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -24,6 +26,21 @@ builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+
+// Register RabbitMQ client
+builder.Services.AddSingleton(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<RabbitMQClient>>();
+    return new RabbitMQClient(logger, builder.Configuration);
+});
+
+// Register RuleService as singleton (will be used by RulesEventSubscriber)
+// Note: RuleService still has dependencies on legacy interfaces, this is for backwards compatibility
+builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
+builder.Services.AddSingleton<Sarah.Rules.RuleService>();
+
+// Register RulesEventSubscriber as a hosted service
+builder.Services.AddHostedService<RulesEventSubscriber>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -98,5 +115,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+// register the hardcoded rule store    
+var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
+var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>();
+
+ruleSvc.RegisterRuleStore(hardCoded);
+
 
 app.Run();

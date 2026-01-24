@@ -12,7 +12,6 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public abstract class NetworkElement : INetworkElement
     {
-        private readonly IEventProcessingService _EventProcessing;
         protected readonly ILogger? _logger;
 
         /// <summary>
@@ -53,31 +52,11 @@ namespace Sarah.API.BusinessObjects
         /// <param name="nodeid">ZWave Node ID des Geräts</param>
         /// <param name="eventProcessing">Event processing service</param>
         /// <param name="logger">Optional logger instance</param>
-        public NetworkElement(byte nodeid, IEventProcessingService eventProcessing, ILogger? logger = null) 
+        public NetworkElement(byte nodeid, ILogger? logger = null) 
         { 
             this.NodeID = nodeid; 
-            this._EventProcessing = eventProcessing;
             this._logger = logger;
         }
-
-        /// <summary>
-        /// Übergibt ein beliebiges Netzwerkereignis an den Event Aggregator
-        /// </summary>
-        /// <param name="e"></param>
-        protected void ReportEvent(NetworkEvent e)
-        {
-            _EventProcessing.PublishNetworkEventAsync(e);
-        }
-
-        /// <summary>
-        /// Übergibt ein beliebiges Netzwerkereignis an den Event Aggregator
-        /// </summary>
-        /// <param name="e"></param>
-        protected void ReportEvent<T>(NetworkEvent<T> e)
-        {
-            _EventProcessing.PublishNetworkEventAsync(e);
-        }
-
         /// <summary>
         /// Liefert die Assoziationsgruppen des Geräts
         /// </summary>

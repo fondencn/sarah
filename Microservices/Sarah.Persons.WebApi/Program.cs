@@ -3,6 +3,9 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Repositories;
+using Sarah.Persons.WebApi.Clients;
+using Sarah.Persons.WebApi.Services;
+using Sarah.API.Interfaces.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +14,30 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// Register services
+builder.Services.AddScoped<IPersonService, PersonService>();
+builder.Services.AddScoped<HomeNetworkService>();
+
+// Register HTTP client for Device Service communication
+builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice:5001";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Register HTTP client for GeoFence Service communication
+builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
+{
+    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice:5003";
+    client.BaseAddress = new Uri(geofenceServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Add services to the container.
 builder.Services.AddControllers();

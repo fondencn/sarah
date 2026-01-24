@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Sarah.API.Interfaces;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.Model
 {
@@ -24,7 +25,7 @@ namespace Sarah.DeviceService.Model
 
         public string Hostname { get; }
 
-        public WifiWallPlug(byte nodeid, string hostname, IEventProcessingService events) : base(nodeid, events)
+        public WifiWallPlug(byte nodeid, string hostname, NetworkElementPublisher publisher, ILogger<WifiWallPlug>? logger = null) : base(nodeid, publisher, logger)
         {
             this.Hostname = hostname;
         }

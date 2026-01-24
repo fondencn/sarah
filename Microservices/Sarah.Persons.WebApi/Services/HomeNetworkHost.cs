@@ -1,5 +1,5 @@
 ﻿
-namespace Sarah.Persons
+namespace Sarah.Persons.WebApi.Services
 {
     public class HomeNetworkHost
     {

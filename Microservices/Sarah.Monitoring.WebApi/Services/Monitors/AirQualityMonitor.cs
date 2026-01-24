@@ -8,10 +8,14 @@ using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Service;
-using Sarah.Data.Models;
+using Sarah.Monitoring.WebApi.Data;
+using Sarah.Monitoring.WebApi.Data.Entities;
+using Sarah.Monitoring.WebApi.Extensions;
 using Sarah.API.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -20,16 +24,16 @@ namespace Sarah.Monitoring.Monitors
     /// </summary>
     internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
-        private readonly IDBService _db;
-        private readonly IEventProcessingService _events;
+        private readonly ApplicationDbContext _db;
         private readonly IDeviceService _devices;
+        private readonly RabbitMQClient _rabbitMQ;
         private readonly ILogger<AirQualityMonitor> _logger;
 
-        public AirQualityMonitor(IDBService db, IEventProcessingService events, IDeviceService devices, ILogger<AirQualityMonitor> logger)
+        public AirQualityMonitor(ApplicationDbContext db, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
         {
             _db = db;
-            _events = events;
             _devices = devices;
+            _rabbitMQ = rabbitMQ;
             _logger = logger;
         }
 
@@ -67,7 +71,6 @@ namespace Sarah.Monitoring.Monitors
         /// <returns></returns>
         public Task Start()
         {
-            _events.SubscribeNetworkEventAsync(this);
             this.IsRunning = true;
             _logger.LogDebug("AirQualityMonitor gestartet und als Provider registriert.");
 
@@ -84,7 +87,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceInfo? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
+                DeviceInfoEntity? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
 
                 if (device != null)
                 {
@@ -93,7 +96,7 @@ namespace Sarah.Monitoring.Monitors
                     if (sensor != null
                         && IsRelevantProperty(e.Property))
                     {
-                        Room? room;
+                        RoomEntity? room;
                         if (device.Id_Room.HasValue)
                         {
                             room = await _db.Rooms.FindAsync(device.Id_Room);
@@ -108,7 +111,7 @@ namespace Sarah.Monitoring.Monitors
                         {
                             if (!this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
                             {
-                                this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(device, room, _devices, _events, _logger));
+                                this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(device, room, _devices, _rabbitMQ, _logger));
                             }
                         }
                         else
@@ -124,8 +127,8 @@ namespace Sarah.Monitoring.Monitors
                                 {
                                     //NotificationEngine.Instance.Voice.Say("Die Luftqualität im " + room.Name + " ist wiederhergestellt."
                                     //    , NotificationEngine.Speaker1);
-                                    await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, 
-                                        AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? "", "AirQualityChanged"));
+                                    await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID, 
+                                        (AirQualityLevel)AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? ""));
 
                                 }
                             }
@@ -183,18 +186,18 @@ namespace Sarah.Monitoring.Monitors
             private static readonly TimeSpan _WarnInterval = TimeSpan.FromMinutes(30);
 
             private readonly IDeviceService _devices;
-            private readonly IEventProcessingService _events;
+            private readonly RabbitMQClient _rabbitMQ;
             private readonly ILogger<AirQualityMonitor> _logger;
 
-            public DeviceInfo Device { get; private set; }
-            public Room? Room { get; private set; }
+            public DeviceInfoEntity Device { get; private set; }
+            public RoomEntity? Room { get; private set; }
             private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
             private Task? Task { get; set; }
 
-            public SurveillanceTask(DeviceInfo device, Room? room, IDeviceService devices, IEventProcessingService events, ILogger<AirQualityMonitor> logger)
+            public SurveillanceTask(DeviceInfoEntity device, RoomEntity? room, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
             {
                 this._devices = devices;
-                this._events = events;
+                this._rabbitMQ = rabbitMQ;
                 this._logger = logger;
                 this.Device = device;
                 this.Room = room;
@@ -264,8 +267,8 @@ namespace Sarah.Monitoring.Monitors
 
                             AirQualitityLevel badestLevel = new AirQualitityLevel[] { voc.Item1, co2.Item1, humidity.Item1 }
                                 .OrderByDescending(item => item).First();
-                            await _events.PublishAirQualityEventAsync(new AirQualityChangedEvent(sensor.NodeID, badestLevel, String.Join(". " + Environment.NewLine, msg), 
-                                (this.Room?.Name ?? ""), "AirQualityChanged"));
+                            await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID, (AirQualityLevel)badestLevel, String.Join(". " + Environment.NewLine, msg), 
+                                (this.Room?.Name ?? "")));
                         }
 
                         /* warten uns später nochmal bescheid sagen */

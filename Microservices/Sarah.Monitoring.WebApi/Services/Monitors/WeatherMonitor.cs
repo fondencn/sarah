@@ -6,13 +6,16 @@ using Microsoft.Extensions.Logging;
 using Sarah.Monitoring.BusinessObjects.OpenWeather.CurrentWeather;
 using Sarah.Monitoring.BusinessObjects.OpenWeather.Forecast;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
     /// <summary>
     /// Überwachung für Wetterwarnungen (In-Memory, Datenquelle DWD-Warnwetter)
     /// </summary>
-    public class WeatherMonitor(IConfiguration _config, IEventProcessingService _events, ILogger<WeatherMonitor> _logger) : IWeatherProvider, ICanSelfTest, IMonitor
+    public class WeatherMonitor(IConfiguration _config, RabbitMQClient _rabbitMQ, ILogger<WeatherMonitor> _logger) : IWeatherProvider, ICanSelfTest, IMonitor
     {
         private static readonly Uri _DwdUri = new Uri("https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json");
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(30);
@@ -186,7 +189,7 @@ namespace Sarah.Monitoring.Monitors
                     _logger.LogInformation("Aktuelles Wetter für {CityName} aktualisiert: {DisplayText}", currentWeather.name, currentWeather.DisplayText);
                     if (currentWeather.main != null)
                     {
-                        await _events.PublishOutDoorTemperatureChangedEventAsync(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
+                        await _rabbitMQ.PublishAsync(new OutDoorTemperatureChangedEventMessage(currentWeather.main.temp));
                     }
                 }
             }
@@ -250,7 +253,7 @@ namespace Sarah.Monitoring.Monitors
                     _logger.LogInformation("{WarningMessage}", str);
                     if(entry.@event != null) 
                     {
-                        await _events.PublishWeatherWarningEventAsync(new WeatherWarningEvent(entry.@event));
+                        await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage(entry.@event));
                     }
                     CurrentLocalWeatherWarnings.Add(entry);
                 }
@@ -260,7 +263,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Aktualisieren der Wetterwarnungen", ex);
+                _logger.LogError("Fehler beim Aktualisieren der Wetterwarnungen {Exception}", ex);
             }
         }
 
@@ -304,7 +307,7 @@ namespace Sarah.Monitoring.Monitors
             {
                 string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
                     + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
-                await _events.PublishSay(new SayEvent(warnMessage));
+                await _rabbitMQ.PublishAsync(new SayMessage(warnMessage));
                 _logger.LogInformation("{WarnMessage}", warnMessage);
             }
         }

@@ -16,6 +16,7 @@ using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService
 {
@@ -25,16 +26,18 @@ namespace Sarah.DeviceService
         private readonly INodeFactory _nodeFactory;
         private readonly IEventProcessingService _events;
         private readonly ILogger<DeviceService> _logger;
+        private readonly NetworkElementPublisher _publisher;
 
 
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events, ILogger<DeviceService> logger)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events, NetworkElementPublisher publisher, ILogger<DeviceService> logger)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
             this._events = events;
+            this._publisher = publisher;
             this._logger = logger;
         }
 
@@ -219,7 +222,7 @@ namespace Sarah.DeviceService
                     if (nodeElement == null)
                     {
                         _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
-                        networkElements.Add(new UnknownElement(n.NodeID, this._events));
+                        networkElements.Add(new UnknownElement(n.NodeID, _publisher, null));
                     }
                     else
                     {
@@ -237,7 +240,7 @@ namespace Sarah.DeviceService
                 if (nodeElement == null)
                 {
                     _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
-                    networkElements.Add(new UnknownElement(nodeId, this._events));
+                    networkElements.Add(new UnknownElement(nodeId, _publisher, null));
                 }
                 else
                 {

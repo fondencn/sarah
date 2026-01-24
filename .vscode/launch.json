@@ -2,6 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Sarah AppHost",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Sarah.AppHost/bin/Debug/net10.0/Sarah.AppHost.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Sarah.AppHost",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DOTNET_ENVIRONMENT": "Development",
+                "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
+            }
+        },
+        {
             "name": "Launch .NET Core (Sarah Server)",
             "type": "coreclr",
             "request": "launch",
