@@ -302,7 +302,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        private void OnSetpointChanged(object sender, ReportEventArgs<ThermostatSetpointReport> e)
+        private void OnSetpointChanged(object? sender, ReportEventArgs<ThermostatSetpointReport> e)
         {
             _logger?.LogDebug("ThermostatSetpoint " + e.Report.Value + e.Report.Unit + " event from node " + e.Report.Node.NodeID + " (Scale=" + e.Report.Scale + ", Type=" + e.Report.Type + ")");
             switch (e.Report.Type)
@@ -317,7 +317,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
+        private void OnBasicChanged(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug("Basic report value" + e.Report.CurrentValue + " from node " + e.Report.Node.NodeID);
             SetBasicValue(e.Report.CurrentValue);
@@ -345,7 +345,7 @@ namespace Sarah.DeviceService.Model
             this.Basic = new SensorData(level, unit);
         }
 
-        private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
+        private void SensorCmd_Changed(object? sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
             _logger?.LogDebug("Thermo-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
 

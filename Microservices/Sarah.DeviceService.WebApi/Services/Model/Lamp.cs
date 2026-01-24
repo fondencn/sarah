@@ -104,7 +104,7 @@ namespace Sarah.DeviceService.Model
             return Task.CompletedTask;
         }
 
-        private void OnMeterChanged(object sender, ReportEventArgs<MeterReport> e)
+        private void OnMeterChanged(object? sender, ReportEventArgs<MeterReport> e)
         {
             _logger?.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}]");
             this.Meter = e.Report.Value.ToString() + e.Report.Unit;
@@ -129,7 +129,7 @@ namespace Sarah.DeviceService.Model
                 Node n = this._deviceService.GetNode(this.NodeID) as Node;
                 //Basic basic = n.GetCommandClass<Basic>();
                 //await basic.Set(value);
-                SwitchMultiLevel swl = n.GetCommandClass<SwitchMultiLevel>();
+                SwitchMultiLevel swl = n!.GetCommandClass<SwitchMultiLevel>();
                 await swl.Set(value);
                 this.Brightness = value;
                 this.LastChange = DateTime.Now;

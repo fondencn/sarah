@@ -11,7 +11,7 @@ namespace Sarah.DeviceService.Model
     internal class SerialPortFactory
     {
         #region singleton pattern
-        private static SerialPortFactory _Instance = null;
+        private static SerialPortFactory _Instance = null!;
         public static SerialPortFactory Instance
         {
             get

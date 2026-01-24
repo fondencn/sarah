@@ -395,24 +395,24 @@ public class ZWaveWallPlug : WallPlug
             }
         }
 
-        private void OnMeterChanged(object sender, ReportEventArgs<MeterReport> e)
+        private void OnMeterChanged(object? sender, ReportEventArgs<MeterReport> e)
         {
             _logger?.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}] ({e.Report.Type})");
             this.SetMeter(new SensorData(e.Report.Value, e.Report.Unit));
         }
 
-        private void Node_MessageReceived(object sender, EventArgs e)
+        private void Node_MessageReceived(object? sender, EventArgs e)
         {
             //_logger?.LogDebug("Node " + this.NodeID + " Message received");
         }
 
-        private void Node_UnknownCommandReceived(object sender, global::ZWave.Channel.NodeEventArgs e)
+        private void Node_UnknownCommandReceived(object? sender, global::ZWave.Channel.NodeEventArgs e)
         {
             _logger?.LogWarning("Node " + this.NodeID + " UNKNOWN COMMAND received");
 
         }
 
-        private void OnSwitchBinChanged(object sender, ReportEventArgs<SwitchBinaryReport> e)
+        private void OnSwitchBinChanged(object? sender, ReportEventArgs<SwitchBinaryReport> e)
         {
             _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue.GetValueOrDefault(false);
@@ -420,13 +420,13 @@ public class ZWaveWallPlug : WallPlug
 
 
 
-        private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
+        private void OnBasicChanged(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             /* Für Popp Wallcontroller kmmt hier eine Basic Notification an die Association Group 1 (Lifeline) */
             this.IsOn = e.Report.CurrentValue != 0;
         }
-        private void OnSwitchMultiChanged(object sender, ReportEventArgs<SwitchMultiLevelReport> e)
+        private void OnSwitchMultiChanged(object? sender, ReportEventArgs<SwitchMultiLevelReport> e)
         {
             _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue != 0;
