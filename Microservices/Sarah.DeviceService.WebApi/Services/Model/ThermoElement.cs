@@ -218,7 +218,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("ThermoElement::InitializeAsync: ", ex);
+                _logger?.LogError(ex, "ThermoElement::InitializeAsync: Error");
             }
 
             return Task.CompletedTask;
@@ -271,7 +271,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("SetTemperature" , ex);
+                _logger?.LogError(ex, "SetTemperature error");
                 throw;
             }
         }
@@ -297,7 +297,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("SetLevel" , ex);
+                _logger?.LogError(ex, "SetLevel error");
                 throw;
             }
         }

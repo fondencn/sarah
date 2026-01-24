@@ -90,7 +90,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("SmokeSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
+                _logger?.LogError(ex, "SmokeSensor::InitializeAsync: Fehler beim registrieren der Events");
             }
 
             return Task.CompletedTask;

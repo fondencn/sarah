@@ -268,7 +268,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("MulitSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
+                _logger?.LogError(ex, "MultiSensor::InitializeAsync: Fehler beim registrieren der Events");
             }
 
 
