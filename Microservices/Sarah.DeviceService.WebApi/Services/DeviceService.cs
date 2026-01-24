@@ -9,10 +9,11 @@ using ZWave.Channel;
 using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Sarah.DeviceService
 {
-    public class DeviceService : IDeviceService
+    public class DeviceService : BackgroundService, IDeviceService
     {
         private readonly IConfiguration _configuration;
         private readonly INodeFactory _nodeFactory;
@@ -506,6 +507,44 @@ namespace Sarah.DeviceService
                     RemoveRecursive(directlyConnectednode, adjacentNodesMatrix, allNodeIds);
                 }
             }
+        }
+
+        /// <summary>
+        /// BackgroundService implementation - starts the DeviceService automatically
+        /// </summary>
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger?.LogInformation("DeviceService background service is starting.");
+            
+            try
+            {
+                await Start();
+                _logger?.LogInformation("DeviceService background service started successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error starting DeviceService background service.");
+            }
+
+            // Keep the service running
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
+
+        /// <summary>
+        /// Clean up resources when the service stops
+        /// </summary>
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger?.LogInformation("DeviceService background service is stopping.");
+            
+            if (UpdateCancellationTokenSource != null && UpdateTask != null && UpdateTask.Status == TaskStatus.Running)
+            {
+                UpdateCancellationTokenSource.Cancel();
+            }
+
+            Controller?.Close();
+            
+            await base.StopAsync(cancellationToken);
         }
 
     }
