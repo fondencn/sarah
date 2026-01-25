@@ -4,6 +4,8 @@ using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Sarah.API.BusinessObjects;
+using System.Linq;
 
 namespace Sarah.DeviceService.WebApi.Controllers;
 
@@ -23,12 +25,13 @@ public class DevicesController : ControllerBase
         _logger = logger;
     }
 
+
     [HttpGet("lamps")]
     public IActionResult GetLamps()
     {
         try
         {
-            var lamps = _deviceService.Lamps;
+            var lamps = _deviceService.Lamps.Select(l => l.ToDto()).ToList();
             return Ok(lamps);
         }
         catch (Exception ex)
@@ -43,7 +46,7 @@ public class DevicesController : ControllerBase
     {
         try
         {
-            var sensors = _deviceService.Sensors;
+            var sensors = _deviceService.Sensors.Select(s => s.ToDto()).ToList();
             return Ok(sensors);
         }
         catch (Exception ex)
@@ -58,7 +61,7 @@ public class DevicesController : ControllerBase
     {
         try
         {
-            var doorSensors = _deviceService.DoorSensors;
+            var doorSensors = _deviceService.DoorSensors.Select(d => d.ToDto()).ToList();
             return Ok(doorSensors);
         }
         catch (Exception ex)
@@ -73,7 +76,7 @@ public class DevicesController : ControllerBase
     {
         try
         {
-            var wallPlugs = _deviceService.WallPlugs;
+            var wallPlugs = _deviceService.WallPlugs.Select(w => w.ToDto()).ToList();
             return Ok(wallPlugs);
         }
         catch (Exception ex)
@@ -88,7 +91,7 @@ public class DevicesController : ControllerBase
     {
         try
         {
-            var thermostats = _deviceService.Heatings;
+            var thermostats = _deviceService.Heatings.Select(h => h.ToDto()).ToList();
             return Ok(thermostats);
         }
         catch (Exception ex)
@@ -98,11 +101,130 @@ public class DevicesController : ControllerBase
         }
     }
 
+    [HttpGet("controllers")]
+    public IActionResult GetControllers()
+    {
+        try
+        {
+            var controllers = _deviceService.Controllers.Select(c => c.ToDto()).ToList();
+            return Ok(controllers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving controllers");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("wallcontrollers")]
+    public IActionResult GetWallControllers()
+    {
+        try
+        {
+            var wallControllers = _deviceService.WallControllers.Select(w => w.ToDto()).ToList();
+            return Ok(wallControllers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving wall controllers");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("smokesensors")]
+    public IActionResult GetSmokeSensors()
+    {
+        try
+        {
+            var smokeSensors = _deviceService.SmokeSensors.Select(s => s.ToDto()).ToList();
+            return Ok(smokeSensors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving smoke sensors");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("batterysensors")]
+    public IActionResult GetBatterySensors()
+    {
+        try
+        {
+            var batterySensors = _deviceService.BatterySensors.Select(b => b.ToDto()).ToList();
+            return Ok(batterySensors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving battery sensors");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("unknown")]
+    public IActionResult GetUnknownElements()
+    {
+        try
+        {
+            var unknowns = _deviceService.UnknownElements.Select(u => u.ToDto()).ToList();
+            return Ok(unknowns);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving unknown elements");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("gps-trackers")]
+    public IActionResult GetGpsTrackers()
+    {
+        try
+        {
+            var trackers = _deviceService.GPSTrackers.Select(t => t.ToDto()).ToList();
+            return Ok(trackers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving GPS trackers");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("status")]
     [AllowAnonymous]
     public IActionResult GetStatus()
     {
         return Ok(new { status = "running", message = _deviceService.StatusMessage });
+    }
+
+    [HttpGet("serial-port")]
+    public IActionResult GetSerialPortName()
+    {
+        try
+        {
+            return Ok(_deviceService.SerialPortName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving serial port name");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("elements")]
+    public IActionResult GetNetworkElements()
+    {
+        try
+        {
+            var elements = _deviceService.Elements.Select(e => e.ToDto()).ToList();
+            return Ok(elements);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving network elements");
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpGet("{id}")]
@@ -135,6 +257,80 @@ public class DevicesController : ControllerBase
         }
     }
 
+    [HttpGet("node/{nodeId}")]
+    public IActionResult GetNode(byte nodeId)
+    {
+        try
+        {
+            var node = _deviceService.GetNode(nodeId);
+            if (node == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(node.ToDto());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving node {NodeId}", nodeId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("networkitem/{nodeId}")]
+    public IActionResult GetNetworkItem(byte nodeId)
+    {
+        try
+        {
+            var item = _deviceService.GetNetworkItem(nodeId);
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(item.ToDto());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving network item {NodeId}", nodeId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+
+    [HttpGet("nodes/{nodeId}/association-groups")]
+    public async Task<IActionResult> GetAssociationGroups(byte nodeId)
+    {
+        try
+        {
+            var groups = await _deviceService.GetAssociationGroups(nodeId);
+            var dto = groups.Select(g => g.ToDto()).ToList();
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving association groups for node {NodeId}", nodeId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    public record SetAssociationGroupRequest(byte[] NodeIds);
+
+    [HttpPost("nodes/{nodeId}/association-groups/{groupId}")]
+    public async Task<IActionResult> SetAssociationGroup(byte nodeId, byte groupId, [FromBody] SetAssociationGroupRequest request)
+    {
+        try
+        {
+            await _deviceService.SetAssociationGroup(nodeId, groupId, request.NodeIds);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting association group {GroupId} for node {NodeId}", groupId, nodeId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("gpstracker/{nodeId}")]
     public IActionResult GetGpsTrackerByNodeId(byte nodeId)
     {
@@ -146,29 +342,7 @@ public class DevicesController : ControllerBase
                 return NotFound();
             }
 
-            var dto = new DeviceDto
-            {
-                Id = 0, // Runtime device, not persisted
-                RoomId = null,
-                Name = $"GPS Tracker {tracker.NodeID}",
-                NodeID = tracker.NodeID,
-                DeviceType = "GPSTracker",
-                IsReadonly = true
-            };
-
-            // Add position information if available
-            if (tracker.Position != null)
-            {
-                dto.Position = new PositionDto
-                {
-                    Longitude = tracker.Position.Longtitude?.Value ?? 0f,
-                    Latitude = tracker.Position.Latitude?.Value ?? 0f,
-                    MeasureTime = tracker.Position.MeasureTime,
-                    IsValid = tracker.Position.IsValid
-                };
-            }
-
-            return Ok(dto);
+            return Ok(tracker.ToDto());
         }
         catch (Exception ex)
         {
