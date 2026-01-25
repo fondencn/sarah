@@ -4,7 +4,7 @@
 
 ## Overview
 
-**Sarah** is an intelligent smart home management system that enables you to monitor, control, and automate your connected devices through a powerful microservices architecture. Built with .NET 9 and Angular, Sarah provides a scalable, event-driven platform for managing lights, sensors, switches, and other IoT devices with advanced features like geofencing, voice control, and automation rules.
+**Sarah** is an intelligent smart home management system that enables you to monitor, control, and automate your connected devices through a powerful microservices architecture. Built with .NET 10 and Angular, Sarah provides a scalable, event-driven platform for managing lights, sensors, switches, and other IoT devices with advanced features like geofencing, voice control, and automation rules.
 
 ### Key Features
 
@@ -21,13 +21,13 @@
 
 | Category | Technology | Purpose |
 |----------|-----------|---------|
-| **Backend Framework** | .NET 9 / ASP.NET Core | Microservices runtime |
+| **Backend Framework** | .NET 10 / ASP.NET Core | Microservices runtime |
 | **Frontend Framework** | Angular 18+ | Single-page application |
 | **Identity & Access** | Keycloak | OAuth2/OIDC authentication |
 | **Message Broker** | RabbitMQ 3.x | Event-driven communication |
 | **Database** | PostgreSQL 16 | Data persistence per service |
 | **ORM** | Entity Framework Core | Database access layer |
-| **Orchestration** | .NET Aspire 9.1 | Development orchestration |
+| **Orchestration** | .NET Aspire 13.x | Development orchestration |
 | **Containerization** | Docker & Docker Compose | Production deployment |
 | **API Documentation** | OpenAPI/Swagger | REST API specification |
 
@@ -51,10 +51,9 @@ graph TB
         DeviceService["Device Service<br/>(Port 5001)<br/>Device Management"]
         PersonsService["Persons Service<br/>(Port 5002)<br/>User Management"]
         GeofencesService["Geofences Service<br/>(Port 5003)<br/>Location Tracking"]
-        RoomService["Room Service<br/>(Port 5004)<br/>Room Organization"]
         MonitoringService["Monitoring Service<br/>(Port 5005)<br/>System Monitoring"]
         RulesService["Rules Service<br/>(Port 5006)<br/>Automation Rules"]
-        SpeechServer["Speech Server<br/>(Port 5008)<br/>Voice Commands"]
+        SpeechServer["Speech Server<br/>(Port 5011)<br/>Voice Commands"]
     end
     
     subgraph "Infrastructure Layer"
@@ -66,7 +65,6 @@ graph TB
             DB3["geofencesdb<br/>(Port 5434)"]
             DB4["monitoringdb<br/>(Port 5436)"]
             DB5["rulesdb<br/>(Port 5437)"]
-            DB6["roomsdb<br/>(Port 5438)"]
         end
     end
     
@@ -80,7 +78,6 @@ graph TB
     DeviceService -->|JWT Validation| Keycloak
     PersonsService -->|JWT Validation| Keycloak
     GeofencesService -->|JWT Validation| Keycloak
-    RoomService -->|JWT Validation| Keycloak
     MonitoringService -->|JWT Validation| Keycloak
     RulesService -->|JWT Validation| Keycloak
     SpeechServer -->|JWT Validation| Keycloak
@@ -99,7 +96,6 @@ graph TB
     GeofencesService -->|Read/Write| DB3
     MonitoringService -->|Read/Write| DB4
     RulesService -->|Read/Write| DB5
-    RoomService -->|Read/Write| DB6
     
     style Angular fill:#4285f4,stroke:#333,stroke-width:2px,color:#fff
     style Keycloak fill:#008aaa,stroke:#333,stroke-width:2px,color:#fff
@@ -192,11 +188,6 @@ sequenceDiagram
   - Automation triggers based on location
   - PostgreSQL database: `geofencesdb`
   
-- **Room Service** (Port 5004): Room and space organization
-  - Room definitions and hierarchies
-  - Device-to-room assignments
-  - PostgreSQL database: `roomsdb`
-  
 - **Monitoring Service** (Port 5005): System health and metrics
   - Service health checks
   - Performance metrics collection
@@ -209,7 +200,7 @@ sequenceDiagram
   - Automation workflows
   - PostgreSQL database: `rulesdb`
   
-- **Speech Server** (Port 5008): Voice interaction
+- **Speech Server** (Port 5011): Voice interaction
   - Voice command recognition
   - Text-to-speech synthesis
   - Natural language processing
@@ -232,6 +223,7 @@ sequenceDiagram
   - Database-per-service pattern for data isolation
   - Entity Framework Core for ORM
   - Migration support
+  - Ports: 5432-5437 (one per database)
 
 ### Security
 
@@ -301,10 +293,9 @@ graph TB
         Device["DeviceService<br/>Port 5001"]
         Persons["PersonsService<br/>Port 5002"]
         Geofences["GeofencesService<br/>Port 5003"]
-        Room["RoomService<br/>Port 5004"]
         Monitoring["MonitoringService<br/>Port 5005"]
         Rules["RulesService<br/>Port 5006"]
-        Speech["SpeechServer<br/>Port 5008"]
+        Speech["SpeechServer<br/>Port 5011"]
     end
     
     subgraph "Frontend"
@@ -317,7 +308,6 @@ graph TB
     AppHost -->|Launches| Device
     AppHost -->|Launches| Persons
     AppHost -->|Launches| Geofences
-    AppHost -->|Launches| Room
     AppHost -->|Launches| Monitoring
     AppHost -->|Launches| Rules
     AppHost -->|Launches| Speech
@@ -399,7 +389,7 @@ Sarah.AppHost/
 
 ### Prerequisites
 
-- **[.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)** - Required for running microservices
+- **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)** - Required for running microservices
 - **[Node.js 20+](https://nodejs.org/)** - Required for Angular frontend
 - **[Docker Desktop](https://www.docker.com/)** - Required for containerized services
 - **[Docker Compose](https://docs.docker.com/compose/)** - Included with Docker Desktop
@@ -411,15 +401,15 @@ Sarah can be run in three different modes depending on your needs:
 
 | Method | Best For | Complexity | Production Ready |
 |--------|----------|------------|------------------|
-| **Docker Compose** | Production, Testing | Low | ✅ Yes |
+| **Docker Compose** | Local Development, Testing | Low | ❌ No (Dev Mode) |
 | **.NET Aspire** | Development, Learning | Medium | ⚠️ Experimental |
 | **Manual Setup** | Debugging, Development | High | ❌ No |
 
 ---
 
-### Option 1: Docker Compose (Recommended for Production)
+### Option 1: Docker Compose (Recommended for Local Development)
 
-Docker Compose provides a complete, production-ready environment with all services pre-configured.
+Docker Compose provides a complete local development environment with all services pre-configured. Note: The current compose file runs services in development mode and is not hardened for production use.
 
 #### Step 1: Clone the Repository
 
@@ -462,8 +452,8 @@ docker-compose -f docker-compose.microservices.yml up --build
 This will start:
 - ✅ Keycloak (Identity Provider)
 - ✅ RabbitMQ (Message Broker)
-- ✅ PostgreSQL (6 databases for microservices)
-- ✅ All 7 microservices
+- ✅ PostgreSQL containers for devices, persons, geofences, monitoring, and rules
+- ✅ 6 microservices (Device, Persons, Geofences, Monitoring, Rules, Speech)
 - ✅ Angular frontend
 
 **First run**: Takes 2-3 minutes for Keycloak to initialize
@@ -496,13 +486,12 @@ Once all services are running, access them at:
 | **Device Service** | http://localhost:5001 | JWT required |
 | **Persons Service** | http://localhost:5002 | JWT required |
 | **Geofences Service** | http://localhost:5003 | JWT required |
-| **Room Service** | http://localhost:5004 | JWT required |
 | **Monitoring Service** | http://localhost:5005 | JWT required |
 | **Rules Service** | http://localhost:5006 | JWT required |
-| **Speech Server** | http://localhost:5008 | JWT required |
+| **Speech Server** | http://localhost:5011 | JWT required |
 | **Keycloak Admin** | http://localhost:8080 | From `.env` |
 | **RabbitMQ Management** | http://localhost:15672 | From `.env` |
-| **PostgreSQL** | localhost:5432-5438 | From `.env` |
+| **PostgreSQL** | localhost:5432-5437 | From `.env` |
 
 #### Step 6: Stop Services
 
@@ -607,23 +596,19 @@ dotnet run
 cd Microservices/Sarah.Geofences.WebApi
 dotnet run
 
-# Terminal 4 - Room Service
-cd Microservices/Sarah.RoomService.WebApi
-dotnet run
-
-# Terminal 5 - Monitoring Service
+# Terminal 4 - Monitoring Service
 cd Microservices/Sarah.Monitoring.WebApi
 dotnet run
 
-# Terminal 6 - Rules Service
+# Terminal 5 - Rules Service
 cd Microservices/Sarah.Rules.WebApi
 dotnet run
 
-# Terminal 7 - Speech Server
+# Terminal 6 - Speech Server
 cd Microservices/Sarah.SpeechServer.WebApi
 dotnet run
 
-# Terminal 8 - Angular Frontend
+# Terminal 7 - Angular Frontend
 cd sarah.client
 npm install
 npm start
@@ -631,7 +616,14 @@ npm start
 
 #### Step 4: Access Services
 
-Services will be available at their default ports (see table in Docker Compose section).
+When running with `dotnet run`, each service listens on ports configured in its `launchSettings.json` (not the Docker Compose ports). For example:
+- Device Service: `http://localhost:5143` (not 5001)
+- Other services have their own default ports in `launchSettings.json`
+
+To use the Docker Compose port mappings with `dotnet run`, specify URLs explicitly:
+```bash
+dotnet run --urls "http://localhost:5001"
+```
 
 #### Benefits of Manual Setup
 
@@ -653,11 +645,12 @@ Each microservice can be configured via `appsettings.json`, environment variable
   "OIDCAuthority": "http://keycloak:8080/realms/sarah-realm",
   "Jwt": {
     "Issuer": "http://keycloak:8080/realms/sarah-realm",
-    "Audience": "account",
-    "RequireHttpsMetadata": false  // Set to true in production
+    "Audience": "account"
   }
 }
 ```
+
+> **Note**: `RequireHttpsMetadata` is automatically set based on the environment (`false` in Development, `true` in Production) and is not read from configuration.
 
 **Environment Variables** (Docker Compose):
 ```bash
@@ -689,19 +682,19 @@ RabbitMQ__Password=YourPassword
 
 #### Database Configuration
 
-Each service has its own PostgreSQL database:
+Each service uses its own PostgreSQL database with the connection string key `PostgresConnection`:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres-devices;Database=devicesdb;Username=postgres;Password=postgres"
+    "PostgresConnection": "Host=postgres-devices;Database=devicesdb;Username=postgres;Password=yourpassword"
   }
 }
 ```
 
 **Environment Variables**:
 ```bash
-ConnectionStrings__DefaultConnection=Host=postgres-devices;Database=devicesdb;Username=postgres;Password=yourpassword
+ConnectionStrings__PostgresConnection=Host=postgres-devices;Database=devicesdb;Username=postgres;Password=yourpassword
 ```
 
 ### Port Mappings Reference
@@ -712,10 +705,9 @@ ConnectionStrings__DefaultConnection=Host=postgres-devices;Database=devicesdb;Us
 | Device Service | 8080 | 5001 | HTTP |
 | Persons Service | 8080 | 5002 | HTTP |
 | Geofences Service | 8080 | 5003 | HTTP |
-| Room Service | 8080 | 5004 | HTTP |
 | Monitoring Service | 8080 | 5005 | HTTP |
 | Rules Service | 8080 | 5006 | HTTP |
-| Speech Server | 8080 | 5008 | HTTP |
+| Speech Server | 8080 | 5011 | HTTP |
 | Keycloak | 8080 | 8080 | HTTP |
 | Keycloak (HTTPS) | 8443 | 8443 | HTTPS |
 | RabbitMQ AMQP | 5672 | 5672 | AMQP |
@@ -725,7 +717,6 @@ ConnectionStrings__DefaultConnection=Host=postgres-devices;Database=devicesdb;Us
 | PostgreSQL (geofences) | 5432 | 5434 | TCP |
 | PostgreSQL (monitoring) | 5432 | 5436 | TCP |
 | PostgreSQL (rules) | 5432 | 5437 | TCP |
-| PostgreSQL (rooms) | 5432 | 5438 | TCP |
 
 ## Development
 
@@ -940,13 +931,17 @@ Send voice commands through the Speech Server to control devices using natural l
 
 ### Health Checks
 
-Each service exposes health check endpoints:
+Each service exposes a status endpoint for health monitoring:
 
 ```bash
-# Check service health
-curl http://localhost:5001/health
-curl http://localhost:5002/health
-curl http://localhost:5003/health
+# Device service status
+curl http://localhost:5001/api/devices/status
+
+# Geofences service status
+curl http://localhost:5003/api/geofences/status
+
+# Rules service status
+curl http://localhost:5006/api/rules/status
 ```
 
 ### RabbitMQ Management
