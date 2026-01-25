@@ -22,7 +22,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
     private string _currentWeatherString = string.Empty;
     private string _forecastStringForToday = string.Empty;
     private string _weatherWarningString = string.Empty;
-    private Dictionary<DateTime, string> _forecastCache = new Dictionary<DateTime, string>();
+    private readonly Dictionary<DateTime, string> _forecastCache = new Dictionary<DateTime, string>();
 
     public MessageBasedWeatherProvider(RabbitMQClient rabbitMQ, ILogger<MessageBasedWeatherProvider> logger)
     {
