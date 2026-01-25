@@ -27,8 +27,7 @@
 | **Message Broker** | RabbitMQ 3.x | Event-driven communication |
 | **Database** | PostgreSQL 16 | Data persistence per service |
 | **ORM** | Entity Framework Core | Database access layer |
-| **Orchestration** | .NET Aspire 13.x | Development orchestration |
-| **Containerization** | Docker & Docker Compose | Production deployment |
+| **Containerization** | Docker & Docker Compose | Deployment |
 | **API Documentation** | OpenAPI/Swagger | REST API specification |
 
 ## Architecture
@@ -233,132 +232,6 @@ All services implement JWT bearer token authentication validated against Keycloa
 - Services verify token signature, issuer, audience, and expiration
 - SSL/TLS encryption for all communications in production
 
-## .NET Aspire Integration
-
-### What is .NET Aspire?
-
-**.NET Aspire** is an opinionated stack for building observable, production-ready distributed applications. It provides:
-
-- **Service Orchestration**: Simplified management of multiple services and dependencies
-- **Service Discovery**: Automatic service-to-service communication configuration
-- **Observability**: Built-in telemetry, logging, and health checks
-- **Local Development**: Streamlined developer experience with dashboard UI
-- **Resource Management**: Simplified configuration of databases, message brokers, and caches
-
-### Aspire Architecture in Sarah
-
-```mermaid
-graph TB
-    subgraph "Aspire Dashboard"
-        Dashboard["Aspire Dashboard<br/>Centralized Monitoring"]
-    end
-    
-    subgraph "AppHost Orchestration"
-        AppHost["Sarah.AppHost<br/>Service Orchestrator"]
-    end
-    
-    subgraph "Infrastructure (Containers)"
-        Keycloak_C["Keycloak Container<br/>Port 8443"]
-        RabbitMQ_C["RabbitMQ Container<br/>Ports 5672/15672"]
-        Postgres_C["PostgreSQL Container<br/>Multiple Databases"]
-    end
-    
-    subgraph "Microservices (Projects)"
-        Device["DeviceService<br/>Port 5001"]
-        Persons["PersonsService<br/>Port 5002"]
-        Geofences["GeofencesService<br/>Port 5003"]
-        Monitoring["MonitoringService<br/>Port 5005"]
-        Rules["RulesService<br/>Port 5006"]
-        Speech["SpeechServer<br/>Port 5011"]
-    end
-    
-    subgraph "Frontend"
-        Frontend["Angular SPA<br/>Port 4200"]
-    end
-    
-    AppHost -->|Orchestrates| Keycloak_C
-    AppHost -->|Orchestrates| RabbitMQ_C
-    AppHost -->|Orchestrates| Postgres_C
-    AppHost -->|Launches| Device
-    AppHost -->|Launches| Persons
-    AppHost -->|Launches| Geofences
-    AppHost -->|Launches| Monitoring
-    AppHost -->|Launches| Rules
-    AppHost -->|Launches| Speech
-    AppHost -->|Launches| Frontend
-    
-    Device -->|References| Postgres_C
-    Device -->|References| Keycloak_C
-    Device -->|References| RabbitMQ_C
-    
-    Persons -->|References| Postgres_C
-    Persons -->|References| Keycloak_C
-    Persons -->|References| RabbitMQ_C
-    
-    Dashboard -.->|Monitors| AppHost
-    Dashboard -.->|Logs & Metrics| Device
-    Dashboard -.->|Logs & Metrics| Persons
-    
-    style AppHost fill:#512bd4,stroke:#333,stroke-width:2px,color:#fff
-    style Dashboard fill:#512bd4,stroke:#333,stroke-width:2px,color:#fff
-```
-
-### Aspire Project Structure
-
-The Sarah project uses .NET Aspire for orchestration through the `Sarah.AppHost` project:
-
-```
-Sarah.AppHost/
-├── Program.cs              # Service orchestration configuration
-├── Sarah.AppHost.csproj    # Aspire project file
-└── appsettings.*.json      # Environment-specific settings
-```
-
-**Key Configuration Highlights** (`Program.cs`):
-- Infrastructure containers: Keycloak, RabbitMQ, PostgreSQL
-- Service references and dependencies
-- Port mappings and environment configuration
-- Database-per-service pattern with single PostgreSQL instance
-
-### Benefits of Aspire in Sarah
-
-1. **Simplified Local Development**
-   - Single command to start entire ecosystem
-   - Automatic service discovery and configuration
-   - Centralized dashboard for all services
-
-2. **Infrastructure as Code**
-   - Infrastructure dependencies defined in code
-   - Version-controlled service configuration
-   - Reproducible development environments
-
-3. **Enhanced Observability**
-   - Built-in telemetry and distributed tracing
-   - Centralized logging across services
-   - Real-time health monitoring
-
-4. **Dependency Management**
-   - Automatic injection of connection strings
-   - Service reference management
-   - Configuration propagation
-
-### ⚠️ Important Notes
-
-- **.NET Aspire is EXPERIMENTAL**: Use for development and testing only
-- **Docker Compose is RECOMMENDED for production**: More mature, stable, and widely adopted
-- **Aspire workload deprecated**: Now uses NuGet packages instead of SDK workload
-- **Full integration in progress**: Some services may need manual configuration
-
-### Communication Patterns
-
-1. **Synchronous**: REST APIs between Gateway and Microservices
-2. **Asynchronous**: RabbitMQ topic exchanges for events
-   - Network events (sensor readings, device states)
-   - Speech events (voice commands, TTS)
-   - Person availability events
-   - Geofence events
-   - Weather and environmental events
-
 ## Getting Started
 
 ### Prerequisites
@@ -369,21 +242,20 @@ Sarah.AppHost/
 - **[Docker Compose](https://docs.docker.com/compose/)** - Included with Docker Desktop
 - **[Git](https://git-scm.com/)** - For cloning the repository
 
-### Three Ways to Run Sarah
+### Two Ways to Run Sarah
 
-Sarah can be run in three different modes depending on your needs:
+Sarah can be run in two different modes depending on your needs:
 
-| Method | Best For | Complexity | Production Ready |
-|--------|----------|------------|------------------|
-| **Docker Compose** | Local Development, Testing | Low | ❌ No (Dev Mode) |
-| **.NET Aspire** | Development, Learning | Medium | ⚠️ Experimental |
-| **Manual Setup** | Debugging, Development | High | ❌ No |
+| Method | Best For | Complexity |
+|--------|----------|------------|
+| **Docker Compose** | Local Development, Testing | Low |
+| **Manual Setup** | Debugging, Development | High |
 
 ---
 
-### Option 1: Docker Compose (Recommended for Local Development)
+### Option 1: Docker Compose (Recommended)
 
-Docker Compose provides a complete local development environment with all services pre-configured. Note: The current compose file runs services in development mode and is not hardened for production use.
+Docker Compose provides a complete local development environment with all services pre-configured.
 
 #### Step 1: Clone the Repository
 
@@ -482,64 +354,9 @@ docker-compose -f docker-compose.microservices.yml down -v
 
 ---
 
-### Option 2: .NET Aspire (Experimental Development)
-
-> ⚠️ **.NET Aspire is experimental** - Use for development and learning only. Docker Compose is recommended for production.
-
-.NET Aspire provides a streamlined development experience with a centralized dashboard for service orchestration.
-
-#### Prerequisites
-- .NET 9 SDK with Aspire support
-- Docker Desktop (for infrastructure containers)
-
-#### Step 1: Run the AppHost
-
-```bash
-cd Sarah.AppHost
-dotnet run
-```
-
-#### Step 2: Access the Aspire Dashboard
-
-The Aspire dashboard will automatically open in your browser, showing:
-- 📊 All running services and containers
-- 📝 Real-time logs from each service
-- 🔍 Distributed tracing
-- 📈 Metrics and health checks
-
-Default URL: `https://localhost:17234` (or as shown in console output)
-
-#### Step 3: Configure Services
-
-Aspire will automatically:
-- ✅ Start Keycloak, RabbitMQ, and PostgreSQL containers
-- ✅ Launch all microservices
-- ✅ Configure connection strings and service discovery
-- ✅ Start the Angular frontend
-
-You'll still need to configure Keycloak (see Docker Compose Step 4 above).
-
-#### What Aspire Does for You
-
-```
-✓ Service Discovery: Automatic configuration of service URLs
-✓ Connection Strings: Injected from infrastructure resources
-✓ Health Checks: Built-in endpoint monitoring
-✓ Logging: Centralized log aggregation
-✓ Telemetry: Distributed tracing across services
-✓ Dashboard UI: Visual overview of entire system
-```
-
-#### Limitations
-
-- Aspire workload deprecated in favor of NuGet packages
-- Not all service integrations may be complete
-- Experimental features may change
-- Not suitable for production deployments
-
 ---
 
-### Option 3: Manual Development Setup
+### Option 2: Manual Development Setup
 
 For fine-grained control and debugging individual services.
 
@@ -590,21 +407,10 @@ npm start
 
 #### Step 4: Access Services
 
-When running with `dotnet run`, each service listens on ports configured in its `launchSettings.json` (not the Docker Compose ports). For example:
-- Device Service: `http://localhost:5143` (not 5001)
-- Other services have their own default ports in `launchSettings.json`
-
-To use the Docker Compose port mappings with `dotnet run`, specify URLs explicitly:
+When running with `dotnet run`, services use ports from `launchSettings.json`. To match Docker Compose ports, use:
 ```bash
 dotnet run --urls "http://localhost:5001"
 ```
-
-#### Benefits of Manual Setup
-
-- 🐛 **Debugging**: Attach debugger to individual services
-- 🔧 **Development**: Make changes without rebuilding containers
-- 🎯 **Selective Running**: Run only the services you need
-- 📝 **Learning**: Understand service dependencies and configuration
 
 ## Configuration
 
