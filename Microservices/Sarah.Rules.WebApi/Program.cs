@@ -43,6 +43,14 @@ builder.Services.AddSingleton<Sarah.Rules.RuleService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 
+// Register MessageBasedWeatherProvider as IWeatherProvider and as IHostedService
+builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedWeatherProvider>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
+builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
+
+// Register WeatherWarningHandler as a hosted service
+builder.Services.AddHostedService<Sarah.Rules.Services.WeatherWarningHandler>();
+
 // Add services to the container.
 builder.Services.AddControllers();
 

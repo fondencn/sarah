@@ -17,7 +17,7 @@ public class StartAudioMessage : AbstractMessage
 
     public StartAudioMessage()
     {
-        Topic = "speech.audio.start";
+        Topic = MessageTopics.SpeechAudioStart;
     }
 
     public StartAudioMessage(string audioFileName, string targetSpeaker = "") : this()

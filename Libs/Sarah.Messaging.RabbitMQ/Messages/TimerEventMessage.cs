@@ -7,7 +7,7 @@ public class TimerEventMessage : NetworkEventMessage
 {
     public TimerEventMessage()
     {
-        Topic = "network.events.timer";
+        Topic = MessageTopics.NetworkEventsTimer;
         Property = "TimerTriggered";
     }
 

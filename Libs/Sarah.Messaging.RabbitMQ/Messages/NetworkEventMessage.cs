@@ -17,7 +17,7 @@ public abstract class NetworkEventMessage : AbstractMessage
 
     protected NetworkEventMessage()
     {
-        Topic = "network.events";
+        Topic = MessageTopics.NetworkEvents;
     }
 }
 

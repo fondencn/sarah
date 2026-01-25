@@ -113,6 +113,7 @@ namespace Sarah.Monitoring.Monitors
             await UpdateCurrentWeather();
             await UpdateForecast();
             this.LastUpdate = DateTime.Now;
+            await PublishWeatherForecastUpdate();
 
             while (!this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
             {
@@ -122,6 +123,7 @@ namespace Sarah.Monitoring.Monitors
                 await UpdateCurrentWeather();
                 await UpdateForecast();
                 this.LastUpdate = DateTime.Now;
+                await PublishWeatherForecastUpdate();
             }
         }
         /// <summary>
@@ -307,10 +309,39 @@ namespace Sarah.Monitoring.Monitors
             {
                 string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
                     + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
-                await _rabbitMQ.PublishAsync(new SayMessage(warnMessage));
+                // Do not publish SayMessage here - let Rules microservice handle this via WeatherWarningEventMessage
                 _logger.LogInformation("{WarnMessage}", warnMessage);
             }
         }
+
+
+        /// <summary>
+        /// Publishes a weather forecast update message for external microservices
+        /// </summary>
+        private async Task PublishWeatherForecastUpdate()
+        {
+            try
+            {
+                var message = new WeatherForecastUpdatedMessage
+                {
+                    CurrentTemperature = CurrentOutdoorTemperature,
+                    AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
+                    Sunrise = GetSunrise(),
+                    CurrentWeatherString = GetCurrentWeatherString(),
+                    ForecastStringForToday = GetWeatherForecastStringForToday(),
+                    WeatherWarningString = GetWeatherWarningString(),
+                    Location = this.WarnLocation
+                };
+                
+                await _rabbitMQ.PublishAsync(message);
+                _logger.LogDebug("Published weather forecast update for {Location}", this.WarnLocation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish weather forecast update");
+            }
+        }
+
 
 
         /// <summary>
