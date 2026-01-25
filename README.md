@@ -233,32 +233,6 @@ All services implement JWT bearer token authentication validated against Keycloa
 - Services verify token signature, issuer, audience, and expiration
 - SSL/TLS encryption for all communications in production
 
-#### Security Best Practices Implemented
-
-**✓ Shared Authentication Library**: 
-- Centralized JWT authentication configuration (`Sarah.Authentication` library)
-- Eliminates code duplication across microservices
-- Consistent security policy enforcement
-
-**✓ Resource Management**: 
-- Shared HttpClient instance prevents socket exhaustion
-- Proper resource lifecycle management
-
-**✓ Environment-Aware Security**:
-- SSL certificate validation enabled in production
-- HTTPS metadata validation enforced in non-development environments
-- Self-signed certificates supported only in development
-
-**✓ Credential Management**:
-- Environment variables for sensitive credentials
-- `.env` file support with `.env.example` template
-- No hardcoded passwords in docker-compose files
-- `.gitignore` configured to prevent credential leaks
-
-**⚠️ Known Limitations**:
-- IssuerSigningKeyResolver uses `.Result` (synchronous blocking) due to framework limitations
-- Signing keys are cached by JWT middleware, minimizing performance impact
-
 ## .NET Aspire Integration
 
 ### What is .NET Aspire?
