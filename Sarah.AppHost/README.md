@@ -129,6 +129,8 @@ This will:
 4. Start all microservices
 5. Start the Angular frontend
 
+> **ℹ️ Note**: The AppHost project includes a `Properties/launchSettings.json` file that automatically configures the necessary environment variables (such as `ASPIRE_ALLOW_UNSECURED_TRANSPORT`) when you run `dotnet run`. No additional configuration from VSCode's `launch.json` is needed.
+
 ### Access the Application
 
 - **Aspire Dashboard**: https://localhost:15888
