@@ -27,7 +27,7 @@ public class PersonGeoFenceMessage : AbstractMessage
 
     public PersonGeoFenceMessage()
     {
-        Topic = "person.geofence";
+        Topic = MessageTopics.PersonGeoFence;
     }
 
     public PersonGeoFenceMessage(long personId, string personName, string? currentGeoFenceName, string? previousGeoFenceName) : this()

@@ -22,7 +22,7 @@ public class AirQualityChangedMessage : NetworkEventMessage
 
     public AirQualityChangedMessage()
     {
-        Topic = "network.events.airquality";
+        Topic = MessageTopics.NetworkEventsAirQuality;
         Property = "AirQuality";
     }
 

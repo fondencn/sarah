@@ -12,7 +12,7 @@ public class ClickedEventMessage : NetworkEventMessage
 
     public ClickedEventMessage()
     {
-        Topic = "network.events.clicked";
+        Topic = MessageTopics.NetworkEventsClicked;
         Property = "ButtonClicked";
     }
 

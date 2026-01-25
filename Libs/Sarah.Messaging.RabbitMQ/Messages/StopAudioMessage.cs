@@ -12,7 +12,7 @@ public class StopAudioMessage : AbstractMessage
 
     public StopAudioMessage()
     {
-        Topic = "speech.audio.stop";
+        Topic = MessageTopics.SpeechAudioStop;
     }
 
     public StopAudioMessage(string targetSpeaker = "") : this()

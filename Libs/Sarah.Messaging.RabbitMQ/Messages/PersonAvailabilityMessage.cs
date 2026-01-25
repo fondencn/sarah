@@ -22,7 +22,7 @@ public class PersonAvailabilityMessage : AbstractMessage
 
     public PersonAvailabilityMessage()
     {
-        Topic = "person.availability";
+        Topic = MessageTopics.PersonAvailability;
     }
 
     public PersonAvailabilityMessage(long personId, string personName, bool isAvailable) : this()

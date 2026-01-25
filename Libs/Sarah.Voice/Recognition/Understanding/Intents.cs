@@ -14,14 +14,14 @@ namespace Sarah.Voice.Recognition.Understanding
         #region Singleton
         private SpeechService SpeechService { get; }
         public static Intents Instance { get; private set; }
-        private Intents(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService lEDService, ILoggerFactory loggerFactory)
+        private Intents(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService lEDService, Sarah.API.Interfaces.IWeatherProvider weatherProvider, ILoggerFactory loggerFactory)
         {
             this.SpeechService = speechService;
-            this.KnownIntents = IntentFactory.CreateIntents(speechService , deviceServiceClient, lEDService, loggerFactory);
+            this.KnownIntents = IntentFactory.CreateIntents(speechService , deviceServiceClient, lEDService, weatherProvider, loggerFactory);
         }
-        public static void Initialize(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService lEDService, ILoggerFactory loggerFactory)
+        public static void Initialize(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService lEDService, Sarah.API.Interfaces.IWeatherProvider weatherProvider, ILoggerFactory loggerFactory)
         {
-            Instance = new Intents(speechService, deviceServiceClient, lEDService, loggerFactory);
+            Instance = new Intents(speechService, deviceServiceClient, lEDService, weatherProvider, loggerFactory);
         }
 
         #endregion

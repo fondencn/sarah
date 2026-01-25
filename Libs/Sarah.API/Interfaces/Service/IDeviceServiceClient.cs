@@ -15,10 +15,8 @@ namespace Services.Sarah.API.Interfaces.Service {
         void Initialize();
         Task ActivateScene(string sceneName);
         Task DeactivateScene(string sceneName);
-        Task<GetWeatherResponse> GetWeatherInfo();
         Task<GetDeseaseInfoResponse> GetDeseaseInfo();
         Task<GetAlarmSchedulesResponse> GetAlarmSchedules();
         Task<GetPersonLocationResponse> GetPersonLocation(string person);
-        Task<GetWeatherResponse> GetWeatherForecastInfo(DateTime targetDate);
     }
 }

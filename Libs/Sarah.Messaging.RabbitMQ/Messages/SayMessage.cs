@@ -22,7 +22,7 @@ public class SayMessage : AbstractMessage
 
     public SayMessage()
     {
-        Topic = "speech.say";
+        Topic = MessageTopics.SpeechSay;
     }
 
     public SayMessage(string message, string targetSpeaker = "", SpeechVolume volume = SpeechVolume.Normal) : this()

@@ -17,12 +17,12 @@ namespace Sarah.Voice.Recognition.Understanding
         public override string Title => "Wettervorhersage und Wetterwarnungen";
         public override string HelpText => "Sag \"Wie ist das Wetter?\" für die Wettervorhersage";
 
-
-
         private Regex PatternMatchExpression { get; }
+        private readonly IWeatherProvider _weatherProvider;
 
-        public WeatherIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<WeatherIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public WeatherIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, IWeatherProvider weatherProvider, ILogger<WeatherIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
+            _weatherProvider = weatherProvider;
             string matchPattern = "^.*Wetter\\s*(.*)$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
@@ -45,14 +45,13 @@ namespace Sarah.Voice.Recognition.Understanding
                     string sdt = first[0]["value"];
                     DateTime targetDate = DateTime.Parse(sdt);
 
-                    GetWeatherResponse response = await _DeviceServiceClient.GetWeatherForecastInfo(targetDate);
-                    this.Say(String.IsNullOrWhiteSpace(response.WeatherInfo) ? "Es liegen keine Wetterdaten für " + timeString + " vor." : response.WeatherInfo);
+                    string weatherInfo = _weatherProvider.GetWeatherForecastString(targetDate);
+                    this.Say(String.IsNullOrWhiteSpace(weatherInfo) ? "Es liegen keine Wetterdaten für " + timeString + " vor." : weatherInfo);
                 }
                 else
                 {
-
-                    GetWeatherResponse response = await _DeviceServiceClient.GetWeatherInfo();
-                    this.Say(String.IsNullOrWhiteSpace(response.WeatherInfo) ? "Es liegen keine Wetterdaten vor." : response.WeatherInfo);
+                    string weatherInfo = _weatherProvider.GetCurrentWeatherString();
+                    this.Say(String.IsNullOrWhiteSpace(weatherInfo) ? "Es liegen keine Wetterdaten vor." : weatherInfo);
                 }
             }
             catch (Exception ex)
