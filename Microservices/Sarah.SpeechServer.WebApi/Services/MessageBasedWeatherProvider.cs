@@ -72,19 +72,19 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
 
     public string GetWeatherForecastString(DateTime dteDate)
     {
-        // Check cache for specific date forecast
-        if (_forecastCache.TryGetValue(dteDate.Date, out string? forecast))
+        // If it's today, always get from the locked field for consistency
+        if (dteDate.Date == DateTime.Today)
         {
-            return forecast;
-        }
-        
-        // If it's today, return today's forecast
-        lock (_stateLock)
-        {
-            if (dteDate.Date == DateTime.Today)
+            lock (_stateLock)
             {
                 return _forecastStringForToday;
             }
+        }
+        
+        // Check cache for other dates
+        if (_forecastCache.TryGetValue(dteDate.Date, out string? forecast))
+        {
+            return forecast;
         }
         
         return "Keine Wettervorhersage für diesen Tag verfügbar";
@@ -140,10 +140,10 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
                     _currentWeatherString = msg.CurrentWeatherString;
                     _forecastStringForToday = msg.ForecastStringForToday;
                     _weatherWarningString = msg.WeatherWarningString;
+                    
+                    // Cache today's forecast for consistency
+                    _forecastCache[DateTime.Today] = msg.ForecastStringForToday;
                 }
-                
-                // Cache today's forecast (ConcurrentDictionary is thread-safe)
-                _forecastCache[DateTime.Today] = msg.ForecastStringForToday;
                 
                 _logger.LogInformation("Updated weather forecast for {Location}", msg.Location);
                 await Task.CompletedTask;
