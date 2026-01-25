@@ -94,7 +94,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
             topic: MessageTopics.WeatherForecastUpdated,
             onMessage: async msg =>
             {
-                _currentOutdoorTemperature = msg.CurrentTemperature;
+                // Note: Current temperature is updated separately via OutDoorTemperatureChangedEventMessage
                 _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
                 _sunrise = msg.Sunrise;
                 _currentWeatherString = msg.CurrentWeatherString;
