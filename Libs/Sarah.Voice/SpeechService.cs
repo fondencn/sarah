@@ -73,15 +73,17 @@ namespace Sarah.Voice
         private ILEDService _LEDService;
 
         private IDeviceServiceClient _DeviceServiceClient;
+        private IWeatherProvider _weatherProvider;
         private IConfiguration _Configuration;
         private ILogger<SpeechService> _logger;
         private ILoggerFactory _loggerFactory;
 
-        public SpeechService(ILEDService ledService, IDeviceServiceClient deviceServiceClient, IConfiguration configuration, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
+        public SpeechService(ILEDService ledService, IDeviceServiceClient deviceServiceClient, IWeatherProvider weatherProvider, IConfiguration configuration, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
         {
             this._Configuration = configuration;
             this._LEDService = ledService;
             this._DeviceServiceClient = deviceServiceClient;
+            this._weatherProvider = weatherProvider;
             this._logger = logger;
             this._loggerFactory = loggerFactory;
             this.Location = "Unbekannt";
@@ -105,7 +107,7 @@ namespace Sarah.Voice
 
             if (isRecognitionEnabled)
             {
-                Intents.Initialize(this, this._DeviceServiceClient, this._LEDService, this._loggerFactory);
+                Intents.Initialize(this, this._DeviceServiceClient, this._LEDService, this._weatherProvider, this._loggerFactory);
                 this.Recognizer = new AzureSpeechRecognizer(this._LEDService, this._Configuration, _loggerFactory.CreateLogger<AzureSpeechRecognizer>());
                 this.Recognizer.Initialize();
                 this.Recognizer.Recognized += this.Recognizer_Recognized;

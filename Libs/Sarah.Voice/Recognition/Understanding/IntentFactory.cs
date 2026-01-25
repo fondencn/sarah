@@ -9,7 +9,7 @@ namespace Sarah.Voice.Recognition.Understanding
 {
     public static class IntentFactory
     {
-        public static List<Intent> CreateIntents(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService ledService, ILoggerFactory loggerFactory)
+        public static List<Intent> CreateIntents(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService ledService, Sarah.API.Interfaces.IWeatherProvider weatherProvider, ILoggerFactory loggerFactory)
         {
             if (speechService is null)
             {
@@ -27,7 +27,7 @@ namespace Sarah.Voice.Recognition.Understanding
             intents.Add(new OpenDoorIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<OpenDoorIntent>()));
             intents.Add(new SceneIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<SceneIntent>()));
             intents.Add(new ClockIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<ClockIntent>()));
-            intents.Add(new WeatherIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<WeatherIntent>()));
+            intents.Add(new WeatherIntent(speechService, deviceServiceClient, weatherProvider, loggerFactory.CreateLogger<WeatherIntent>()));
             intents.Add(new CoronaIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<CoronaIntent>()));
             intents.Add(new SilentIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<SilentIntent>()));
             intents.Add(new FindPersonIntent(speechService, deviceServiceClient, loggerFactory.CreateLogger<FindPersonIntent>()));
