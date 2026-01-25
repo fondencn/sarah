@@ -1,6 +1,6 @@
 # Sarah - Smart Home Management System
 
-> A modern, cloud-native smart home management platform built with microservices architecture
+> A modern smart home management platform built with microservices architecture
 
 ## Overview
 
@@ -271,7 +271,7 @@ All services implement JWT bearer token authentication validated against Keycloa
 
 ### What is .NET Aspire?
 
-**.NET Aspire** is an opinionated, cloud-ready stack for building observable, production-ready distributed applications. It provides:
+**.NET Aspire** is an opinionated stack for building observable, production-ready distributed applications. It provides:
 
 - **Service Orchestration**: Simplified management of multiple services and dependencies
 - **Service Discovery**: Automatic service-to-service communication configuration
@@ -1145,7 +1145,7 @@ Future enhancements planned for Sarah:
 - 📊 **Advanced Analytics**: Historical data analysis and insights
 - 🌐 **Multi-Tenant**: Support for multiple households
 - 🔐 **2FA Support**: Two-factor authentication
-- ☁️ **Cloud Deployment**: Azure/AWS deployment templates
+- 🏠 **Kubernetes Support**: Container orchestration for scaling
 
 ## Resources
 
