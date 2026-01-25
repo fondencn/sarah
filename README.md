@@ -1164,4 +1164,358 @@ Special thanks to the open-source community for these amazing tools!
 
 ---
 
+## Developer Reference: Architecture Deep Dive
+
+This section provides a comprehensive understanding of Sarah's software structure, use cases, and call chains to help developers (and AI assistants) quickly understand the system architecture in future sessions.
+
+### System Architecture Overview
+
+Sarah follows a **microservices architecture** with the following key characteristics:
+
+- **Service Independence**: Each microservice owns its data and business logic
+- **Event-Driven Communication**: Services communicate asynchronously via RabbitMQ
+- **Centralized Authentication**: All services authenticate via Keycloak JWT tokens
+- **Database Per Service**: Each microservice has its own PostgreSQL database
+- **REST API Exposure**: Each service exposes REST endpoints for synchronous operations
+
+### Core Services and Responsibilities
+
+#### 1. Device Service (Port 5001)
+**Purpose**: Manages all smart home devices and their states
+
+**Key Responsibilities**:
+- Device discovery and registration
+- Device state management (on/off, brightness, temperature)
+- Z-Wave network communication
+- Device grouping and associations
+- LED animations
+
+**Database**: `devicesdb` - stores device configurations, states, and network topology
+
+**Dependencies**:
+- **Keycloak**: JWT authentication
+- **RabbitMQ**: Publishes device state changes, listens for control commands
+- **Shared Libraries**: `Sarah.API`, `Sarah.LEDService`, `Sarah.Messaging.RabbitMQ`
+
+**Key Endpoints**:
+- `GET /api/devices/lamps` - Retrieve all lamp devices
+- `GET /api/devices/sensors` - Retrieve all sensors
+- `GET /api/devices/{id}` - Get specific device details
+- `GET /api/devices/status` - Service health check
+
+#### 2. Persons Service (Port 5002)
+**Purpose**: Manages users, persons, and their presence/availability
+
+**Key Responsibilities**:
+- User profile management
+- Person tracking and availability status
+- Presence detection integration
+- User preferences and settings
+
+**Database**: `personsdb` - stores user data, profiles, and availability states
+
+**Dependencies**:
+- **Keycloak**: JWT authentication
+- **RabbitMQ**: Publishes person availability events, presence changes
+- **PostgreSQL**: Stores person and user data
+
+**Key Use Cases**:
+- Track who is home/away for automation rules
+- Manage user preferences for device control
+- Provide presence context for geofencing
+
+#### 3. Geofences Service (Port 5003)
+**Purpose**: Location-based automation and boundary detection
+
+**Key Responsibilities**:
+- Geofence boundary definitions
+- Location tracking and position updates
+- Entry/exit event detection
+- Home zone management
+
+**Database**: `geofencesdb` - stores geofence definitions and location history
+
+**Dependencies**:
+- **Keycloak**: JWT authentication
+- **RabbitMQ**: Publishes geofence entry/exit events
+- **Persons Service**: Correlates location with persons
+
+**Key Endpoints**:
+- `GET /api/geofences` - List all geofences
+- `GET /api/geofences/current?latitude={lat}&longitude={lon}` - Check current location
+- `GET /api/geofences/home` - Get home geofence
+
+**Use Case Flow**:
+1. GPS tracker publishes location update
+2. Geofences Service receives location
+3. Checks if location crosses any boundaries
+4. Publishes `PersonGeoFenceMessage` to RabbitMQ
+5. Rules Service consumes event and triggers automation
+
+#### 4. Rules Service (Port 5006)
+**Purpose**: Automation engine and rule execution
+
+**Key Responsibilities**:
+- Rule definition and storage
+- Event pattern matching
+- Condition evaluation (time, location, device state)
+- Action execution (trigger devices, send notifications)
+
+**Database**: `rulesdb` - stores automation rules and execution history
+
+**Dependencies**:
+- **Keycloak**: JWT authentication
+- **RabbitMQ**: Consumes all event types, publishes action commands
+- **All Services**: Can trigger actions in any service
+
+**Typical Rule Flow**:
+```
+Event (e.g., Geofence Exit) 
+  → Rules Service evaluates conditions
+  → Matches rule: "Turn off lights when leaving home"
+  → Publishes command to Device Service
+  → Device Service executes action
+```
+
+#### 5. Monitoring Service (Port 5005)
+**Purpose**: System health and metrics collection
+
+**Key Responsibilities**:
+- Service health monitoring
+- Performance metrics collection
+- System diagnostics
+- Logging aggregation
+
+**Database**: `monitoringdb` - stores metrics, logs, and health status
+
+#### 6. Speech Server (Port 5011)
+**Purpose**: Voice command processing and text-to-speech
+
+**Key Responsibilities**:
+- Voice command recognition
+- Natural language processing
+- Text-to-speech synthesis
+- Audio playback management
+
+**Dependencies**:
+- **Keycloak**: JWT authentication
+- **RabbitMQ**: Publishes speech events (`SayMessage`, `StopAudioMessage`)
+- **Device Service**: Controls devices via voice
+
+**Use Case Example**:
+```
+User: "Turn on living room lights"
+  → Speech Server processes command
+  → Identifies intent: device control
+  → Publishes device command to RabbitMQ
+  → Device Service receives and executes
+  → Speech Server confirms: "Living room lights are now on"
+```
+
+#### 7. Room Service (Port 5004)
+**Purpose**: Room and space organization
+
+**Key Responsibilities**:
+- Room definitions and hierarchies
+- Device-to-room assignments
+- Zone management
+
+**Database**: `roomsdb` - stores room definitions and device mappings
+
+### Shared Libraries
+
+#### Sarah.API
+Core business objects, interfaces, and DTOs shared across all services:
+- **Interfaces**: `IDeviceService`, `IRuleService`, `IGeoFenceService`
+- **Business Objects**: `NetworkElement`, `AssociationGroup`, `SensorData`
+- **DTOs**: Device models, request/response objects
+
+#### Sarah.Authentication
+Centralized JWT authentication configuration:
+- Keycloak integration
+- JWT token validation
+- Environment-aware HTTPS metadata handling
+- Shared HttpClient for JWKS retrieval
+
+#### Sarah.Messaging.RabbitMQ
+Event messaging infrastructure:
+- **Base Classes**: `AbstractMessage`
+- **Message Types**: 
+  - `PersonGeoFenceMessage` - Geofence events
+  - `SayMessage` - Text-to-speech requests
+  - `WeatherEventMessages` - Weather updates
+  - `StopAudioMessage` - Audio control
+
+#### Sarah.DeviceServiceClient
+Client library for Device Service API:
+- HTTP client wrapper
+- Type-safe API calls
+- Used by services that need to control devices
+
+### Communication Patterns and Call Chains
+
+#### Pattern 1: Synchronous HTTP Requests
+**Example: Frontend retrieves device list**
+```
+Angular Client
+  → HTTP GET /api/devices/lamps (JWT token)
+  → Device Service validates JWT with Keycloak
+  → Device Service queries database
+  → Returns device list as JSON
+```
+
+#### Pattern 2: Asynchronous Event Publishing
+**Example: Device state change**
+```
+Device Service changes lamp state
+  → Publishes DeviceStateChanged to RabbitMQ (topic exchange)
+  → Multiple consumers receive event:
+    - Rules Service: Checks if triggers any rules
+    - Monitoring Service: Records state change
+    - Frontend (via WebSocket): Updates UI
+```
+
+#### Pattern 3: Cross-Service Automation
+**Example: "Turn off lights when leaving home"**
+```
+1. GPS Tracker updates position
+2. Geofences Service detects exit from home zone
+3. Publishes PersonGeoFenceMessage (event: exit, person: John)
+4. Rules Service receives event
+5. Evaluates rule: "If John exits home, turn off all lights"
+6. Publishes device commands to RabbitMQ
+7. Device Service receives commands
+8. Turns off all lamp devices
+9. Publishes state change events
+10. Speech Server announces: "All lights turned off"
+```
+
+#### Pattern 4: Voice Command Processing
+**Example: "What's the weather?"**
+```
+User speaks command
+  → Speech Server captures audio
+  → Processes natural language
+  → Identifies intent: weather query
+  → Publishes weather request to RabbitMQ
+  → Monitoring Service responds with weather data
+  → Speech Server synthesizes response
+  → Plays audio: "It's 72 degrees and sunny"
+```
+
+### Key Use Cases
+
+#### Use Case 1: Morning Automation
+**Trigger**: 7:00 AM on weekdays
+**Flow**:
+1. Rules Service timer fires
+2. Checks person availability (is anyone home?)
+3. If home, publishes commands:
+   - Turn on bedroom lights (30% brightness)
+   - Start coffee maker
+   - Announce weather forecast via Speech Server
+
+#### Use Case 2: Security Monitoring
+**Trigger**: Door sensor detects open door
+**Flow**:
+1. Device Service receives sensor event
+2. Publishes door sensor state change
+3. Rules Service checks conditions:
+   - Is it after 10 PM?
+   - Is alarm armed?
+4. If yes, publishes alert
+5. Speech Server announces: "Front door opened"
+6. Monitoring Service logs security event
+
+#### Use Case 3: Energy Saving
+**Trigger**: Last person leaves home (geofence exit)
+**Flow**:
+1. Geofences Service detects all persons outside home zone
+2. Publishes "AllPersonsAway" event
+3. Rules Service triggers energy-saving mode:
+   - Turn off all lights
+   - Set thermostat to away mode
+   - Disable unnecessary devices
+4. Speech Server confirms via mobile notification
+
+### Service Dependencies Matrix
+
+| Service | Database | RabbitMQ | Keycloak | Other Services |
+|---------|----------|----------|----------|----------------|
+| Device Service | devicesdb | ✅ Pub/Sub | ✅ Auth | - |
+| Persons Service | personsdb | ✅ Pub/Sub | ✅ Auth | - |
+| Geofences Service | geofencesdb | ✅ Pub/Sub | ✅ Auth | Persons (data) |
+| Rules Service | rulesdb | ✅ Pub/Sub | ✅ Auth | All (triggers) |
+| Monitoring Service | monitoringdb | ✅ Pub/Sub | ✅ Auth | All (monitors) |
+| Room Service | roomsdb | - | ✅ Auth | Device (assigns) |
+| Speech Server | - | ✅ Pub/Sub | ✅ Auth | Device (controls) |
+
+### Data Flow Diagram
+
+```
+┌──────────────┐
+│ Angular SPA  │
+└──────┬───────┘
+       │ HTTP/JWT
+       ▼
+┌──────────────────────────────────────────┐
+│         Microservices Layer              │
+│  ┌────────┐ ┌────────┐ ┌──────────┐    │
+│  │ Device │ │ Persons│ │ Geofences│    │
+│  │ Service│ │ Service│ │  Service │    │
+│  └────┬───┘ └───┬────┘ └────┬─────┘    │
+│       │         │            │           │
+│  ┌────┴─────────┴────────────┴─────┐    │
+│  │       RabbitMQ (Events)         │    │
+│  └────┬─────────┬────────────┬─────┘    │
+│       │         │            │           │
+│  ┌────▼───┐ ┌──▼─────┐ ┌───▼──────┐    │
+│  │ Rules  │ │Monitor │ │  Speech  │    │
+│  │ Service│ │ Service│ │  Server  │    │
+│  └────────┘ └────────┘ └──────────┘    │
+└──────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────┐
+│    Keycloak      │
+│  (Auth/JWT)      │
+└──────────────────┘
+```
+
+### Development Tips
+
+1. **Adding a New Service**:
+   - Create in `Microservices/` folder
+   - Reference `Sarah.API` and `Sarah.Authentication` libraries
+   - Add database configuration with `PostgresConnection`
+   - Register in `Sarah.AppHost/Program.cs` for Aspire
+   - Add to `docker-compose.microservices.yml`
+
+2. **Adding New Event Types**:
+   - Define message class in `Sarah.Messaging.RabbitMQ/Messages/`
+   - Inherit from `AbstractMessage`
+   - Publisher: Inject RabbitMQ client, publish to topic exchange
+   - Consumer: Subscribe to relevant topics, implement handler
+
+3. **Debugging Service Communication**:
+   - Check RabbitMQ Management UI (port 15672) for message flow
+   - Verify JWT tokens are valid (check Keycloak logs)
+   - Use service status endpoints: `/api/{service}/status`
+   - Review service logs for authentication errors
+
+4. **Common Integration Points**:
+   - Device control: Publish commands to RabbitMQ or call Device Service API
+   - User context: Query Persons Service for availability
+   - Location awareness: Use Geofences Service for position checks
+   - Automation: Rules Service automatically triggers actions based on events
+
+### Testing Strategy
+
+- **Unit Tests**: Test individual service logic in isolation
+- **Integration Tests**: Test service-to-service communication via RabbitMQ
+- **API Tests**: Test REST endpoints with valid JWT tokens
+- **End-to-End Tests**: Test complete use case flows (UI → Services → Events → Actions)
+
+---
+
 **Star ⭐ this repository if you find it helpful!**
