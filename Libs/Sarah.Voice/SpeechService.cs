@@ -73,7 +73,7 @@ namespace Sarah.Voice
         private ILEDService _LEDService;
 
         private IDeviceServiceClient _DeviceServiceClient;
-        private IWeatherProvider _weatherProvider;
+        private readonly IWeatherProvider _weatherProvider;
         private IConfiguration _Configuration;
         private ILogger<SpeechService> _logger;
         private ILoggerFactory _loggerFactory;
