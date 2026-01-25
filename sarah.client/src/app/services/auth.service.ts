@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { environment } from '../../environments/environment';
 
 export const authConfig: AuthConfig = {
-  issuer: 'https://pi:8443/realms/sarah-realm',
+  issuer: environment.keycloakIssuer ?? 'http://localhost:8080/realms/sarah-realm',
   redirectUri: window.location.origin + '/home',
-  clientId: 'sarah-client',
+  clientId: environment.keycloakClientId ?? 'sarah-client',
   dummyClientSecret: '5q3qyM7WdFQWkaiMr3kUBneLtsQJYu0M',
   scope: 'openid profile email offline_access',
   responseType: 'code',
@@ -12,7 +13,7 @@ export const authConfig: AuthConfig = {
   strictDiscoveryDocumentValidation: false,
   useHttpBasicAuth: false,
   disableAtHashCheck: true,
-  requireHttps: true
+  requireHttps: !window.location.origin.startsWith('http://localhost')
 };
 
 @Injectable({
