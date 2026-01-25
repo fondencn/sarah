@@ -39,7 +39,6 @@
       "description": "Angular SPA client for Sarah smart home system",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
       "redirectUris": [
         "http://localhost:4200/*",
         "https://localhost:4200/*",

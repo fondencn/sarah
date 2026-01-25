@@ -48,10 +48,16 @@ The `keycloak-realm.json` file contains the complete Keycloak realm configuratio
   - Web origins: `http://localhost:4200`, `https://localhost:4200`
   - Direct access grants enabled
   - Standard flow (authorization code) enabled
-- **Test User**: Pre-configured with credentials from appsettings
+- **Test User**: Pre-configured with hardcoded password (for development only)
 - **Token Settings**: 
   - Access token: 5 minutes (300 seconds)
   - Refresh token: 30 minutes (1800 seconds)
+
+> **⚠️ IMPORTANT**: The `keycloak-realm.json` file contains a hardcoded test user password. This is acceptable for development but should **NEVER** be used in production. For production deployments:
+> - Create a separate realm configuration without hardcoded credentials
+> - Use Keycloak's user management features to create users after deployment
+> - Consider using Keycloak's user federation (LDAP/Active Directory) for production user management
+> - Exclude this file from production builds or use environment-specific realm configurations
 
 ### Customizing Credentials
 
@@ -85,7 +91,21 @@ You can customize the Keycloak admin and test user credentials in two ways:
    }
    ```
 
-> **Note**: The test user credentials in `appsettings.json` should match the user credentials in `keycloak-realm.json` for the realm import to work correctly.
+3. **Use Environment Variables** (recommended for production):
+   ```bash
+   export Keycloak__AdminPassword="YourSecurePassword123!"
+   export Keycloak__TestUser__Password="YourSecurePassword456!"
+   dotnet run --project Sarah.AppHost
+   ```
+
+> **🔒 SECURITY WARNING**: 
+> - The default credentials in `appsettings.json` are for **development only**
+> - **NEVER** use these default passwords in production environments
+> - **NEVER** commit production credentials to version control
+> - For production, use environment variables, Azure Key Vault, or other secure configuration providers
+> - The test user password in `keycloak-realm.json` must be manually updated if you change it in `appsettings.json`
+
+> **Note**: The test user credentials in `appsettings.json` should match the user credentials in `keycloak-realm.json` for the realm import to work correctly. If you change the password in appsettings, you must also update it in the JSON file.
 
 ## Running the Application
 

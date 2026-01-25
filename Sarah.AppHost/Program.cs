@@ -1,10 +1,8 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-// Add configuration for Keycloak admin credentials and test user
+// Add configuration for Keycloak admin credentials
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
-var testUser = builder.Configuration["Keycloak:TestUser:Username"] ?? "testuser";
-var testUserPassword = builder.Configuration["Keycloak:TestUser:Password"] ?? "password";
 
 // Add Keycloak IDP with realm import
 var keycloak = builder.AddKeycloak("keycloak", 8443)

@@ -299,6 +299,8 @@ The default credentials work out of the box, but you can customize them by editi
 
 For development-specific overrides, edit `Sarah.AppHost/appsettings.Development.json`.
 
+> **🔒 Security Note**: These are default development credentials. **Never use these passwords in production**. For production deployments, use environment variables or secure configuration providers like Azure Key Vault.
+
 #### Step 3: Start All Services with Aspire
 
 ```bash
