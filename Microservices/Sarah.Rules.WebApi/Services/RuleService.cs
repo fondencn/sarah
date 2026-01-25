@@ -6,15 +6,16 @@ using Sarah.Rules.Conditions;
 using System.Text;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Sarah.Rules
 {
     /// <summary>
     /// Die RuleEngine (Singleton)
     /// </summary>
-    public sealed class RuleService : IRuleService, INetworkEventSubscriber, IDisposable
+    public sealed class RuleService : BackgroundService, IRuleService, INetworkEventSubscriber, IDisposable
     {
-        private readonly IDeviceService _devices;
         private readonly RabbitMQClient _rabbitMQ;
 
 
@@ -34,19 +35,157 @@ namespace Sarah.Rules
         /// </summary>
         private TimerEngine Timers { get; } 
 
-        private readonly ILogger _logger;
+        private readonly ILogger<RuleService> _logger;
 
         /// <summary>
         /// Alle Regel-Quellen
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(IDeviceService devices, RabbitMQClient rabbitMQ, ILogger logger) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger) 
         { 
-            this._devices = devices;
             this._rabbitMQ = rabbitMQ;
-            this.Timers = new TimerEngine(rabbitMQ, logger);
             this._logger = logger;
+            this.Timers = new TimerEngine(rabbitMQ, logger);
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("RuleService is starting");
+
+            try
+            {
+                await _rabbitMQ.ConnectAsync(stoppingToken);
+
+                // Subscribe to specific network event types only
+                await _rabbitMQ.SubscribeAsync<ClickedEventMessage>(
+                    topic: "network.events.clicked",
+                    onMessage: HandleClickedEvent,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<TimerEventMessage>(
+                    topic: "network.events.timer",
+                    onMessage: HandleTimerEvent,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<PersonAvailabilityMessage>(
+                    topic: "person.availability",
+                    onMessage: HandlePersonAvailability,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<PersonGeoFenceMessage>(
+                    topic: "person.geofence",
+                    onMessage: HandlePersonGeoFence,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<AirQualityChangedMessage>(
+                    topic: "network.events.airquality",
+                    onMessage: HandleAirQualityChanged,
+                    cancellationToken: stoppingToken);
+
+                _logger.LogInformation("RuleService subscribed to all event topics");
+
+                // Keep the service running
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("RuleService is stopping");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in RuleService");
+                throw;
+            }
+        }
+
+        private async Task HandleClickedEvent(ClickedEventMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received clicked event: Scene {SceneId} from node {NodeId}", 
+                    message.SceneId, message.SourceNodeId);
+
+                var clickedEvent = new ClickedEvent(message.SourceNodeId, message.SceneId);
+                EvaluateRules(clickedEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling clicked event");
+            }
+        }
+
+        private async Task HandleTimerEvent(TimerEventMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received timer event from node {NodeId}", message.SourceNodeId);
+
+                var timerEvent = new TimerEvent(message.SourceNodeId);
+                EvaluateRules(timerEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling timer event");
+            }
+        }
+
+        private async Task HandlePersonAvailability(PersonAvailabilityMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received person availability: {PersonName} is {Available}", 
+                    message.PersonName, message.IsAvailable ? "available" : "unavailable");
+
+                var availabilityEvent = new PersonAvailabilityEvent(
+                    message.PersonId, 
+                    message.PersonName, 
+                    message.IsAvailable);
+                EvaluateRules(availabilityEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling person availability event");
+            }
+        }
+
+        private async Task HandlePersonGeoFence(PersonGeoFenceMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received geofence event: {PersonName}", message.PersonName);
+
+                var geofenceEvent = new PersonGeoFenceEvent(
+                    message.PersonId,
+                    message.PersonName,
+                    null, // CurrentGeoFence - would need to resolve from message
+                    null); // PreviousGeoFence - would need to resolve from message
+                EvaluateRules(geofenceEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling geofence event");
+            }
+        }
+
+        private async Task HandleAirQualityChanged(AirQualityChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received air quality changed event from node {NodeId}: {Level}", 
+                    message.SourceNodeId, message.Level);
+
+                var airQualityEvent = new AirQualityChangedEvent(
+                    message.SourceNodeId,
+                    (Sarah.API.BusinessObjects.AirQualitityLevel)message.Level,
+                    message.Message ?? string.Empty,
+                    message.RoomName ?? string.Empty);
+                EvaluateRules(airQualityEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling air quality changed event");
+            }
         }
 
         private object _evaluateRulesLock = new object();
@@ -158,9 +297,10 @@ namespace Sarah.Rules
         /// <summary>
         /// From IDisposable
         /// </summary>
-        public void Dispose()
+        public new void Dispose()
         {
             this.Timers?.Dispose();
+            base.Dispose();
         }
 
 

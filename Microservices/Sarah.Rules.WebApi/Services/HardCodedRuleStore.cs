@@ -20,10 +20,23 @@ namespace Sarah.Rules
         private readonly IEmailNotifier _emails;
         private readonly IFerienInfoProvider _ferien;
         private readonly IDeviceServiceClient _deviceServiceClient;
-        private List<Rule> _rules;
+        private List<Rule> _rules = new List<Rule>();
         private readonly IWeatherProvider _weather;
 
         private readonly ILogger<HardCodedRuleStore> _logger;
+
+
+        /// <summary>
+        /// Die Regeln dieses Speichers.
+        /// </summary>
+        public IReadOnlyCollection<Rule> Rules => _rules.AsReadOnly();
+
+        /// <summary>
+        ///
+        /// </summary>
+        public event EventHandler? Changed; // wird momentan nie ausgelöst, da die Regeln immer fest im ctor erzeugt werden
+
+
 
         /// <summary>
         /// ctor
@@ -40,18 +53,6 @@ namespace Sarah.Rules
             this._deviceServiceClient = deviceServiceClient;
             this.CreateRules();
         }
-
-        /// <summary>
-        /// Die Regeln dieses Speichers.
-        /// </summary>
-        public IReadOnlyCollection<Rule> Rules => _rules.AsReadOnly();
-
-        /// <summary>
-        ///
-        /// </summary>
-        #pragma warning disable 67 // Suppress warning for unused event
-        public event EventHandler Changed; // wird momentan nie ausgelöst, da die Regeln immer fest im ctor erzeugt werden
-        #pragma warning restore 67
 
 
 
@@ -81,6 +82,7 @@ namespace Sarah.Rules
 
             //AddLukasGehInsBettRules();
 
+            this.Changed?.Invoke(this, EventArgs.Empty);
            
         }
 
@@ -382,8 +384,8 @@ namespace Sarah.Rules
                 }
 
                 /* Ferien morgen zu Ende */
-                string aktuelleFerien = _ferien.AktuelleFerien?.Name;
-                if (!String.IsNullOrWhiteSpace(aktuelleFerien) && _ferien.AktuelleFerien.Ende == DateTime.Today)
+                string? aktuelleFerien = _ferien.AktuelleFerien?.Name;
+                if (!String.IsNullOrWhiteSpace(aktuelleFerien) && _ferien.AktuelleFerien?.Ende == DateTime.Today)
                 {
                     greet += ". " + "Heute sind die " + aktuelleFerien + " zu Ende.";
                 }

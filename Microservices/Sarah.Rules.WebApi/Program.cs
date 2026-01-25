@@ -34,13 +34,14 @@ builder.Services.AddSingleton(sp =>
     return new RabbitMQClient(logger, builder.Configuration);
 });
 
-// Register RuleService as singleton (will be used by RulesEventSubscriber)
-// Note: RuleService still has dependencies on legacy interfaces, this is for backwards compatibility
+// Register RuleService with triple registration pattern:
+// 1. As singleton RuleService (concrete implementation)
+// 2. As IHostedService (to start background service)
+// 3. As IRuleService (for controller/service injection)
 builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
-
-// Register RulesEventSubscriber as a hosted service
-builder.Services.AddHostedService<RulesEventSubscriber>();
+builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
+builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 
 // Add services to the container.
 builder.Services.AddControllers();
