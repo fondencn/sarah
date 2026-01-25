@@ -34,9 +34,9 @@ namespace Sarah.DeviceService.Model
             return String.Format("#{0:x02}{1:x02}{2:x02}", color.R, color.G, color.B);
         }
 
-        public static void FromHex(string hex, out byte a, out byte r, out byte g, out byte b)
+        public static void FromHex(string? hex, out byte a, out byte r, out byte g, out byte b)
         {
-            hex = ToRgbaHex(hex);
+            hex = ToRgbaHex(hex ?? "#000000");
             if (hex == null || !uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var packedValue))
             {
                 throw new ArgumentException("Hexadecimal string is not in the correct format.", nameof(hex));
@@ -49,7 +49,7 @@ namespace Sarah.DeviceService.Model
         }
 
 
-        private static string ToRgbaHex(string hex)
+        private static string? ToRgbaHex(string hex)
         {
             hex = hex.StartsWith("#") ? hex.Substring(1) : hex;
 

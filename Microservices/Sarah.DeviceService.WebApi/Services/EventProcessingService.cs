@@ -217,12 +217,12 @@ public class EventProcessingService : IEventProcessingService
             var message = new PersonGeoFenceMessage(
                 personGeoFenceEvent.Id_Person,
                 personGeoFenceEvent.PersonName,
-                personGeoFenceEvent.CurrentGeoFence?.Name,
-                personGeoFenceEvent.PreviousGeoFence?.Name);
+                personGeoFenceEvent.CurrentGeoFence,
+                personGeoFenceEvent.PreviousGeoFence);
 
             await _rabbitMQClient.PublishAsync(message, exchange: "person.events", cancellationToken: cancellationToken);
             _logger.LogDebug("Published geofence event - Person: {Person}, Current: {Current}, Previous: {Previous}",
-                personGeoFenceEvent.PersonName, personGeoFenceEvent.CurrentGeoFence?.Name, personGeoFenceEvent.PreviousGeoFence?.Name);
+                personGeoFenceEvent.PersonName, personGeoFenceEvent.CurrentGeoFence, personGeoFenceEvent.PreviousGeoFence);
         }
         catch (Exception ex)
         {

@@ -20,7 +20,7 @@ namespace Sarah.DeviceService.Model
 
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            _publisher.ReportEvent(this, "Status", "Controller gestartet");
+            _ = _publisher.ReportEvent(this, "Status", "Controller gestartet");
             return Task.CompletedTask;
         }
     }

@@ -37,7 +37,7 @@ namespace Sarah.DeviceService.Model.Animations
 
         private static IEnumerable<Type> LoadSceneDefinitions()
         {
-            return Assembly.GetAssembly(typeof(Scene)).GetTypes().Where(item => item.BaseType == typeof(Scene));
+            return Assembly.GetAssembly(typeof(Scene))!.GetTypes().Where(item => item.BaseType == typeof(Scene));
         }
 
         public static bool IsSceneActive(Type sceneType)
@@ -45,7 +45,7 @@ namespace Sarah.DeviceService.Model.Animations
             return _activeScenes.ContainsKey(sceneType);
         }
 
-        public static void Start(Type sceneType)
+        public static void Start(Type? sceneType)
         {
             if(sceneType == null)
             {
@@ -54,13 +54,13 @@ namespace Sarah.DeviceService.Model.Animations
 
             if (!_activeScenes.ContainsKey(sceneType))
             {
-                Scene scene = Activator.CreateInstance(sceneType) as Scene;
+                Scene scene = (Scene)Activator.CreateInstance(sceneType)!;
                 scene.Start();
                 _activeScenes.Add(sceneType, scene);
             }
         }
 
-        public static void Stop(Type sceneType)
+        public static void Stop(Type? sceneType)
         {
             if (sceneType == null)
             {
@@ -78,11 +78,11 @@ namespace Sarah.DeviceService.Model.Animations
         public static void Start(string sceneTypeName) => Start(FindScene(sceneTypeName));
         public static void Stop(string sceneTypeName) => Stop(FindScene(sceneTypeName));
 
-        private static Type FindScene(string sceneTypeName)
+        private static Type? FindScene(string sceneTypeName)
         {
             // Console.WriteLine("FindScene " + (sceneTypeName ?? "(null)"));
             string cleanedSceneName = sceneTypeName.Trim(',', ' ', '.');
-            Type sceneType = KnownScenes.FirstOrDefault(item => String.Equals(item.Name, sceneTypeName, StringComparison.OrdinalIgnoreCase));
+            Type? sceneType = KnownScenes.FirstOrDefault(item => String.Equals(item.Name, sceneTypeName, StringComparison.OrdinalIgnoreCase));
             if(sceneType == null)
             {
                 sceneType = KnownScenes.FirstOrDefault(item => item.GetCustomAttributes<SceneNameAttribute>()
