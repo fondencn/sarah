@@ -25,9 +25,6 @@ public class WeatherWarningHandler : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        
-        await _rabbitMQ.ConnectAsync(cancellationToken);
-        
         // Subscribe to weather warning messages
         await _rabbitMQ.SubscribeAsync<WeatherWarningEventMessage>(
             topic: MessageTopics.WeatherWarning,
