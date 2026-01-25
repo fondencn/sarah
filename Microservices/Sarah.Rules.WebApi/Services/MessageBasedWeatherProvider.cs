@@ -14,6 +14,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
     private readonly RabbitMQClient _rabbitMQ;
     private readonly ILogger<MessageBasedWeatherProvider> _logger;
     private CancellationTokenSource? _cancellationTokenSource;
+    private readonly object _stateLock = new object();
 
     // Local state
     private double _currentOutdoorTemperature = 22.0;
@@ -29,38 +30,71 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
         _logger = logger;
     }
 
-    public double CurrentOutdoorTemperature => _currentOutdoorTemperature;
+    public double CurrentOutdoorTemperature
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _currentOutdoorTemperature;
+            }
+        }
+    }
 
-    public double? AverageTemperatureNext4Hours => _averageTemperatureNext4Hours;
+    public double? AverageTemperatureNext4Hours
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _averageTemperatureNext4Hours;
+            }
+        }
+    }
 
     public string GetCurrentWeatherString(bool addDebugOutput = false, bool getWarningDetails = false)
     {
-        return _currentWeatherString;
+        lock (_stateLock)
+        {
+            return _currentWeatherString;
+        }
     }
 
     public string GetWeatherForecastStringForToday()
     {
-        return _forecastStringForToday;
+        lock (_stateLock)
+        {
+            return _forecastStringForToday;
+        }
     }
 
     public string GetWeatherForecastString(DateTime dteDate)
     {
-        // For specific dates, return a generic message as we only cache today's forecast
-        if (dteDate.Date == DateTime.Today)
+        lock (_stateLock)
         {
-            return _forecastStringForToday;
+            // For specific dates, return a generic message as we only cache today's forecast
+            if (dteDate.Date == DateTime.Today)
+            {
+                return _forecastStringForToday;
+            }
+            return "Keine Wettervorhersage für diesen Tag verfügbar";
         }
-        return "Keine Wettervorhersage für diesen Tag verfügbar";
     }
 
     public string GetWeatherWarningString()
     {
-        return _weatherWarningString;
+        lock (_stateLock)
+        {
+            return _weatherWarningString;
+        }
     }
 
     public DateTime? GetSunrise()
     {
-        return _sunrise;
+        lock (_stateLock)
+        {
+            return _sunrise;
+        }
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -74,7 +108,10 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
             topic: MessageTopics.WeatherOutdoorTemperature,
             onMessage: async msg =>
             {
-                _currentOutdoorTemperature = msg.NewValue;
+                lock (_stateLock)
+                {
+                    _currentOutdoorTemperature = msg.NewValue;
+                }
                 _logger.LogDebug("Updated outdoor temperature to {Temperature}°C", msg.NewValue);
                 await Task.CompletedTask;
             },
@@ -86,12 +123,15 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
             topic: MessageTopics.WeatherForecastUpdated,
             onMessage: async msg =>
             {
-                // Note: Current temperature is updated separately via OutDoorTemperatureChangedEventMessage
-                _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
-                _sunrise = msg.Sunrise;
-                _currentWeatherString = msg.CurrentWeatherString;
-                _forecastStringForToday = msg.ForecastStringForToday;
-                _weatherWarningString = msg.WeatherWarningString;
+                lock (_stateLock)
+                {
+                    // Note: Current temperature is updated separately via OutDoorTemperatureChangedEventMessage
+                    _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
+                    _sunrise = msg.Sunrise;
+                    _currentWeatherString = msg.CurrentWeatherString;
+                    _forecastStringForToday = msg.ForecastStringForToday;
+                    _weatherWarningString = msg.WeatherWarningString;
+                }
                 
                 _logger.LogInformation("Updated weather forecast for {Location}", msg.Location);
                 await Task.CompletedTask;

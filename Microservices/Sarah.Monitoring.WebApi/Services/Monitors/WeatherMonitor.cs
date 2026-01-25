@@ -309,14 +309,10 @@ namespace Sarah.Monitoring.Monitors
             {
                 string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
                     + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
-                // Do not publish SayMessage here - let Rules microservice handle this via WeatherWarningEventMessage
-                var weatherWarningEvent = new WeatherWarningEventMessage
-                {
-                    Location = this.WarnLocation,
-                    WarningText = warnMessage
-                };
-
-                await _rabbitMQ.PublishAsync(weatherWarningEvent);
+                
+                // Publish weather warning event for periodic re-announcements
+                await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage(warnMessage));
+                
                 _logger.LogInformation("{WarnMessage}", warnMessage);
             }
         }
