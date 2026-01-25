@@ -108,20 +108,6 @@ namespace Sarah.Voice.DeviceApi
             return responseContent;
         }
 
-        public async Task<GetWeatherResponse> GetWeatherInfo()
-        {
-            HttpClient http = new HttpClient();
-
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetWeatherInfo");
-            _logger?.LogDebug("HTTP GET To " + uri);
-            HttpResponseMessage response = await http.GetAsync(uri);
-            response.EnsureSuccessStatusCode();
-            string json = await response.Content.ReadAsStringAsync();
-            GetWeatherResponse responseContent = JsonConvert.DeserializeObject<GetWeatherResponse>(json)!;
-
-            return responseContent;
-        }
-
         public async Task<GetDeseaseInfoResponse> GetDeseaseInfo()
         {
             HttpClient http = new HttpClient();
@@ -223,20 +209,6 @@ namespace Sarah.Voice.DeviceApi
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
-        }
-
-        public async Task<GetWeatherResponse> GetWeatherForecastInfo(DateTime targetDate)
-        {
-            HttpClient http = new HttpClient();
-
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetWeatherForecastInfo?date=" + targetDate.ToString("dd.MM.yyyy HH:mm"));
-            _logger?.LogDebug("HTTP GET To " + uri);
-            HttpResponseMessage response = await http.GetAsync(uri);
-            response.EnsureSuccessStatusCode();
-            string json = await response.Content.ReadAsStringAsync();
-            GetWeatherResponse responseContent = JsonConvert.DeserializeObject<GetWeatherResponse>(json)!;
-
-            return responseContent;
         }
     }
 }
