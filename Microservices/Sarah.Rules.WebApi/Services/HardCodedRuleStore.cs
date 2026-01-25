@@ -251,7 +251,7 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new PresenceCondition(13, false, _devices),
-                Action = new SetLampColorAndBrightnessAction(14, 0, null, _devices, _logger),
+                Action = new SetLampColorAndBrightnessAction(14, 0, "#000000", _devices, _logger),
                 Name = "Lampe 14 aus wenn niemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
@@ -349,11 +349,11 @@ namespace Sarah.Rules
                     string text;
                     if(evt.CurrentGeoFence != null)
                     {
-                        text = $"{evt.PersonName} hat {evt.CurrentGeoFence.Name} erreicht";
+                        text = $"{evt.PersonName} hat {evt.CurrentGeoFence} erreicht";
                     } 
                     else if (evt.PreviousGeoFence != null)
                     {
-                        text = $"{evt.PersonName} hat {evt.PreviousGeoFence.Name} verlassen";
+                        text = $"{evt.PersonName} hat {evt.PreviousGeoFence} verlassen";
                     } 
                     else
                     {

@@ -113,14 +113,14 @@ namespace Sarah.API.BusinessObjects
     public class PersonGeoFenceEvent : NetworkEvent
     {
         public long Id_Person { get; private set; }
-        public IGeoFence? CurrentGeoFence { get; private set; }
-        public IGeoFence? PreviousGeoFence { get; private set; }
+        public string? CurrentGeoFence { get; private set; }
+        public string? PreviousGeoFence { get; private set; }
         public string PersonName { get; private set; }
-        public PersonGeoFenceEvent(long personId, string personName, IGeoFence? newState, IGeoFence? previousGeoFence) : base(0, "PersonGeoFence")
+        public PersonGeoFenceEvent(long personId, string personName, string? newState, string? previousGeoFence) : base(0, "PersonGeoFence")
         {
             this.Id_Person = personId;
-            this.CurrentGeoFence = newState;
             this.PersonName = personName;
+            this.CurrentGeoFence = newState;
             this.PreviousGeoFence = previousGeoFence;
         }
     }

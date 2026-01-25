@@ -158,8 +158,8 @@ namespace Sarah.Rules
                 var geofenceEvent = new PersonGeoFenceEvent(
                     message.PersonId,
                     message.PersonName,
-                    null, // CurrentGeoFence - would need to resolve from message
-                    null); // PreviousGeoFence - would need to resolve from message
+                    message.CurrentGeoFenceName, 
+                    message.PreviousGeoFenceName); 
                 EvaluateRules(geofenceEvent);
             }
             catch (Exception ex)
