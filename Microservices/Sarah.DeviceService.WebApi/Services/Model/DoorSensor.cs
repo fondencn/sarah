@@ -224,7 +224,7 @@ namespace Sarah.DeviceService.Model
 
             return Task.CompletedTask;
         }
-        private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
+        private void SensorCmd_Changed(object? sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
             _logger?.LogDebug("Door-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
 
@@ -240,7 +240,7 @@ namespace Sarah.DeviceService.Model
 
         }
 
-        private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
+        private void OnBasicChanged(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             if (e.Report.CurrentValue == 0)
@@ -253,7 +253,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        private void OnSensorBinaryChanged(object sender, ReportEventArgs<SensorBinaryReport> e)
+        private void OnSensorBinaryChanged(object? sender, ReportEventArgs<SensorBinaryReport> e)
         {
             _logger?.LogDebug($"SensorBinary report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             if (e.Report.Value)

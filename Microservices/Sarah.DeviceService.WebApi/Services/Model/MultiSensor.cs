@@ -268,7 +268,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("MulitSensor::InitializeAsync: Fehler beim registrieren der Events", ex);
+                _logger?.LogError(ex, "MultiSensor::InitializeAsync: Fehler beim registrieren der Events");
             }
 
 
@@ -358,14 +358,14 @@ namespace Sarah.DeviceService.Model
         //    }
         //}
 
-        private void BattCmd_Changed(object sender, ReportEventArgs<BatteryReport> e)
+        private void BattCmd_Changed(object? sender, ReportEventArgs<BatteryReport> e)
         {
             _logger?.LogDebug("Battery value " + e.Report.Value + " from node " + this.NodeID + " received");
 
             this.Battery = new SensorData(e.Report.Value, "%");
         }
 
-        private void BasicCmd_Changed(object sender, ReportEventArgs<BasicReport> e)
+        private void BasicCmd_Changed(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug("Basic value " + e.Report.CurrentValue + " from node " + this.NodeID + " received");
 
@@ -386,14 +386,14 @@ namespace Sarah.DeviceService.Model
             //this.Presence = new SensorData(e.Report.Value, "Präsenz");
         }
 
-        private void AlarmCmd_Changed(object sender, ReportEventArgs<SensorAlarmReport> e)
+        private void AlarmCmd_Changed(object? sender, ReportEventArgs<SensorAlarmReport> e)
         {
             _logger?.LogDebug("Sensor Alarm " + e.Report.Type + " from node " + this.NodeID + " received");
             this.Alarm = new SensorData(e.Report.Level, (e.Report.Level > 0 ? "🚨" : "") + (e.Report.Level > 0 ? "(" + e.Report.Type.ToString() + " Alarm)" : ""));
 
         }
 
-        private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
+        private void SensorCmd_Changed(object? sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
             _logger?.LogDebug("Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
             if (e.Report.Type == SensorType.Temperature)

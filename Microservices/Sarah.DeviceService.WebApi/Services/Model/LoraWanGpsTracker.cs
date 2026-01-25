@@ -70,7 +70,7 @@ namespace Sarah.DeviceService.Model
                 if (_battery != value)
                 {
                     _battery = value;
-                    _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString(CultureInfo.CurrentCulture));
+                    _ = _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace Sarah.DeviceService.Model
                 if (_isButtonPressed != value)
                 {
                     _isButtonPressed = value;
-                    _publisher.ReportEvent(this, nameof(IsButtonPressed), _isButtonPressed?.Value.ToString(CultureInfo.CurrentCulture));
+                    _ = _publisher.ReportEvent(this, nameof(IsButtonPressed), _isButtonPressed?.Value.ToString(CultureInfo.CurrentCulture));
                 }
             }
         }
@@ -96,14 +96,14 @@ namespace Sarah.DeviceService.Model
         /// </summary>
         public LocatorPosition Position
         {
-            get { return _position; }
+            get { return _position ?? LocatorPosition.Empty; }
             private set
             {
                 if (_position != value)
                 {
                     _position = value;
-                    _publisher.ReportEvent(this, "Longtitude", _position?.Longtitude?.Value.ToString(CultureInfo.CurrentCulture));
-                    _publisher.ReportEvent(this, "Latitude", _position?.Latitude?.Value.ToString(CultureInfo.CurrentCulture));
+                    _ = _publisher.ReportEvent(this, "Longtitude", _position?.Longtitude?.Value.ToString(CultureInfo.CurrentCulture));
+                    _ = _publisher.ReportEvent(this, "Latitude", _position?.Latitude?.Value.ToString(CultureInfo.CurrentCulture));
 
                     if (value.IsValid)
                     {
@@ -185,7 +185,7 @@ namespace Sarah.DeviceService.Model
                     {
                         this.Battery = deserializedDeviceData.Battery;
                     }
-                    if(deserializedDeviceData.Longitude != null && deserializedDeviceData.Latitude != null) 
+                    if(deserializedDeviceData?.Longitude != null && deserializedDeviceData.Latitude != null) 
                     { 
                         var locatorPos = new LocatorPosition(deserializedDeviceData.Longitude, deserializedDeviceData.Latitude);
                         if(locatorPos.IsValid)
@@ -194,8 +194,8 @@ namespace Sarah.DeviceService.Model
                         }
                     }
                     this.LastMessageReceived = DateTime.Now;
-                    this.IsButtonPressed = new SensorData(deserializedDeviceData.IsButtonSosEvent ? 1f : 0f, "");
-                    if (deserializedDeviceData.NearbyDevices?.Any() == true)
+                    this.IsButtonPressed = new SensorData(deserializedDeviceData?.IsButtonSosEvent == true ? 1f : 0f, "");
+                    if (deserializedDeviceData?.NearbyDevices?.Any() == true)
                     {
                         this.NearbyDevices = deserializedDeviceData.NearbyDevices;
                     }
@@ -211,8 +211,8 @@ namespace Sarah.DeviceService.Model
 
         private  void LoadTtnApiKey(IConfiguration config) 
         {
-            Ttn_cf_ApiKey = config["TTN:AppApiKey"];
-            TtnApiKey_SarahApiKey = config["TTN:SarahApiKey"];
+            Ttn_cf_ApiKey = config["TTN:AppApiKey"] ?? throw new InvalidOperationException("TTN:AppApiKey not configured in DeviceService configuration");
+            TtnApiKey_SarahApiKey = config["TTN:SarahApiKey"] ?? throw new InvalidOperationException("TTN:SarahApiKey not configured in DeviceService configuration");
         }
 
         public void Dispose()

@@ -23,7 +23,7 @@ namespace Sarah.DeviceService.Model.Animations
             Task.Run(async () =>
             {
                 int waitTimeMs = 10000;
-                Lamp wohnzimmerLampe = _deviceService.GetNetworkItem(24) as Lamp;
+                Lamp wohnzimmerLampe = (Lamp)_deviceService.GetNetworkItem(24)!;
                 await wohnzimmerLampe.SetColor("#402200");
                 await wohnzimmerLampe.SetBrightness(255);
                 await Task.Delay(waitTimeMs);

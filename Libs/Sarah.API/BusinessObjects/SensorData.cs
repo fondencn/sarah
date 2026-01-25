@@ -71,7 +71,7 @@ namespace Sarah.API.Business
             return other?.Equals(this) == true;
         }
 
-        public static bool operator ==(SensorData lhs, SensorData rhs)
+        public static bool operator ==(SensorData? lhs, SensorData? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {
@@ -95,7 +95,7 @@ namespace Sarah.API.Business
             }
         }
 
-        public static bool operator !=(SensorData lhs, SensorData rhs)
+        public static bool operator !=(SensorData? lhs, SensorData? rhs)
         {
             if (object.ReferenceEquals(lhs, null) && object.ReferenceEquals(rhs, null))
             {

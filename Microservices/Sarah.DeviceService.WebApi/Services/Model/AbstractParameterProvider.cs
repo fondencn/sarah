@@ -74,7 +74,7 @@ namespace Sarah.DeviceService.Model
 
         public async Task<DeviceParameter> GetParameter(byte nodeId, byte paramId, IDeviceService deviceService)
         {
-            DeviceParameter parameter = null;
+            DeviceParameter parameter = null!;
             try
             {
                 Node n = deviceService.GetNode(nodeId) as Node;

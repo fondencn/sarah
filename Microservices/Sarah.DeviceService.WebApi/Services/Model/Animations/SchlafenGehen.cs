@@ -15,11 +15,17 @@ namespace Sarah.DeviceService.Model.Animations
 
         protected override async void Start()
         {
-            Lamp arbeitsZimmerLedStrip = _deviceService.GetNetworkItem(14) as Lamp;
-            Lamp mamaZimmerNachtLampe = _deviceService.GetNetworkItem(21) as Lamp;
-            await mamaZimmerNachtLampe.SetWarmWhite(); 
-            await mamaZimmerNachtLampe.SetBrightness(255);
-            await arbeitsZimmerLedStrip.SetBrightness(0);
+            Lamp? arbeitsZimmerLedStrip = _deviceService.GetNetworkItem(14) as Lamp;
+            Lamp? mamaZimmerNachtLampe = _deviceService.GetNetworkItem(21) as Lamp;
+            if (mamaZimmerNachtLampe != null)
+            {
+                await mamaZimmerNachtLampe.SetWarmWhite(); 
+                await mamaZimmerNachtLampe.SetBrightness(255);
+            }
+            if (arbeitsZimmerLedStrip != null)
+            {
+                await arbeitsZimmerLedStrip.SetBrightness(0);
+            }
             await Task.Delay(2000);
             Scene.Stop(this.GetType());
         }

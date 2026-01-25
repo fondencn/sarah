@@ -10,7 +10,7 @@ namespace Sarah.DeviceService.Model
 {
     public class DefectElement : NetworkElement, IDefectElement
     {
-        private string _genericType = null;
+        private string _genericType = null!;
         public override string ClassDescription => this._genericType;
 
 

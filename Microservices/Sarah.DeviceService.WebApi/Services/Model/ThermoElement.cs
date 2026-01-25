@@ -218,7 +218,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("ThermoElement::InitializeAsync: ", ex);
+                _logger?.LogError(ex, "ThermoElement::InitializeAsync: Error");
             }
 
             return Task.CompletedTask;
@@ -271,7 +271,7 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("SetTemperature" , ex);
+                _logger?.LogError(ex, "SetTemperature error");
                 throw;
             }
         }
@@ -297,12 +297,12 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError("SetLevel" , ex);
+                _logger?.LogError(ex, "SetLevel error");
                 throw;
             }
         }
 
-        private void OnSetpointChanged(object sender, ReportEventArgs<ThermostatSetpointReport> e)
+        private void OnSetpointChanged(object? sender, ReportEventArgs<ThermostatSetpointReport> e)
         {
             _logger?.LogDebug("ThermostatSetpoint " + e.Report.Value + e.Report.Unit + " event from node " + e.Report.Node.NodeID + " (Scale=" + e.Report.Scale + ", Type=" + e.Report.Type + ")");
             switch (e.Report.Type)
@@ -317,7 +317,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
+        private void OnBasicChanged(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug("Basic report value" + e.Report.CurrentValue + " from node " + e.Report.Node.NodeID);
             SetBasicValue(e.Report.CurrentValue);
@@ -345,7 +345,7 @@ namespace Sarah.DeviceService.Model
             this.Basic = new SensorData(level, unit);
         }
 
-        private void SensorCmd_Changed(object sender, ReportEventArgs<SensorMultiLevelReport> e)
+        private void SensorCmd_Changed(object? sender, ReportEventArgs<SensorMultiLevelReport> e)
         {
             _logger?.LogDebug("Thermo-Sensor Data " + e.Report.Type + " from node " + this.NodeID + " received");
 

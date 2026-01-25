@@ -40,6 +40,7 @@ namespace Sarah.API.BusinessObjects
         /// </summary>
         public static LocatorPosition ZuHause { get; }
             = new LocatorPosition(new SensorData(48.8878487f, "°"), new SensorData(9.209924f, "°"));
+        public static LocatorPosition Empty { get; } = new LocatorPosition(new SensorData(0.0f, "°"), new SensorData(0.0f, "°"));
 
         /// <summary>
         /// ctor

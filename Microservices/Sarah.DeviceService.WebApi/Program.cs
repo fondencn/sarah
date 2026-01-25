@@ -5,6 +5,9 @@ using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.DeviceService.WebApi.Extensions;
+using Sarah.API.Interfaces.Services;
+using Sarah.API.Interfaces;
+using Sarah.DeviceService.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,15 +22,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register RabbitMQ client
-builder.Services.AddSingleton<RabbitMQClient>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<RabbitMQClient>>();
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    return new RabbitMQClient(logger, configuration);
-});
+builder.Services.AddSingleton<RabbitMQClient>();
 
 // Register NetworkElementPublisher
 builder.Services.AddSingleton<NetworkElementPublisher>();
+
+// Register EventProcessingService with RabbitMQ
+builder.Services.AddSingleton<IEventProcessingService, EventProcessingService>();
+
+// Register NodeFactory
+builder.Services.AddSingleton<INodeFactory, NodeFactory>();
+
+// Register DeviceService as both a hosted service (BackgroundService) and as IDeviceService for DI
+builder.Services.AddSingleton<Sarah.DeviceService.DeviceService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.DeviceService.DeviceService>());
+builder.Services.AddSingleton<IDeviceService>(sp => sp.GetRequiredService<Sarah.DeviceService.DeviceService>());
 
 // Add services to the container.
 builder.Services.AddControllers();

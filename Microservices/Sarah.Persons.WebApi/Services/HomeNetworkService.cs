@@ -1,7 +1,5 @@
 ﻿using PS.FritzBox.API;
 using PS.FritzBox.API.LANDevice;
-using System.Configuration;
-using Microsoft.Extensions.Configuration;
 
 namespace Sarah.Persons.WebApi.Services
 {

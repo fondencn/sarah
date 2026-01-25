@@ -20,10 +20,10 @@ namespace Sarah.DeviceService.Model
     public abstract class WallPlug : NetworkElement, IWallPlug
     {
         private bool _isOn;
-        private SensorData _meter_kwh;
-        private SensorData _meter_kVAh;
-        private SensorData _meter_W;
-        private SensorData _meter_A;
+        private SensorData _meter_kwh = new SensorData(0, "kWh");
+        private SensorData _meter_kVAh = new SensorData(0, "kVAh");
+        private SensorData _meter_W = new SensorData(0, "W");
+        private SensorData _meter_A = new SensorData(0, "A");
         private DateTime _lastStateChange;
         protected readonly NetworkElementPublisher _publisher;
 
@@ -55,17 +55,17 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Status des Schalters (an oder aus)
         /// </summary>
-        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _publisher.ReportEvent(this, nameof(IsOn), value); } } }
+        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); } } }
 
         /// <summary>
         /// Meter in Kilowattstunden
         /// </summary>
-        public SensorData Meter_kWh { get => _meter_kwh; protected set { if (_meter_kwh != value) { _meter_kwh = value; _publisher.ReportEvent(this, nameof(Meter_kWh), value?.ToString()); } } }
+        public SensorData Meter_kWh { get => _meter_kwh; protected set { if (_meter_kwh != value) { _meter_kwh = value; _ = _publisher.ReportEvent(this, nameof(Meter_kWh), value?.ToString()); } } }
 
         /// <summary>
         /// Meter in 1000 Volt-Ampère-Stunden
         /// </summary>
-        public SensorData Meter_kVAh { get => _meter_kVAh; protected set { if (_meter_kVAh != value) { _meter_kVAh = value; _publisher.ReportEvent(this, nameof(Meter_kVAh), value?.ToString()); } } }
+        public SensorData Meter_kVAh { get => _meter_kVAh; protected set { if (_meter_kVAh != value) { _meter_kVAh = value; _ = _publisher.ReportEvent(this, nameof(Meter_kVAh), value?.ToString()); } } }
 
         /// <summary>
         /// Meter in Watt
@@ -75,8 +75,8 @@ namespace Sarah.DeviceService.Model
             get => _meter_W;
             protected set
             {
-                float oldVal = _meter_W?.Value ?? 0f;
-                float newVal = value?.Value ?? 0f;
+                float oldVal = _meter_W.Value;
+                float newVal = value.Value;
                 if (oldVal != newVal)
                 {
                     if (oldVal > 5.0f && newVal <= 5.0f)
@@ -95,14 +95,14 @@ namespace Sarah.DeviceService.Model
                     }
                 }
                 _meter_W = value;
-                _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
+                _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
             }
         }
 
         /// <summary>
         /// Meter in Ampère
         /// </summary>
-        public SensorData Meter_A { get => _meter_A; protected set { if (_meter_A != value) { _meter_A = value; _publisher.ReportEvent(this, nameof(Meter_A), value?.ToString()); } } }
+        public SensorData Meter_A { get => _meter_A; protected set { if (_meter_A != value) { _meter_A = value; _ = _publisher.ReportEvent(this, nameof(Meter_A), value?.ToString()); } } }
 
 
         /// <summary>
@@ -173,8 +173,8 @@ namespace Sarah.DeviceService.Model
 /// </summary>
 public class ZWaveWallPlug : WallPlug
     {
-        private Task _updateSensorDataTask;
-        private CancellationTokenSource _UpdateSensorDataCancellationTokenSource;
+        private Task? _updateSensorDataTask;
+        private CancellationTokenSource? _UpdateSensorDataCancellationTokenSource;
         private IDeviceService _deviceService;
 
 
@@ -188,7 +188,7 @@ public class ZWaveWallPlug : WallPlug
 
             try
             {
-                Node node = _deviceService.GetNode(this.NodeID) as Node;
+                Node node = (Node)_deviceService.GetNode(this.NodeID)!;
                 var switchBin = node.GetCommandClass<SwitchBinary>();
                 await switchBin.Set(newState);
                 _logger?.LogDebug("switchBinReport.Value SET To: " + newState);
@@ -217,7 +217,7 @@ public class ZWaveWallPlug : WallPlug
         {
             try
             {
-                Node node = _deviceService.GetNode(this.NodeID) as Node;
+                Node node = (Node)_deviceService.GetNode(this.NodeID)!;
                 var meter = node.GetCommandClass<Meter>();
                 var meterReport = await meter.Get(ElectricMeterScale.kWh);
                 if (meterReport != null)
@@ -263,31 +263,29 @@ public class ZWaveWallPlug : WallPlug
         /// <param name="sensorData"></param>
         private void SetMeter(SensorData sensorData)
         {
-            if (sensorData != null)
+            if (sensorData.Unit.Equals("kWh", StringComparison.OrdinalIgnoreCase))
             {
-                if (sensorData.Unit.Equals("kWh", StringComparison.OrdinalIgnoreCase))
-                {
-                    /* bei kWh interessieren die tausendstel nicht */
-                    sensorData = new SensorData((float)Math.Round(sensorData.Value, 1), sensorData.Unit);
-                    this.Meter_kWh = sensorData;
-                }
-                else if (sensorData.Unit.Equals("kVAh", StringComparison.OrdinalIgnoreCase))
-                {
-                    this.Meter_kVAh = sensorData;
-                }
-                else if (sensorData.Unit.Equals("W", StringComparison.OrdinalIgnoreCase))
-                {
-                    this.Meter_W = sensorData;
-                }
-                else if (sensorData.Unit.Equals("A", StringComparison.OrdinalIgnoreCase))
-                {
-                    this.Meter_A = sensorData;
-                }
-                else
-                {
-                    _logger?.LogDebug("WallPlug: Unbekannter Leistungswert " + sensorData.Unit);
-                }
+                /* bei kWh interessieren die tausendstel nicht */
+                sensorData = new SensorData((float)Math.Round(sensorData.Value, 1), sensorData.Unit);
+                this.Meter_kWh = sensorData;
             }
+            else if (sensorData.Unit.Equals("kVAh", StringComparison.OrdinalIgnoreCase))
+            {
+                this.Meter_kVAh = sensorData;
+            }
+            else if (sensorData.Unit.Equals("W", StringComparison.OrdinalIgnoreCase))
+            {
+                this.Meter_W = sensorData;
+            }
+            else if (sensorData.Unit.Equals("A", StringComparison.OrdinalIgnoreCase))
+            {
+                this.Meter_A = sensorData;
+            }
+            else
+            {
+                _logger?.LogDebug("WallPlug: Unbekannter Leistungswert " + sensorData.Unit);
+            }
+            
             LastMeterReport = DateTime.Now;
         }
 
@@ -296,8 +294,9 @@ public class ZWaveWallPlug : WallPlug
         /// ctor
         /// </summary>
         /// <param name="nodeid">ID des ZWave Knotens</param>
-        public ZWaveWallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger<ZWaveWallPlug>? logger = null) : base(nodeid, publisher, logger)
+        public ZWaveWallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger<ZWaveWallPlug> logger, IDeviceService deviceService) : base(nodeid, publisher, logger)
         {
+            this._deviceService = deviceService;
         }
 
 
@@ -306,7 +305,7 @@ public class ZWaveWallPlug : WallPlug
         /// </summary>
         ~ZWaveWallPlug()
         {
-            if (this._updateSensorDataTask != null && this._updateSensorDataTask.Status == TaskStatus.Running)
+            if (this._updateSensorDataTask != null && _UpdateSensorDataCancellationTokenSource != null && this._updateSensorDataTask.Status == TaskStatus.Running)
             {
                 this._UpdateSensorDataCancellationTokenSource.Cancel();
             }
@@ -315,10 +314,10 @@ public class ZWaveWallPlug : WallPlug
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             this._deviceService = deviceService;
-            Node node = deviceService.GetNode(this.NodeID) as Node;
+            Node node = (Node)deviceService.GetNode(this.NodeID)!;
             _logger?.LogDebug("Initialize Node " + this.NodeID + " as " + this.Name);
 
             if (node != null)
@@ -395,24 +394,24 @@ public class ZWaveWallPlug : WallPlug
             }
         }
 
-        private void OnMeterChanged(object sender, ReportEventArgs<MeterReport> e)
+        private void OnMeterChanged(object? sender, ReportEventArgs<MeterReport> e)
         {
             _logger?.LogDebug($"Meter report of Node {e.Report.Node:D3} changed to [{e.Report.Value}{e.Report.Unit}] ({e.Report.Type})");
             this.SetMeter(new SensorData(e.Report.Value, e.Report.Unit));
         }
 
-        private void Node_MessageReceived(object sender, EventArgs e)
+        private void Node_MessageReceived(object? sender, EventArgs e)
         {
             //_logger?.LogDebug("Node " + this.NodeID + " Message received");
         }
 
-        private void Node_UnknownCommandReceived(object sender, global::ZWave.Channel.NodeEventArgs e)
+        private void Node_UnknownCommandReceived(object? sender, global::ZWave.Channel.NodeEventArgs e)
         {
             _logger?.LogWarning("Node " + this.NodeID + " UNKNOWN COMMAND received");
 
         }
 
-        private void OnSwitchBinChanged(object sender, ReportEventArgs<SwitchBinaryReport> e)
+        private void OnSwitchBinChanged(object? sender, ReportEventArgs<SwitchBinaryReport> e)
         {
             _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue.GetValueOrDefault(false);
@@ -420,13 +419,13 @@ public class ZWaveWallPlug : WallPlug
 
 
 
-        private void OnBasicChanged(object sender, ReportEventArgs<BasicReport> e)
+        private void OnBasicChanged(object? sender, ReportEventArgs<BasicReport> e)
         {
             _logger?.LogDebug($"Basic report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             /* Für Popp Wallcontroller kmmt hier eine Basic Notification an die Association Group 1 (Lifeline) */
             this.IsOn = e.Report.CurrentValue != 0;
         }
-        private void OnSwitchMultiChanged(object sender, ReportEventArgs<SwitchMultiLevelReport> e)
+        private void OnSwitchMultiChanged(object? sender, ReportEventArgs<SwitchMultiLevelReport> e)
         {
             _logger?.LogDebug($"SwitchMultiLevel report of Node {e.Report.Node:D3} changed to [{e.Report}]");
             this.IsOn = e.Report.CurrentValue != 0;

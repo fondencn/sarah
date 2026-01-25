@@ -9,7 +9,7 @@ namespace Sarah.DeviceService.Model
 {
     public class UnknownElement : NetworkElement, IUnknownElement
     {
-        private string _genericType = null;
+        private string? _genericType = null;
         public override string ClassDescription => this._genericType;
 
 
@@ -19,7 +19,7 @@ namespace Sarah.DeviceService.Model
 
         public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            INode node = deviceService.GetNode(this.NodeID);
+            INode? node = deviceService.GetNode(this.NodeID);
             this._genericType = await node?.GetDeviceTypeName();
         }
     }

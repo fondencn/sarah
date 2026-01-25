@@ -1,54 +1,47 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.Model;
 using Sarah.DeviceService.Model.Extensions;
 using Sarah.DeviceService.Model.ParameterProviders;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ZWave;
 using ZWave.Channel;
 using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
-using System.IO;
-using Microsoft.Extensions.Configuration;
 using Sarah.DeviceService.WebApi.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Sarah.DeviceService
 {
-    public class DeviceService : IDeviceService
+    public class DeviceService : BackgroundService, IDeviceService
     {
         private readonly IConfiguration _configuration;
         private readonly INodeFactory _nodeFactory;
-        private readonly IEventProcessingService _events;
         private readonly ILogger<DeviceService> _logger;
         private readonly NetworkElementPublisher _publisher;
+        private Task? UpdateTask { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
 
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, IEventProcessingService events, NetworkElementPublisher publisher, ILogger<DeviceService> logger)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
-            this._events = events;
             this._publisher = publisher;
             this._logger = logger;
         }
 
 
-        private ZWaveController Controller { get; set; }
-        private NodeCollection Nodes { get; set; }
+        private ZWaveController? Controller { get; set; }
+        private NodeCollection? Nodes { get; set; }
 
-        public string StatusMessage { get; private set; }
+        public string StatusMessage { get; private set; } = "";
 
 
-        public string SerialPortName => _configuration["ZWave:SerialPortName"];
+        public string SerialPortName => _configuration["ZWave:SerialPortName"] ?? throw new InvalidOperationException("ZWave:SerialPortName configuration is missing");
 
         private List<NetworkElement> NetworkElements { get; } = new List<NetworkElement>();
 
@@ -67,7 +60,7 @@ namespace Sarah.DeviceService
         public IEnumerable<IGPSTracker> GPSTrackers => NetworkElements.OfType<IGPSTracker>();
         public IEnumerable<NetworkElement> Elements => NetworkElements.AsReadOnly();
 
-        public INetworkElement GetNetworkItem(byte nodeID) => this.NetworkElements?.FirstOrDefault(item => item.NodeID == nodeID);
+        public INetworkElement? GetNetworkItem(byte nodeID) => this.NetworkElements?.FirstOrDefault(item => item.NodeID == nodeID);
 
         /// <summary>
         /// Map für bestimmte Parameterprovider
@@ -96,7 +89,7 @@ namespace Sarah.DeviceService
         ~DeviceService()
         {
             this.Controller?.Close();
-            if (this.UpdateTask != null && this.UpdateTask.Status == TaskStatus.Running)
+            if (this.UpdateTask != null && UpdateCancellationTokenSource != null && this.UpdateTask.Status == TaskStatus.Running)
             {
                 this.UpdateCancellationTokenSource.Cancel();
             }
@@ -118,7 +111,7 @@ namespace Sarah.DeviceService
                     throw new InvalidOperationException("Missing configuration for ZWave serial port");
                 }
                 _logger?.LogInformation("Starting Controller on serial port " + SerialPortName);
-                ISerialPort serialPort;
+                ISerialPort? serialPort;
                 try
                 {
                     serialPort = SerialPortFactory.Instance.Create(SerialPortName);
@@ -189,13 +182,10 @@ namespace Sarah.DeviceService
             }
         }
 
-        private void Controller_Error(object sender, ZWave.ErrorEventArgs e)
+        private void Controller_Error(object? sender, ZWave.ErrorEventArgs e)
         {
             _logger?.LogError("Controller_Error: " + e.Error?.Message);
         }
-
-        private Task UpdateTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
 
         /// <summary>
         /// Aktualisiert die interne Liste der verbundenen ZWave-Knoten
@@ -218,7 +208,7 @@ namespace Sarah.DeviceService
             {
                 foreach (Node n in this.Nodes)
                 {
-                    NetworkElement nodeElement = _nodeFactory.CreateByNodeId(n.NodeID);
+                    NetworkElement? nodeElement = _nodeFactory.CreateByNodeId(n.NodeID);
                     if (nodeElement == null)
                     {
                         _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
@@ -228,15 +218,15 @@ namespace Sarah.DeviceService
                     {
                         _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
                         networkElements.Add(nodeElement);
+                        await nodeElement.InitializeAsync(this, _configuration);
                     }
-                    await nodeElement.InitializeAsync(this, _configuration);
                 }
             }
 
             /* jetzt die Nicht-ZWave Geräte */
             foreach (byte nodeId in _nodeFactory.GetNonZwaveNodeIds().ToList())
             {
-                NetworkElement nodeElement = _nodeFactory.CreateByNodeId(nodeId);
+                NetworkElement? nodeElement = _nodeFactory.CreateByNodeId(nodeId);
                 if (nodeElement == null)
                 {
                     _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
@@ -253,10 +243,10 @@ namespace Sarah.DeviceService
             this.NetworkElements.Clear();
             this.NetworkElements.AddRange(networkElements);
 
-            if(!Debugger.IsAttached && (this.NetworkElements.Count != this.Nodes.Count() + _nodeFactory.GetNonZwaveNodeIds().Count()))
+            if(!Debugger.IsAttached && (this.NetworkElements.Count != this.Nodes!.Count() + _nodeFactory.GetNonZwaveNodeIds().Count()))
             {
-                var missing = this.Nodes.Where(item => !this.NetworkElements.Any(item2 => item.NodeID == item2.NodeID)).ToList();
-                throw new InvalidOperationException("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert (ist=" + this.NetworkElements.Count + ", Soll=" + this.Nodes.Count() + ")");
+                var missing = this.Nodes!.Where(item => !this.NetworkElements.Any(item2 => item.NodeID == item2.NodeID)).ToList();
+                throw new InvalidOperationException("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert (ist=" + this.NetworkElements.Count + ", Soll=" + this.Nodes?.Count() + ")");
             }
 
             _logger?.LogInformation("UpdateNodeList done for " + this.NetworkElements.Count + " nodes.");
@@ -268,9 +258,9 @@ namespace Sarah.DeviceService
         /// </summary>
         /// <param name="specificType"></param>
         /// <returns></returns>
-        public IParameterProvider GetParameterProvider(KnownDeviceTypes specificType)
+        public IParameterProvider? GetParameterProvider(KnownDeviceTypes specificType)
         {
-            IParameterProvider result;
+            IParameterProvider? result;
             if(!_KnownParameterProviders.TryGetValue(specificType, out result))
             {
                 result = null;
@@ -286,7 +276,7 @@ namespace Sarah.DeviceService
         /// <returns></returns>
         public async Task SetLampColor(byte nodeId, string color)
         {
-            Node n = this.GetNodeInternal(nodeId);
+            Node? n = this.GetNodeInternal(nodeId);
             if (n != null)
             {
                 Color c = n.GetCommandClass<Color>();
@@ -328,7 +318,7 @@ namespace Sarah.DeviceService
 
         public async Task SetLampBrightness(byte nodeId, byte brightness)
         {
-            Node n = this.GetNodeInternal(nodeId);
+            Node? n = this.GetNodeInternal(nodeId);
             if (n != null)
             {
                 Basic basic = n.GetCommandClass<Basic>();
@@ -347,9 +337,9 @@ namespace Sarah.DeviceService
         }
 
 
-        internal Node GetNodeInternal(byte nodeid)
+        internal Node? GetNodeInternal(byte nodeid)
         {
-            Node n = this.Nodes?.FirstOrDefault(item => item.NodeID == nodeid);
+            Node? n = this.Nodes?.FirstOrDefault(item => item.NodeID == nodeid);
             if (n == null)
             {
                 _logger?.LogWarning("GetNode(" + nodeid + "): nicht gefunden!");
@@ -359,10 +349,10 @@ namespace Sarah.DeviceService
 
         public async Task<IAssociationGroup[]> GetAssociationGroups(byte nodeID)
         {
-            Node n = GetNodeInternal(nodeID);
+            Node? n = GetNodeInternal(nodeID);
             if (n == null)
             {
-                return null;
+                return Array.Empty<IAssociationGroup>();
             } 
             else
             {
@@ -389,13 +379,13 @@ namespace Sarah.DeviceService
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "An error occurred");
-                    return null;
+                    return Array.Empty<IAssociationGroup>();
                 }
             }
         }
         public async Task SetAssociationGroup(byte nodeID, byte groupId, byte[] nodeIds)
         {
-            Node n = GetNodeInternal(nodeID);
+            Node? n = GetNodeInternal(nodeID);
             if (n == null)
             {
                 _logger?.LogError("SetAssociationGroup: ZWAVE Node " + nodeID + " nicht gefunden");
@@ -432,7 +422,7 @@ namespace Sarah.DeviceService
             }
         }
 
-        public INode GetNode(byte nodeid) => new NodeWrapper(GetNodeInternal(nodeid));
+        public INode? GetNode(byte nodeid) => new NodeWrapper(GetNodeInternal(nodeid));
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {
@@ -517,6 +507,44 @@ namespace Sarah.DeviceService
                     RemoveRecursive(directlyConnectednode, adjacentNodesMatrix, allNodeIds);
                 }
             }
+        }
+
+        /// <summary>
+        /// BackgroundService implementation - starts the DeviceService automatically
+        /// </summary>
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger?.LogInformation("DeviceService background service is starting.");
+            
+            try
+            {
+                await Start();
+                _logger?.LogInformation("DeviceService background service started successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error starting DeviceService background service.");
+            }
+
+            // Keep the service running
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
+
+        /// <summary>
+        /// Clean up resources when the service stops
+        /// </summary>
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger?.LogInformation("DeviceService background service is stopping.");
+            
+            if (UpdateCancellationTokenSource != null && UpdateTask != null && UpdateTask.Status == TaskStatus.Running)
+            {
+                UpdateCancellationTokenSource.Cancel();
+            }
+
+            Controller?.Close();
+            
+            await base.StopAsync(cancellationToken);
         }
 
     }

@@ -7,7 +7,7 @@ namespace Sarah.API.Interfaces.Services
 {
     public interface IDeviceService : ICanSelfTest
     {
-        INode GetNode(byte nodeId);
+        INode? GetNode(byte nodeId);
 
         Task Start();
 
@@ -30,8 +30,8 @@ namespace Sarah.API.Interfaces.Services
 
         IEnumerable<NetworkElement> Elements { get; }
 
-        INetworkElement GetNetworkItem(byte sourceNodeId);
-        IParameterProvider GetParameterProvider(KnownDeviceTypes specificType);
+        INetworkElement? GetNetworkItem(byte sourceNodeId);
+        IParameterProvider?GetParameterProvider(KnownDeviceTypes specificType);
 
         Task<IAssociationGroup[]> GetAssociationGroups(byte nodeID);
         Task SetAssociationGroup(byte nodeID, byte groupId, byte[] nodeIds);
