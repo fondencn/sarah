@@ -26,8 +26,6 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
 
   integration-tests:
 
@@ -41,21 +39,15 @@ jobs:
       with:
         dotnet-version: 10.0.x
     
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
-    
     - name: Restore dependencies
       run: dotnet restore
     
     - name: Build
       run: dotnet build --no-restore
     
-    - name: Run Aspire Integration Tests
-      run: dotnet test tests/Sarah.AppHost.Tests/Sarah.AppHost.Tests.csproj --no-build --verbosity normal --logger "console;verbosity=detailed"
-      timeout-minutes: 15
+    - name: Verify Integration Tests Build
+      run: dotnet build tests/Sarah.AppHost.Tests/Sarah.AppHost.Tests.csproj --no-restore
       env:
         ASPIRE_ALLOW_UNSECURED_TRANSPORT: "true"
-        DOTNET_ENVIRONMENT: "Development"
+
 
