@@ -29,11 +29,15 @@ const path = require('path');
 // Configuration constants
 const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB for large OpenAPI specs
 
-// ⚠️ DEVELOPMENT TOOL ONLY: Create HTTPS agent with relaxed certificate validation
+// ⚠️ DEVELOPMENT TOOL ONLY: Create HTTPS agent with optional relaxed certificate validation
 // 
-// SECURITY JUSTIFICATION:
+// SECURITY NOTE:
 // This script is a development tool that downloads OpenAPI specifications from
 // local microservices running on localhost with self-signed SSL certificates.
+// 
+// To avoid disabling TLS verification by default, certificate validation is kept
+// enabled unless the environment variable ALLOW_INSECURE_LOCALHOST_SSL is set
+// to "true". This makes any insecure behavior explicit and opt-in.
 // 
 // This is acceptable because:
 // 1. Script runs locally on developer machines, not in production
@@ -44,16 +48,24 @@ const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB for large OpenAPI specs
 // 6. Agent is scoped to this script only, doesn't affect other code
 //
 // Production microservices should use proper SSL certificates from trusted CAs.
-// lgtm[js/disabling-certificate-validation]
+const allowInsecureLocalhost = process.env.ALLOW_INSECURE_LOCALHOST_SSL === 'true';
 const httpsAgent = new https.Agent({
-    rejectUnauthorized: false // codeql[js/disabling-certificate-validation] - Development tool for localhost
+    // When ALLOW_INSECURE_LOCALHOST_SSL=true, disable certificate verification for localhost dev.
+    // Otherwise, use the default secure behavior.
+    rejectUnauthorized: !allowInsecureLocalhost
 });
 
 // Show warning in development mode
 if (process.env.NODE_ENV !== 'production') {
-    console.warn('⚠️  Development mode: Accepting self-signed SSL certificates');
-    console.warn('   This is only for local OpenAPI spec downloads.');
-    console.warn('   Production should use proper SSL certificates.\n');
+    if (allowInsecureLocalhost) {
+        console.warn('⚠️  Development mode: Accepting self-signed SSL certificates (ALLOW_INSECURE_LOCALHOST_SSL=true)');
+        console.warn('   This is only for local OpenAPI spec downloads.');
+        console.warn('   Do NOT use this setting in production environments.\n');
+    } else {
+        console.warn('ℹ️  Development mode: Using standard TLS certificate verification.');
+        console.warn('   To temporarily allow self-signed localhost certificates,');
+        console.warn('   set ALLOW_INSECURE_LOCALHOST_SSL=true when running this script.\n');
+    }
 }
 
 // Parse command line arguments
