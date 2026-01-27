@@ -29,12 +29,19 @@ const path = require('path');
 // Configuration constants
 const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB for large OpenAPI specs
 
-// ⚠️ DEVELOPMENT ONLY: Disable SSL certificate validation for local development
+// ⚠️ DEVELOPMENT ONLY: Create HTTPS agent with relaxed certificate validation
 // This allows downloading OpenAPI specs from services with self-signed certificates.
-// In production, proper SSL certificates should be used and this should NOT be set.
+// Only used for HTTPS requests in this script, doesn't affect other processes.
+// In production, proper SSL certificates should be used.
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false // Allow self-signed certificates in development
+});
+
+// Show warning in development mode
 if (process.env.NODE_ENV !== 'production') {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    console.warn('⚠️  SSL verification disabled for development. Do not use in production!');
+    console.warn('⚠️  Development mode: Accepting self-signed SSL certificates');
+    console.warn('   This is only for local OpenAPI spec downloads.');
+    console.warn('   Production should use proper SSL certificates.\n');
 }
 
 // Parse command line arguments
@@ -158,10 +165,20 @@ function downloadSpec(url, dest) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(dest);
         
-        https.get(url, (response) => {
+        // Use the HTTPS agent with relaxed certificate validation for development
+        const requestOptions = {
+            ...new URL(url),
+            agent: httpsAgent
+        };
+        
+        https.get(requestOptions, (response) => {
             if (response.statusCode === 302 || response.statusCode === 301) {
-                // Follow redirect
-                https.get(response.headers.location, (redirectResponse) => {
+                // Follow redirect with same agent
+                const redirectOptions = {
+                    ...new URL(response.headers.location),
+                    agent: httpsAgent
+                };
+                https.get(redirectOptions, (redirectResponse) => {
                     if (redirectResponse.statusCode !== 200) {
                         reject(new Error(`Failed to get '${url}' (${redirectResponse.statusCode})`));
                         return;
