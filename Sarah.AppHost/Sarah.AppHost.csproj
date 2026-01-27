@@ -29,4 +29,10 @@
     <ProjectReference Include="..\sarah.client\sarah.client.esproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="keycloak-realm.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

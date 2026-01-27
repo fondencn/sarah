@@ -242,20 +242,147 @@ All services implement JWT bearer token authentication validated against Keycloa
 - **[Docker Compose](https://docs.docker.com/compose/)** - Included with Docker Desktop
 - **[Git](https://git-scm.com/)** - For cloning the repository
 
-### Two Ways to Run Sarah
+### Three Ways to Run Sarah
 
-Sarah can be run in two different modes depending on your needs:
+Sarah can be run in three different modes depending on your needs:
 
-| Method | Best For | Complexity |
-|--------|----------|------------|
-| **Docker Compose** | Local Development, Testing | Low |
-| **Manual Setup** | Debugging, Development | High |
+| Method | Best For | Complexity | Setup Time |
+|--------|----------|------------|------------|
+| **Aspire (Recommended)** | Development, Modern Cloud-Native | Low | 1-2 minutes |
+| **Docker Compose** | Local Testing, Traditional Docker | Low | 2-3 minutes |
+| **Manual Setup** | Debugging, Fine-Grained Control | High | 5-10 minutes |
 
 ---
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: .NET Aspire (Recommended) 🚀
 
-Docker Compose provides a complete local development environment with all services pre-configured.
+.NET Aspire provides the most modern development experience with automatic service orchestration, service discovery, and zero manual configuration.
+
+#### Why Aspire?
+
+✅ **Zero Manual Configuration** - No need to manually configure Keycloak realm, clients, or users  
+✅ **Automatic Service Discovery** - Services automatically find each other  
+✅ **Built-in Dashboard** - Visual monitoring of all services and their dependencies  
+✅ **Reproducible Setup** - Same configuration every time, perfect for team development  
+✅ **Fast Startup** - All services orchestrated efficiently
+
+#### Prerequisites
+
+- **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)**
+- **[Docker Desktop](https://www.docker.com/)** - Must be running
+- **[Node.js 20+](https://nodejs.org/)** - For Angular frontend
+
+#### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/fondencn/sarah.git
+cd sarah
+```
+
+#### Step 2: (Optional) Customize Credentials
+
+The default credentials work out of the box, but you can customize them by editing `Sarah.AppHost/appsettings.json`:
+
+```json
+{
+  "Keycloak": {
+    "AdminUser": "admin",
+    "AdminPassword": "ChangeMe123!",
+    "TestUser": {
+      "Username": "sarah-admin",
+      "Password": "TestPassword123!",
+      "Email": "admin@sarah.local"
+    }
+  }
+}
+```
+
+For development-specific overrides, edit `Sarah.AppHost/appsettings.Development.json`.
+
+> **🔒 Security Note**: These are default development credentials. **Never use these passwords in production**. For production deployments, use environment variables or secure configuration providers like Azure Key Vault.
+
+#### Step 3: Start All Services with Aspire
+
+```bash
+dotnet run --project Sarah.AppHost
+```
+
+That's it! Aspire will:
+1. ✅ Start the Aspire Dashboard
+2. ✅ Pull and start Docker containers (Keycloak, RabbitMQ, PostgreSQL)
+3. ✅ **Automatically import Keycloak realm** with pre-configured client and test user
+4. ✅ Start all microservices with automatic service discovery
+5. ✅ Start the Angular frontend
+6. ✅ Wire everything together
+
+**First run**: Takes 60-90 seconds for all services to be ready
+
+#### Step 4: Access the Application
+
+Once started, access:
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Aspire Dashboard** 🎯 | https://localhost:15888 | None (dev mode) |
+| **Angular Frontend** | http://localhost:4200 | `sarah-admin` / `TestPassword123!` |
+| **Keycloak Admin Console** | http://localhost:8080 | `admin` / `ChangeMe123!` |
+| **RabbitMQ Management** | http://localhost:15672 | `guest` / `guest` |
+
+> 💡 **Tip**: The Aspire Dashboard shows all running services, their logs, traces, and metrics in real-time!
+
+#### Step 5: Login to Sarah
+
+1. Navigate to http://localhost:4200
+2. You'll be redirected to Keycloak login
+3. Login with:
+   - **Username**: `sarah-admin`
+   - **Password**: `TestPassword123!` (or your custom password from appsettings)
+4. You'll be redirected back to Sarah's home page
+
+No manual Keycloak configuration needed! Everything is pre-configured.
+
+#### Understanding What Aspire Does
+
+Aspire automatically configures:
+
+- **Keycloak Realm**: `sarah-realm` is created on startup
+- **Keycloak Client**: `sarah-client` configured for Angular SPA
+  - Redirect URIs: `http://localhost:4200/*`, `https://localhost:4200/*`
+  - Direct access grants enabled
+  - Standard flow (authorization code) enabled
+- **Test User**: Pre-created with credentials from appsettings
+- **Token Lifetimes**: 5 min access tokens, 30 min refresh tokens
+- **Service Discovery**: All services automatically discover Keycloak, RabbitMQ, and PostgreSQL
+
+For more details on Aspire configuration, see [Sarah.AppHost/README.md](Sarah.AppHost/README.md).
+
+#### Stopping Aspire
+
+Press `Ctrl+C` in the terminal where Aspire is running. All services will stop gracefully.
+
+#### Troubleshooting Aspire
+
+**Keycloak takes a long time to start**  
+- First startup: Keycloak may take 60-90 seconds to download the image and import the realm
+- Subsequent startups: Should be faster (30-45 seconds)
+- Check Keycloak logs in Aspire Dashboard for progress
+
+**Services can't authenticate**  
+- Ensure Keycloak is fully started (check Aspire Dashboard)
+- The realm import happens automatically, but takes time
+- Check Keycloak container logs for "Imported realm" message
+
+**Port conflicts**  
+- Ensure ports 4200, 8080, 8443, 5001-5006, 5672, 15672, 15888 are available
+- Stop any other instances of Docker Compose or manual services
+
+---
+
+### Option 2: Docker Compose (Traditional)
+
+Docker Compose provides a complete local development environment with all services pre-configured. Use this if you prefer traditional Docker tooling or don't want to use Aspire.
+
+> ⚠️ **Note**: Docker Compose requires manual Keycloak configuration (realm, client, user creation). For automatic configuration, use Aspire instead.
 
 #### Step 1: Clone the Repository
 
@@ -354,11 +481,11 @@ docker-compose -f docker-compose.microservices.yml down -v
 
 ---
 
----
-
-### Option 2: Manual Development Setup
+### Option 3: Manual Development Setup
 
 For fine-grained control and debugging individual services.
+
+> ⚠️ **Note**: This method requires manual Keycloak configuration and is the most complex. Recommended only for advanced debugging scenarios.
 
 #### Step 1: Start Infrastructure Services
 

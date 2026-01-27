@@ -1,9 +1,17 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-// Add Keycloak IDP
+// Add configuration for Keycloak admin credentials
+var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
+var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
+
+// Add Keycloak IDP with realm import
 var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
+    .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
+    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json")
+    .WithArgs("start-dev", "--import-realm");
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
