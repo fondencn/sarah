@@ -1,3 +1,6 @@
+/* You can add global styles to this file, and also import other style files */
+@import "../node_modules/bootstrap/dist/css/bootstrap.css";
+
 /* Microsoft Fluent Design Variables */
 :root {
   /* Fluent Design Colors */
@@ -32,10 +35,6 @@
   --acrylic-background: rgba(255, 255, 255, 0.7);
   --acrylic-border: rgba(255, 255, 255, 0.2);
 }
-
-
-/* You can add global styles to this file, and also import other style files */
-@import "../node_modules/bootstrap/dist/css/bootstrap.css";
 
 /* Fluent Design System Overrides */
 body {
@@ -109,4 +108,3 @@ body {
   border-bottom: 1px solid var(--acrylic-border);
   box-shadow: var(--shadow-depth-8);
 }
-
