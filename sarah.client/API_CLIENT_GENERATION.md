@@ -151,8 +151,6 @@ export class AppModule { }
 
 **No manual token management required!**
 
-For detailed authentication documentation, see [API_AUTH_GUIDE.md](./API_AUTH_GUIDE.md).
-
 For usage examples, see [API_USAGE_EXAMPLES.md](./API_USAGE_EXAMPLES.md).
 
 ### Example Usage

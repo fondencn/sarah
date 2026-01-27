@@ -52,7 +52,6 @@ export class MyComponent {
 |----------|---------|--------------|
 | **UPDATE_OPENAPI_README.md** | Quick reference for updating clients | When regenerating clients |
 | **API_CLIENT_GENERATION.md** | Detailed generation documentation | First time setup |
-| **API_AUTH_GUIDE.md** | Authentication architecture & setup | Understanding auth flow |
 | **API_USAGE_EXAMPLES.md** | Code examples and patterns | Writing code |
 | **COMPLETE_SETUP.md** | This file - overview of everything | Getting started |
 
@@ -60,7 +59,7 @@ export class MyComponent {
 
 **I want to...**
 - **Update API clients** → [UPDATE_OPENAPI_README.md](./UPDATE_OPENAPI_README.md)
-- **Understand authentication** → [API_AUTH_GUIDE.md](./API_AUTH_GUIDE.md)
+- **Understand authentication** → See "System Architecture" section below
 - **See code examples** → [API_USAGE_EXAMPLES.md](./API_USAGE_EXAMPLES.md)
 - **Generate clients first time** → [API_CLIENT_GENERATION.md](./API_CLIENT_GENERATION.md)
 - **Get complete overview** → This document
@@ -148,7 +147,6 @@ Component updates UI
 | File | Content | Size |
 |------|---------|------|
 | `API_CLIENT_GENERATION.md` | Generation process details | ~6 KB |
-| `API_AUTH_GUIDE.md` | Authentication guide | ~10 KB |
 | `API_USAGE_EXAMPLES.md` | Code examples | ~14 KB |
 | `UPDATE_OPENAPI_README.md` | Quick reference | ~3 KB |
 | `COMPLETE_SETUP.md` | This overview | ~8 KB |
@@ -407,7 +405,7 @@ describe('MyService', () => {
 
 1. Read this file (COMPLETE_SETUP.md) - Overview
 2. Read UPDATE_OPENAPI_README.md - Learn how to update clients
-3. Read API_AUTH_GUIDE.md - Understand authentication
+3. Review "System Architecture" section - Understand authentication
 4. Read API_USAGE_EXAMPLES.md - See code examples
 5. Start coding with the examples!
 
@@ -415,7 +413,7 @@ describe('MyService', () => {
 
 **Need code examples?** → API_USAGE_EXAMPLES.md
 
-**Debugging auth issues?** → API_AUTH_GUIDE.md
+**Debugging auth issues?** → See "Troubleshooting" section below
 
 ## 📞 Support
 
