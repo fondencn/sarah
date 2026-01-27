@@ -26,8 +26,16 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-// Disable SSL certificate validation for local development
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Configuration constants
+const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB for large OpenAPI specs
+
+// ⚠️ DEVELOPMENT ONLY: Disable SSL certificate validation for local development
+// This allows downloading OpenAPI specs from services with self-signed certificates.
+// In production, proper SSL certificates should be used and this should NOT be set.
+if (process.env.NODE_ENV !== 'production') {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    console.warn('⚠️  SSL verification disabled for development. Do not use in production!');
+}
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -208,7 +216,7 @@ function generateClient(specPath, outputDir, serviceName) {
         
         console.log(`  Generating TypeScript client...`);
         
-        exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+        exec(command, { maxBuffer: MAX_BUFFER_SIZE }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`  ✗ Error: ${error.message}`);
                 reject(error);

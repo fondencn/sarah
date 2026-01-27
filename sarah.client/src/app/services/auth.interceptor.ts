@@ -65,7 +65,10 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           // Unauthorized - token might be expired or invalid
-          console.warn('Authentication error (401) - redirecting to login');
+          // In production, this should use a proper logging service
+          if (typeof console !== 'undefined') {
+            console.warn('Authentication error (401) - redirecting to login');
+          }
           this.authService.login();
         }
         return throwError(() => error);
