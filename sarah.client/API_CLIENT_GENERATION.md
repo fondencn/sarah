@@ -1,10 +1,10 @@
 # Sarah API Client Generation
 
-This directory contains scripts for automatically generating TypeScript Angular API clients from the microservices' OpenAPI specifications.
+This directory contains a unified script for automatically generating TypeScript Angular API clients from the microservices' OpenAPI specifications.
 
 ## Overview
 
-The Sarah smart home system uses a microservice architecture with 6 independent services. Each service exposes a REST API documented with OpenAPI/Swagger. These scripts automate the process of generating TypeScript clients for use in the Angular frontend.
+The Sarah smart home system uses a microservice architecture with 7 independent services. Each service exposes a REST API documented with OpenAPI/Swagger. The `update-openapi-clients.js` script automates the process of downloading OpenAPI specs and generating TypeScript clients for use in the Angular frontend.
 
 ## Prerequisites
 
@@ -14,33 +14,59 @@ The Sarah smart home system uses a microservice architecture with 6 independent 
 
 ## Microservices
 
-| Service | Port | Swagger URL |
-|---------|------|-------------|
-| Device Service | 5001 | https://localhost:5001/swagger |
-| Persons Service | 5002 | https://localhost:5002/swagger |
-| Geofences Service | 5003 | https://localhost:5003/swagger |
-| Event Processing Service | 5004 | https://localhost:5004/swagger |
-| Monitoring Service | 5005 | https://localhost:5005/swagger |
-| Rules Service | 5006 | https://localhost:5006/swagger |
+| Service | Port | Swagger URL | Description |
+|---------|------|-------------|-------------|
+| Device Service | 5001 | https://localhost:5001/swagger | Manages smart home devices |
+| Persons Service | 5002 | https://localhost:5002/swagger | Manages persons and user profiles |
+| Geofences Service | 5003 | https://localhost:5003/swagger | Manages geofences and location automation |
+| Room Service | 5004 | https://localhost:5004/swagger | Manages rooms and device organization |
+| Monitoring Service | 5005 | https://localhost:5005/swagger | System monitoring and health checks |
+| Rules Service | 5006 | https://localhost:5006/swagger | Automation rules engine |
+| Speech Server | 5008 | https://localhost:5008/swagger | Voice recognition and text-to-speech |
 
 ## Usage
 
-### Option 1: Using the Shell Script (Recommended)
+### Quick Start
+
+The easiest way to update all API clients is using npm scripts:
 
 ```bash
-# Make the script executable (first time only)
-chmod +x generate-api-clients.sh
+# Update all OpenAPI clients
+npm run update-openapi
 
-# Run the generator
-./generate-api-clients.sh
+# Update all clients and save OpenAPI specs
+npm run update-openapi:save
 ```
 
-### Option 2: Using Node.js directly
+### Advanced Usage
+
+The `update-openapi-clients.js` script supports several options:
 
 ```bash
-# Run the Node.js script
-node generate-api-clients.js
+# Generate all clients (default)
+node update-openapi-clients.js
+
+# Generate a specific service only
+node update-openapi-clients.js --service device-service
+
+# Save OpenAPI specs to openapi-specs/ directory
+node update-openapi-clients.js --save-specs
+
+# Download specs only, skip generation
+node update-openapi-clients.js --skip-generate --save-specs
+
+# Show help
+node update-openapi-clients.js --help
 ```
+
+### Available npm Scripts
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `update-openapi` | `npm run update-openapi` | Generate all OpenAPI clients |
+| `update-openapi:save` | `npm run update-openapi:save` | Generate clients and save specs |
+| `generate-clients` | `npm run generate-clients` | Alias for update-openapi |
+| `update-api` | `npm run update-api` | Alias for update-openapi |
 
 ## What Gets Generated
 
@@ -57,25 +83,34 @@ The scripts will:
 ## Generated Directory Structure
 
 ```
-src/app/services/
-├── api/
-│   ├── device-service/          # Generated Device Service client
-│   │   ├── api/
-│   │   │   └── devicesController.service.ts
-│   │   ├── model/
-│   │   │   └── *.model.ts
-│   │   └── ...
-│   ├── persons-service/         # Generated Persons Service client
-│   ├── geofences-service/       # Generated Geofences Service client
-│   ├── eventprocessing-service/ # Generated Event Processing Service client
-│   ├── monitoring-service/      # Generated Monitoring Service client
-│   └── rules-service/           # Generated Rules Service client
-├── device.service.ts            # Wrapper service for Device API
-├── person.service.ts            # Wrapper service for Persons API
-├── geofence.service.ts          # Wrapper service for Geofences API
-├── event-processing.service.ts  # Wrapper service for Event Processing API
-├── monitoring.service.ts        # Wrapper service for Monitoring API
-└── rules.service.ts             # Wrapper service for Rules API
+sarah.client/
+├── openapi-specs/               # Saved OpenAPI specs (optional, with --save-specs)
+│   ├── device-service.json
+│   ├── persons-service.json
+│   ├── geofences-service.json
+│   ├── room-service.json
+│   ├── monitoring-service.json
+│   ├── rules-service.json
+│   └── speech-server.json
+└── src/app/services/
+    ├── api/
+    │   ├── device-service/          # Generated Device Service client
+    │   │   ├── api/
+    │   │   │   └── *.service.ts
+    │   │   ├── model/
+    │   │   │   └── *.model.ts
+    │   │   └── ...
+    │   ├── persons-service/         # Generated Persons Service client
+    │   ├── geofences-service/       # Generated Geofences Service client
+    │   ├── room-service/            # Generated Room Service client
+    │   ├── monitoring-service/      # Generated Monitoring Service client
+    │   ├── rules-service/           # Generated Rules Service client
+    │   └── speech-server/           # Generated Speech Server client
+    ├── device.service.ts            # Wrapper service for Device API
+    ├── person.service.ts            # Wrapper service for Persons API
+    ├── geofence.service.ts          # Wrapper service for Geofences API
+    ├── monitoring.service.ts        # Wrapper service for Monitoring API
+    └── rules.service.ts             # Wrapper service for Rules API
 ```
 
 ## Wrapper Services
@@ -173,36 +208,39 @@ Regenerate the API clients whenever:
 - **Solution**: The scripts automatically disable SSL verification (NODE_TLS_REJECT_UNAUTHORIZED=0)
 - **Note**: This is only for development; production should use proper certificates
 
-## Scripts
+## The Script: update-openapi-clients.js
 
-### generate-api-clients.js
-
-Node.js script that:
-- Downloads OpenAPI specs from all microservices
+A comprehensive Node.js script that:
+- Downloads OpenAPI specs from all Sarah microservices
 - Generates TypeScript Angular clients using openapi-generator-cli
-- Handles errors and provides detailed progress output
+- Supports selective service updates
+- Optionally saves OpenAPI specs for offline use
+- Provides detailed progress output and error handling
+- Supports both all-services and single-service mode
 
-### generate-api-clients.sh
+### Features
 
-Shell script wrapper that:
-- Checks prerequisites
-- Installs openapi-generator-cli if needed
-- Runs the Node.js generator
-- Provides usage instructions
+✓ **Flexible**: Update all services or just one  
+✓ **Spec Saving**: Optionally save OpenAPI specs locally  
+✓ **Offline Mode**: Download specs without generating clients  
+✓ **Error Handling**: Clear error messages with troubleshooting hints  
+✓ **Progress Tracking**: Detailed output for each step  
+✓ **Auto-configuration**: Discovers all services automatically
 
 ## Integration with Angular Build
 
-To automatically regenerate clients during development, add to `package.json`:
+The scripts are already integrated in `package.json`. If you want to automatically regenerate clients before starting the dev server, you can modify the `prestart` script:
 
 ```json
 {
   "scripts": {
-    "generate-clients": "node generate-api-clients.js",
-    "prestart": "npm run generate-clients",
+    "prestart": "node aspnetcore-https && node update-openapi-clients.js",
     "start": "ng serve"
   }
 }
 ```
+
+**Note:** This is not enabled by default as it requires all microservices to be running.
 
 ## Further Reading
 
