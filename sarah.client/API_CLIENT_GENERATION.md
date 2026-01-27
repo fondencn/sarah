@@ -70,15 +70,25 @@ node update-openapi-clients.js --help
 
 ## What Gets Generated
 
-The scripts will:
+The script will:
 
-1. Download OpenAPI specifications from each running microservice
-2. Generate TypeScript Angular clients in `src/app/services/api/[service-name]/`
+1. **Download** OpenAPI specifications from each running microservice
+2. **Generate** TypeScript Angular clients in `src/app/services/api/[service-name]/`
 3. Each generated client includes:
    - API service classes with typed methods
    - Model interfaces for request/response objects
-   - Configuration classes
+   - Configuration classes with bearer token support
    - Angular module definitions
+   - Automatic providedIn: 'root' for services
+
+### Generated Clients Include:
+
+- ✅ **Type-safe API methods** - Full TypeScript typing
+- ✅ **Bearer token authentication** - Automatic OAuth2/OIDC integration
+- ✅ **Angular 18 compatibility** - Latest Angular features
+- ✅ **providedIn: 'root'** - Singleton services
+- ✅ **RxJS Observables** - Reactive programming support
+- ✅ **Error handling** - HTTP error responses
 
 ## Generated Directory Structure
 
@@ -113,58 +123,118 @@ sarah.client/
     └── rules.service.ts             # Wrapper service for Rules API
 ```
 
-## Wrapper Services
+## Authentication & Security
 
-Pre-built wrapper services are provided in `src/app/services/`. These services:
+All generated clients support **bearer token authentication** automatically:
 
-- Provide a simplified, application-specific interface
-- Hide implementation details of the generated clients
-- Make it easier to mock during testing
-- Allow for additional business logic
+### Setup (One-Time)
+
+Import `SarahApiModule` in your `app.module.ts`:
+
+```typescript
+import { SarahApiModule } from './services/sarah-api.module';
+
+@NgModule({
+  imports: [
+    SarahApiModule.forRoot() // ← Configures all clients with auth
+  ]
+})
+export class AppModule { }
+```
+
+### How It Works
+
+1. **AuthService** manages OAuth2/OIDC authentication with Keycloak
+2. **AuthInterceptor** automatically adds bearer tokens to all API requests
+3. **Environment config** defines all microservice endpoints
+4. **Generated clients** work seamlessly with authentication
+
+**No manual token management required!**
+
+For detailed authentication documentation, see [API_AUTH_GUIDE.md](./API_AUTH_GUIDE.md).
+
+For usage examples, see [API_USAGE_EXAMPLES.md](./API_USAGE_EXAMPLES.md).
 
 ### Example Usage
 
 ```typescript
 import { Component, OnInit } from '@angular/core';
-import { DeviceService } from './services/device.service';
+import { DevicesControllerService } from './services/api/device-service';
 
 @Component({
   selector: 'app-devices',
   templateUrl: './devices.component.html'
 })
 export class DevicesComponent implements OnInit {
-
   lamps: any[] = [];
-
-  constructor(private deviceService: DeviceService) { }
-
+  
+  constructor(private deviceClient: DevicesControllerService) { }
+  
   ngOnInit() {
-    this.deviceService.getLamps().subscribe(
-      lamps => this.lamps = lamps,
-      error => console.error('Error loading lamps', error)
-    );
+    // Bearer token is automatically added to the request
+    this.deviceClient.getLamps().subscribe({
+      next: (lamps) => this.lamps = lamps,
+      error: (error) => console.error('Error loading lamps', error)
+    });
   }
 }
 ```
+
+**Note:** Bearer authentication is handled automatically. No manual token management needed!
+
+## Wrapper Services (Recommended Pattern)
+
+Create wrapper services for better abstraction and testability:
+
+```typescript
+// device.service.ts
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { DevicesControllerService } from './api/device-service';
+
+@Injectable({ providedIn: 'root' })
+export class DeviceService {
+  constructor(private client: DevicesControllerService) { }
+  
+  getLamps(): Observable<any> {
+    return this.client.getLamps();
+  }
+}
+```
+
+Benefits:
+- Simplified interface for your application
+- Easy to mock during testing
+- Allows adding business logic
+- Decouples components from generated code
 
 ## Configuration
 
 ### Authentication
 
-The generated clients support Bearer token authentication (JWT). Configure this in your Angular app:
+All generated clients automatically support Bearer token authentication via the `AuthInterceptor`.
 
+The interceptor:
+- Adds `Authorization: Bearer <token>` header to all microservice requests
+- Retrieves tokens from `AuthService` (Keycloak OAuth2/OIDC)
+- Handles 401 errors by redirecting to login
+- Works consistently across all 7 microservices
+
+**Setup once in AppModule:**
 ```typescript
-import { Configuration } from './services/api/device-service';
+import { SarahApiModule } from './services/sarah-api.module';
 
-const apiConfig = new Configuration({
-  basePath: 'https://localhost:5001',
-  accessToken: () => this.authService.getAccessToken()
-});
+@NgModule({
+  imports: [
+    SarahApiModule.forRoot()
+  ]
+})
+export class AppModule { }
 ```
 
 ### Base URLs
 
-By default, clients use the URLs where the OpenAPI specs were downloaded from. Update these in your app configuration:
+All microservice endpoints are configured in environment files:
 
 ```typescript
 // In environment.ts

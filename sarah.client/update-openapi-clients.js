@@ -199,7 +199,9 @@ function generateClient(specPath, outputDir, serviceName) {
             'modelSuffix=Model',
             'withInterfaces=true',
             'stringEnums=true',
-            'useSingleRequestParameter=false'
+            'useSingleRequestParameter=false',
+            'supportsES6=true',
+            'providedInRoot=true'
         ].join(',');
         
         const command = `npx @openapitools/openapi-generator-cli generate -i ${specPath} -g typescript-angular -o ${outputDir} --additional-properties=${additionalProps}`;
