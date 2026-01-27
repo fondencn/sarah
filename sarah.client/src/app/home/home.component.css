@@ -1,15 +1,108 @@
+/* Fluent Design Card Variants */
 .card-device {
-    background-color: #ffecb3; /* Brighter version of Bootstrap warning color */
+    background: linear-gradient(135deg, #FFD93D 0%, #FFB900 100%);
+    border: none;
+    color: var(--fluent-gray-160);
 }
+
+.card-device:hover {
+    background: linear-gradient(135deg, #FFE168 0%, #FFC700 100%);
+}
+
 .card-scene {
-    background-color: #81c784; /* Brighter version of Bootstrap success color */
+    background: linear-gradient(135deg, #6FCF97 0%, var(--fluent-green) 100%);
+    border: none;
+    color: white;
 }
+
+.card-scene:hover {
+    background: linear-gradient(135deg, #85D9AC 0%, #138C13 100%);
+}
+
 .card-room {
-    background-color: #e57373; /* Brighter version of Bootstrap danger color */
+    background: linear-gradient(135deg, #FF6B9D 0%, #C239B3 100%);
+    border: none;
+    color: white;
 }
+
+.card-room:hover {
+    background: linear-gradient(135deg, #FF85B0 0%, #D44FC4 100%);
+}
+
 .card-person {
-    background-color: #64b5f6; /* Brighter version of Bootstrap primary color */
+    background: linear-gradient(135deg, var(--fluent-blue-light) 0%, var(--fluent-blue) 100%);
+    border: none;
+    color: white;
 }
+
+.card-person:hover {
+    background: linear-gradient(135deg, #6EEBFF 0%, #0086F0 100%);
+}
+
+/* Fluent Design Icons */
 .big-icon {
-    font-size: 28pt;
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+svg.big-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.card-device .big-icon {
+    color: #323130;
+}
+
+.card-scene .big-icon,
+.card-room .big-icon,
+.card-person .big-icon {
+    color: white;
+}
+
+/* Hero Image Container */
+.hero-container {
+    position: relative;
+    height: 300px;
+    background: linear-gradient(135deg, var(--fluent-blue) 0%, var(--fluent-purple) 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-depth-16);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 3rem;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+}
+
+.hero-content p {
+    font-size: 1.5rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Fluent Design animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.5s ease-out;
 }
