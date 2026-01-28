@@ -46,19 +46,19 @@
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-svg.big-icon {
+img.big-icon {
     width: 48px;
     height: 48px;
 }
 
 .card-device .big-icon {
-    color: #323130;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)) brightness(0) saturate(100%) invert(14%) sepia(6%) saturate(449%) hue-rotate(349deg) brightness(95%) contrast(89%);
 }
 
 .card-scene .big-icon,
 .card-room .big-icon,
 .card-person .big-icon {
-    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)) brightness(0) saturate(100%) invert(100%);
 }
 
 /* Hero Image Container */
