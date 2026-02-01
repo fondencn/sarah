@@ -5,6 +5,7 @@ using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register HTTP client for Rules Service communication
-builder.Services.AddHttpClient<IRulesServiceClient, RulesServiceClient>(client =>
+builder.Services.AddHttpClient<IRuleService, RulesServiceClient>(client =>
 {
     var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://rules:5006";
     client.BaseAddress = new Uri(rulesServiceUrl);

@@ -17,12 +17,7 @@ namespace Sarah.Rules.Actions
 
         public override async void Execute(NetworkEvent sourceEvent)
         {
-            var command = new StopSceneCommand
-            {
-                SceneTypeName = _sceneTypeName
-            };
-            
-            await _deviceServiceClient.StopSceneAsync(command);
+            await _deviceServiceClient.DeactivateScene(_sceneTypeName);
         }
     }
 }

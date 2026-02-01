@@ -6,6 +6,7 @@ using Sarah.Rules.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Rules.WebApi.Services;
 using Sarah.API.Interfaces.Services;
+using Sarah.Voice.DeviceApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +22,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register HTTP client for DeviceService communication - stub
 // In production, this would use DeviceServiceClient from Sarah.ServiceClients
-builder.Services.AddSingleton<IDeviceService, DeviceServiceStub>();
+builder.Services.AddSingleton<IDeviceService, DeviceServiceClient>();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

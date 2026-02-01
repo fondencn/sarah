@@ -33,12 +33,7 @@ namespace Sarah.Rules.Actions
                 return;
             }
             
-            var command = new StartSceneCommand
-            {
-                SceneTypeName = _sceneTypeName
-            };
-            
-            await _deviceServiceClient.StartSceneAsync(command);
+            await _deviceServiceClient.ActivateScene(_sceneTypeName);
         }
     }
 }

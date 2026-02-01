@@ -3,10 +3,12 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sarah.API.BusinessObjects.DTOs;
+using Sarah.API.Interfaces.Services;
+using Sarah.API.Interfaces;
 
 namespace Sarah.ServiceClients
 {
-    public class RulesServiceClient
+    public class RulesServiceClient : IRuleService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<RulesServiceClient> _logger;
@@ -42,6 +44,11 @@ namespace Sarah.ServiceClients
                 _logger.LogError(ex, "Error getting rules status");
                 return null;
             }
+        }
+
+        public void RegisterRuleStore(IRuleStore storage)
+        {
+            throw new NotImplementedException();
         }
     }
 }
