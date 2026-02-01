@@ -4,11 +4,10 @@ using Sarah.API.BusinessObjects;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
+public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
@@ -39,7 +38,7 @@ public class MonitoringService (IServiceProvider _serviceProvider, IDeviceServic
             doors,
             ferien, 
             weather,
-            new Monitors.RuleMonitor(_rules, ferien, _rabbitMQ, _db, _devices, doors, weather, _loggerFactory.CreateLogger<Monitors.RuleMonitor>()),
+            // RuleMonitor has been moved to Sarah.Rules.WebApi as AlarmScheduleService and TemperatureScheduleService
         };
 
         await Task.WhenAll(Monitors.Select(m => m.Start()).ToArray());

@@ -48,6 +48,10 @@ builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.Ge
 // Register WeatherWarningHandler as a hosted service
 builder.Services.AddHostedService<Sarah.Rules.Services.WeatherWarningHandler>();
 
+// Register schedule services
+builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
+builder.Services.AddScoped<Sarah.Rules.Services.TemperatureScheduleService>();
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -129,5 +133,11 @@ var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>(
 
 ruleSvc.RegisterRuleStore(hardCoded);
 
+// Initialize AlarmScheduleService
+using (var scope = app.Services.CreateScope())
+{
+    var alarmService = scope.ServiceProvider.GetRequiredService<Sarah.Rules.Services.AlarmScheduleService>();
+    await alarmService.Start();
+}
 
 app.Run();

@@ -5,7 +5,6 @@ using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
-using Sarah.ServiceClients;
 using Sarah.Voice.DeviceApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,12 +20,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register HTTP client for Rules Service communication
-builder.Services.AddHttpClient<IRuleService, RulesServiceClient>(client =>
-{
-    var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://localhost:5006";
-    client.BaseAddress = new Uri(rulesServiceUrl);
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+// builder.Services.AddHttpClient<IRuleService, RulesServiceClient>(client =>
+// {
+//     var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://localhost:5006";
+//     client.BaseAddress = new Uri(rulesServiceUrl);
+//     client.Timeout = TimeSpan.FromSeconds(30);
+// });
 
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
