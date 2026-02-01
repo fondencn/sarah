@@ -4,10 +4,11 @@ using Sarah.API.BusinessObjects;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
+public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
@@ -23,6 +24,9 @@ public class MonitoringService (ApplicationDbContext _db, IDeviceService _device
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var scope = _serviceProvider.CreateScope();
+        var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
         var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>());
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
         var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>());

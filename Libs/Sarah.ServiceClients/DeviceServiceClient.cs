@@ -1,26 +1,25 @@
-﻿using Newtonsoft.Json;
-using Microsoft.Extensions.Logging;
-using System.Text;
-using Sarah.API.BusinessObjects.SpeakerRequests;
+﻿using System.Text;
+using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces;
+using Sarah.API.BusinessObjects.DTOs;
+using Sarah.API.BusinessObjects.SpeakerRequests;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Sarah.Voice.DeviceApi
 {
     public class DeviceServiceClient : IDeviceService
     {
-
-        private Uri BaseUri {get;}
-        private readonly ILogger? _logger;
+        private readonly ILogger<DeviceServiceClient> _logger;
+        private readonly HttpClient _httpClient;
         
-        public DeviceServiceClient(string serverName, ILogger<DeviceServiceClient>? logger = null)
+        // Constructor for HTTP client registration (required for typed clients)
+        public DeviceServiceClient(HttpClient httpClient, ILogger<DeviceServiceClient> logger)
         {
-            BaseUri = new Uri("http://" + serverName + ":5000");
+            _httpClient = httpClient;
             _logger = logger;
         }
-
-
         public void Initialize()
         {
             this.BeginEventApiActivity();
@@ -45,9 +44,11 @@ namespace Sarah.Voice.DeviceApi
             });
         }
 
+        private Uri GetBaseUri() => _httpClient.BaseAddress ?? throw new InvalidOperationException("No HTTP client available");
+
         public async Task ToggleLampByRoom(string roomName, string lampName)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient ?? new HttpClient();
 
             SetLampByRoomRequest request = new SetLampByRoomRequest()
             {
@@ -56,7 +57,7 @@ namespace Sarah.Voice.DeviceApi
                 On = false
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/ToggleLampByRoom");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/ToggleLampByRoom");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -73,7 +74,7 @@ namespace Sarah.Voice.DeviceApi
                 On = on
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/SetLampByRoom");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/SetLampByRoom");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -89,7 +90,7 @@ namespace Sarah.Voice.DeviceApi
                 Temperature = temperature
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/SetTemperatureByRoom");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/SetTemperatureByRoom");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -100,7 +101,7 @@ namespace Sarah.Voice.DeviceApi
         {
             HttpClient http = new HttpClient();
 
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetOpenDoors");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetOpenDoors");
             _logger?.LogDebug("HTTP GET To " + uri);
             HttpResponseMessage response = await http.GetAsync(uri);
             response.EnsureSuccessStatusCode();
@@ -114,7 +115,7 @@ namespace Sarah.Voice.DeviceApi
         {
             HttpClient http = new HttpClient();
 
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetDeseaseInfo");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetDeseaseInfo");
             _logger?.LogDebug("HTTP GET To " + uri);
             HttpResponseMessage response = await http.GetAsync(uri);
             response.EnsureSuccessStatusCode();
@@ -136,7 +137,7 @@ namespace Sarah.Voice.DeviceApi
                 TargetSpeaker = speakerHostname
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/SetAlarmSchedule");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/SetAlarmSchedule");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -146,7 +147,7 @@ namespace Sarah.Voice.DeviceApi
         {
             HttpClient http = new HttpClient();
 
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetAlarmSchedules");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetAlarmSchedules");
             _logger?.LogDebug("HTTP GET To " + uri);
             HttpResponseMessage response = await http.GetAsync(uri);
             response.EnsureSuccessStatusCode();
@@ -161,7 +162,7 @@ namespace Sarah.Voice.DeviceApi
         {
             HttpClient http = new HttpClient();
 
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/GetPersonLocation?personName=" + personName);
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetPersonLocation?personName=" + personName);
             _logger?.LogDebug("HTTP GET To " + uri);
             HttpResponseMessage response = await http.GetAsync(uri);
             response.EnsureSuccessStatusCode();
@@ -180,7 +181,7 @@ namespace Sarah.Voice.DeviceApi
                 SceneName = sceneName
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/ActivateScene");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/ActivateScene");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -196,7 +197,7 @@ namespace Sarah.Voice.DeviceApi
                 SceneName = sceneName
             };
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/DeactivateScene");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/DeactivateScene");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
@@ -207,7 +208,7 @@ namespace Sarah.Voice.DeviceApi
             HttpClient http = new HttpClient();
 
             var content = new StringContent(JsonConvert.SerializeObject(Environment.MachineName), Encoding.UTF8, "application/json");
-            Uri uri = new Uri(BaseUri, "/api/DeviceApi/RegisterSpeaker");
+            Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/RegisterSpeaker");
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
