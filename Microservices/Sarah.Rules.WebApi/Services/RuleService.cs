@@ -93,6 +93,11 @@ namespace Sarah.Rules
                     onMessage: HandleTemperatureScheduleChanged,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<HolidayStatusChangedMessage>(
+                    topic: MessageTopics.HolidaysStatusChanged,
+                    onMessage: HandleHolidayStatusChanged,
+                    cancellationToken: stoppingToken);
+
                 _logger.LogInformation("RuleService subscribed to all event topics");
 
                 // Keep the service running
@@ -229,6 +234,25 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling temperature schedule changed event");
+            }
+        }
+
+        private async Task HandleHolidayStatusChanged(HolidayStatusChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received holiday status changed event: {HolidayName}, Change: {ChangeType}", 
+                    message.HolidayName, message.Change);
+
+                // Activate/deactivate alarms based on holiday status
+                // This is a placeholder - actual implementation would require access to AlarmScheduleService
+                _logger.LogInformation("Holiday status changed: {HolidayName} - {ChangeType}", 
+                    message.HolidayName, 
+                    message.Change == HolidayStatusChangedMessage.ChangeType.Started ? "Started" : "Ended");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling holiday status changed event");
             }
         }
 

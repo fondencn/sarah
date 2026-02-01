@@ -17,7 +17,6 @@ namespace Sarah.Rules
         private readonly IDeviceService _devices;
         private readonly IPersonService _persons;
         private readonly IEmailNotifier _emails;
-        private readonly IFerienInfoProvider _ferien;
         private readonly IDeviceService _deviceServiceClient;
         private List<Rule> _rules = new List<Rule>();
         private readonly IWeatherProvider _weather;
@@ -40,7 +39,7 @@ namespace Sarah.Rules
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceService deviceServiceClient, ILogger<HardCodedRuleStore> logger)
+        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IDeviceService deviceServiceClient, ILogger<HardCodedRuleStore> logger)
         {
             this._logger = logger;
             this._rabbitMQ = rabbitMQ;
@@ -48,7 +47,6 @@ namespace Sarah.Rules
             this._weather = weather;
             this._persons = persons;
             this._emails = email;
-            this._ferien = ferien;
             this._deviceServiceClient = deviceServiceClient;
             this.CreateRules();
         }
@@ -383,17 +381,17 @@ namespace Sarah.Rules
                 }
 
                 /* Ferien morgen zu Ende */
-                string? aktuelleFerien = _ferien.AktuelleFerien?.Name;
-                if (!String.IsNullOrWhiteSpace(aktuelleFerien) && _ferien.AktuelleFerien?.Ende == DateTime.Today)
-                {
-                    greet += ". " + "Heute sind die " + aktuelleFerien + " zu Ende.";
-                }
+                // string? aktuelleFerien = _ferien.AktuelleFerien?.Name;
+                // if (!String.IsNullOrWhiteSpace(aktuelleFerien) && _ferien.AktuelleFerien?.Ende == DateTime.Today)
+                // {
+                //     greet += ". " + "Heute sind die " + aktuelleFerien + " zu Ende.";
+                // }
 
-                /* Ferien beginnen morgen */
-                if (_ferien.Ferien.Any(item => item.Start == DateTime.Today.AddDays(1)))
-                {
-                    greet += ". " + "Ab morgen sind Ferien. ";
-                }
+                // /* Ferien beginnen morgen */
+                // if (_ferien.Ferien.Any(item => item.Start == DateTime.Today.AddDays(1)))
+                // {
+                //     greet += ". " + "Ab morgen sind Ferien. ";
+                // }
 
                 // if (appendDeseaseStats)
                 // {

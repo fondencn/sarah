@@ -4,14 +4,15 @@ using Sarah.API.BusinessObjects;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.Monitoring.Monitors;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
+public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
-    public IFerienInfoProvider Ferien => this.Monitors.OfType<IFerienInfoProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IFerienInfoProvider monitor available");
+    public FerienMonitor Ferien => this.Monitors.OfType<FerienMonitor>().FirstOrDefault() ?? throw new InvalidOperationException("No IFerienInfoProvider monitor available");
 
     private  IMonitor[] Monitors {get; set;} = Array.Empty<IMonitor>();
 
@@ -28,7 +29,7 @@ public class MonitoringService (IServiceProvider _serviceProvider, IDeviceServic
         
         var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>());
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
-        var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>());
+        var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>(), _rabbitMQ);
         var doors = new Monitors.DoorMonitor(_db, _devices, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>());
         Monitors = new IMonitor[]
         {

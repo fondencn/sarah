@@ -102,4 +102,13 @@ public static class MessageTopics
     /// Used to notify RuleService to reconfigure timer triggers.
     /// </summary>
     public const string SchedulesTemperatureChanged = "schedules.temperature.changed";
+
+    // Holiday-related topics
+
+    /// <summary>
+    /// Topic for holiday status changes.
+    /// Published when holidays start or end.
+    /// Used to notify RuleService to activate/deactivate holiday-dependent alarms.
+    /// </summary>
+    public const string HolidaysStatusChanged = "holidays.status.changed";
 }

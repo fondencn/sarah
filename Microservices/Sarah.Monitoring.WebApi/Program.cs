@@ -6,6 +6,7 @@ using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.Voice.DeviceApi;
+using Sarah.Monitoring;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +46,7 @@ builder.Services.AddSingleton(sp =>
 
 // Register MonitoringService as a hosted background service
 builder.Services.AddHostedService<Sarah.Monitoring.MonitoringService>();
-builder.Services.AddSingleton<IMonitoringService>(sp => 
+builder.Services.AddSingleton<MonitoringService>(sp => 
     sp.GetServices<IHostedService>().OfType<Sarah.Monitoring.MonitoringService>().First());
 
 // Add services to the container.

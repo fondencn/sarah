@@ -9,10 +9,10 @@ namespace Sarah.Monitoring.WebApi.Controllers;
 [Route("api/[controller]")]
 public class MonitoringController : ControllerBase
 {
-    private readonly IMonitoringService _monitoringService;
+    private readonly MonitoringService _monitoringService;
     private readonly ILogger<MonitoringController> _logger;
 
-    public MonitoringController(IMonitoringService monitoringService, ILogger<MonitoringController> logger)
+    public MonitoringController(MonitoringService monitoringService, ILogger<MonitoringController> logger)
     {
         _monitoringService = monitoringService;
         _logger = logger;
