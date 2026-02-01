@@ -5,8 +5,8 @@ using Sarah.SpeechServer;
 using Sarah.SpeechServer.Extensions;
 using Sarah.Voice;
 using Sarah.Voice.DeviceApi;
-using Services.Sarah.API.Interfaces.Service;
 using Sarah.Messaging.RabbitMQ;
+using Sarah.API.Interfaces.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
-builder.Services.AddSingleton<IDeviceServiceClient, DeviceServiceClient>();
+builder.Services.AddSingleton<IDeviceService, DeviceServiceClient>();
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
 
 // Register MessageBasedWeatherProvider as IWeatherProvider and as IHostedService

@@ -2,8 +2,8 @@
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces.Service;
-using Services.Sarah.API.Interfaces.Service;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
@@ -16,7 +16,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpression { get; }
         private ILEDService LEDService { get; }
 
-        public FlashlightIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService ledService, ILogger<FlashlightIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public FlashlightIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILEDService ledService, ILogger<FlashlightIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             this.LEDService = ledService;
             string matchPattern = "^.*Taschenlampe (an|aus).*$";

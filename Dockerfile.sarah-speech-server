@@ -9,7 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Sarah.SpeechServer/Sarah.SpeechServer.csproj", "Sarah.SpeechServer/"]
 COPY ["Services/Sarah.API/Sarah.API.csproj", "Services/Sarah.API/"]
-COPY ["Services/Sarah.DeviceServiceClient/Sarah.DeviceServiceClient.csproj", "Services/Sarah.DeviceServiceClient/"]
+COPY ["Services/Sarah.ServiceClients/Sarah.ServiceClients.csproj", "Services/Sarah.ServiceClients/"]
 COPY ["Services/Sarah.EventProcessing/Sarah.EventProcessing.csproj", "Services/Sarah.EventProcessing/"]
 COPY ["Services/Sarah.LEDService/Sarah.LEDService.csproj", "Services/Sarah.LEDService/"]
 COPY ["Services/Sarah.Voice/Sarah.Voice.csproj", "Services/Sarah.Voice/"]

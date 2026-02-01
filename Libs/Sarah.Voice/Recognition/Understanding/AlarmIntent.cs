@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
@@ -19,7 +19,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpressionTimeSpan { get; }
         private Regex PatternMatchExpressionTime { get; }
 
-        public CreateAlarmIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<CreateAlarmIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public CreateAlarmIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<CreateAlarmIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPatternTimeSpan = @"^.*Erinnere mich in (.+)\s*(Minuten|Minute|Stunden|Stunde|Tagen|Tag)\s*((?:an)*\s*(.)*)$";
             this.PatternMatchExpressionTimeSpan = new Regex(matchPatternTimeSpan, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

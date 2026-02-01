@@ -3,7 +3,6 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
-using Sarah.Monitoring.Clients;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 

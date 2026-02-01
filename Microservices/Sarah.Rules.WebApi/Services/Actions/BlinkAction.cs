@@ -1,14 +1,13 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.Rules.Clients;
-using Sarah.Rules.DTOs.DeviceCommands;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Rules.Actions
 {
     public class BlinkAction : RuleAction
     {
-        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly IDeviceService _deviceServiceClient;
 
-        public BlinkAction(byte nodeId, int count, IDeviceServiceClient deviceServiceClient)
+        public BlinkAction(byte nodeId, int count, IDeviceService deviceServiceClient)
         {
             this._deviceServiceClient = deviceServiceClient;
             this.BlinkCount = count;

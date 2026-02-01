@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.API", "Libs\Sarah.API
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.Voice", "Libs\Sarah.Voice\Sarah.Voice.csproj", "{1CC74A39-11D7-475E-85EA-D99A8940424F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.DeviceServiceClient", "Libs\Sarah.DeviceServiceClient\Sarah.DeviceServiceClient.csproj", "{698C9DF4-548A-44CE-8843-1254A1DA7D66}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.ServiceClients", "Libs\Sarah.ServiceClients\Sarah.ServiceClients.csproj", "{698C9DF4-548A-44CE-8843-1254A1DA7D66}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sarah.SpeakerEventClient", "Libs\Sarah.SpeakerEventClient\Sarah.SpeakerEventClient.csproj", "{9C2CCBFA-8597-4210-9B62-05A48CC4F958}"
 EndProject

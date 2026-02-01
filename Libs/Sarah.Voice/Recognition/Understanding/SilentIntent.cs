@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
@@ -19,7 +19,7 @@ namespace Sarah.Voice.Recognition.Understanding
 
         private Regex PatternMatchExpression { get; }
 
-        public SilentIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<SilentIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public SilentIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<SilentIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = "^Sei[t]* (.+) still$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

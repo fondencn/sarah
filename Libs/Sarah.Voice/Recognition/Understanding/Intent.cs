@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -25,11 +25,11 @@ namespace Sarah.Voice.Recognition.Understanding
 
         protected string Location => this.SpeechService.Location;
 
-        protected IDeviceServiceClient _DeviceServiceClient;
+        protected IDeviceService _DeviceServiceClient;
         
         protected ILogger _logger;
 
-        public Intent (ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger logger)
+        public Intent (ISpeechService speechService, IDeviceService deviceServiceClient, ILogger logger)
         {
             this.SpeechService = speechService;
             this._DeviceServiceClient = deviceServiceClient;

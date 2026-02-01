@@ -1,4 +1,6 @@
-namespace Sarah.Rules.WebApi.DTOs
+using System;
+
+namespace Sarah.API.BusinessObjects.DTOs
 {
     public class RuleStatusDto
     {

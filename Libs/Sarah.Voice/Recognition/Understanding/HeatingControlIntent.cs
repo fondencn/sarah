@@ -1,4 +1,4 @@
-﻿using Services.Sarah.API.Interfaces.Service;
+﻿using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -12,7 +12,7 @@ namespace Sarah.Voice.Recognition.Understanding
         public override string HelpText => "Sag \"Heizung im Wohnzimmer einschalten\" oder \"Heizung aus\" ohne Raumangabe für diesen Raum. ";
         private Regex PatternMatchExpression { get; }
 
-        public HeatingControlIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<HeatingControlIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public HeatingControlIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<HeatingControlIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = @"^.*Heizung\s*(im\s*(\w*)\s*)?(an|ein|aus)[schalten]*$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

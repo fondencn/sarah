@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects.SpeakerRequests;
 
 namespace Sarah.Voice.Recognition.Understanding
@@ -20,7 +20,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpression { get; }
         private readonly IWeatherProvider _weatherProvider;
 
-        public WeatherIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, IWeatherProvider weatherProvider, ILogger<WeatherIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public WeatherIntent(ISpeechService speechService, IDeviceService deviceServiceClient, IWeatherProvider weatherProvider, ILogger<WeatherIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             _weatherProvider = weatherProvider;
             string matchPattern = "^.*Wetter\\s*(.*)$";

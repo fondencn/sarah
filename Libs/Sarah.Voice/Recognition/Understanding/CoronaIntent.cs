@@ -1,5 +1,5 @@
 ﻿using Sarah.API.BusinessObjects.SpeakerRequests;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -16,7 +16,7 @@ namespace Sarah.Voice.Recognition.Understanding
 
         private Regex PatternMatchExpression { get; }
 
-        public CoronaIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<CoronaIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public CoronaIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<CoronaIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = "^.*Corona.*$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

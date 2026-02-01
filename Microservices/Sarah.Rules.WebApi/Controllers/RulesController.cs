@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sarah.API.Interfaces.Services;
-using Sarah.Rules.WebApi.DTOs;
+using Sarah.API.BusinessObjects.DTOs;
 
 namespace Sarah.Rules.WebApi.Controllers;
 

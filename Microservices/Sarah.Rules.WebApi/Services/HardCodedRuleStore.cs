@@ -2,7 +2,6 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Rules.Actions;
-using Sarah.Rules.Clients;
 using Sarah.Rules.Conditions;
 using Microsoft.Extensions.Logging;
 using Sarah.Messaging.RabbitMQ;
@@ -19,7 +18,7 @@ namespace Sarah.Rules
         private readonly IPersonService _persons;
         private readonly IEmailNotifier _emails;
         private readonly IFerienInfoProvider _ferien;
-        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly IDeviceService _deviceServiceClient;
         private List<Rule> _rules = new List<Rule>();
         private readonly IWeatherProvider _weather;
 
@@ -41,7 +40,7 @@ namespace Sarah.Rules
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceServiceClient deviceServiceClient, ILogger<HardCodedRuleStore> logger)
+        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IFerienInfoProvider ferien, IDeviceService deviceServiceClient, ILogger<HardCodedRuleStore> logger)
         {
             this._logger = logger;
             this._rabbitMQ = rabbitMQ;

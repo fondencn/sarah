@@ -547,5 +547,66 @@ namespace Sarah.DeviceService
             await base.StopAsync(cancellationToken);
         }
 
+        // High-level API methods - not implemented in device service (these are for HTTP clients)
+        public Task ToggleLampByRoom(string roomName, string lampName)
+        {
+            _logger?.LogWarning("ToggleLampByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task SetLampByRoom(string roomName, string lampName, bool on)
+        {
+            _logger?.LogWarning("SetLampByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task SetTemperatureByRoom(string roomName, float temperature)
+        {
+            _logger?.LogWarning("SetTemperatureByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetOpenDoorsResponse> GetOpenDoors()
+        {
+            _logger?.LogWarning("GetOpenDoors called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetOpenDoorsResponse());
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetDeseaseInfoResponse> GetDeseaseInfo()
+        {
+            _logger?.LogWarning("GetDeseaseInfo called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetDeseaseInfoResponse());
+        }
+
+        public Task SetAlarmSchedule(string text, DateTime alarmTime, string speakerHostname)
+        {
+            _logger?.LogWarning("SetAlarmSchedule called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetAlarmSchedulesResponse> GetAlarmSchedules()
+        {
+            _logger?.LogWarning("GetAlarmSchedules called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetAlarmSchedulesResponse());
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetPersonLocationResponse> GetPersonLocation(string personName)
+        {
+            _logger?.LogWarning("GetPersonLocation called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetPersonLocationResponse());
+        }
+
+        public Task ActivateScene(string sceneName)
+        {
+            _logger?.LogWarning("ActivateScene called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task DeactivateScene(string sceneName)
+        {
+            _logger?.LogWarning("DeactivateScene called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
     }
 }

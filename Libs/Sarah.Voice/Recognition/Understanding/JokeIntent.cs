@@ -1,4 +1,4 @@
-﻿using Services.Sarah.API.Interfaces.Service;
+﻿using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
@@ -17,7 +17,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Uri _witzeUri = new Uri("https://funny4you.at/webmasterprogramm/zufallswitz.php");
         private Regex PatternMatchExpression { get; }
 
-        public JokeIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<JokeIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public JokeIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<JokeIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = "^.*Erzähl(?:e)*\\s*(?:mir)*\\s*einen Witz.*$|^.*Wie wäre es mit einem Witz.*$|^.*Sag was lustiges.*$|^.*Sag(?:e)*\\s*(?:mir)*\\s*einen Witz.*$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

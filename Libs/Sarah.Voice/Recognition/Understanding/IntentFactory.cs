@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces.Service;
-using Services.Sarah.API.Interfaces.Service;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
     public static class IntentFactory
     {
-        public static List<Intent> CreateIntents(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILEDService ledService, Sarah.API.Interfaces.IWeatherProvider weatherProvider, ILoggerFactory loggerFactory)
+        public static List<Intent> CreateIntents(SpeechService speechService, IDeviceService deviceServiceClient, ILEDService ledService, Sarah.API.Interfaces.IWeatherProvider weatherProvider, ILoggerFactory loggerFactory)
         {
             if (speechService is null)
             {

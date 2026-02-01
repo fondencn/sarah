@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -16,7 +16,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpressionToggle { get; } //Lampen in Räumen umschalten
         private Regex PatternMatchExpressionKaffee { get; } //Kaffee kochen
 
-        public SwitchControlIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<SwitchControlIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public SwitchControlIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<SwitchControlIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = @"^(Licht)?\s*(\w*)\s*(im\s*(\w*)\s*)?(an|ein|aus)[schalten]*$";
             string matchPattern2 = @"^\w*Licht\w*$";

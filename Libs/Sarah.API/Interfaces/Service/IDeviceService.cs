@@ -1,4 +1,6 @@
 ﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.SpeakerRequests;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,5 +37,17 @@ namespace Sarah.API.Interfaces.Services
 
         Task<IAssociationGroup[]> GetAssociationGroups(byte nodeID);
         Task SetAssociationGroup(byte nodeID, byte groupId, byte[] nodeIds);
+
+        // High-level API methods for Speaker/HTTP clients
+        Task ToggleLampByRoom(string roomName, string lampName);
+        Task SetLampByRoom(string roomName, string lampName, bool on);
+        Task SetTemperatureByRoom(string roomName, float temperature);
+        Task<GetOpenDoorsResponse> GetOpenDoors();
+        Task<GetDeseaseInfoResponse> GetDeseaseInfo();
+        Task SetAlarmSchedule(string text, DateTime alarmTime, string speakerHostname);
+        Task<GetAlarmSchedulesResponse> GetAlarmSchedules();
+        Task<GetPersonLocationResponse> GetPersonLocation(string personName);
+        Task ActivateScene(string sceneName);
+        Task DeactivateScene(string sceneName);
     }
 }

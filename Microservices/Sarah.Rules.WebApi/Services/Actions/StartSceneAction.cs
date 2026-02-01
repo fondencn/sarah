@@ -1,6 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.Rules.Clients;
-using Sarah.Rules.DTOs.DeviceCommands;
+using Sarah.API.Interfaces.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -8,17 +7,17 @@ namespace Sarah.Rules.Actions
 {
     public class StartSceneAction : RuleAction
     {
-        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly IDeviceService _deviceServiceClient;
         private readonly string _sceneTypeName;
         private RuleCondition _delayCondition;
         private TimeSpan _delay;
 
-        public StartSceneAction(string sceneTypeName, IDeviceServiceClient deviceServiceClient) 
+        public StartSceneAction(string sceneTypeName, IDeviceService deviceServiceClient) 
             : this(sceneTypeName, TimeSpan.Zero, null, deviceServiceClient)
         {
         }
 
-        public StartSceneAction(string sceneTypeName, TimeSpan delay, RuleCondition delayCondition, IDeviceServiceClient deviceServiceClient)
+        public StartSceneAction(string sceneTypeName, TimeSpan delay, RuleCondition delayCondition, IDeviceService deviceServiceClient)
         {
             this._deviceServiceClient = deviceServiceClient;
             this._sceneTypeName = sceneTypeName;

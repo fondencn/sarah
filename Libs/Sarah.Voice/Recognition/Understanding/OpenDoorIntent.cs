@@ -1,5 +1,5 @@
 ﻿using Sarah.API.BusinessObjects.SpeakerRequests;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -14,7 +14,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpression { get; }
 
 
-        public OpenDoorIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<OpenDoorIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public OpenDoorIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<OpenDoorIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = "^.*Welche Türen sind offen$|^.*Welche Türen sind geöffnet$|^.*Sind alle Türen zu|^.*Sind alle Türen geschlossen$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

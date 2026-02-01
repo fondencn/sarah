@@ -1,9 +1,12 @@
-using Sarah.Monitoring.DTOs;
+using System;
+using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Sarah.API.BusinessObjects.DTOs;
 
-namespace Sarah.Monitoring.Clients
+namespace Sarah.ServiceClients
 {
-    public class RulesServiceClient : IRulesServiceClient
+    public class RulesServiceClient
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<RulesServiceClient> _logger;

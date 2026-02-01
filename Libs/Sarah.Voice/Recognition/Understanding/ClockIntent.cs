@@ -1,5 +1,5 @@
-﻿using Services.Sarah.API.Interfaces.Service;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Sarah.API.Interfaces.Services;
 using System;
 using System.Text.RegularExpressions;
 
@@ -15,7 +15,7 @@ namespace Sarah.Voice.Recognition.Understanding
 
         private Regex PatternMatchExpression { get; }
 
-        public ClockIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<ClockIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public ClockIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<ClockIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = "^.*Wie spät ist es.*$";
             this.PatternMatchExpression = new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

@@ -2,11 +2,13 @@
 using Microsoft.Extensions.Logging;
 using System.Text;
 using Sarah.API.BusinessObjects.SpeakerRequests;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
+using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
 
 namespace Sarah.Voice.DeviceApi
 {
-    public class DeviceServiceClient : IDeviceServiceClient
+    public class DeviceServiceClient : IDeviceService
     {
 
         private Uri BaseUri {get;}
@@ -21,10 +23,10 @@ namespace Sarah.Voice.DeviceApi
 
         public void Initialize()
         {
-            this.BeginEventApiActivíty();
+            this.BeginEventApiActivity();
         }
         
-        private void BeginEventApiActivíty()
+        private void BeginEventApiActivity()
         {
             Task.Run(async () =>
             {
@@ -209,6 +211,66 @@ namespace Sarah.Voice.DeviceApi
             _logger?.LogDebug("HTTP POST To " + uri);
             HttpResponseMessage response = await http.PostAsync(uri, content);
             response.EnsureSuccessStatusCode();
+        }
+
+        // IDeviceService implementation - stub properties since this is an HTTP client
+        public IEnumerable<ILamp> Lamps => Enumerable.Empty<ILamp>();
+        public IEnumerable<IWallPlug> WallPlugs => Enumerable.Empty<IWallPlug>();
+        public IEnumerable<IMultiSensor> Sensors => Enumerable.Empty<IMultiSensor>();
+        public IEnumerable<IDoorSensor> DoorSensors => Enumerable.Empty<IDoorSensor>();
+        public IEnumerable<ISmokeSensor> SmokeSensors => Enumerable.Empty<ISmokeSensor>();
+        public IEnumerable<IBatterySensor> BatterySensors => Enumerable.Empty<IBatterySensor>();
+        public IEnumerable<IThermoElement> Heatings => Enumerable.Empty<IThermoElement>();
+        public IEnumerable<IControllerElement> Controllers => Enumerable.Empty<IControllerElement>();
+        public IEnumerable<IWallController> WallControllers => Enumerable.Empty<IWallController>();
+        public IEnumerable<IUnknownElement> UnknownElements => Enumerable.Empty<IUnknownElement>();
+        public IEnumerable<IGPSTracker> GPSTrackers => Enumerable.Empty<IGPSTracker>();
+        
+        public string SerialPortName => "N/A - HTTP Client";
+        public string StatusMessage => "DeviceServiceClient - HTTP-based client";
+        
+        public IEnumerable<NetworkElement> Elements => Enumerable.Empty<NetworkElement>();
+        
+        public INode? GetNode(byte nodeId)
+        {
+            _logger?.LogWarning("GetNode not implemented in HTTP client");
+            return null;
+        }
+        
+        public Task Start()
+        {
+            Initialize();
+            return Task.CompletedTask;
+        }
+        
+        public INetworkElement? GetNetworkItem(byte sourceNodeId)
+        {
+            _logger?.LogWarning("GetNetworkItem not implemented in HTTP client");
+            return null;
+        }
+        
+        public IParameterProvider? GetParameterProvider(KnownDeviceTypes specificType)
+        {
+            _logger?.LogWarning("GetParameterProvider not implemented in HTTP client");
+            return null;
+        }
+        
+        public Task<IAssociationGroup[]> GetAssociationGroups(byte nodeID)
+        {
+            _logger?.LogWarning("GetAssociationGroups not implemented in HTTP client");
+            return Task.FromResult(Array.Empty<IAssociationGroup>());
+        }
+        
+        public Task SetAssociationGroup(byte nodeID, byte groupId, byte[] nodeIds)
+        {
+            _logger?.LogWarning("SetAssociationGroup not implemented in HTTP client");
+            return Task.CompletedTask;
+        }
+        
+        public IEnumerable<SelfTestResult> RunSelfTest()
+        {
+            _logger?.LogInformation("RunSelfTest - HTTP client self-test");
+            return Enumerable.Empty<SelfTestResult>();
         }
     }
 }

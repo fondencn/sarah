@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces.Service;
 using Sarah.Voice.Recognition;
 using Sarah.Voice.Recognition.Understanding;
 using Sarah.Voice.Synthesis;
-using Services.Sarah.API.Interfaces.Service;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -72,13 +72,13 @@ namespace Sarah.Voice
 
         private ILEDService _LEDService;
 
-        private IDeviceServiceClient _DeviceServiceClient;
+        private IDeviceService _DeviceServiceClient;
         private readonly IWeatherProvider _weatherProvider;
         private IConfiguration _Configuration;
         private ILogger<SpeechService> _logger;
         private ILoggerFactory _loggerFactory;
 
-        public SpeechService(ILEDService ledService, IDeviceServiceClient deviceServiceClient, IWeatherProvider weatherProvider, IConfiguration configuration, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
+        public SpeechService(ILEDService ledService, IDeviceService deviceServiceClient, IWeatherProvider weatherProvider, IConfiguration configuration, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
         {
             this._Configuration = configuration;
             this._LEDService = ledService;
