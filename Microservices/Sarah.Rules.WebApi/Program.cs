@@ -17,12 +17,19 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
+// Enable Aspire service discovery for outbound HTTP calls
+builder.Services.AddServiceDiscovery();
+builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
+
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// Register HTTP client for DeviceService communication - stub
-// In production, this would use DeviceServiceClient from Sarah.ServiceClients
-builder.Services.AddSingleton<IDeviceService, DeviceServiceClient>();
+// Register HTTP client for DeviceService communication
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+});
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

@@ -36,7 +36,8 @@ var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personss
     .WithHttpsEndpoint(port: 5002, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService);
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
@@ -58,12 +59,14 @@ var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice
     .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresRules, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
     .WithHttpsEndpoint(port: 5008, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService);
 
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")

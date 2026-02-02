@@ -21,8 +21,16 @@ builder.Configuration
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// Enable Aspire service discovery for outbound HTTP calls
+builder.Services.AddServiceDiscovery();
+builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
+
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
-builder.Services.AddSingleton<IDeviceService, DeviceServiceClient>();
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+});
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
 
 // Register MessageBasedWeatherProvider as IWeatherProvider and as IHostedService
