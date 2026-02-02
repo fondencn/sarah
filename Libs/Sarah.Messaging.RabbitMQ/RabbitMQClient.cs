@@ -74,11 +74,12 @@ public class RabbitMQClient : IDisposable
     public async Task PublishAsync<T>(T message, string? exchange = null, CancellationToken cancellationToken = default) 
         where T : AbstractMessage
     {
+        await this.ConnectAsync(cancellationToken);
+
         if (_channel == null)
         {
-            throw new InvalidOperationException("Not connected. Call ConnectAsync first.");
+            throw new InvalidOperationException("Not connected. Retry later.");
         }
-        await this.ConnectAsync(cancellationToken);
 
         var exchangeName = exchange ?? message.Topic;
         
@@ -123,12 +124,13 @@ public class RabbitMQClient : IDisposable
         CancellationToken cancellationToken = default) 
         where T : AbstractMessage
     {
+        await this.ConnectAsync(cancellationToken);
+
         if (_channel == null)
         {
-            throw new InvalidOperationException("Not connected. Call ConnectAsync first.");
+            throw new InvalidOperationException("Not connected. Retry later.");
         }
 
-        await this.ConnectAsync(cancellationToken);
 
         var exchangeName = exchange ?? topic;
 
