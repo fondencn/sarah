@@ -66,9 +66,9 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
     .WithReference(rabbitmq);
 
 // Add frontend (Angular client)
-var frontend = builder.AddProject<Projects.sarah_client>("frontend")
-    .WithHttpsEndpoint(port: 4200)
-    .WithExternalHttpEndpoints();
+var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
+    .WithNpm()
+    .WithRunScript("start");
 
 builder.Build().Run();
 
