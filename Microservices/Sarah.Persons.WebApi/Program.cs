@@ -6,6 +6,7 @@ using Sarah.Persons.WebApi.Data.Repositories;
 using Sarah.Persons.WebApi.Clients;
 using Sarah.Persons.WebApi.Services;
 using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,7 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<HomeNetworkService>();
 
 // Register HTTP client for Device Service communication
-builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
     var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);

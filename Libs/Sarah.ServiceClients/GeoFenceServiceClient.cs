@@ -2,8 +2,9 @@ using System.Net.Http.Json;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
+using Microsoft.Extensions.Logging;
 
-namespace Sarah.Persons.WebApi.Clients;
+namespace Sarah.ServiceClients;
 
 public class GeoFenceServiceClient : IGeoFenceService
 {

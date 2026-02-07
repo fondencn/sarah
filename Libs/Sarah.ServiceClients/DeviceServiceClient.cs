@@ -7,7 +7,7 @@ using Sarah.API.BusinessObjects.SpeakerRequests;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 
-namespace Sarah.Voice.DeviceApi
+namespace Sarah.ServiceClients
 {
     public class DeviceServiceClient : IDeviceService
     {

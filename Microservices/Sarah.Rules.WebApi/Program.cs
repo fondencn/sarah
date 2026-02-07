@@ -4,9 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
-using Sarah.Rules.WebApi.Services;
 using Sarah.API.Interfaces.Services;
-using Sarah.Voice.DeviceApi;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
