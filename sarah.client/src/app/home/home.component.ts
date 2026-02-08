@@ -55,6 +55,10 @@ export class HomeComponent implements OnInit {
 
 
   startDashboardUpdateTimer(): void {
+    if (!this.authService.isLoggedIn()) {
+      console.log('User not logged in, skipping dashboard update timer');
+      return;
+    }
     setInterval(() => {
       this.updateDashboardItems();
     }, this.UPDATE_MILLISECONDS); // Update every 10 seconds
