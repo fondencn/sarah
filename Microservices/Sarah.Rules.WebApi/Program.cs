@@ -6,6 +6,8 @@ using Sarah.Rules.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;
+using Sarah.API.Interfaces;
+using Sarah.API.Businessobjects;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,7 @@ builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery())
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
 
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
@@ -44,11 +47,11 @@ builder.Services.AddSingleton(sp =>
     return new RabbitMQClient(logger, builder.Configuration);
 });
 
-// Register RuleService with triple registration pattern:
-// 1. As singleton RuleService (concrete implementation)
-// 2. As IHostedService (to start background service)
-// 3. As IRuleService (for controller/service injection)
+// register helper application services
+builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
 builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
+
+// Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
