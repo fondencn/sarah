@@ -11,8 +11,8 @@ public class TimerEventMessage : NetworkEventMessage
         Property = "TimerTriggered";
     }
 
-    public TimerEventMessage(byte sourceNodeId) : this()
+    public TimerEventMessage(byte SourceNodeId) : this()
     {
-        SourceNodeId = sourceNodeId;
+        this.SourceNodeId = SourceNodeId;
     }
 }

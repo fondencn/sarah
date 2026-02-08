@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sarah.API.BusinessObjects;
 using Sarah.Rules.WebApi.Data;
@@ -17,14 +18,16 @@ public class AlarmScheduleService : IDisposable
     private readonly ApplicationDbContext _db;
     private readonly ILogger<AlarmScheduleService> _logger;
     private readonly RabbitMQClient _rabbitMQ;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private CancellationTokenSource? _updateCancellationTokenSource;
     private Task? _updateTask;
 
-    public AlarmScheduleService(ApplicationDbContext db, ILogger<AlarmScheduleService> logger, RabbitMQClient rabbitMQ)
+    public AlarmScheduleService(ApplicationDbContext db, ILogger<AlarmScheduleService> logger, RabbitMQClient rabbitMQ, IServiceScopeFactory serviceScopeFactory)
     {
         _db = db;
         _logger = logger;
         _rabbitMQ = rabbitMQ;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     /// <summary>
@@ -60,20 +63,26 @@ public class AlarmScheduleService : IDisposable
     {
         try
         {
-            var oldAlarms = await _db.AlarmSchedules
-                .Where(item => item.AlarmTime <= DateTime.Now && !item.HasRecurrence && item.IsActive)
-                .ToListAsync();
-
-            foreach (var alarm in oldAlarms)
+            // Use a separate scope to get a new DbContext instance for this background task
+            // This prevents issues with disposed contexts when the main service is disposed
+            using (var scope = _serviceScopeFactory.CreateScope())
             {
-                alarm.IsActive = false;
-                _db.AlarmSchedules.Update(alarm);
-            }
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var oldAlarms = await db.AlarmSchedules
+                    .Where(item => item.AlarmTime <= DateTime.UtcNow && !item.HasRecurrence && item.IsActive)
+                    .ToListAsync();
 
-            if (oldAlarms.Any())
-            {
-                await _db.SaveChangesAsync();
-                _logger.LogDebug("Cleaned up {Count} old alarms", oldAlarms.Count);
+                foreach (var alarm in oldAlarms)
+                {
+                    alarm.IsActive = false;
+                    db.AlarmSchedules.Update(alarm);
+                }
+
+                if (oldAlarms.Any())
+                {
+                    await db.SaveChangesAsync();
+                    _logger.LogDebug("Cleaned up {Count} old alarms", oldAlarms.Count);
+                }
             }
         }
         catch (Exception ex)
@@ -215,6 +224,20 @@ public class AlarmScheduleService : IDisposable
     public void Dispose()
     {
         _updateCancellationTokenSource?.Cancel();
+        
+        // Wait for the background task to complete before disposing
+        if (_updateTask != null)
+        {
+            try
+            {
+                _updateTask.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error waiting for cleanup task to complete");
+            }
+        }
+        
         _updateCancellationTokenSource?.Dispose();
     }
 }

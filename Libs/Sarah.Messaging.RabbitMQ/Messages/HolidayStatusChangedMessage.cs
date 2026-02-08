@@ -59,12 +59,12 @@ public class HolidayStatusChangedMessage : AbstractMessage
     /// <param name="change">Type of change</param>
     /// <param name="holidayStart">Start date of holiday period</param>
     /// <param name="holidayEnd">End date of holiday period</param>
-    public HolidayStatusChangedMessage(string holidayName, ChangeType change, DateTime holidayStart, DateTime holidayEnd)
+    public HolidayStatusChangedMessage(string HolidayName, ChangeType Change, DateTime HolidayStart, DateTime HolidayEnd)
     {
         Topic = MessageTopics.HolidaysStatusChanged;
-        HolidayName = holidayName;
-        Change = change;
-        HolidayStart = holidayStart;
-        HolidayEnd = holidayEnd;
+        this.HolidayName = HolidayName;
+        this.Change = Change;
+        this.HolidayStart = HolidayStart;
+        this.HolidayEnd = HolidayEnd;
     }
 }

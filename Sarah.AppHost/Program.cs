@@ -66,6 +66,11 @@ var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice
     .WithReference(rabbitmq)
     .WithReference(deviceService)
     .WithReference(personsService)
+    .WithEnvironment("EmailNotifier__SmtpSender", builder.Configuration["EmailNotifier:SmtpSender"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpServer", builder.Configuration["EmailNotifier:SmtpServer"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPort", builder.Configuration["EmailNotifier:SmtpPort"] ?? "25")
+    .WithEnvironment("EmailNotifier__SmtpUsername", builder.Configuration["EmailNotifier:SmtpUsername"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPassword", builder.Configuration["EmailNotifier:SmtpPassword"] ?? "")
     .WaitFor(rabbitmq);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")

@@ -168,7 +168,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Aktualisieren der Wettervorhersage", ex);
+                _logger.LogError("Fehler beim Aktualisieren der Wettervorhersage {Exception}", ex.Message);
             }
         }
 
@@ -197,7 +197,7 @@ namespace Sarah.Monitoring.Monitors
             }
             catch (Exception ex)
             {
-                _logger.LogError("Fehler beim Aktualisieren der Wetterdaten", ex);
+                _logger.LogError("Fehler beim Aktualisieren der Wetterdaten {Exception}", ex.Message);
             }
         }
 

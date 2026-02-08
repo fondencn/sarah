@@ -4,10 +4,10 @@ namespace Sarah.Messaging.RabbitMQ.Messages;
 
 public class OutDoorTemperatureChangedEventMessage : AbstractMessage
 {
-    public OutDoorTemperatureChangedEventMessage(double newVal) 
+    public OutDoorTemperatureChangedEventMessage(double NewValue) 
     {
         Topic = MessageTopics.WeatherOutdoorTemperature;
-        NewValue = newVal;
+        this.NewValue = NewValue;
     }
 
     public double NewValue { get; set; }
@@ -15,10 +15,10 @@ public class OutDoorTemperatureChangedEventMessage : AbstractMessage
 
 public class WeatherWarningEventMessage : AbstractMessage
 {
-    public WeatherWarningEventMessage(string newVal) 
+    public WeatherWarningEventMessage(string NewValue) 
     {
         Topic = MessageTopics.WeatherWarning;
-        NewValue = newVal;
+        this.NewValue = NewValue;
     }
 
     public string NewValue { get; set; }

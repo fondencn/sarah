@@ -20,9 +20,9 @@ public class StartAudioMessage : AbstractMessage
         Topic = MessageTopics.SpeechAudioStart;
     }
 
-    public StartAudioMessage(string audioFileName, string targetSpeaker = "") : this()
+    public StartAudioMessage(string AudioFileName, string TargetSpeaker = "") : this()
     {
-        AudioFileName = audioFileName;
-        TargetSpeaker = targetSpeaker;
+        this.AudioFileName = AudioFileName;
+        this.TargetSpeaker = TargetSpeaker;
     }
 }
