@@ -31,6 +31,8 @@ var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("dev
     .WithReference(postgresDevices, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
+    .WithEnvironment("ZWave__SerialPortName", builder.Configuration["ZWave:SerialPortName"] ?? "/dev/ttyUSB0")
+    .WithEnvironment("TheThingsNetwork__ApiKey", builder.Configuration["TheThingsNetwork:ApiKey"] ?? "")
     .WaitFor(rabbitmq);
 
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
@@ -84,6 +86,18 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithNpm()
     .WithRunScript("start");
+
+if (builder.Environment.IsDevelopment())
+{
+    deviceService.WithExplicitStart();
+    personsService.WithExplicitStart();
+    geofencesService.WithExplicitStart();
+    roomService.WithExplicitStart();
+    monitoringService.WithExplicitStart();
+    rulesService.WithExplicitStart();
+    speechServer.WithExplicitStart();
+    frontend.WithExplicitStart();
+}
 
 builder.Build().Run();
 

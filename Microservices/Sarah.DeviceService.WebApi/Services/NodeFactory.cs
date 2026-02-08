@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using Sarah.API.Interfaces;
 using Sarah.API.BusinessObjects;
 using Sarah.DeviceService.Model;
+using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.WebApi.Services
 {
     /// <summary>
     /// Factory Klasse für alle bekannten Netzwerkknoten
     /// </summary>
-    public class NodeFactory(IEventProcessingService _events) : INodeFactory
+    public class NodeFactory(IEventProcessingService _events, ILogger<NodeFactory> _logger, NetworkElementPublisher _networkEventPublisher, IConfiguration _config) : INodeFactory
     {
+        private string TtnApiKey => _config["TheThingsNetwork:ApiKey"] ?? throw new InvalidOperationException("TTN_API_KEY not set in configuration");
+
         private readonly Dictionary<byte, Type> _knownNodes = new Dictionary<byte, Type>()
         {
             {1, typeof(ControllerElement)} ,
@@ -150,7 +153,8 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         /* Ctor Ausnahme: Wifi-Steckdosen brauchen zusätzlich noch einen Hostname, über welchen Sie über das WLAN erreichbar sind */
                         string hostname = _WifiDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
+                        //el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
+                        el = new WifiWallPlug(nodeId, hostname, _networkEventPublisher, _logger);
                     }
                     else
                     {
@@ -164,7 +168,8 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         /* Ctor Ausnahme: Wifi-lAMEPN brauchen zusätzlich noch einen Hostname, über welchen Sie über das WLAN erreichbar sind */
                         string hostname = _WifiDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
+                        //el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, hostname, _events);
+                        el = new ShellyWifiLamp(nodeId, hostname, _networkEventPublisher, _logger);
                     }
                     else
                     {
@@ -178,7 +183,8 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         /* Ctor Ausnahme: TTN Device ID mit übergeben */
                         string deviceName = _TtnDeviceNames[nodeId];
-                        el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, deviceName, _events);
+                        //el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, deviceName, _events);
+                        el = new LoraWanGpsTracker(nodeId, deviceName, TtnApiKey, _networkEventPublisher, _logger);
                     }
                     else
                     {
