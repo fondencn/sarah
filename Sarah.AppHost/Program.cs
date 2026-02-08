@@ -10,8 +10,7 @@ var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
-    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json")
-    .WithArgs("start-dev", "--import-realm");
+    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json");
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
