@@ -28,16 +28,13 @@ import { ProblemDetails } from '../model/problemDetails';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
-import {
-    DashboardServiceInterface
-} from './dashboard.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class DashboardService implements DashboardServiceInterface {
+export class DashboardService {
 
     protected basePath = 'http://localhost';
     public defaultHeaders = new HttpHeaders();
