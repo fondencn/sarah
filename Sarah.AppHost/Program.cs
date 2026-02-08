@@ -30,19 +30,22 @@ var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("dev
     .WithHttpsEndpoint(port: 5001, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresDevices, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
     .WithHttpsEndpoint(port: 5002, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
-    .WithReference(deviceService);
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
     .WithHttpsEndpoint(port: 5004, env: "ASPNETCORE_HTTPS_PORT")
@@ -53,20 +56,24 @@ var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("mo
     .WithHttpsEndpoint(port: 5005, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresMonitoring, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
     .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresRules, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
-    .WithReference(deviceService);
+    .WithReference(deviceService)
+    .WithReference(personsService)
+    .WaitFor(rabbitmq);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
     .WithHttpsEndpoint(port: 5008, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
-    .WithReference(deviceService);
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
 
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")

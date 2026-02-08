@@ -5,8 +5,8 @@ using Sarah.Monitoring.WebApi.Data;
 using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
-using Sarah.Voice.DeviceApi;
 using Sarah.Monitoring;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 

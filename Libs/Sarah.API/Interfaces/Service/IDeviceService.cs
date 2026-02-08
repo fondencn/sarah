@@ -1,4 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.BusinessObjects.SpeakerRequests;
 using System;
 using System.Collections.Generic;
@@ -47,6 +48,7 @@ namespace Sarah.API.Interfaces.Services
         Task SetAlarmSchedule(string text, DateTime alarmTime, string speakerHostname);
         Task<GetAlarmSchedulesResponse> GetAlarmSchedules();
         Task<GetPersonLocationResponse> GetPersonLocation(string personName);
+        Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId);
         Task ActivateScene(string sceneName);
         Task DeactivateScene(string sceneName);
     }

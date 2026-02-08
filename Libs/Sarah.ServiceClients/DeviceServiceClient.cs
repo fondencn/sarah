@@ -214,6 +214,25 @@ namespace Sarah.ServiceClients
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId)
+        {
+            HttpClient http = new HttpClient();
+
+            Uri uri = new Uri(GetBaseUri(), $"/api/Devices/gpstracker/{nodeId}");
+            _logger?.LogDebug("HTTP GET To " + uri);
+            HttpResponseMessage response = await http.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            TrackerDto responseContent = JsonConvert.DeserializeObject<TrackerDto>(json)!;
+
+            return responseContent;
+        }
+
         // IDeviceService implementation - stub properties since this is an HTTP client
         public IEnumerable<ILamp> Lamps => Enumerable.Empty<ILamp>();
         public IEnumerable<IWallPlug> WallPlugs => Enumerable.Empty<IWallPlug>();

@@ -1,4 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.Interfaces;
 using Sarah.DeviceService.Model;
 using Sarah.DeviceService.Model.Extensions;
@@ -424,6 +425,30 @@ namespace Sarah.DeviceService
 
         public INode? GetNode(byte nodeid) => new NodeWrapper(GetNodeInternal(nodeid));
 
+        public Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId)
+        {
+            var tracker = this.GPSTrackers.FirstOrDefault(t => t.NodeID == nodeId);
+            if (tracker == null)
+            {
+                return Task.FromResult<TrackerDto?>(null);
+            }
+
+            var dto = new TrackerDto
+            {
+                Id = tracker.NodeID,
+                Name = tracker.ClassDescription, 
+                Position = tracker.Position == null ? null : new PositionDto()
+                {
+                    Longitude = tracker.Position.Longtitude.Value, 
+                    Latitude = tracker.Position.Latitude.Value,
+                    IsValid = tracker.Position.IsValid
+                }, 
+                BatteryLevel = tracker.Battery?.Value  
+            };
+
+            return Task.FromResult<TrackerDto?>(dto);
+        }
+
         public IEnumerable<SelfTestResult> RunSelfTest()
         {
             if(String.IsNullOrEmpty(this.SerialPortName))
@@ -530,22 +555,6 @@ namespace Sarah.DeviceService
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
-        /// <summary>
-        /// Clean up resources when the service stops
-        /// </summary>
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger?.LogInformation("DeviceService background service is stopping.");
-            
-            if (UpdateCancellationTokenSource != null && UpdateTask != null && UpdateTask.Status == TaskStatus.Running)
-            {
-                UpdateCancellationTokenSource.Cancel();
-            }
-
-            Controller?.Close();
-            
-            await base.StopAsync(cancellationToken);
-        }
 
         // High-level API methods - not implemented in device service (these are for HTTP clients)
         public Task ToggleLampByRoom(string roomName, string lampName)

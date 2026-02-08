@@ -3,7 +3,6 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Repositories;
-using Sarah.Persons.WebApi.Clients;
 using Sarah.Persons.WebApi.Services;
 using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;

@@ -30,6 +30,13 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
     client.BaseAddress = new Uri(deviceServiceUrl);
 });
 
+// Register HTTP client for PersonService communication
+builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
+{
+    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "https://personsservice";
+    client.BaseAddress = new Uri(personServiceUrl);
+});
+
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
 {

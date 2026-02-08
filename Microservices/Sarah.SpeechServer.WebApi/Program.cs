@@ -4,9 +4,9 @@ using Sarah.LEDService;
 using Sarah.SpeechServer;
 using Sarah.SpeechServer.Extensions;
 using Sarah.Voice;
-using Sarah.Voice.DeviceApi;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 

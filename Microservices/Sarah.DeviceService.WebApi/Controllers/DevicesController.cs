@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.DTOs;
+using Sarah.API.BusinessObjects.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Sarah.API.BusinessObjects;
 using System.Linq;
@@ -332,17 +333,17 @@ public class DevicesController : ControllerBase
     }
 
     [HttpGet("gpstracker/{nodeId}")]
-    public IActionResult GetGpsTrackerByNodeId(byte nodeId)
+    public async Task<IActionResult> GetGpsTrackerByNodeId(byte nodeId)
     {
         try
         {
-            var tracker = _deviceService.GPSTrackers?.FirstOrDefault(t => t.NodeID == nodeId);
+            var tracker = await _deviceService.GetGpsTrackerByNodeId(nodeId);
             if (tracker == null)
             {
                 return NotFound();
             }
 
-            return Ok(tracker.ToDto());
+            return Ok(tracker);
         }
         catch (Exception ex)
         {
