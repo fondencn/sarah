@@ -71,10 +71,7 @@ public class DashboardController : ControllerBase
         try
         {
             var created = await _dashboardService.CreateDashboardItemAsync(createDto);
-            return CreatedAtAction(
-                nameof(GetDashboardItem), 
-                new { id = created.ItemId }, 
-                created);
+            return Created(string.Empty, created);
         }
         catch (InvalidOperationException ex)
         {

@@ -123,10 +123,8 @@ export class HomeComponent implements OnInit {
       next: async (items: DashboardItemDto[]) => {
         console.log('Dashboard items (metadata):', items);
         
-        // Enrich each dashboard item with actual data from respective services
-        const enrichedItems: DashboardItemViewModel[] = [];
-        
-        for (const item of items) {
+        // Enrich dashboard items with actual data from respective services concurrently
+        const enrichmentPromises = items.map(async (item) => {
           if (item.itemType === this.ITEM_TYPE_DEVICE && item.itemId) {
             // Fetch device details
             try {
@@ -141,20 +139,21 @@ export class HomeComponent implements OnInit {
                   subtype: item.subtype || device.typeName,
                   extendedProperties: device.extendedProperties
                 };
-                enrichedItems.push(new DashboardItemViewModel(enrichedItem));
+                return new DashboardItemViewModel(enrichedItem);
               }
             } catch (error) {
               console.error(`Error fetching device ${item.itemId}:`, error);
               // Still add the item but without device data
-              enrichedItems.push(new DashboardItemViewModel(item));
+              return new DashboardItemViewModel(item);
             }
-          } else {
-            // For non-device items (or if device fetch fails), just use the dashboard metadata
-            enrichedItems.push(new DashboardItemViewModel(item));
           }
-        }
+          
+          // For non-device items (or if device fetch fails), just use the dashboard metadata
+          return new DashboardItemViewModel(item);
+        });
         
-        this.dashboardItems = enrichedItems;
+        // Wait for all enrichments to complete
+        this.dashboardItems = await Promise.all(enrichmentPromises);
       },
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
@@ -168,8 +167,8 @@ export class HomeComponent implements OnInit {
     this.animateItems = false;
     this.dashboardService.apiDashboardGet().subscribe({
       next: async (items: DashboardItemDto[]) => {
-        // For each dashboard item, fetch fresh data
-        for (const dashboardItem of items) {
+        // Create update promises for all dashboard items
+        const updatePromises = items.map(async (dashboardItem) => {
           const existingItem = this.dashboardItems.find(
             i => i.itemId === dashboardItem.itemId && i.itemType === dashboardItem.itemType
           );
@@ -182,16 +181,19 @@ export class HomeComponent implements OnInit {
                 existingItem.description = device.info as string;
                 existingItem.extendedProperties = device.extendedProperties as ExtendedPropertyDto[];
                 existingItem.title = device.name as string;
-                
-                // Mark for check and manually trigger change detection
-                this.cdr.markForCheck();
-                this.cdr.detectChanges();
               }
             } catch (error) {
               console.error(`Error updating device ${dashboardItem.itemId}:`, error);
             }
           }
-        }
+        });
+        
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
+        
+        // Trigger change detection after all updates
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error updating dashboard items:', error);
