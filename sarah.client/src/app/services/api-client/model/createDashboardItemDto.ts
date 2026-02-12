@@ -11,7 +11,7 @@ import { ExtendedPropertyDto } from './extendedPropertyDto';
 import { DashboardItemType } from './dashboardItemType';
 
 
-export interface DashboardItemDto { 
+export interface CreateDashboardItemDto { 
     itemId?: number;
     itemType?: DashboardItemType;
     title?: string | null;
@@ -19,7 +19,7 @@ export interface DashboardItemDto {
     subtype?: string | null;
     extendedProperties?: Array<ExtendedPropertyDto> | null;
 }
-export namespace DashboardItemDto {
+export namespace CreateDashboardItemDto {
 }
 
 

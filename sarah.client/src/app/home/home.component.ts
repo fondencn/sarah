@@ -55,13 +55,12 @@ export class HomeComponent implements OnInit {
 
 
   startDashboardUpdateTimer(): void {
-    if (!this.authService.isLoggedIn()) {
-      console.log('User not logged in, skipping dashboard update timer');
-      return;
+    // Only start the timer if user is logged in
+    if (this.isLoggedIn()) {
+      setInterval(() => {
+        this.updateDashboardItems();
+      }, this.UPDATE_MILLISECONDS); // Update every 3 seconds
     }
-    setInterval(() => {
-      this.updateDashboardItems();
-    }, this.UPDATE_MILLISECONDS); // Update every 10 seconds
   }
 
 
@@ -118,39 +117,87 @@ export class HomeComponent implements OnInit {
 
 
   /* ******************** API Calls ******************** */
-  private loadDashboardItems() : void {
+  private loadDashboardItems(): void {
     this.animateItems = true;
     this.dashboardService.apiDashboardGet().subscribe({
-      next: (items: DashboardItemDto[]) => {
-        console.log('Dashboard items:', items);
-        //this.dashboardItems = items;
-        this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
+      next: async (items: DashboardItemDto[]) => {
+        console.log('Dashboard items (metadata):', items);
+        
+        // Enrich dashboard items with actual data from respective services concurrently
+        const enrichmentPromises = items.map(async (item) => {
+          if (item.itemType === this.ITEM_TYPE_DEVICE && item.itemId) {
+            // Fetch device details
+            try {
+              const device = await this.devicesService.devicesIdGet(item.itemId).toPromise();
+              if (device) {
+                // Merge metadata from dashboard with device data
+                const enrichedItem: DashboardItemDto = {
+                  itemId: item.itemId,
+                  itemType: item.itemType,
+                  title: item.title || device.name,
+                  description: item.description || device.info,
+                  subtype: item.subtype || device.typeName,
+                  extendedProperties: device.extendedProperties
+                };
+                return new DashboardItemViewModel(enrichedItem);
+              }
+            } catch (error) {
+              console.error(`Error fetching device ${item.itemId}:`, error);
+              // Still add the item but without device data
+              return new DashboardItemViewModel(item);
+            }
+          }
+          
+          // For non-device items (or if device fetch fails), just use the dashboard metadata
+          return new DashboardItemViewModel(item);
+        });
+        
+        // Wait for all enrichments to complete
+        this.dashboardItems = await Promise.all(enrichmentPromises);
       },
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
       }
-    })
+    });
   }
 
 
 
   updateDashboardItems(): void {
     this.animateItems = false;
-    this.dashboardService.apiDashboardGet().subscribe(items => {
-      this.dashboardItems.forEach((item, index) => {
-        const updatedItem = items.find(i => i.itemId === item.itemId && item.itemType === i.itemType);
-        if (updatedItem) {
-          // Update the properties
-          item.description = updatedItem.description as string;
-          item.extendedProperties = updatedItem.extendedProperties as ExtendedPropertyDto[]; 
-          item.title = updatedItem.title as string;
-
-
-          // Mark for check and manually trigger change detection
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        }
-      });
+    this.dashboardService.apiDashboardGet().subscribe({
+      next: async (items: DashboardItemDto[]) => {
+        // Create update promises for all dashboard items
+        const updatePromises = items.map(async (dashboardItem) => {
+          const existingItem = this.dashboardItems.find(
+            i => i.itemId === dashboardItem.itemId && i.itemType === dashboardItem.itemType
+          );
+          
+          if (existingItem && dashboardItem.itemType === this.ITEM_TYPE_DEVICE && dashboardItem.itemId) {
+            try {
+              const device = await this.devicesService.devicesIdGet(dashboardItem.itemId).toPromise();
+              if (device) {
+                // Update with fresh device data
+                existingItem.description = device.info as string;
+                existingItem.extendedProperties = device.extendedProperties as ExtendedPropertyDto[];
+                existingItem.title = device.name as string;
+              }
+            } catch (error) {
+              console.error(`Error updating device ${dashboardItem.itemId}:`, error);
+            }
+          }
+        });
+        
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
+        
+        // Trigger change detection after all updates
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error updating dashboard items:', error);
+      }
     });
   }
 
