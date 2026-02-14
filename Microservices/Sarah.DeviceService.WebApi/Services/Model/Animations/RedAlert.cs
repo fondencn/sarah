@@ -34,6 +34,9 @@ namespace Sarah.DeviceService.Model.Animations
 
         protected override void Stop()
         {
+            if (_disposed)
+                return;
+                
             foreach(Animation anim in _runningAnimations)
             {
                 anim.Stop();
@@ -54,7 +57,20 @@ namespace Sarah.DeviceService.Model.Animations
             {
                 if (disposing)
                 {
-                    Stop();
+                    // Stop only if not already disposed
+                    foreach(Animation anim in _runningAnimations.ToList())
+                    {
+                        try
+                        {
+                            anim.Stop();
+                            anim.Dispose();
+                        }
+                        catch
+                        {
+                            // Ignore disposal errors to allow cleanup to continue
+                        }
+                    }
+                    _runningAnimations.Clear();
                 }
                 _disposed = true;
             }
