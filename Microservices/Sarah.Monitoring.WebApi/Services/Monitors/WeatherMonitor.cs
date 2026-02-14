@@ -227,7 +227,19 @@ namespace Sarah.Monitoring.Monitors
                 }
                 
                 resultJson = resultJson.Replace('\n', ' ').Replace('\r', ' ');
-                resultJson = resultJson.Substring("warnWetter.loadWarnings(".Length, resultJson.Length - "warnWetter.loadWarnings(".Length - 2);
+                
+                // Validate length before substring operation
+                const string prefix = "warnWetter.loadWarnings(";
+                const int suffixLength = 2;
+                int minLength = prefix.Length + suffixLength;
+                
+                if (resultJson.Length < minLength)
+                {
+                    _logger.LogWarning("DWD response too short to parse: {Length} characters", resultJson.Length);
+                    return;
+                }
+                
+                resultJson = resultJson.Substring(prefix.Length, resultJson.Length - prefix.Length - suffixLength);
                 DwdWarnings? deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson);
 
                 if (deserialized == null)
@@ -236,12 +248,16 @@ namespace Sarah.Monitoring.Monitors
                     return;
                 }
 
+                // Extract predicate to local function for reusability
+                bool ContainsWarnLocation(KeyValuePair<string, DwdWarning[]> item) =>
+                    item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true);
+
                 IEnumerable<DwdWarning> ludwigsburgWarnings = (deserialized.warnings ?? new Dictionary<string, DwdWarning[]>())
-                    .Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
+                    .Where(ContainsWarnLocation)
                     .SelectMany(item => item.Value)
                     .Concat(
                         (deserialized.vorabInformation ?? new Dictionary<string, DwdWarning[]>())
-                        .Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
+                        .Where(ContainsWarnLocation)
                         .SelectMany(item => item.Value)
                     )
                     .ToList();

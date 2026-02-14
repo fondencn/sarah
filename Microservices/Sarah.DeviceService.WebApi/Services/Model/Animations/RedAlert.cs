@@ -57,7 +57,7 @@ namespace Sarah.DeviceService.Model.Animations
             {
                 if (disposing)
                 {
-                    // Stop only if not already disposed
+                    // Dispose all animations, continuing even if one fails
                     foreach(Animation anim in _runningAnimations.ToList())
                     {
                         try
@@ -65,9 +65,13 @@ namespace Sarah.DeviceService.Model.Animations
                             anim.Stop();
                             anim.Dispose();
                         }
-                        catch
+                        catch (ObjectDisposedException)
                         {
-                            // Ignore disposal errors to allow cleanup to continue
+                            // Animation already disposed, continue
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Animation in invalid state, continue
                         }
                     }
                     _runningAnimations.Clear();
