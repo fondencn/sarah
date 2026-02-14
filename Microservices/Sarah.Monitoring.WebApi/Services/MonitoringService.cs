@@ -8,7 +8,7 @@ using Sarah.Monitoring.Monitors;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService
+public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory) : BackgroundService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
@@ -27,7 +27,7 @@ public class MonitoringService (IServiceProvider _serviceProvider, IDeviceServic
         using var scope = _serviceProvider.CreateScope();
         var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
-        var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>());
+        var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>(), _httpClientFactory);
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
         var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>(), _rabbitMQ);
         var doors = new Monitors.DoorMonitor(_db, _devices, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>());
