@@ -1,5 +1,5 @@
 /**
- * Sarah.Server
+ * Sarah Dashboard Service API
  *
  * 
  *
@@ -8,12 +8,12 @@
  * Do not edit the class manually.
  */
 import { ExtendedPropertyDto } from './extendedPropertyDto';
-import { DashboardItemTypeDto } from './dashboardItemTypeDto';
+import { DashboardItemType } from './dashboardItemType';
 
 
 export interface DashboardItemDto { 
     itemId?: number;
-    itemType?: DashboardItemTypeDto;
+    itemType?: DashboardItemType;
     title?: string | null;
     description?: string | null;
     subtype?: string | null;

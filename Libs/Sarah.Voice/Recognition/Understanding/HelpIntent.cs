@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace Sarah.Voice.Recognition.Understanding
         /// ctor
         /// </summary>
         /// <param name="speechService"></param>
-        public HelpIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<HelpIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public HelpIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<HelpIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
         }
 

@@ -146,6 +146,24 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-dashboard:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=dashboarddb
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres-dashboard-data:/var/lib/postgresql/data
+    networks:
+      - sarah-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Microservices
   deviceservice:
     build:
@@ -273,6 +291,25 @@ services:
     networks:
       - sarah-network
 
+  dashboardservice:
+    build:
+      context: .
+      dockerfile: Microservices/Sarah.Dashboard.WebApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - Jwt__Audience=account
+      - ConnectionStrings__PostgresConnection=Host=postgres-dashboard;Database=dashboarddb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5007:8080"
+    depends_on:
+      postgres-dashboard:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - sarah-network
+
 
   speechserver:
     build:
@@ -322,3 +359,4 @@ volumes:
   postgres-events-data:
   postgres-monitoring-data:
   postgres-rules-data:
+  postgres-dashboard-data:

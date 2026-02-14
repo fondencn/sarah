@@ -10,8 +10,7 @@ var keycloak = builder.AddKeycloak("keycloak", 8443)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
-    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json")
-    .WithArgs("start-dev", "--import-realm");
+    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json");
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
@@ -30,18 +29,24 @@ var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("dev
     .WithHttpsEndpoint(port: 5001, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresDevices, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithEnvironment("ZWave__SerialPortName", builder.Configuration["ZWave:SerialPortName"] ?? "/dev/ttyUSB0")
+    .WithEnvironment("TheThingsNetwork__ApiKey", builder.Configuration["TheThingsNetwork:ApiKey"] ?? "")
+    .WaitFor(rabbitmq);
 
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
     .WithHttpsEndpoint(port: 5002, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
     .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
     .WithHttpsEndpoint(port: 5004, env: "ASPNETCORE_HTTPS_PORT")
@@ -52,23 +57,46 @@ var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("mo
     .WithHttpsEndpoint(port: 5005, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresMonitoring, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
     .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(postgresRules, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WithReference(personsService)
+    .WithEnvironment("EmailNotifier__SmtpSender", builder.Configuration["EmailNotifier:SmtpSender"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpServer", builder.Configuration["EmailNotifier:SmtpServer"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPort", builder.Configuration["EmailNotifier:SmtpPort"] ?? "25")
+    .WithEnvironment("EmailNotifier__SmtpUsername", builder.Configuration["EmailNotifier:SmtpUsername"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPassword", builder.Configuration["EmailNotifier:SmtpPassword"] ?? "")
+    .WaitFor(rabbitmq);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
     .WithHttpsEndpoint(port: 5008, env: "ASPNETCORE_HTTPS_PORT")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
 
 // Add frontend (Angular client)
-var frontend = builder.AddProject<Projects.sarah_client>("frontend")
-    .WithHttpsEndpoint(port: 4200)
-    .WithExternalHttpEndpoints();
+var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
+    .WithNpm()
+    .WithRunScript("start");
+
+if (builder.Environment.IsDevelopment())
+{
+    deviceService.WithExplicitStart();
+    personsService.WithExplicitStart();
+    geofencesService.WithExplicitStart();
+    roomService.WithExplicitStart();
+    monitoringService.WithExplicitStart();
+    rulesService.WithExplicitStart();
+    speechServer.WithExplicitStart();
+    frontend.WithExplicitStart();
+}
 
 builder.Build().Run();
 

@@ -86,4 +86,29 @@ public static class MessageTopics
     /// Published when a person enters or exits a defined geographical zone.
     /// </summary>
     public const string PersonGeoFence = "person.geofence";
+
+    // Schedule-related topics
+
+    /// <summary>
+    /// Topic for alarm schedule changes.
+    /// Published when alarm schedules are created, updated, or deleted.
+    /// Used to notify RuleService to reconfigure timer triggers.
+    /// </summary>
+    public const string SchedulesAlarmChanged = "schedules.alarm.changed";
+
+    /// <summary>
+    /// Topic for temperature schedule changes.
+    /// Published when temperature schedules are created, updated, or deleted.
+    /// Used to notify RuleService to reconfigure timer triggers.
+    /// </summary>
+    public const string SchedulesTemperatureChanged = "schedules.temperature.changed";
+
+    // Holiday-related topics
+
+    /// <summary>
+    /// Topic for holiday status changes.
+    /// Published when holidays start or end.
+    /// Used to notify RuleService to activate/deactivate holiday-dependent alarms.
+    /// </summary>
+    public const string HolidaysStatusChanged = "holidays.status.changed";
 }

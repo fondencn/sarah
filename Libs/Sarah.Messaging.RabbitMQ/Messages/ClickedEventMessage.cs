@@ -16,9 +16,9 @@ public class ClickedEventMessage : NetworkEventMessage
         Property = "ButtonClicked";
     }
 
-    public ClickedEventMessage(byte sourceNodeId, byte sceneId) : this()
+    public ClickedEventMessage(byte SourceNodeId, byte SceneId) : this()
     {
-        SourceNodeId = sourceNodeId;
-        SceneId = sceneId;
+        this.SourceNodeId = SourceNodeId;
+        this.SceneId = SceneId;
     }
 }

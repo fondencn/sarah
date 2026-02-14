@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
@@ -20,14 +20,14 @@ namespace Sarah.Voice.Recognition.Understanding
 
         private Random _rng = new Random();
 
-        public DialogIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<DialogIntent> logger, string inputPattern, params string[] outputs) : base(speechService, deviceServiceClient, logger)
+        public DialogIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<DialogIntent> logger, string inputPattern, params string[] outputs) : base(speechService, deviceServiceClient, logger)
         {
             this.InputPattern = inputPattern;
             this.Outputs = outputs;
             this.OutputFunc = null;
             this.PatternMatchExpression = new Regex(inputPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
-        public DialogIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<DialogIntent> logger, string inputPattern, Func<string> outFunc) : base(speechService, deviceServiceClient, logger)
+        public DialogIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<DialogIntent> logger, string inputPattern, Func<string> outFunc) : base(speechService, deviceServiceClient, logger)
         {
             this.InputPattern = inputPattern;
             this.Outputs = null;

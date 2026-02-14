@@ -640,7 +640,6 @@ sarah/
 │   ├── Sarah.DeviceServiceClient/  # Device service client
 │   ├── Sarah.LEDService/           # LED device logic
 │   ├── Sarah.Messaging.RabbitMQ/   # RabbitMQ messaging
-│   ├── Sarah.SpeakerEventClient/   # Speaker client
 │   └── Sarah.Voice/                # Voice processing
 ├── Microservices/                  # Microservice applications
 │   ├── Sarah.DeviceService.WebApi/

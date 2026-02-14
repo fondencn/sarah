@@ -1,32 +1,38 @@
 html, body {
   height: 100%;
   margin: 0;
-  overflow: hidden; /* Remove the page-wide scrollbar */
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
 }
 
 .root__container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ensure the container takes up the full height of the viewport */
+  height: 100vh;
+  background: linear-gradient(135deg, #FAF9F8 0%, #F3F2F1 100%);
 }
 
 .main__header {
   flex: 0 0 auto;
-  background-color: #aaaaaa;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(40px);
   padding: 0rem;
   position: fixed;
   width: 100%;
   top: 0;
-  z-index: 1000; /* Ensure the header is above other content */
+  z-index: 1000;
+  box-shadow: 0 3.2px 7.2px 0 rgba(0,0,0,0.132), 0 0.6px 1.8px 0 rgba(0,0,0,0.108);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .content__container {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  margin-top: 4rem; /* Adjust based on header height */
-  margin-bottom: 4rem; /* Adjust based on footer height */
-  overflow-y: auto; /* Enable vertical scrolling */
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #FAF9F8 0%, #EDEBE9 50%, #F3F2F1 100%);
 }
 
 .main__container {
@@ -36,30 +42,33 @@ html, body {
 
 .main__footer {
   flex: 0 0 auto;
-  background-color: #aaaaaa;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(40px);
   padding: 1rem;
   text-align: center;
   position: fixed;
   width: 100%;
   bottom: 0;
-  z-index: 1000; /* Ensure the footer is above other content */
+  z-index: 1000;
+  box-shadow: 0 -3.2px 7.2px 0 rgba(0,0,0,0.132), 0 -0.6px 1.8px 0 rgba(0,0,0,0.108);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .content {
-  color: white; /* Set default text color to white */
+  color: #323130;
 }
 
 /* Media query for screens with a width less than 992px */
 @media (max-width: 992px) {
   html, body {
-    font-size: 0.875em; /* Adjust the base font size */
+    font-size: 0.875em;
   }
 
   .main__header, .main__footer {
-    font-size: 0.875em; /* Adjust the font size for header and footer */
+    font-size: 0.875em;
   }
 
   .content__container, .main__container {
-    font-size: 0.875em; /* Adjust the font size for content */
+    font-size: 0.875em;
   }
 }

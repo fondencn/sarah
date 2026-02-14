@@ -1,5 +1,5 @@
 /**
- * Sarah.Server
+ * Sarah Dashboard Service API
  *
  * 
  *

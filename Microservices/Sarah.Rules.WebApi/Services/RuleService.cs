@@ -59,28 +59,43 @@ namespace Sarah.Rules
 
                 // Subscribe to specific network event types only
                 await _rabbitMQ.SubscribeAsync<ClickedEventMessage>(
-                    topic: "network.events.clicked",
+                    topic: MessageTopics.NetworkEventsClicked,
                     onMessage: HandleClickedEvent,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<TimerEventMessage>(
-                    topic: "network.events.timer",
+                    topic: MessageTopics.NetworkEventsTimer,
                     onMessage: HandleTimerEvent,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<PersonAvailabilityMessage>(
-                    topic: "person.availability",
+                    topic: MessageTopics.PersonAvailability,
                     onMessage: HandlePersonAvailability,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<PersonGeoFenceMessage>(
-                    topic: "person.geofence",
+                    topic: MessageTopics.PersonGeoFence,
                     onMessage: HandlePersonGeoFence,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<AirQualityChangedMessage>(
-                    topic: "network.events.airquality",
+                    topic: MessageTopics.NetworkEventsAirQuality,
                     onMessage: HandleAirQualityChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
+                    topic: MessageTopics.SchedulesAlarmChanged,
+                    onMessage: HandleAlarmScheduleChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<TemperatureScheduleChangedMessage>(
+                    topic: MessageTopics.SchedulesTemperatureChanged,
+                    onMessage: HandleTemperatureScheduleChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<HolidayStatusChangedMessage>(
+                    topic: MessageTopics.HolidaysStatusChanged,
+                    onMessage: HandleHolidayStatusChanged,
                     cancellationToken: stoppingToken);
 
                 _logger.LogInformation("RuleService subscribed to all event topics");
@@ -185,6 +200,59 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling air quality changed event");
+            }
+        }
+
+        private async Task HandleAlarmScheduleChanged(AlarmScheduleChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received alarm schedule changed event: {AlarmScheduleId}, Change: {ChangeType}", 
+                    message.AlarmScheduleId, message.Change);
+
+                // Reconfigure timer rules to reflect schedule changes
+                this.UpdateTimerRules();
+                _logger.LogInformation("Timer rules reconfigured due to alarm schedule change");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling alarm schedule changed event");
+            }
+        }
+
+        private async Task HandleTemperatureScheduleChanged(TemperatureScheduleChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received temperature schedule changed event: {TemperatureScheduleId}, RoomId: {RoomId}, Change: {ChangeType}", 
+                    message.TemperatureScheduleId, message.RoomId, message.Change);
+
+                // Reconfigure timer rules to reflect schedule changes
+                this.UpdateTimerRules();
+                _logger.LogInformation("Timer rules reconfigured due to temperature schedule change");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling temperature schedule changed event");
+            }
+        }
+
+        private async Task HandleHolidayStatusChanged(HolidayStatusChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received holiday status changed event: {HolidayName}, Change: {ChangeType}", 
+                    message.HolidayName, message.Change);
+
+                // Activate/deactivate alarms based on holiday status
+                // This is a placeholder - actual implementation would require access to AlarmScheduleService
+                _logger.LogInformation("Holiday status changed: {HolidayName} - {ChangeType}", 
+                    message.HolidayName, 
+                    message.Change == HolidayStatusChangedMessage.ChangeType.Started ? "Started" : "Ended");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling holiday status changed event");
             }
         }
 

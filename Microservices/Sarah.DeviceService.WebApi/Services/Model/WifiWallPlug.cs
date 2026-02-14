@@ -19,13 +19,13 @@ namespace Sarah.DeviceService.Model
     {
         private static readonly string _PowerOnOffUriTemplate = "http://{0}/cm?cmnd=power%20{1}";
         private static readonly string _StatusUriTemplate = "http://{0}/cm?cmnd=status{1}";
-        private Task _updateSensorDataTask;
-        private CancellationTokenSource _UpdateSensorDataCancellationTokenSource;
+        private Task? _updateSensorDataTask;
+        private CancellationTokenSource? _UpdateSensorDataCancellationTokenSource;
 
 
         public string Hostname { get; }
 
-        public WifiWallPlug(byte nodeid, string hostname, NetworkElementPublisher publisher, ILogger<WifiWallPlug>? logger = null) : base(nodeid, publisher, logger)
+        public WifiWallPlug(byte nodeid, string hostname, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, publisher, logger)
         {
             this.Hostname = hostname;
         }
@@ -39,11 +39,11 @@ namespace Sarah.DeviceService.Model
         {
             if (this._updateSensorDataTask != null && this._updateSensorDataTask.Status == TaskStatus.Running)
             {
-                this._UpdateSensorDataCancellationTokenSource.Cancel();
+                this._UpdateSensorDataCancellationTokenSource?.Cancel();
             }
         }
 
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             _logger?.LogInformation("Wifi WallPlug " +
                  this.Hostname + ": start polling status...");
@@ -74,7 +74,7 @@ namespace Sarah.DeviceService.Model
                 {
                     response.EnsureSuccessStatusCode();
                     string responseJson = await response.Content.ReadAsStringAsync();
-                    PowerResponse newStateResponse = JsonConvert.DeserializeObject<PowerResponse>(responseJson);
+                    PowerResponse newStateResponse = JsonConvert.DeserializeObject<PowerResponse>(responseJson)!;
                     this.IsOn = String.Equals(newStateResponse.POWER, "ON", StringComparison.OrdinalIgnoreCase);
 
                     /* Anliegende Leistung abfragen */
@@ -99,8 +99,8 @@ namespace Sarah.DeviceService.Model
                 {
                     response.EnsureSuccessStatusCode();
                     string responseJson = await response.Content.ReadAsStringAsync();
-                    StatusResponse statusResponse = JsonConvert.DeserializeObject<StatusResponse>(responseJson);
-                    Energy e = statusResponse.StatusSNS.ENERGY;
+                    StatusResponse statusResponse = JsonConvert.DeserializeObject<StatusResponse>(responseJson)!;
+                    Energy? e = statusResponse.StatusSNS?.ENERGY;
 
                     if (e != null)
                     {
@@ -117,8 +117,8 @@ namespace Sarah.DeviceService.Model
                 {
                     response.EnsureSuccessStatusCode();
                     string responseJson = await response.Content.ReadAsStringAsync();
-                    PowerResponse2 statusResponseGeneral = JsonConvert.DeserializeObject<PowerResponse2>(responseJson);
-                    this.IsOn = String.Equals(statusResponseGeneral.StatusSTS.POWER, "ON", StringComparison.OrdinalIgnoreCase);
+                    PowerResponse2 statusResponseGeneral = JsonConvert.DeserializeObject<PowerResponse2>(responseJson)!;
+                    this.IsOn = String.Equals(statusResponseGeneral.StatusSTS?.POWER, "ON", StringComparison.OrdinalIgnoreCase);
                 }
             }
             catch (Exception ex)
@@ -132,24 +132,24 @@ namespace Sarah.DeviceService.Model
 
         private class PowerResponse
         {
-            public string POWER { get; set; }
+            public string POWER { get; set; } = "";
         }
 
         private class PowerResponse2
         {
-            public StatusSTS StatusSTS { get; set; }
+            public StatusSTS? StatusSTS { get; set; }
         }
 
         public class StatusResponse
         {
-            public StatusSNS StatusSNS { get; set; }
+            public StatusSNS? StatusSNS { get; set; }
         }
 
         public partial class StatusSNS
         {
             public DateTimeOffset Time { get; set; }
 
-            public Energy ENERGY { get; set; }
+            public Energy? ENERGY { get; set; }
         }
 
         public partial class Energy
@@ -180,28 +180,28 @@ namespace Sarah.DeviceService.Model
         {
             public DateTimeOffset Time { get; set; }
 
-            public string Uptime { get; set; }
+            public string? Uptime { get; set; }
 
             public double Vcc { get; set; }
 
-            public string SleepMode { get; set; }
+            public string? SleepMode { get; set; }
 
             public long Sleep { get; set; }
 
             public long LoadAvg { get; set; }
 
-            public string POWER { get; set; }
+            public string POWER { get; set; } = "";
 
-            public Wifi Wifi { get; set; }
+            public Wifi? Wifi { get; set; }
         }
 
         public partial class Wifi
         {
             public long AP { get; set; }
 
-            public string SSId { get; set; }
+            public string? SSId { get; set; }
 
-            public string BSSId { get; set; }
+            public string? BSSId { get; set; }
 
             public long Channel { get; set; }
 
@@ -209,7 +209,7 @@ namespace Sarah.DeviceService.Model
 
             public long LinkCount { get; set; }
 
-            public string Downtime { get; set; }
+            public string? Downtime { get; set; }
         }
     }
 }

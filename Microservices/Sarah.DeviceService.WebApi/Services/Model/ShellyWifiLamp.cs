@@ -1,19 +1,10 @@
 ﻿using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Sarah.DeviceService.WebApi.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
-using Microsoft.Extensions.Configuration;
 
 namespace Sarah.DeviceService.Model
 {
@@ -23,7 +14,7 @@ namespace Sarah.DeviceService.Model
         private byte _brightness = 0;
         private string _color = "";
         private SensorData _meter = SensorData.Empty;
-        private Task _updateSensorDataTask;
+        private Task? _updateSensorDataTask = null;
         private CancellationTokenSource? _UpdateSensorDataCancellationTokenSource =  null;
 
 
@@ -33,7 +24,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public ShellyWifiLamp(byte nodeid, string ipOrHostname, NetworkElementPublisher publisher, ILogger<ShellyWifiLamp>? logger = null) : base(nodeid, logger)
+        public ShellyWifiLamp(byte nodeid, string ipOrHostname, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, logger)
         {
             _publisher = publisher;
             this.Hostname = ipOrHostname;
@@ -50,7 +41,7 @@ namespace Sarah.DeviceService.Model
                 this._UpdateSensorDataCancellationTokenSource?.Cancel();
             }
         }
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             _logger?.LogInformation("Wifi Lamp " +
                  this.Hostname + ": start polling status...");
@@ -83,18 +74,18 @@ namespace Sarah.DeviceService.Model
                 {
                     response.EnsureSuccessStatusCode();
                     string responseJson = await response.Content.ReadAsStringAsync();
-                    Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(responseJson);
+                    Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(responseJson)!;
 
-                    this.Brightness = myDeserializedClass.lights[0].brightness;
+                    this.Brightness = myDeserializedClass.lights?[0].brightness ?? 0;
 
-                    string mode = myDeserializedClass.lights[0].mode;
+                    string mode = myDeserializedClass.lights?[0].mode ?? "";
                     if(mode.Equals("color"))
                     {
                         byte a, r, g, b;
                         a = 255;
-                        r = myDeserializedClass.lights[0].red;
-                        g = myDeserializedClass.lights[0].green;
-                        b = myDeserializedClass.lights[0].blue;
+                        r = myDeserializedClass.lights?[0].red ?? 0;
+                        g = myDeserializedClass.lights?[0].green ?? 0;
+                        b = myDeserializedClass.lights?[0].blue ?? 0;
                         System.Drawing.Color color = System.Drawing.Color.FromArgb(a, r, g, b);
                         this.Color = ColorConverter.ToHex(color);
                     } 
@@ -104,7 +95,7 @@ namespace Sarah.DeviceService.Model
                         this.Color = "#FFFFFF";
                     }
 
-                    float watts = myDeserializedClass.meters.Average(item => item.power);
+                    float watts = myDeserializedClass.meters?.Average(item => item.power) ?? 0;
                     this.Meter = new SensorData(watts, "W");
                 }
             }
@@ -123,7 +114,7 @@ namespace Sarah.DeviceService.Model
         public byte Brightness
         {
             get => _brightness;
-            private set { if (_brightness != value) { _brightness = value; _publisher.ReportEvent(this, nameof(Brightness), value); } }
+            private set { if (_brightness != value) { _brightness = value; _ = _publisher.ReportEvent(this, nameof(Brightness), value); } }
         }
 
         /// <summary>
@@ -132,14 +123,14 @@ namespace Sarah.DeviceService.Model
         public string Color
         {
             get => _color;
-            private set { if (_color != value) { _color = value; if (value != "?") { _publisher.ReportEvent(this, nameof(Color), value); } } }
+            private set { if (_color != value) { _color = value; if (value != "?") { _ = _publisher.ReportEvent(this, nameof(Color), value); } } }
         }
 
 
         /// <summary>
         /// Meter
         /// </summary>
-        public SensorData Meter { get => _meter; private set { if (_meter != value) { _meter = value; _publisher.ReportEvent(this, nameof(Meter), value?.ToString()); } } }
+        public SensorData Meter { get => _meter; private set { if (_meter != value) { _meter = value; _ =    _publisher.ReportEvent(this, nameof(Meter), value?.ToString()); } } }
 
         /// <summary>
         /// Letzte Änderungszeitpunkt
@@ -249,19 +240,19 @@ namespace Sarah.DeviceService.Model
 
         public class Root
         {
-            public WifiSta wifi_sta { get; set; }
-            public Cloud cloud { get; set; }
-            public Mqtt mqtt { get; set; }
-            public string time { get; set; }
+            public WifiSta? wifi_sta { get; set; }
+            public Cloud? cloud { get; set; }
+            public Mqtt? mqtt { get; set; }
+            public string? time { get; set; }
             public int unixtime { get; set; }
             public int serial { get; set; }
             public bool has_update { get; set; }
-            public string mac { get; set; }
+            public string? mac { get; set; }
             public int cfg_changed_cnt { get; set; }
-            public ActionsStats actions_stats { get; set; }
-            public List<Light> lights { get; set; }
-            public List<PowerMeter> meters { get; set; }
-            public Update update { get; set; }
+            public ActionsStats? actions_stats { get; set; }
+            public List<Light>? lights { get; set; }
+            public List<PowerMeter>? meters { get; set; }
+            public Update? update { get; set; }
             public int ram_total { get; set; }
             public int ram_free { get; set; }
             public int fs_size { get; set; }
@@ -271,17 +262,17 @@ namespace Sarah.DeviceService.Model
 
         public class Update
         {
-            public string status { get; set; }
+            public string? status { get; set; }
             public bool has_update { get; set; }
-            public string new_version { get; set; }
-            public string old_version { get; set; }
+            public string? new_version { get; set; }
+            public string? old_version { get; set; }
         }
 
         public class WifiSta
         {
             public bool connected { get; set; }
-            public string ssid { get; set; }
-            public string ip { get; set; }
+            public string? ssid { get; set; }
+            public string? ip { get; set; }
             public int rssi { get; set; }
         }
 

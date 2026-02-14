@@ -9,7 +9,7 @@ namespace Sarah.Rules.Conditions
     /// </summary>
     public class TimerCondition : RuleCondition
     {
-        public TimerRecurrence Recurrence { get; }
+        public TimerRecurrence? Recurrence { get; }
 
         public DateTime DateTime { get; }
 
@@ -34,6 +34,7 @@ namespace Sarah.Rules.Conditions
         {
             this.IsOneShot = true;
             this.DateTime = alarmTime;
+            this.Recurrence = null;
         }
 
         /// <summary>
@@ -47,10 +48,11 @@ namespace Sarah.Rules.Conditions
                 int reminderAccuracy = 10; //auf 10 sekunden genau
                 return evt.SourceNodeId == this.TargetNodeId && Math.Abs( (this.DateTime - DateTime.Now).TotalSeconds ) < reminderAccuracy;
             }
-            else
+            else if (Recurrence != null)
             {
                 return evt.SourceNodeId == this.TargetNodeId && Recurrence.Matches(DateTime.Now);
             }
+            return false;
         }
     }
 }

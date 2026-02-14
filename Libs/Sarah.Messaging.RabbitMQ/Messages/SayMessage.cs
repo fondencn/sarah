@@ -25,11 +25,11 @@ public class SayMessage : AbstractMessage
         Topic = MessageTopics.SpeechSay;
     }
 
-    public SayMessage(string message, string targetSpeaker = "", SpeechVolume volume = SpeechVolume.Normal) : this()
+    public SayMessage(string Message, string TargetSpeaker = "", SpeechVolume Volume = SpeechVolume.Normal) : this()
     {
-        Message = message;
-        TargetSpeaker = targetSpeaker;
-        Volume = volume;
+        this.Message = Message;
+        this.TargetSpeaker = TargetSpeaker;
+        this.Volume = Volume;
     }
 }
 

@@ -21,7 +21,6 @@ namespace Sarah.DeviceService.Model
     public class LoraWanGpsTracker : NetworkElement, IDisposable, IGPSTracker, IBatterySensor
     {
         private readonly NetworkElementPublisher _publisher;
-        private string Ttn_cf_ApiKey {get; set;}
         private string TtnApiKey_SarahApiKey {get; set; }
         private const string TtnAppName = "sarah-lorawan";
         private const string TtnUserName = "sarah-lorawan@ttn";
@@ -30,9 +29,23 @@ namespace Sarah.DeviceService.Model
         private readonly TtnClient _ttn;
         private SensorData? _battery = null;
         private LocatorPosition? _position = null;
-        private SensorData _isButtonPressed;
+        private SensorData _isButtonPressed = new SensorData(0, ""); // 0 = nicht gedrückt, 1 = gedrückt
         private const int MAX_POSITION_TRACE_ENTRIES = 50;
         private readonly Queue<LocatorPosition> _PositionTrace = new Queue<LocatorPosition>();
+
+
+
+        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId, string sarahApiKey, NetworkElementPublisher publisher, ILogger logger) 
+        : base(nodeid, logger)
+        {
+            _publisher = publisher;
+            this.TtnDeviceId = ttnDeviceId;
+            this.TtnApiKey_SarahApiKey = sarahApiKey;
+            this.Parser = new SenseCapTTNParser(); // TODO: Make configurable if more devices get integrated
+            this._ttn = new TtnClient(TtnAppName);
+            this._ttn.MessageReceived += OnTtnMessageReceived;
+            this._ttn.ConnectionStateChanged += OnTtnConnectionChanged;
+        }
 
         /// <summary>
         /// Positionsverlauf dieses Objektes
@@ -47,12 +60,12 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// 
         /// </summary>
-        public DateTime LastMessageReceived { get; private set; }
+        public DateTime LastMessageReceived { get; private set; } = DateTime.MinValue;
 
         /// <summary>
         /// Liste aller MACAdressen in der Nähe des Trackers, die über Bluetooth oder Wifi aufgezeichnet wurden.
         /// </summary>
-        public List<TTNTrackerNearbyDevice> NearbyDevices { get; private set; }
+        public List<TTNTrackerNearbyDevice> NearbyDevices { get; } = new List<TTNTrackerNearbyDevice>();
 
         /// <summary>
         /// 
@@ -114,7 +127,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public LocatorPosition LastValidPosition { get; private set; }
+        public LocatorPosition? LastValidPosition { get; private set; }
 
         private void AddToTrace(LocatorPosition value)
         {
@@ -146,26 +159,17 @@ namespace Sarah.DeviceService.Model
 
         private ITTNPayloadParser Parser { get; }
 
-        public LoraWanGpsTracker(byte nodeid, string ttnDeviceId, NetworkElementPublisher publisher, ILogger<LoraWanGpsTracker>? logger = null) : base(nodeid, logger)
-        {
-            _publisher = publisher;
-            this.TtnDeviceId = ttnDeviceId;
-            this.Parser = new SenseCapTTNParser(); // TODO: Make configurable if more devices get integrated
-            this._ttn = new TtnClient(TtnAppName);
-            this._ttn.MessageReceived += OnTtnMessageReceived;
-            this._ttn.ConnectionStateChanged += OnTtnConnectionChanged;
-        }
 
-        private void OnTtnConnectionChanged(object sender, bool e)
+        private void OnTtnConnectionChanged(object?sender, bool e)
         {
             if (e)
             {
-                _logger?.LogDebug("TTN Connected: Device " + this.TtnDeviceId);
+                _logger.LogInformation("TTN Connected: Device " + this.TtnDeviceId);
                 this.IsTtnConnected = true;
             }
             else
             {
-                _logger?.LogDebug("TTN Disconnected: Device " + this.TtnDeviceId);
+                _logger.LogInformation("TTN Disconnected: Device " + this.TtnDeviceId);
                 this.IsTtnConnected = false;
             }
         }
@@ -174,16 +178,16 @@ namespace Sarah.DeviceService.Model
         {
             if (topic.Contains(this.TtnDeviceId)) // nur auf eigene Messages hören
             {
-                _logger?.LogDebug("OnTtnMessageReceived Topic" + topic);
+                _logger.LogDebug("OnTtnMessageReceived Topic" + topic);
                 if (msg.uplink_message != null && msg.uplink_message.frm_payload != null)
                 {
                     string payloadBase64 = msg.uplink_message.frm_payload;
                     var deserializedDeviceData = this.Parser.Parse(payloadBase64);
-                    _logger?.LogDebug("OnTtnMessageReceived DataId" + deserializedDeviceData.DataId);
+                    _logger.LogDebug("OnTtnMessageReceived DataId" + deserializedDeviceData.DataId);
 
                     if(deserializedDeviceData != null)
                     {
-                        this.Battery = deserializedDeviceData.Battery;
+                        this.Battery = deserializedDeviceData?.Battery ?? SensorData.Empty;
                     }
                     if(deserializedDeviceData?.Longitude != null && deserializedDeviceData.Latitude != null) 
                     { 
@@ -197,7 +201,8 @@ namespace Sarah.DeviceService.Model
                     this.IsButtonPressed = new SensorData(deserializedDeviceData?.IsButtonSosEvent == true ? 1f : 0f, "");
                     if (deserializedDeviceData?.NearbyDevices?.Any() == true)
                     {
-                        this.NearbyDevices = deserializedDeviceData.NearbyDevices;
+                        this.NearbyDevices.Clear();
+                        this.NearbyDevices.AddRange(deserializedDeviceData.NearbyDevices);
                     }
                 }
             }
@@ -205,15 +210,9 @@ namespace Sarah.DeviceService.Model
 
         public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
-            LoadTtnApiKey(config);
             await _ttn.Start(TtnHostname, TtnPort, true, TtnUserName, TtnApiKey_SarahApiKey, TimeSpan.FromSeconds(5));
         }
 
-        private  void LoadTtnApiKey(IConfiguration config) 
-        {
-            Ttn_cf_ApiKey = config["TTN:AppApiKey"] ?? throw new InvalidOperationException("TTN:AppApiKey not configured in DeviceService configuration");
-            TtnApiKey_SarahApiKey = config["TTN:SarahApiKey"] ?? throw new InvalidOperationException("TTN:SarahApiKey not configured in DeviceService configuration");
-        }
 
         public void Dispose()
         {
@@ -407,13 +406,13 @@ namespace Sarah.DeviceService.Model
     public class TTNTrackerPayload
     {
         public DataId DataId { get; set; }
-        public SensorData Battery { get; set; }
-        public SensorData Longitude { get; set; }
-        public SensorData Latitude { get; set; }
-        public SensorData ButtonState { get; set; }
+        public SensorData? Battery { get; set; }
+        public SensorData? Longitude { get; set; }
+        public SensorData? Latitude { get; set; }
+        public SensorData? ButtonState { get; set; }
         public DateTime Timestamp { get; set; }
-        public string Message { get; set; }
-        public string RawData { get; set; }
+        public string? Message { get; set; }
+        public string? RawData { get; set; }
         public List<TTNTrackerNearbyDevice> NearbyDevices { get; } = new List<TTNTrackerNearbyDevice>();
         public bool IsStartMoveEvent { get; set; }
         public bool IsEndMoveEvent { get; set; }
@@ -424,8 +423,8 @@ namespace Sarah.DeviceService.Model
 
     public class TTNTrackerNearbyDevice
     {
-        public byte[] MAC { get; set; }
-        public byte RSSI { get; set; }
+        public byte[] MAC { get; set; } = Array.Empty<byte>();
+        public byte RSSI { get; set; } = 0;
 
         public override string ToString()
         {

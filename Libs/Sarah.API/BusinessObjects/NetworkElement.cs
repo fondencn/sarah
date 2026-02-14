@@ -12,7 +12,7 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public abstract class NetworkElement : INetworkElement
     {
-        protected readonly ILogger? _logger;
+        protected readonly ILogger _logger;
 
         /// <summary>
         /// Name
@@ -52,7 +52,7 @@ namespace Sarah.API.BusinessObjects
         /// <param name="nodeid">ZWave Node ID des Geräts</param>
         /// <param name="eventProcessing">Event processing service</param>
         /// <param name="logger">Optional logger instance</param>
-        public NetworkElement(byte nodeid, ILogger? logger = null) 
+        public NetworkElement(byte nodeid, ILogger logger) 
         { 
             this.NodeID = nodeid; 
             this._logger = logger;

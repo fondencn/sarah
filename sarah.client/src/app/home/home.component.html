@@ -92,17 +92,17 @@
                   <div class="col-3 d-flex align-items-center justify-content-center">
                     <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
-                        <span class="big-icon" title="{{ item.subType }}">💡</span>
+                        <img class="big-icon" src="assets/icons/lightbulb.svg" [alt]="item.subType" [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
-                        <span class="big-icon" title="{{ item.subType }}">🔌</span>
+                        <img class="big-icon" src="assets/icons/plug.svg" [alt]="item.subType" [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
-                        <span class="big-icon" title="{{ item.subType }}">🌐</span>
+                        <img class="big-icon" src="assets/icons/location.svg" [alt]="item.subType" [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
-                          <span class="big-icon" title="{{ item.subType }}">⚙️</span>
+                          <img class="big-icon" src="assets/icons/settings.svg" [alt]="item.subType" [title]="item.subType">
                           <small>{{ item.subType }}</small>
                         </div>
                       </ng-container>
@@ -123,7 +123,7 @@
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="big-icon">⏯️</span>
+                    <img class="big-icon" src="assets/icons/play.svg" alt="Scene">
                   </div>
                 </div>
               </div>
@@ -140,7 +140,7 @@
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="big-icon">🟨</span>
+                    <img class="big-icon" src="assets/icons/home.svg" alt="Room">
                   </div>
                 </div>
               </div>
@@ -159,7 +159,7 @@
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
-                    <span class="big-icon">👤</span>
+                    <img class="big-icon" src="assets/icons/person.svg" alt="Person">
                   </div>
                 </div>
               </div>

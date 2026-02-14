@@ -3,9 +3,9 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Repositories;
-using Sarah.Persons.WebApi.Clients;
 using Sarah.Persons.WebApi.Services;
 using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +16,10 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
+// Enable Aspire service discovery for outbound HTTP calls
+builder.Services.AddServiceDiscovery();
+builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
+
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
@@ -24,9 +28,9 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<HomeNetworkService>();
 
 // Register HTTP client for Device Service communication
-builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice:5001";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });

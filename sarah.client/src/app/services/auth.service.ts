@@ -4,9 +4,10 @@ import { environment } from '../../environments/environment';
 
 export const authConfig: AuthConfig = {
   issuer: environment.keycloakIssuer ?? 'http://localhost:8080/realms/sarah-realm',
-  redirectUri: window.location.origin + '/home',
+  redirectUri: window.location.origin,
+  postLogoutRedirectUri: window.location.origin,
   clientId: environment.keycloakClientId ?? 'sarah-client',
-  dummyClientSecret: '5q3qyM7WdFQWkaiMr3kUBneLtsQJYu0M',
+  // No client secret needed - public client as configured in keycloak-realm.json
   scope: 'openid profile email offline_access',
   responseType: 'code',
   showDebugInformation: true,

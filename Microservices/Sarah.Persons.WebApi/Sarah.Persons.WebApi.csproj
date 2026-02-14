@@ -14,9 +14,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\..\Libs\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.ServiceClients\Sarah.ServiceClients.csproj" />
   </ItemGroup>
 </Project>

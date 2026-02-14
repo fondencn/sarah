@@ -18,6 +18,8 @@ public class RabbitMQClient : IDisposable
     private IChannel? _channel;
     private bool _disposed;
 
+    private bool _isConnected = false;
+
     public RabbitMQClient(ILogger<RabbitMQClient> logger, IConfiguration configuration)
     {
         _logger = logger;
@@ -29,6 +31,11 @@ public class RabbitMQClient : IDisposable
     /// </summary>
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
+        if(this._isConnected)
+        {
+            _logger.LogWarning("RabbitMQClient is already connected.");
+            return;
+        }
         var factory = new ConnectionFactory();
         
         // Check if Aspire connection string is provided
@@ -52,7 +59,7 @@ public class RabbitMQClient : IDisposable
 
         _connection = await factory.CreateConnectionAsync(cancellationToken);
         _channel = await _connection.CreateChannelAsync();
-
+        _isConnected = true;
         _logger.LogInformation("Connected to RabbitMQ at {HostName}:{Port}", 
             factory.HostName, factory.Port);
     }
@@ -67,9 +74,11 @@ public class RabbitMQClient : IDisposable
     public async Task PublishAsync<T>(T message, string? exchange = null, CancellationToken cancellationToken = default) 
         where T : AbstractMessage
     {
+        await this.ConnectAsync(cancellationToken);
+
         if (_channel == null)
         {
-            throw new InvalidOperationException("Not connected. Call ConnectAsync first.");
+            throw new InvalidOperationException("Not connected. Retry later.");
         }
 
         var exchangeName = exchange ?? message.Topic;
@@ -115,10 +124,13 @@ public class RabbitMQClient : IDisposable
         CancellationToken cancellationToken = default) 
         where T : AbstractMessage
     {
+        await this.ConnectAsync(cancellationToken);
+
         if (_channel == null)
         {
-            throw new InvalidOperationException("Not connected. Call ConnectAsync first.");
+            throw new InvalidOperationException("Not connected. Retry later.");
         }
+
 
         var exchangeName = exchange ?? topic;
 
@@ -197,6 +209,7 @@ public class RabbitMQClient : IDisposable
         _connection?.Dispose();
         
         _disposed = true;
+        _isConnected = false;
         GC.SuppressFinalize(this);
     }
 }

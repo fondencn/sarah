@@ -31,7 +31,6 @@
   "notBefore": 0,
   "revokeRefreshToken": false,
   "refreshTokenMaxReuse": 0,
-  "accessTokenLifespanForRefreshToken": 1800,
   "clients": [
     {
       "clientId": "sarah-client",

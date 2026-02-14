@@ -4,13 +4,16 @@ using Microsoft.Extensions.Logging;
 using Ical.Net;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
     /// <summary>
-    /// Stellt Daten für Schulferien für das System bereit
+    /// Stellt Daten für Schulferien für das System bereit.
+    /// Überwacht Ferienänderungen stündlich und veröffentlicht Nachrichten wenn Ferien beginnen oder enden.
     /// </summary>
-    public class FerienMonitor (IConfiguration _config, ILogger<FerienMonitor> _logger) : IFerienInfoProvider, ICanSelfTest, IMonitor
+    public class FerienMonitor (IConfiguration _config, ILogger<FerienMonitor> _logger, RabbitMQClient _rabbitMQ) :  ICanSelfTest, IMonitor
     {
         /// <summary>
         /// Die bekannten Schulferien als vereinheitlichte Liste
@@ -28,10 +31,13 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         public Ferien? AktuelleFerien => this.Ferien?.FirstOrDefault(item => item.Start <= DateTime.Now && item.Ende >= DateTime.Now);
 
-    
+        private bool _previousHolidayState = false;
+        private string? _previousHolidayName = null;
+        private Timer? _holidayCheckTimer = null;
 
         /// <summary>
         /// Lädt alle bekannten Ferien aus den Dateien im iCal Unterordner
+        /// und startet den stündlichen Überwachungstimer
         /// </summary>
         /// <returns></returns>
         public Task Start()
@@ -39,8 +45,77 @@ namespace Sarah.Monitoring.Monitors
             string iCalFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "/", _config["iCalFolder"] ?? "");
             FerienDateien.Instance.Load(iCalFolder);
             _logger.LogDebug("{FerienElementCount} Ferienelemente geladen.", FerienDateien.Instance.Items?.Count ?? 0);
+
+            // Initiale Prüfung
+            CheckAndPublishHolidayStatusAsync().Wait();
+
+            // Stündlicher Timer für Ferienänderungen
+            _holidayCheckTimer = new Timer(async (state) =>
+            {
+                try
+                {
+                    await CheckAndPublishHolidayStatusAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error checking holiday status");
+                }
+            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1));
+
             return Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Prüft den aktuellen Ferienstatus und veröffentlicht eine Nachricht wenn sich dieser geändert hat
+        /// </summary>
+        private async Task CheckAndPublishHolidayStatusAsync()
+        {
+            try
+            {
+                var currentHoliday = this.AktuelleFerien;
+                bool isCurrentlyInHoliday = currentHoliday != null;
+                string? currentHolidayName = currentHoliday?.Name;
+
+                _logger.LogDebug("Checking holiday status. Current: {Status}, Holiday: {HolidayName}",
+                    isCurrentlyInHoliday ? "In holidays" : "Not in holidays",
+                    currentHolidayName ?? "None");
+
+                // Ferien haben gerade begonnen
+                if (isCurrentlyInHoliday && !_previousHolidayState)
+                {
+                    _logger.LogInformation("Holidays started: {HolidayName}", currentHolidayName);
+                    var message = new HolidayStatusChangedMessage(
+                        currentHolidayName ?? "Unknown",
+                        HolidayStatusChangedMessage.ChangeType.Started,
+                        currentHoliday!.Start,
+                        currentHoliday.Ende);
+
+                    await _rabbitMQ.PublishAsync(message);
+                    _previousHolidayState = true;
+                    _previousHolidayName = currentHolidayName;
+                }
+                // Ferien haben gerade geendet
+                else if (!isCurrentlyInHoliday && _previousHolidayState)
+                {
+                    _logger.LogInformation("Holidays ended: {HolidayName}", _previousHolidayName);
+                    var message = new HolidayStatusChangedMessage(
+                        _previousHolidayName ?? "Unknown",
+                        HolidayStatusChangedMessage.ChangeType.Ended,
+                        DateTime.Now.Date,
+                        DateTime.Now.Date);
+
+                    await _rabbitMQ.PublishAsync(message);
+                    _previousHolidayState = false;
+                    _previousHolidayName = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking holiday status");
+            }
+        }
+
+    
 
         /// <summary>
         /// Die Selbsttestfunktion
