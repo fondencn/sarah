@@ -40,13 +40,9 @@ Grösse: 1 Byte, Voreingestellt: 1
 
         protected override IEnumerable<byte> GetKnownParameters() => InternalParameterNames.Keys;
 
-        protected override string GetParameterName(byte paramId)
+        protected override string? GetParameterName(byte paramId)
         {
-            string res;
-            if (!InternalParameterNames.TryGetValue(paramId, out res))
-            {
-                res = null;
-            }
+            InternalParameterNames.TryGetValue(paramId, out string? res);
             return res;
         }
     }

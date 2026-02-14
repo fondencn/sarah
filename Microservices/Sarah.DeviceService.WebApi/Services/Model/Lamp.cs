@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using ZWave;
 using ZWave.CommandClasses;
 
+#pragma warning disable CS4014 // Intentional fire-and-forget async calls in property setters
+
 namespace Sarah.DeviceService.Model
 {
     /// <summary>
@@ -17,11 +19,12 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class Lamp : NetworkElement, ILamp
     {
-        private readonly NetworkElementPublisher _publisher;
+        private readonly NetworkElementPublisher _publisher = null!;
         private byte _brightness;
-        private string _color;
-        private string _meter;
-        private IDeviceService _deviceService;
+        private string _color = null!;
+        private string _meter = null!;
+        private IDeviceService _deviceService = null!;
+        private Animation? _currentAnimation;
 
         public override string ClassDescription => "Lampe";
 
@@ -86,7 +89,7 @@ namespace Sarah.DeviceService.Model
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
-            Node n = deviceService.GetNode(this.NodeID) as Node;
+            Node? n = deviceService.GetNode(this.NodeID) as Node;
             if (n != null)
             {
                 Basic basic = n.GetCommandClass<Basic>();

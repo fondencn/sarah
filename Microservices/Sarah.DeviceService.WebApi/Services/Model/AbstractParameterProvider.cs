@@ -13,7 +13,7 @@ namespace Sarah.DeviceService.Model
 {
     public abstract class AbstractParameterProvider : IParameterProvider
     {
-        protected abstract string GetParameterName(byte paramId);
+        protected abstract string? GetParameterName(byte paramId);
         protected abstract IEnumerable<byte> GetKnownParameters();
 
 
@@ -22,7 +22,9 @@ namespace Sarah.DeviceService.Model
             List<DeviceParameter> parameters = new List<DeviceParameter>();
             try
             {
-                Node n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetNode(nodeId) as Node;
+                if (n == null)
+                    throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();
 
                 foreach (byte pId in GetKnownParameters())
@@ -43,7 +45,7 @@ namespace Sarah.DeviceService.Model
                 // _logger?.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht ausgelesen werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // _logger?.LogDebug("Error reading parameters: " + ex.Message);
                 throw;
@@ -56,7 +58,9 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetNode(nodeId) as Node;
+                if (n == null)
+                    throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();
                 await configCmd.Set(p.Id, Convert.ToByte(p.Value));
             }
@@ -65,7 +69,7 @@ namespace Sarah.DeviceService.Model
                 // _logger?.LogError("Error WRITING parameters, device is sleeping or not reachable", tEx);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht gesendet werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // _logger?.LogError("Error reading parameters ", ex);
                 throw;
@@ -77,7 +81,9 @@ namespace Sarah.DeviceService.Model
             DeviceParameter parameter = null!;
             try
             {
-                Node n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetNode(nodeId) as Node;
+                if (n == null)
+                    throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();
 
                 ConfigurationReport report = await configCmd.Get(paramId);
