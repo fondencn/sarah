@@ -127,7 +127,15 @@ public class AlarmScheduleService : IDisposable
 
         _db.AlarmSchedules.Add(alarm);
         await _db.SaveChangesAsync();
-        _logger.LogInformation("Alarm erstellt: {AlarmText} um {AlarmTime}", alarm.Text, alarm.AlarmTime);
+
+        // Sanitize user-provided text before logging to prevent log forging via newlines
+        var safeAlarmText = alarm.Text?
+            .Replace(Environment.NewLine, string.Empty)
+            .Replace("\r", string.Empty)
+            .Replace("\t", string.Empty)
+            .Replace("\n", string.Empty);
+
+        _logger.LogInformation("Alarm erstellt: {AlarmText} um {AlarmTime}", safeAlarmText, alarm.AlarmTime);
         
         // Notify subscribers of the change
         await _rabbitMQ.PublishAsync(new AlarmScheduleChangedMessage 
