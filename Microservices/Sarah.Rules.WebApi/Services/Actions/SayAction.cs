@@ -9,9 +9,9 @@ namespace Sarah.Rules.Actions
     public class SayAction : RuleAction
     {
         protected readonly RabbitMQClient _rabbitMQClient;
-        protected string Text { get; }
+        protected string? Text { get; }
         protected string Hostname { get; }
-        protected Func<string> TextExpr { get; }
+        protected Func<string>? TextExpr { get; }
         private SpeechVolume Volume { get; set; } = SpeechVolume.Normal;
 
         public SayAction(string text, RabbitMQClient rabbitMQClient, SpeechVolume volume = SpeechVolume.Normal)
@@ -43,9 +43,12 @@ namespace Sarah.Rules.Actions
 
         public override void Execute(NetworkEvent sourceEvent)
         {
-            string textToSay = this.Text ?? this.TextExpr?.Invoke();
-            var message = new SayMessage(textToSay, this.Hostname, this.Volume);
-            _rabbitMQClient.PublishAsync(message).Wait();
+            string? textToSay = this.Text ?? this.TextExpr?.Invoke();
+            if (!string.IsNullOrEmpty(textToSay))
+            {
+                var message = new SayMessage(textToSay, this.Hostname, this.Volume);
+                _rabbitMQClient.PublishAsync(message).Wait();
+            }
         }
     }
 
@@ -69,10 +72,13 @@ namespace Sarah.Rules.Actions
         {
             if ((DateTime.Now - this.LastSay) > this.SilentTime)
             {
-                string textToSay = this.Text ?? this.TextExpr?.Invoke();
-                var message = new SayMessage(textToSay, this.Hostname, this.Volume);
-                _rabbitMQClient.PublishAsync(message).Wait();
-                this.LastSay = DateTime.Now;
+                string? textToSay = this.Text ?? this.TextExpr?.Invoke();
+                if (!string.IsNullOrEmpty(textToSay))
+                {
+                    var message = new SayMessage(textToSay, this.Hostname, this.Volume);
+                    _rabbitMQClient.PublishAsync(message).Wait();
+                    this.LastSay = DateTime.Now;
+                }
             }
         }
     }

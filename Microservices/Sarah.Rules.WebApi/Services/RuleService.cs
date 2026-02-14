@@ -272,9 +272,12 @@ namespace Sarah.Rules
                         bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
                         if (!hasOccuredLately && rule.Condition.Evaluate(e))
                         {
-                            AddLog("Regel " + rule.Name + " aktiviert");
-                            rule.Action.Execute(e);
-                            rule.LastOccurence = DateTime.Now;
+                            if (rule.Name != null && rule.Action != null)
+                            {
+                                AddLog("Regel " + rule.Name + " aktiviert");
+                                rule.Action.Execute(e);
+                                rule.LastOccurence = DateTime.Now;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -331,7 +334,7 @@ namespace Sarah.Rules
             this.Timers.Clear();
             foreach (var rule in Rules)
             {
-                TimerCondition timerCondition = rule.Condition as TimerCondition;
+                TimerCondition? timerCondition = rule.Condition as TimerCondition;
                 if (timerCondition != null)
                 {
                     if (timerCondition.IsOneShot)
@@ -344,9 +347,11 @@ namespace Sarah.Rules
                     }
                     else
                     {
-                        this.Timers.Register(timerCondition.Recurrence);
-                        _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {NextTick} (recurring)", rule.Name, timerCondition.Recurrence.GetNext());
-
+                        if (timerCondition.Recurrence != null)
+                        {
+                            this.Timers.Register(timerCondition.Recurrence);
+                            _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {NextTick} (recurring)", rule.Name, timerCondition.Recurrence.GetNext());
+                        }
                     }
                 }
             }
@@ -400,7 +405,7 @@ namespace Sarah.Rules
             /// </summary>
             private readonly Timer _RecreateTimersTimer;
 
-            private void RecreateTimer_Tick(object state)
+            private void RecreateTimer_Tick(object? state)
             {
                 foreach (RecurrenceTimer item in this.RegisteredRecurrences.Where(timer => !timer.IsTimerCreated).ToList())
                 {
@@ -446,7 +451,7 @@ namespace Sarah.Rules
                 }
             }
 
-            private async void recurrence_elapsed(object sender, EventArgs e)
+            private async void recurrence_elapsed(object? sender, EventArgs e)
             {
                 var message = new TimerEventMessage(0);
                 await _rabbitMQ.PublishAsync(message);
@@ -514,7 +519,7 @@ namespace Sarah.Rules
                     }
                 }
 
-                private Timer CreateOneShotTimer(DateTime nextOccurence)
+                private Timer? CreateOneShotTimer(DateTime nextOccurence)
                 {
                     TimeSpan dueTime = (nextOccurence - DateTime.Now);
                     if (dueTime.TotalSeconds > 0 && dueTime.TotalMilliseconds < (Int32.MaxValue - 2))
@@ -533,7 +538,7 @@ namespace Sarah.Rules
                     }
                 }
 
-                private void timer_tick_internal(object state)
+                private void timer_tick_internal(object? state)
                 {
                     this.Tick?.Invoke(this, EventArgs.Empty);
                     this._timer.Dispose();
