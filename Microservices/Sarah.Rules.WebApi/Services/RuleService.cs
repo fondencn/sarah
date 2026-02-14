@@ -265,12 +265,12 @@ namespace Sarah.Rules
         {
             lock (_evaluateRulesLock)
             {
-                foreach (var rule in Rules.Where(r => r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0))
+                foreach (var rule in Rules.Where(r => r.Condition != null && (r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0)))
                 {
                     try
                     {
                         bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
-                        if (!hasOccuredLately && rule.Condition.Evaluate(e))
+                        if (!hasOccuredLately && rule.Condition != null && rule.Condition.Evaluate(e))
                         {
                             if (rule.Name != null && rule.Action != null)
                             {
@@ -472,28 +472,29 @@ namespace Sarah.Rules
             /// </summary>
             private sealed class RecurrenceTimer : IDisposable
             {
-                private TimerRecurrence RecurrenceDefinition { get; }
+                private TimerRecurrence? RecurrenceDefinition { get; }
                 private DateTime? OccuresOnceDate { get; }
 
-                private Timer _timer;
+                private Timer? _timer = null!;
 
                 public bool IsTimerCreated => this._timer != null;
-                private ILogger _logger;
+                private ILogger _logger = null!;
+                public event EventHandler? Tick = null!;
 
                 public RecurrenceTimer(TimerRecurrence recurrenceDefinition, ILogger logger)
                 {
                     this.RecurrenceDefinition = recurrenceDefinition;
                     this.OccuresOnceDate = null;
-                    this.CreateTimer();
                     this._logger = logger;
+                    this.CreateTimer();
                 }
 
                 public RecurrenceTimer(DateTime occurance, ILogger logger)
                 {
                     this.RecurrenceDefinition = null;
                     this.OccuresOnceDate = occurance;
-                    this.CreateTimer();
                     this._logger = logger;
+                    this.CreateTimer();
                 }
 
                 /// <summary>
@@ -541,7 +542,7 @@ namespace Sarah.Rules
                 private void timer_tick_internal(object? state)
                 {
                     this.Tick?.Invoke(this, EventArgs.Empty);
-                    this._timer.Dispose();
+                    this._timer?.Dispose();
                     if (this.RecurrenceDefinition != null)
                     {
                         DateTime next = this.RecurrenceDefinition.GetNext();
@@ -560,8 +561,6 @@ namespace Sarah.Rules
                 {
                     this._timer?.Dispose();
                 }
-
-                public event EventHandler Tick;
             }
 
         }
