@@ -60,7 +60,6 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
             }), 
         FormsModule,
         HttpClientModule, 
-        ApiModule.forRoot(() => new Configuration({ basePath: environment.apiBaseUrl })), // Use environment configuration
         BrowserAnimationsModule
     ], 
     providers: [

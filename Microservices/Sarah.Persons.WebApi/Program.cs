@@ -38,7 +38,7 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 // Register HTTP client for GeoFence Service communication
 builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
 {
-    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice:5003";
+    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "https://geofencesservice";
     client.BaseAddress = new Uri(geofenceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });

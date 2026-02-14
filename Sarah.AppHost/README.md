@@ -44,8 +44,8 @@ The `keycloak-realm.json` file contains the complete Keycloak realm configuratio
 
 - **Realm**: `sarah-realm`
 - **Client**: `sarah-client` (public client for Angular SPA)
-  - Redirect URIs: `http://localhost:4200/*`, `https://localhost:4200/*`
-  - Web origins: `http://localhost:4200`, `https://localhost:4200`
+  - Redirect URIs: `https://localhost:4200/*`
+  - Web origins: `https://localhost:4200`
   - Direct access grants enabled
   - Standard flow (authorization code) enabled
 - **Test User**: Pre-configured with hardcoded password (for development only)
@@ -129,14 +129,14 @@ This will:
 4. Start all microservices
 5. Start the Angular frontend
 
-> **ℹ️ Note**: The AppHost project includes a `Properties/launchSettings.json` file that automatically configures the necessary environment variables (such as `ASPIRE_ALLOW_UNSECURED_TRANSPORT`) when you run `dotnet run`. No additional configuration from VSCode's `launch.json` is needed.
+> **ℹ️ Note**: The AppHost project includes a `Properties/launchSettings.json` file that automatically configures the necessary environment variables when you run `dotnet run`. No additional configuration from VSCode's `launch.json` is needed.
 
 ### Access the Application
 
 - **Aspire Dashboard**: https://localhost:15888
-- **Angular Frontend**: http://localhost:4200
-- **Keycloak Admin Console**: http://localhost:8080 or https://localhost:8443
-- **RabbitMQ Management**: http://localhost:15672
+- **Angular Frontend**: https://localhost:4200
+- **Keycloak Admin Console**: https://localhost:8443
+- **RabbitMQ Management**: https://localhost:15672
 
 ### Default Credentials
 

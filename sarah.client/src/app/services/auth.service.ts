@@ -3,7 +3,7 @@ import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../environments/environment';
 
 export const authConfig: AuthConfig = {
-  issuer: environment.keycloakIssuer ?? 'http://localhost:8080/realms/sarah-realm',
+  issuer: environment.keycloakIssuer ?? 'https://localhost:8080/realms/sarah-realm',
   redirectUri: window.location.origin,
   postLogoutRedirectUri: window.location.origin,
   clientId: environment.keycloakClientId ?? 'sarah-client',
@@ -14,7 +14,7 @@ export const authConfig: AuthConfig = {
   strictDiscoveryDocumentValidation: false,
   useHttpBasicAuth: false,
   disableAtHashCheck: true,
-  requireHttps: !window.location.origin.startsWith('http://localhost')
+  requireHttps: true
 };
 
 @Injectable({

@@ -1,4 +1,4 @@
-@Sarah.Rules.WebApi_HostAddress = http://localhost:5272
+@Sarah.Rules.WebApi_HostAddress = https://localhost:7257
 
 GET {{Sarah.Rules.WebApi_HostAddress}}/weatherforecast/
 Accept: application/json

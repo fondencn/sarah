@@ -39,13 +39,10 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:4200/*",
         "https://localhost:4200/*",
-        "http://localhost:4200",
         "https://localhost:4200"
       ],
       "webOrigins": [
-        "http://localhost:4200",
         "https://localhost:4200",
         "+"
       ],
