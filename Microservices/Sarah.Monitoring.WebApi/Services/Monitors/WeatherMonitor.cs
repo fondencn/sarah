@@ -707,9 +707,10 @@ namespace Sarah.Monitoring.Monitors
                             str = str.Replace(m.Value, string.Empty);
                         }
                     }
+                    return str;
                 }
 
-                return str ?? string.Empty;
+                return string.Empty;
             }
         }
 
