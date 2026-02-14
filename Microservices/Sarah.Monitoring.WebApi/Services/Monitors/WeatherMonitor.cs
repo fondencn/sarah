@@ -15,7 +15,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachung für Wetterwarnungen (In-Memory, Datenquelle DWD-Warnwetter)
     /// </summary>
-    public class WeatherMonitor(IConfiguration _config, RabbitMQClient _rabbitMQ, ILogger<WeatherMonitor> _logger) : IWeatherProvider, ICanSelfTest, IMonitor
+    public class WeatherMonitor(IConfiguration _config, RabbitMQClient _rabbitMQ, ILogger<WeatherMonitor> _logger, IHttpClientFactory _httpClientFactory) : IWeatherProvider, ICanSelfTest, IMonitor
     {
         private static readonly Uri _DwdUri = new Uri("https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json");
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(30);
@@ -25,6 +25,8 @@ namespace Sarah.Monitoring.Monitors
         private static readonly TimeSpan _UpdateIntervalWarnings = TimeSpan.FromMinutes(10);
 #endif
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(3);
+        private static readonly Regex _regexWind = new Regex("([0-9]+) km/h", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex _regexParentheses = new Regex(@"\(([^)]*)\)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         internal string WarnLocation { get; set; } = "";
 
         private Task? UpdateTask { get; set; }
@@ -150,7 +152,7 @@ namespace Sarah.Monitoring.Monitors
 
             try
             {
-                var client = new HttpClient();
+                var client = _httpClientFactory.CreateClient();
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
@@ -160,9 +162,12 @@ namespace Sarah.Monitoring.Monitors
                 {
                     response.EnsureSuccessStatusCode();
                     string json = await response.Content.ReadAsStringAsync();
-                    Root forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<Root>(json)!;
-                    this.WeatherForecast = forecast;
-                    _logger.LogInformation("Wettervorhersage für {CityName} aktualisiert ({ForecastCount} Elemente): {Message}", forecast?.city?.name, forecast?.cnt, forecast?.message);
+                    Root? forecast = Newtonsoft.Json.JsonConvert.DeserializeObject<Root>(json);
+                    if (forecast != null)
+                    {
+                        this.WeatherForecast = forecast;
+                        _logger.LogInformation("Wettervorhersage für {CityName} aktualisiert ({ForecastCount} Elemente): {Message}", forecast?.city?.name, forecast?.cnt, forecast?.message);
+                    }
                     //NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
                 }
             }
@@ -176,7 +181,7 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                var client = new HttpClient();
+                var client = _httpClientFactory.CreateClient();
                 var request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Get,
@@ -186,12 +191,15 @@ namespace Sarah.Monitoring.Monitors
                 {
                     response.EnsureSuccessStatusCode();
                     string json = await response.Content.ReadAsStringAsync();
-                    WeatherForecast currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<WeatherForecast>(json)!;
-                    this.CurrentWeather = currentWeather;
-                    _logger.LogInformation("Aktuelles Wetter für {CityName} aktualisiert: {DisplayText}", currentWeather.name, currentWeather.DisplayText);
-                    if (currentWeather.main != null)
+                    WeatherForecast? currentWeather = Newtonsoft.Json.JsonConvert.DeserializeObject<WeatherForecast>(json);
+                    if (currentWeather != null)
                     {
-                        await _rabbitMQ.PublishAsync(new OutDoorTemperatureChangedEventMessage(currentWeather.main.temp));
+                        this.CurrentWeather = currentWeather;
+                        _logger.LogInformation("Aktuelles Wetter für {CityName} aktualisiert: {DisplayText}", currentWeather.name, currentWeather.DisplayText);
+                        if (currentWeather.main != null)
+                        {
+                            await _rabbitMQ.PublishAsync(new OutDoorTemperatureChangedEventMessage(currentWeather.main.temp));
+                        }
                     }
                 }
             }
@@ -210,21 +218,31 @@ namespace Sarah.Monitoring.Monitors
             {
                 _logger.LogDebug(nameof(UpdateWeatherWarnings));
 
-                HttpClient http = new HttpClient();
+                HttpClient http = _httpClientFactory.CreateClient();
                 string resultJson = await http.GetStringAsync(_DwdUri);
+                if (string.IsNullOrEmpty(resultJson))
+                {
+                    _logger.LogWarning("Received empty response from DWD weather warnings API");
+                    return;
+                }
+                
                 resultJson = resultJson.Replace('\n', ' ').Replace('\r', ' ');
                 resultJson = resultJson.Substring("warnWetter.loadWarnings(".Length, resultJson.Length - "warnWetter.loadWarnings(".Length - 2);
-                DwdWarnings deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson)!;
+                DwdWarnings? deserialized = Newtonsoft.Json.JsonConvert.DeserializeObject<DwdWarnings>(resultJson);
 
+                if (deserialized == null)
+                {
+                    _logger.LogWarning("Failed to deserialize DWD weather warnings");
+                    return;
+                }
 
-                IEnumerable<DwdWarning> ludwigsburgWarnings = deserialized.warnings!
+                IEnumerable<DwdWarning> ludwigsburgWarnings = (deserialized.warnings ?? new Dictionary<string, DwdWarning[]>())
                     .Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
                     .SelectMany(item => item.Value)
                     .Concat(
-                        deserialized.vorabInformation
-                        ?.Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
-                        ?.SelectMany(item => item.Value)
-                        ?? new List<DwdWarning>()
+                        (deserialized.vorabInformation ?? new Dictionary<string, DwdWarning[]>())
+                        .Where(item => item.Value.Any(itemVal => itemVal.regionName?.Contains(this.WarnLocation, StringComparison.OrdinalIgnoreCase) == true))
+                        .SelectMany(item => item.Value)
                     )
                     .ToList();
 
@@ -648,8 +666,7 @@ namespace Sarah.Monitoring.Monitors
                     }
 
                     if (!String.IsNullOrEmpty(this.description)) {
-                    Regex regexWind = new Regex("([0-9]+) km/h", RegexOptions.IgnoreCase);
-                    MatchCollection windmatches = regexWind.Matches(this.description!);
+                    MatchCollection windmatches = WeatherMonitor._regexWind.Matches(this.description);
                     /* Bei Windwarnungen die Windgeschwindigkeit es der Description mit anhängen. Nicht alle Details, aber verkürzt nur die km/h */
                     if (windmatches.Any() && !getWarningDetails)
                     {
@@ -664,17 +681,19 @@ namespace Sarah.Monitoring.Monitors
 
                 // m/s, kn und bft raussschmeissen, uns interessieren nur die km/h
                 //"Es treten oberhalb 600 m Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus südwestlicher Richtung auf.
-                Regex regex = new Regex(@"\(([^)]*)\)");
-                MatchCollection matches = regex.Matches(str!);
-                if (matches.Count > 0)
+                if (!string.IsNullOrEmpty(str))
                 {
-                    foreach (Match m in matches)
+                    MatchCollection matches = WeatherMonitor._regexParentheses.Matches(str);
+                    if (matches.Count > 0)
                     {
-                        str = str!.Replace(m.Value, string.Empty);
+                        foreach (Match m in matches)
+                        {
+                            str = str.Replace(m.Value, string.Empty);
+                        }
                     }
                 }
 
-                return str!;
+                return str ?? string.Empty;
             }
         }
 

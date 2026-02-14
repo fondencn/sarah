@@ -8,18 +8,19 @@ namespace Sarah.Rules.Services;
 /// <summary>
 /// Handles weather warning messages and raises speech notifications
 /// </summary>
-public class WeatherWarningHandler : IHostedService
+public class WeatherWarningHandler : IHostedService, IDisposable
 {
     private readonly RabbitMQClient _rabbitMQ;
     private readonly ILogger<WeatherWarningHandler> _logger;
     private readonly IConfiguration _config;
     private CancellationTokenSource? _cancellationTokenSource;
+    private bool _disposed = false;
 
     public WeatherWarningHandler(RabbitMQClient rabbitMQ, ILogger<WeatherWarningHandler> logger, IConfiguration config)
     {
-        _rabbitMQ = rabbitMQ;
-        _logger = logger;
-        _config = config;
+        _rabbitMQ = rabbitMQ ?? throw new ArgumentNullException(nameof(rabbitMQ));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -66,5 +67,24 @@ public class WeatherWarningHandler : IHostedService
         _cancellationTokenSource?.Cancel();
         _logger.LogInformation("WeatherWarningHandler stopped");
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+            }
+            _disposed = true;
+        }
     }
 }

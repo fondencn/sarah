@@ -489,6 +489,6 @@ namespace Sarah.DeviceService.Model
         /// When the device cannot locate due to poor GNSS/ Wi-Fi/Bluetooth signal, the positioning timeout 
         /// packet is uploaded.
         /// </summary>
-        Positioning_Timeout_and_ErrorCode = 0x0D,
+        PositioningTimeoutAndErrorCode = 0x0D,
     }
 }
