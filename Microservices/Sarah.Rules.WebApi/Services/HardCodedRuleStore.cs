@@ -107,48 +107,6 @@ namespace Sarah.Rules
 
         private void AddDeviceRules()
         {
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new ButtonPressedCondition(12),
-            //    Action = new ToggleLampAction(21),
-            //    Name = "RedButton schaltet Lampe 21"
-            //});
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new ButtonPressedCondition(12),
-            //    Action = new ToggleLampAction(30),
-            //    Name = "RedButton schaltet Lampe LED Strip 30"
-            //});
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new CombinedCondition(11, ConditionOperator.OR,
-            //    new ButtonPressedCondition(11, 1)
-            //    /*  new ButtonPressedCondition(11, 2)*/
-            //    /*,new ButtonPressedCondition(11, 3), new ButtonPressedCondition(11, 4),
-            //    new ButtonPressedCondition(11, 5), new ButtonPressedCondition(11, 6) */
-            //    ),
-            //    Action = new ToggleLampAction(30),
-            //    Name = "Wandschalter 11 schaltet LED 30 an/aus"
-            //});
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new ButtonPressedCondition(11,2),
-            //    Action = new ToggleLampAction(21),
-            //    Name = "Wandschalter 11 schaltet Lampe 21"
-            //});
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new ButtonPressedCondition(11, 5),
-            //    Action = new SetLampColorAndBrightnessAction(30, 255, "#FFBC1F"),
-            //    Name = "Wandschalter 11 schaltet Licht LED Strip 30 auf Warmweiss"
-            //});
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new ButtonPressedCondition(11, 6),
-            //    Action = new SetLampColorAndBrightnessAction(30, 255, "#FFFFFF"),
-            //    Name = "Wandschalter 11 schaltet Licht Strip 30 auf Kaltweiss"
-            //});
-
             this._rules.Add(new Rule()
             {
                 Condition = new ButtonPressedCondition(41, 1, _devices),
@@ -221,30 +179,6 @@ namespace Sarah.Rules
                 Name = "Morgens Guten morgen sagen wenn jemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
-
-
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new CombinedCondition(25, ConditionOperator.AND,
-            //        new PredicateCondition(25, id => DateTime.Now.Hour >= 6 && DateTime.Now.Hour < 21),
-            //        new WallPlugPowerIncreasingCondition(25)),
-            //    Action = new SayOnceAction(CreateGreetingStringExpr("Hannah", false), "speaker3", TimeSpan.FromHours(23)),
-            //    Name = "Hannah begrüßen sagen wenn der Fernseher angeht."
-            //});
-
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new CombinedCondition(25, ConditionOperator.AND,
-            //        new PredicateCondition(25, id => DateTime.Now.Hour >= 19),
-            //        new WallPlugPowerDecreasingCondition(25)),
-            //    Action = new CombinedAction(
-            //        //new SetLampColorAndBrightnessAction(24, 0, null),
-            //        new SayOnceAction(CreateGreetingStringExpr("alle Miteinander", false), "speaker3", TimeSpan.FromHours(23))
-            //        ),
-            //    Name = "Gute Nacht sagen wenn abends der Fernseher aus geht."
-            //});
-
-
             this._rules.Add(new Rule()
             {
                 Condition = new PresenceCondition(13, false, _devices),
@@ -264,18 +198,6 @@ namespace Sarah.Rules
                 Action = new SayAction("Die Waschmaschine ist fertig.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Leistung an Node 252 (Waschmaschine) abfällt"
             });
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new CombinedCondition(25, ConditionOperator.OR,
-            //        new WallPlugSwitchOffCondition(25),
-            //        new WallPlugPowerOffCondition(25)
-            //        ),
-            //    Action = new CombinedAction(
-            //        new SendMailAction("c.fonden@die-rooter.de", "Fernseher ist aus", "Die Steckdose des Fernsehers (25) meldet Zustand \"aus\"!"),
-            //        new SayAction("Achtung! Die Steckdose des Fernsehers (Gerät 25) ist aus!", NotificationEngine.BroadcastAllSpeakers)
-            //        ),
-            //    Name = "Warnung wenn Steckdose Fernseher (25) aus ist"
-            //});
             this._rules.Add(new Rule()
             {
                 Condition = new WallPlugPowerOffCondition(20, _devices),
@@ -286,19 +208,6 @@ namespace Sarah.Rules
                     ),
                 Name = "Kaffeemaschine: Sprachausgabe und Node 20 ausschalten, wenn Leistung an Node 20 abfällt"
             });
-
-            //this._rules.Add(new Rule()
-            //{
-            //    Condition = new CombinedCondition(27, ConditionOperator.OR,
-            //        new WallPlugSwitchOffCondition(27),
-            //        new WallPlugPowerOffCondition(27)
-            //        ),
-            //    Action = new CombinedAction(
-            //        new SendMailAction("c.fonden@die-rooter.de", "Fernseher ist aus", "Die Steckdose der Festplatten (27) meldet Zustand \"aus\"!"),
-            //        new SayAction("Achtung! Die Steckdose der Festplatten (Gerät 27) ist aus!", NotificationEngine.BroadcastAllSpeakers)
-            //        ),
-            //    Name = "Warnung wenn Steckdose Festplatten (27) aus ist"
-            //});
 
             this._rules.Add(new Rule()
             {

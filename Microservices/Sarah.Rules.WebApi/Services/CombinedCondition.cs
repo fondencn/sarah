@@ -6,13 +6,16 @@ namespace Sarah.Rules
 {
     public class CombinedCondition : RuleCondition
     {
-        public CombinedCondition(byte targetNodeId) : this(targetNodeId, ConditionOperator.AND, null)
+        public CombinedCondition(byte targetNodeId) : this(targetNodeId, ConditionOperator.AND, null!)
         {
         }
-        public CombinedCondition(byte targetNodeId, ConditionOperator oper, params RuleCondition[] conditions) : base(targetNodeId)
+        public CombinedCondition(byte targetNodeId, ConditionOperator oper, params RuleCondition[]? conditions) : base(targetNodeId)
         {
             this.Operator = oper;
-            this.Conditions.AddRange(conditions);
+            if (conditions != null)
+            {
+                this.Conditions.AddRange(conditions);
+            }
         }
 
         public ConditionOperator Operator { get; set; }

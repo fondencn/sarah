@@ -10,9 +10,10 @@ namespace Sarah.DeviceService.Model.Animations
 {
     [SceneName("Roter Alarm")]
     [SceneName("Alarmstufe rot")]
-    public class RedAlert : Scene
+    public class RedAlert : Scene, IDisposable
     {
         private readonly List<Animation> _runningAnimations = new List<Animation>();
+        private bool _disposed = false;
 
         public RedAlert(IDeviceService deviceService) : base(deviceService)
         {
@@ -33,12 +34,50 @@ namespace Sarah.DeviceService.Model.Animations
 
         protected override void Stop()
         {
+            if (_disposed)
+                return;
+                
             foreach(Animation anim in _runningAnimations)
             {
                 anim.Stop();
                 anim.Dispose();
             }
             _runningAnimations.Clear();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose all animations, continuing even if one fails
+                    foreach(Animation anim in _runningAnimations.ToList())
+                    {
+                        try
+                        {
+                            anim.Stop();
+                            anim.Dispose();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Animation already disposed, continue
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Animation in invalid state, continue
+                        }
+                    }
+                    _runningAnimations.Clear();
+                }
+                _disposed = true;
+            }
         }
     }
 }

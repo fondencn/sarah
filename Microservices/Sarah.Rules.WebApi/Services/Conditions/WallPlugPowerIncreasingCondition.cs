@@ -17,9 +17,9 @@ namespace Sarah.Rules.Conditions
 
         public override bool Evaluate(NetworkEvent evt)
         {
-            IWallPlug wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
+            IWallPlug? wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
 
-            return wallplug.IsOn && (DateTime.Now - wallplug.LastIncreasePower).TotalSeconds < 60;
+            return wallplug != null && wallplug.IsOn && (DateTime.Now - wallplug.LastIncreasePower).TotalSeconds < 60;
         }
     }
     public class WallPlugPowerDecreasingCondition : RuleCondition
@@ -32,9 +32,9 @@ namespace Sarah.Rules.Conditions
 
         public override bool Evaluate(NetworkEvent evt)
         {
-            IWallPlug wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
+            IWallPlug? wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
 
-            return wallplug.IsOn && (DateTime.Now - wallplug.LastDecreasePower).TotalSeconds < 60;
+            return wallplug != null && wallplug.IsOn && (DateTime.Now - wallplug.LastDecreasePower).TotalSeconds < 60;
         }
     }
 }

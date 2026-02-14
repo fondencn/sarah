@@ -22,7 +22,7 @@ namespace Sarah.Rules.Actions
 
         public override async void Execute(NetworkEvent sourceEvent)
         {
-            IWallPlug device = _devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
+            IWallPlug? device = _devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
             if (device != null)
             {
                 await device.SetState(true);

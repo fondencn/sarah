@@ -46,11 +46,11 @@ namespace Sarah.Rules.Conditions
             if (IsOneShot)
             {
                 int reminderAccuracy = 10; //auf 10 sekunden genau
-                return evt.SourceNodeId == this.TargetNodeId && Math.Abs( (this.DateTime - DateTime.Now).TotalSeconds ) < reminderAccuracy;
+                return evt != null && evt.SourceNodeId == this.TargetNodeId && Math.Abs( (this.DateTime - DateTime.Now).TotalSeconds ) < reminderAccuracy;
             }
             else if (Recurrence != null)
             {
-                return evt.SourceNodeId == this.TargetNodeId && Recurrence.Matches(DateTime.Now);
+                return evt != null && evt.SourceNodeId == this.TargetNodeId && Recurrence.Matches(DateTime.Now);
             }
             return false;
         }

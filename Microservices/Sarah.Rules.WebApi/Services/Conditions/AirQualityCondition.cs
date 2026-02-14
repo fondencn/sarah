@@ -21,7 +21,7 @@ namespace Sarah.Rules.Conditions
                 if(evt.SourceNodeId == this.TargetNodeId)
                 {
                     /* Condition löst aus, sobald die Leven schlechter als OK ist */
-                    return airEvent.Level > AirQualitityLevel.OK;
+                    return airEvent != null && airEvent.Level > AirQualitityLevel.OK;
                 } 
                 else
                 {

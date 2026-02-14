@@ -343,7 +343,7 @@ namespace Sarah.DeviceService.Model
                         decoded.Message = $"StartMove: {decoded.IsStartMoveEvent}; EndMove: {decoded.IsEndMoveEvent}; NoMove: {decoded.IsNoMoveEvent}; ButtonPressed: {decoded.IsButtonEvent}; SOS: {decoded.IsButtonSosEvent}";
                     }
                     break;
-                case DataId.Positioning_Timeout_and_ErrorCode:
+                case DataId.PositioningTimeoutAndErrorCode:
                     // Int32-ErrorCode ab Byteposition 1:
                     byte[] errorCodeBytes = new byte[payloadBytes.Length - 1];
                     errorCodeBytes[0] = payloadBytes[1];
@@ -398,7 +398,7 @@ namespace Sarah.DeviceService.Model
                 case 7:
                     return "The Bluetooth + Wi-Fi + GNSS scan timed out and failed to obtain the \r\nlocation.";
                 default:
-                    return "Unbekannter Fehlercode " + errorCode + " beim lesen der Positioning_Timeout_and_ErrorCode Nachricht";
+                    return "Unbekannter Fehlercode " + errorCode + " beim lesen der PositioningTimeoutAndErrorCode Nachricht";
             }
         }
     }
@@ -489,6 +489,6 @@ namespace Sarah.DeviceService.Model
         /// When the device cannot locate due to poor GNSS/ Wi-Fi/Bluetooth signal, the positioning timeout 
         /// packet is uploaded.
         /// </summary>
-        Positioning_Timeout_and_ErrorCode = 0x0D,
+        PositioningTimeoutAndErrorCode = 0x0D,
     }
 }

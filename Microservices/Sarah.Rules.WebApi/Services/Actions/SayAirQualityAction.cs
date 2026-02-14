@@ -23,7 +23,7 @@ namespace Sarah.Rules.Actions
 
         public override void Execute(NetworkEvent sourceEvent)
         {
-            AirQualityChangedEvent airEvent = sourceEvent as AirQualityChangedEvent;
+            AirQualityChangedEvent? airEvent = sourceEvent as AirQualityChangedEvent;
 
             if (airEvent != null && airEvent.SourceNodeId == TargetNodeId)
             {

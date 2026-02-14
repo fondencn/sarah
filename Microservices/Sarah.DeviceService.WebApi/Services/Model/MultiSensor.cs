@@ -17,6 +17,8 @@ using ZWave;
 using ZWave.CommandClasses;
 using ZWave.Devices.Aeon;
 
+#pragma warning disable CS4014 // Intentional fire-and-forget async calls in property setters
+
 namespace Sarah.DeviceService.Model
 {
     /// <summary>
@@ -24,25 +26,25 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class MultiSensor : NetworkElement, ITemperatureSensor, IBatterySensor, IMultiSensor
     {
-        private readonly NetworkElementPublisher _publisher;
-        private SensorData _temperature;
-        private SensorData _luminance;
-        private SensorData _alarm;
-        private SensorData _unknown;
-        private SensorData _presence;
-        private SensorData _battery;
+        private readonly NetworkElementPublisher _publisher = null!;
+        private SensorData _temperature = null!;
+        private SensorData _luminance = null!;
+        private SensorData _alarm = null!;
+        private SensorData _unknown = null!;
+        private SensorData _presence = null!;
+        private SensorData _battery = null!;
         private DateTime? _firstPresenceTick;
-        private SensorData _relativeHumidity;
-        private SensorData _dewPoint;
-        private SensorData _cO2;
-        private SensorData _moisture;
-        private SensorData _volatileOrganicCompounds;
+        private SensorData _relativeHumidity = null!;
+        private SensorData _dewPoint = null!;
+        private SensorData _cO2 = null!;
+        private SensorData _moisture = null!;
+        private SensorData _volatileOrganicCompounds = null!;
 
-        private Task UpdateNoMotionTask { get; set; }
-        private Task UpdateDewpointTask { get; set; }
-        private CancellationTokenSource CancellationTokenSource { get; set; }
+        private Task UpdateNoMotionTask { get; set; } = null!;
+        private Task UpdateDewpointTask { get; set; } = null!;
+        private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
-        private IDeviceService _deviceService;
+        private IDeviceService _deviceService = null!;
 
         /// <summary>
         /// Temperatur
