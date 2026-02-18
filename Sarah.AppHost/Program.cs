@@ -5,18 +5,23 @@ var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
 
 // Add Keycloak IDP with realm import (HTTPS-only mode)
-var keycloak = builder.AddKeycloak("keycloak", 8443)
+#pragma warning disable ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
-    //.WithHttpsEndpoint(port: 443, targetPort: 8443, name: "keycloak-https")
-    //.WithHttpsEndpoint(port: 9000, targetPort: 9000, name: "keycloak-management-https")
-    .WithRealmImport("./keycloak-realm.json")
-    .WithOtlpExporter()
-    .WithDeveloperCertificateTrust(true)
+    .WithEnvironment("KC_HTTP_ENABLED", "true")
+    .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
+    .WithEnvironment("KC_HOSTNAME_STRICT", "false")
+    .WithEnvironment("KC_HOSTNAME", "localhost")
     .WithArgs("--features=preview")
-    .WithArgs("--spi-connections-http-client-default-disable-trust-manager=true");
+    .WithArgs("--spi-connections-http-client-default-disable-trust-manager=true")
+    .WithHttpsDeveloperCertificate()
+    .WithDeveloperCertificateTrust(true)
+    .WithOtlpExporter()
+    .WithRealmImport("./sarah-realm-realm.json");
+#pragma warning restore ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
@@ -99,6 +104,7 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithNpm()
     .WithDeveloperCertificateTrust(true)
+    .WithReference(keycloak)
     .WithRunScript("start");
 
 if (builder.Environment.IsDevelopment())

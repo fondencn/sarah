@@ -40,7 +40,11 @@
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
         "https://localhost:4200/*",
-        "https://localhost:4200"
+        "https://localhost:4200",
+	"https://127.0.0.1:4200/*",
+	"https://127.0.0.1:4200",
+	"https://pi:4200",
+	"https://pi:4200/*"
       ],
       "webOrigins": [
         "https://localhost:4200",

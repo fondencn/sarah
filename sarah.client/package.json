@@ -12,7 +12,7 @@
     "test": "ng test",
     "prestart": "node aspnetcore-https",
     "start:windows": "ng serve --ssl --ssl-cert \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.pem\" --ssl-key \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.key\" --host=127.0.0.1",
-    "start:default": "ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1",
+    "start:default": "node -e \"console.log('[NG-SERVE-START] Services env vars:', Object.keys(process.env).filter(k => k.toLowerCase().startsWith('services__')));\" && ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1",
     "update-openapi": "node update-openapi-clients.js",
     "update-openapi:save": "node update-openapi-clients.js --save-specs",
     "generate-clients": "node update-openapi-clients.js",
