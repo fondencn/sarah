@@ -135,7 +135,7 @@ This will:
 
 - **Aspire Dashboard**: https://localhost:15888
 - **Angular Frontend**: https://localhost:4200
-- **Keycloak Admin Console**: https://localhost:8443
+- **Keycloak Admin Console**: http://localhost:8080
 - **RabbitMQ Management**: https://localhost:15672
 
 ### Default Credentials

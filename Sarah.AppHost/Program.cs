@@ -4,8 +4,7 @@
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
 
-// Add Keycloak IDP with realm import (HTTPS-only mode)
-#pragma warning disable ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+// Add Keycloak IDP with realm import (HTTP-only mode)
 var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
@@ -17,11 +16,8 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithEnvironment("KC_HOSTNAME", "localhost")
     .WithArgs("--features=preview")
     .WithArgs("--spi-connections-http-client-default-disable-trust-manager=true")
-    .WithHttpsDeveloperCertificate()
-    .WithDeveloperCertificateTrust(true)
     .WithOtlpExporter()
     .WithRealmImport("./sarah-realm-realm.json");
-#pragma warning restore ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
@@ -37,51 +33,45 @@ var postgresRooms = postgres.AddDatabase("roomsdb");
 
 // Add microservices with their dependencies
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
-    .WithHttpsEndpoint(port: 5001, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5001, name: "http-api")
     .WithReference(postgresDevices, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
-    .WithDeveloperCertificateTrust(true)
     .WithEnvironment("ZWave__SerialPortName", builder.Configuration["ZWave:SerialPortName"] ?? "/dev/ttyUSB0")
     .WithEnvironment("TheThingsNetwork__ApiKey", builder.Configuration["TheThingsNetwork:ApiKey"] ?? "")
     .WaitFor(rabbitmq);
 
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
-    .WithHttpsEndpoint(port: 5002, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5002, name: "http-api")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(rabbitmq)
     .WithReference(deviceService)
     .WaitFor(rabbitmq);
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
-    .WithHttpsEndpoint(port: 5003, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5003, name: "http-api")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq);
 
 var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
-    .WithHttpsEndpoint(port: 5004, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5004, name: "http-api")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(postgresRooms, "PostgresConnection")
     .WithReference(keycloak);
 
 var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("monitoringservice")
-    .WithHttpsEndpoint(port: 5005, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5005, name: "http-api")
     .WithReference(postgresMonitoring, "PostgresConnection")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
-    .WithHttpsEndpoint(port: 5006, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5006, name: "http-api")
     .WithReference(postgresRules, "PostgresConnection")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(rabbitmq)
     .WithReference(deviceService)
     .WithReference(personsService)
@@ -93,9 +83,8 @@ var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice
     .WaitFor(rabbitmq);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
-    .WithHttpsEndpoint(port: 5008, name: "https-api", env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5008, name: "http-api")
     .WithReference(keycloak)
-    .WithDeveloperCertificateTrust(true)
     .WithReference(rabbitmq)
     .WithReference(deviceService)
     .WaitFor(rabbitmq);
@@ -103,7 +92,6 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithNpm()
-    .WithDeveloperCertificateTrust(true)
     .WithReference(keycloak)
     .WithRunScript("start");
 
