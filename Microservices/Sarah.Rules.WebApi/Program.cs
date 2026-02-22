@@ -3,11 +3,15 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Repositories;
-using Sarah.Rules.Clients;
 using Sarah.Messaging.RabbitMQ;
-using Sarah.Rules.WebApi.Services;
+using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
+using Sarah.API.Interfaces;
+using Sarah.API.Businessobjects;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
@@ -19,12 +23,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
+
 // Register HTTP client for DeviceService communication
-builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice:5001";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
-    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Register HTTP client for PersonService communication
+builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
+{
+    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "http://personsservice";
+    client.BaseAddress = new Uri(personServiceUrl);
 });
 
 // Register RabbitMQ client
@@ -34,11 +45,11 @@ builder.Services.AddSingleton(sp =>
     return new RabbitMQClient(logger, builder.Configuration);
 });
 
-// Register RuleService with triple registration pattern:
-// 1. As singleton RuleService (concrete implementation)
-// 2. As IHostedService (to start background service)
-// 3. As IRuleService (for controller/service injection)
+// register helper application services
+builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
 builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
+
+// Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
@@ -50,6 +61,10 @@ builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.Ge
 
 // Register WeatherWarningHandler as a hosted service
 builder.Services.AddHostedService<Sarah.Rules.Services.WeatherWarningHandler>();
+
+// Register schedule services
+builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
+builder.Services.AddScoped<Sarah.Rules.Services.TemperatureScheduleService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -118,8 +133,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -132,5 +145,11 @@ var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>(
 
 ruleSvc.RegisterRuleStore(hardCoded);
 
+// Initialize AlarmScheduleService
+using (var scope = app.Services.CreateScope())
+{
+    var alarmService = scope.ServiceProvider.GetRequiredService<Sarah.Rules.Services.AlarmScheduleService>();
+    await alarmService.Start();
+}
 
 app.Run();

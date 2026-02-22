@@ -1,32 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces;
-using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Entities;
-using Sarah.Persons.WebApi.Clients;
-
 namespace Sarah.Persons.WebApi.Services
 {
     public class PersonService : IPersonService
     {
         private readonly ILogger<PersonService> _logger;
         private readonly ApplicationDbContext _database;
-        private readonly IDeviceServiceClient _deviceServiceClient;
+        private readonly IDeviceService _deviceServiceClient;
         private readonly IGeoFenceService _geoFenceService;
         private readonly IConfiguration _config;
         private readonly HomeNetworkService _homeNetworkService;
 
-        public PersonService(ILogger<PersonService> logger, ApplicationDbContext database, IDeviceServiceClient deviceServiceClient, IGeoFenceService geoFenceService, IConfiguration config, HomeNetworkService homenet)
+        public PersonService(ILogger<PersonService> logger, ApplicationDbContext database, IDeviceService deviceService, IGeoFenceService geoFenceService, IConfiguration config, HomeNetworkService homenet)
         {
             _logger = logger;
             _database = database;
-            _deviceServiceClient = deviceServiceClient;
+            _deviceServiceClient = deviceService;
             _geoFenceService = geoFenceService;
             _config = config;
             _homeNetworkService = homenet;
@@ -133,13 +125,6 @@ namespace Sarah.Persons.WebApi.Services
 
         private async Task LoadLocationInfos(PersonInfoEntity p)
         {
-            // Load current GPS Tracker position
-            if(p.GPSTrackerID > 0) 
-            {
-                // Call DeviceService via HTTP to get device info
-                var device = await _deviceServiceClient.GetDeviceByIdAsync(p.GPSTrackerID);
-                p.TrackerDeviceName = device?.Name ?? "";
-            }
 
             // Check if person's mobile phone is at home
             if(p.MobilePhoneHostname != null) 
@@ -149,23 +134,24 @@ namespace Sarah.Persons.WebApi.Services
                 {
                     p.IsAtHome = device.IsConnected;
                 }
+            }
 
-                // Check GPS tracker position via DeviceService
-                if (p.GPSTrackerID != 0)
+            // Check GPS tracker position via DeviceService
+            if (p.GPSTrackerID != 0)
+            {
+                var trackerDevice = await _deviceServiceClient.GetGpsTrackerByNodeId(p.GPSTrackerID);
+                if (trackerDevice?.Position != null && trackerDevice.Position.IsValid)
                 {
-                    var trackerDevice = await _deviceServiceClient.GetGpsTrackerByNodeIdAsync(p.GPSTrackerID);
-                    if (trackerDevice?.Position != null && trackerDevice.Position.IsValid)
-                    {
-                        var position = new Sarah.API.BusinessObjects.LocatorPosition(
-                            new Sarah.API.Business.SensorData(trackerDevice.Position.Longitude, "°"),
-                            new Sarah.API.Business.SensorData(trackerDevice.Position.Latitude, "°"));
-                        
-                        var geofence = _geoFenceService.GetCurrent(position);
-                        p.IsAtHome |= geofence == _geoFenceService.GetZuhause();
-                        p.CurrentGeoFence = geofence;
-                    }
+                    var position = new Sarah.API.BusinessObjects.LocatorPosition(
+                        new Sarah.API.Business.SensorData(trackerDevice.Position.Longitude, "°"),
+                        new Sarah.API.Business.SensorData(trackerDevice.Position.Latitude, "°"));
+                    
+                    var geofence = _geoFenceService.GetCurrent(position);
+                    p.IsAtHome |= geofence == _geoFenceService.GetZuhause();
+                    p.CurrentGeoFence = geofence;
                 }
             }
+            
         }
 
         public async Task<bool> IsSomeonePresent()

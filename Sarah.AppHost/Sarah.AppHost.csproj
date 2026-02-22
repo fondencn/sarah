@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.0.0" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.1" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,13 +9,15 @@
     <Nullable>enable</Nullable>
     <DcpDir>$(HOME)/.nuget/packages/aspire.hosting.orchestration.linux-arm64/13.0.0/tools/</DcpDir>
     <AspireDashboardDir>$(HOME)/.nuget/packages/aspire.dashboard.sdk.linux-arm64/13.0.0/tools/</AspireDashboardDir>
+    <UserSecretsId>5edff633-419b-430d-9113-6b68d0605eda</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.0" />
-    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.0.0" />
-    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.1.0-preview.1.25616.3" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.1.1-preview.1.26105.8" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +28,7 @@
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.Dashboard.WebApi\Sarah.Dashboard.WebApi.csproj" />
     <ProjectReference Include="..\sarah.client\sarah.client.esproj" />
   </ItemGroup>
 

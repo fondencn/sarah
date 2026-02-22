@@ -283,7 +283,7 @@ function generateClient(specPath, outputDir, serviceName) {
  * Process a single microservice
  */
 async function processService(service, tempDir, specsDir) {
-    const specUrl = `https://localhost:${service.port}/swagger/v1/swagger.json`;
+    const specUrl = `http://localhost:${service.port}/swagger/v1/swagger.json`;
     const tempSpecPath = path.join(tempDir, `${service.name}.json`);
     const savedSpecPath = specsDir ? path.join(specsDir, `${service.name}.json`) : null;
     
@@ -325,7 +325,7 @@ async function processService(service, tempDir, specsDir) {
     } catch (error) {
         console.error(`  ✗ Failed: ${error.message}`);
         console.error(`  → Make sure ${service.title} is running on port ${service.port}`);
-        console.error(`  → Check: https://localhost:${service.port}/swagger`);
+        console.error(`  → Check: http://localhost:${service.port}/swagger`);
         return { success: false, service: service.name, error: error.message };
     }
 }

@@ -26,12 +26,12 @@ public class AirQualityChangedMessage : NetworkEventMessage
         Property = "AirQuality";
     }
 
-    public AirQualityChangedMessage(byte sourceNodeId, AirQualityLevel level, string message, string roomName) : this()
+    public AirQualityChangedMessage(byte SourceNodeId, AirQualityLevel Level, string Message, string RoomName) : this()
     {
-        SourceNodeId = sourceNodeId;
-        Level = level;
-        Message = message;
-        RoomName = roomName;
+        this.SourceNodeId = SourceNodeId;
+        this.Level = Level;
+        this.Message = Message;
+        this.RoomName = RoomName;
     }
 }
 

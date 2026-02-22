@@ -29,7 +29,7 @@ namespace Sarah.Rules.Conditions
 
             float? val = sensor?.Alarm?.Value;
 
-            return val.HasValue && val.Value > 0;
+            return val != null && val.HasValue && val.Value > 0;
         }
 
     }

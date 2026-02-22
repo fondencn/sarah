@@ -230,8 +230,12 @@ namespace Sarah.Monitoring.Monitors
                     while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
                         List<string> msg = new List<string>();
-                        IMultiSensor sensor = (IMultiSensor)this.Device.GetNetworkItem(_devices);
-
+                        IMultiSensor? sensor = (IMultiSensor?)this.Device.GetNetworkItem(_devices);
+                        if (sensor == null)
+                        {
+                            _logger.LogWarning("Überwachung der Luftqualität für {DeviceName} konnte nicht gestartet werden, da der Sensor nicht mehr erreichbar ist.", this.Device.Name);
+                            return;
+                        }
                         Tuple<AirQualitityLevel, string> co2 = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, "");
                         Tuple<AirQualitityLevel, string> voc = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, ""); 
                         Tuple<AirQualitityLevel, string> humidity = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, ""); 

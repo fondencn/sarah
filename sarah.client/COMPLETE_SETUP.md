@@ -199,7 +199,7 @@ const microservices = [
 export const environment = {
   api: {
     // ... existing services
-    newService: 'https://localhost:5009'
+    newService: 'http://localhost:5009'
   }
 };
 ```

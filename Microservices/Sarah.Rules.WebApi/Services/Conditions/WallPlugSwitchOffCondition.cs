@@ -28,7 +28,7 @@ namespace Sarah.Rules.Conditions
         /// <returns></returns>
         public override bool Evaluate(NetworkEvent evt)
         {
-            IWallPlug wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
+            IWallPlug? wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
             return wallplug?.IsOn == false;
         }
     }

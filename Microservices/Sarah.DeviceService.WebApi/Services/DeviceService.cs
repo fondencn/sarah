@@ -1,4 +1,5 @@
 ﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.Interfaces;
 using Sarah.DeviceService.Model;
 using Sarah.DeviceService.Model.Extensions;
@@ -110,7 +111,7 @@ namespace Sarah.DeviceService
                 {
                     throw new InvalidOperationException("Missing configuration for ZWave serial port");
                 }
-                _logger?.LogInformation("Starting Controller on serial port " + SerialPortName);
+                _logger.LogInformation("Starting Controller on serial port " + SerialPortName);
                 ISerialPort? serialPort;
                 try
                 {
@@ -125,8 +126,8 @@ namespace Sarah.DeviceService
                 {
                     serialPort = null;
                     this.StatusMessage = ex.Message;
-                    _logger?.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
-                    _logger?.LogError(ex, "An error occurred");
+                    _logger.LogError("Error opening serial port at " + SerialPortName + ": " + ex.Message);
+                    _logger.LogError(ex, "An error occurred");
                 }
 
 
@@ -155,12 +156,13 @@ namespace Sarah.DeviceService
                         this.StatusMessage = "OK - ZWave Network with HomeID " + (homeid) + ", ControllerVersion=" + (controllerversion);
                     } catch (Exception ex)
                     {
-                        _logger?.LogError(ex, "An error occurred");
+                        _logger.LogError(ex, "An error occurred");
                         this.StatusMessage = "OK - ZWave Network with unkown HomeID (" + ex.Message + " )";
                     }
                 }
                 else
                 {
+                    _logger.LogWarning("No ZWave Controller available, device service started without ZWave functionality");
                     this.StatusMessage = "WARN - Kein ZWave Controller vorhanden";
                 }
             }
@@ -172,19 +174,16 @@ namespace Sarah.DeviceService
                     this.Controller = null;
                 }
                 this.Nodes = null;
-                _logger?.LogDebug(ex.Message);
+                _logger.LogError("Device service startup failed {Exception}", ex.Message);
                 this.StatusMessage = ex.Message;
+
+                throw; // No catch here, let the exception bubble up - this will cause the service to stop and can be used by hosting environment to trigger a restart (e.g., via Kubernetes liveness probe)
             } 
-            finally
-            {
-                _logger?.LogInformation("DeviceService started.");
-                // _logger?.LogInformation = false;
-            }
         }
 
         private void Controller_Error(object? sender, ZWave.ErrorEventArgs e)
         {
-            _logger?.LogError("Controller_Error: " + e.Error?.Message);
+            _logger.LogError("Controller_Error: " + e.Error?.Message);
         }
 
         /// <summary>
@@ -193,7 +192,7 @@ namespace Sarah.DeviceService
         /// <returns>Task</returns>
         private async Task UpdateNodeList()
         {
-            _logger?.LogDebug("Updating NodeList...");
+            _logger.LogInformation("Updating NodeList...");
             this.StatusMessage = "Verbundene Geräte werden Initialisiert...";
             // get the included nodes
             if (this.Controller != null)
@@ -211,12 +210,12 @@ namespace Sarah.DeviceService
                     NetworkElement? nodeElement = _nodeFactory.CreateByNodeId(n.NodeID);
                     if (nodeElement == null)
                     {
-                        _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
+                        _logger.LogInformation("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
                         networkElements.Add(new UnknownElement(n.NodeID, _publisher, null));
                     }
                     else
                     {
-                        _logger?.LogDebug("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
+                        _logger.LogInformation("Adding Zwave Node " + n.NodeID + " as " + nodeElement.GetType().Name + "...");
                         networkElements.Add(nodeElement);
                         await nodeElement.InitializeAsync(this, _configuration);
                     }
@@ -229,12 +228,12 @@ namespace Sarah.DeviceService
                 NetworkElement? nodeElement = _nodeFactory.CreateByNodeId(nodeId);
                 if (nodeElement == null)
                 {
-                    _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
+                    _logger.LogInformation("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
                     networkElements.Add(new UnknownElement(nodeId, _publisher, null));
                 }
                 else
                 {
-                    _logger?.LogDebug("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
+                    _logger.LogInformation("Adding non-Zwave Node " + nodeId + " as " + nodeElement.GetType().Name + "...");
                     networkElements.Add(nodeElement);
                     await nodeElement.InitializeAsync(this, _configuration);
                 }
@@ -243,13 +242,15 @@ namespace Sarah.DeviceService
             this.NetworkElements.Clear();
             this.NetworkElements.AddRange(networkElements);
 
-            if(!Debugger.IsAttached && (this.NetworkElements.Count != this.Nodes!.Count() + _nodeFactory.GetNonZwaveNodeIds().Count()))
+            if(this.NetworkElements.Count != (this.Nodes?.Count() ?? 0) + _nodeFactory.GetNonZwaveNodeIds().Count())
             {
                 var missing = this.Nodes!.Where(item => !this.NetworkElements.Any(item2 => item.NodeID == item2.NodeID)).ToList();
-                throw new InvalidOperationException("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert (ist=" + this.NetworkElements.Count + ", Soll=" + this.Nodes?.Count() + ")");
+                _logger.LogError("Fehler beim Initialisieren: es wurden nicht alle Knoten initialisiert! Fehlende Knoten: {MissingNodes}",
+                    String.Join(",", missing.Select(item => item.NodeID)));
+                // eigentlich schlecht, kann aber passieren wenn gerade kein ZWave Controller am Gerät steckt. Dann nur Non-ZWave Geräte nutzen...
             }
 
-            _logger?.LogInformation("UpdateNodeList done for " + this.NetworkElements.Count + " nodes.");
+            _logger.LogInformation("UpdateNodeList done for " + this.NetworkElements.Count + " nodes.");
         }
 
         /// <summary>
@@ -342,7 +343,7 @@ namespace Sarah.DeviceService
             Node? n = this.Nodes?.FirstOrDefault(item => item.NodeID == nodeid);
             if (n == null)
             {
-                _logger?.LogWarning("GetNode(" + nodeid + "): nicht gefunden!");
+                _logger.LogWarning("GetNode(" + nodeid + "): nicht gefunden!");
             }
             return n;
         }
@@ -378,7 +379,7 @@ namespace Sarah.DeviceService
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "An error occurred");
+                    _logger.LogError(ex, "An error occurred");
                     return Array.Empty<IAssociationGroup>();
                 }
             }
@@ -388,7 +389,7 @@ namespace Sarah.DeviceService
             Node? n = GetNodeInternal(nodeID);
             if (n == null)
             {
-                _logger?.LogError("SetAssociationGroup: ZWAVE Node " + nodeID + " nicht gefunden");
+                _logger.LogError("SetAssociationGroup: ZWAVE Node " + nodeID + " nicht gefunden");
             }
             else
             {
@@ -417,12 +418,36 @@ namespace Sarah.DeviceService
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "An error occurred");
+                    _logger.LogError(ex, "An error occurred");
                 }
             }
         }
 
         public INode? GetNode(byte nodeid) => new NodeWrapper(GetNodeInternal(nodeid));
+
+        public Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId)
+        {
+            var tracker = this.GPSTrackers.FirstOrDefault(t => t.NodeID == nodeId);
+            if (tracker == null)
+            {
+                return Task.FromResult<TrackerDto?>(null);
+            }
+
+            var dto = new TrackerDto
+            {
+                Id = tracker.NodeID,
+                Name = tracker.ClassDescription, 
+                Position = tracker.Position == null ? null : new PositionDto()
+                {
+                    Longitude = tracker.Position.Longtitude.Value, 
+                    Latitude = tracker.Position.Latitude.Value,
+                    IsValid = tracker.Position.IsValid
+                }, 
+                BatteryLevel = tracker.Battery?.Value  
+            };
+
+            return Task.FromResult<TrackerDto?>(dto);
+        }
 
         public IEnumerable<SelfTestResult> RunSelfTest()
         {
@@ -471,8 +496,8 @@ namespace Sarah.DeviceService
             {
                 byte[] neighborIds = el.GetNeighbors(this).Result;
                 adjacentNodesMatrix.Add(el.NodeID, neighborIds);
-                _logger?.LogDebug(el.NodeID + "\t|\t" + String.Join(" | ", neighborIds));
-                _logger?.LogDebug("--------------------------------------------------------");
+                _logger.LogDebug(el.NodeID + "\t|\t" + String.Join(" | ", neighborIds));
+                _logger.LogDebug("--------------------------------------------------------");
             }
 
             byte controllerId = this.Controllers.First().NodeID;
@@ -514,37 +539,82 @@ namespace Sarah.DeviceService
         /// </summary>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger?.LogInformation("DeviceService background service is starting.");
+            _logger.LogInformation("DeviceService background service is starting...");
             
             try
             {
                 await Start();
-                _logger?.LogInformation("DeviceService background service started successfully.");
+                _logger.LogInformation("DeviceService background service started successfully.");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error starting DeviceService background service.");
+                _logger.LogError(ex, "Error starting DeviceService background service.");
             }
 
             // Keep the service running
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
-        /// <summary>
-        /// Clean up resources when the service stops
-        /// </summary>
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            _logger?.LogInformation("DeviceService background service is stopping.");
-            
-            if (UpdateCancellationTokenSource != null && UpdateTask != null && UpdateTask.Status == TaskStatus.Running)
-            {
-                UpdateCancellationTokenSource.Cancel();
-            }
 
-            Controller?.Close();
-            
-            await base.StopAsync(cancellationToken);
+        // High-level API methods - not implemented in device service (these are for HTTP clients)
+        public Task ToggleLampByRoom(string roomName, string lampName)
+        {
+            _logger.LogWarning("ToggleLampByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task SetLampByRoom(string roomName, string lampName, bool on)
+        {
+            _logger.LogWarning("SetLampByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task SetTemperatureByRoom(string roomName, float temperature)
+        {
+            _logger.LogWarning("SetTemperatureByRoom called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetOpenDoorsResponse> GetOpenDoors()
+        {
+            _logger.LogWarning("GetOpenDoors called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetOpenDoorsResponse());
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetDeseaseInfoResponse> GetDeseaseInfo()
+        {
+            _logger.LogWarning("GetDeseaseInfo called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetDeseaseInfoResponse());
+        }
+
+        public Task SetAlarmSchedule(string text, DateTime alarmTime, string speakerHostname)
+        {
+            _logger.LogWarning("SetAlarmSchedule called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetAlarmSchedulesResponse> GetAlarmSchedules()
+        {
+            _logger.LogWarning("GetAlarmSchedules called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetAlarmSchedulesResponse());
+        }
+
+        public Task<Sarah.API.BusinessObjects.SpeakerRequests.GetPersonLocationResponse> GetPersonLocation(string personName)
+        {
+            _logger.LogWarning("GetPersonLocation called on device service - not implemented");
+            return Task.FromResult(new Sarah.API.BusinessObjects.SpeakerRequests.GetPersonLocationResponse());
+        }
+
+        public Task ActivateScene(string sceneName)
+        {
+            _logger.LogWarning("ActivateScene called on device service - not implemented");
+            return Task.CompletedTask;
+        }
+
+        public Task DeactivateScene(string sceneName)
+        {
+            _logger.LogWarning("DeactivateScene called on device service - not implemented");
+            return Task.CompletedTask;
         }
 
     }

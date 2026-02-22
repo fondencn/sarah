@@ -1,6 +1,6 @@
 {
   "name": "sarah.client",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "ng": "ng",
     "start": "run-script-os",
@@ -10,13 +10,9 @@
     "build:prod": "ng build --prod",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "prestart": "node aspnetcore-https",
-    "start:windows": "ng serve --ssl --ssl-cert \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.pem\" --ssl-key \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.key\" --host=127.0.0.1",
-    "start:default": "ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1",
-    "update-openapi": "node update-openapi-clients.js",
-    "update-openapi:save": "node update-openapi-clients.js --save-specs",
-    "generate-clients": "node update-openapi-clients.js",
-    "update-api": "node update-openapi-clients.js"
+    "start:windows": "ng serve --host=127.0.0.1",
+    "start:default": "node -e \"const vars = Object.fromEntries(Object.entries(process.env).filter(([k]) => k.toLowerCase().startsWith('services__'))); console.log('[NG-SERVE-START] Services env vars:', vars);\" && ng serve --host=127.0.0.1",
+    "update-openapi": "node update-openapi-clients.js"
   },
   "private": true,
   "dependencies": {
@@ -28,6 +24,8 @@
     "@angular/platform-browser": "^18.2.1",
     "@angular/platform-browser-dynamic": "^18.2.1",
     "@angular/router": "^18.2.1",
+    "@fluentui/svg-icons": "^1.1.317",
+    "@fluentui/web-components": "^2.6.1",
     "@types/bingmaps": "^7.0.25",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

@@ -3,11 +3,13 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Repositories;
-using Sarah.Persons.WebApi.Clients;
 using Sarah.Persons.WebApi.Services;
 using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
@@ -24,9 +26,9 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<HomeNetworkService>();
 
 // Register HTTP client for Device Service communication
-builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client =>
+builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice:5001";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -34,7 +36,7 @@ builder.Services.AddHttpClient<IDeviceServiceClient, DeviceServiceClient>(client
 // Register HTTP client for GeoFence Service communication
 builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
 {
-    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice:5003";
+    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice";
     client.BaseAddress = new Uri(geofenceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -105,8 +107,6 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sarah Persons Service API v1");
     });
 }
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

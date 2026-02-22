@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Sarah.Voice.Synthesis
 {
@@ -27,7 +26,7 @@ namespace Sarah.Voice.Synthesis
         private const string CacheFolderName = "SpeechCache";
         internal const string CsvSeparator = "|||";
 
-        private ILogger? _logger;
+        private ILogger _logger;
 
         public void SetLogger(ILogger logger)
         {

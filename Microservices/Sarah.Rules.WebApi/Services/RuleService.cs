@@ -59,28 +59,43 @@ namespace Sarah.Rules
 
                 // Subscribe to specific network event types only
                 await _rabbitMQ.SubscribeAsync<ClickedEventMessage>(
-                    topic: "network.events.clicked",
+                    topic: MessageTopics.NetworkEventsClicked,
                     onMessage: HandleClickedEvent,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<TimerEventMessage>(
-                    topic: "network.events.timer",
+                    topic: MessageTopics.NetworkEventsTimer,
                     onMessage: HandleTimerEvent,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<PersonAvailabilityMessage>(
-                    topic: "person.availability",
+                    topic: MessageTopics.PersonAvailability,
                     onMessage: HandlePersonAvailability,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<PersonGeoFenceMessage>(
-                    topic: "person.geofence",
+                    topic: MessageTopics.PersonGeoFence,
                     onMessage: HandlePersonGeoFence,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<AirQualityChangedMessage>(
-                    topic: "network.events.airquality",
+                    topic: MessageTopics.NetworkEventsAirQuality,
                     onMessage: HandleAirQualityChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
+                    topic: MessageTopics.SchedulesAlarmChanged,
+                    onMessage: HandleAlarmScheduleChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<TemperatureScheduleChangedMessage>(
+                    topic: MessageTopics.SchedulesTemperatureChanged,
+                    onMessage: HandleTemperatureScheduleChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<HolidayStatusChangedMessage>(
+                    topic: MessageTopics.HolidaysStatusChanged,
+                    onMessage: HandleHolidayStatusChanged,
                     cancellationToken: stoppingToken);
 
                 _logger.LogInformation("RuleService subscribed to all event topics");
@@ -188,6 +203,59 @@ namespace Sarah.Rules
             }
         }
 
+        private async Task HandleAlarmScheduleChanged(AlarmScheduleChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received alarm schedule changed event: {AlarmScheduleId}, Change: {ChangeType}", 
+                    message.AlarmScheduleId, message.Change);
+
+                // Reconfigure timer rules to reflect schedule changes
+                this.UpdateTimerRules();
+                _logger.LogInformation("Timer rules reconfigured due to alarm schedule change");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling alarm schedule changed event");
+            }
+        }
+
+        private async Task HandleTemperatureScheduleChanged(TemperatureScheduleChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received temperature schedule changed event: {TemperatureScheduleId}, RoomId: {RoomId}, Change: {ChangeType}", 
+                    message.TemperatureScheduleId, message.RoomId, message.Change);
+
+                // Reconfigure timer rules to reflect schedule changes
+                this.UpdateTimerRules();
+                _logger.LogInformation("Timer rules reconfigured due to temperature schedule change");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling temperature schedule changed event");
+            }
+        }
+
+        private async Task HandleHolidayStatusChanged(HolidayStatusChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received holiday status changed event: {HolidayName}, Change: {ChangeType}", 
+                    message.HolidayName, message.Change);
+
+                // Activate/deactivate alarms based on holiday status
+                // This is a placeholder - actual implementation would require access to AlarmScheduleService
+                _logger.LogInformation("Holiday status changed: {HolidayName} - {ChangeType}", 
+                    message.HolidayName, 
+                    message.Change == HolidayStatusChangedMessage.ChangeType.Started ? "Started" : "Ended");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling holiday status changed event");
+            }
+        }
+
         private object _evaluateRulesLock = new object();
 
         /// <summary>
@@ -197,16 +265,19 @@ namespace Sarah.Rules
         {
             lock (_evaluateRulesLock)
             {
-                foreach (var rule in Rules.Where(r => r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0))
+                foreach (var rule in Rules.Where(r => r.Condition != null && (r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0)))
                 {
                     try
                     {
                         bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
-                        if (!hasOccuredLately && rule.Condition.Evaluate(e))
+                        if (!hasOccuredLately && rule.Condition != null && rule.Condition.Evaluate(e))
                         {
-                            AddLog("Regel " + rule.Name + " aktiviert");
-                            rule.Action.Execute(e);
-                            rule.LastOccurence = DateTime.Now;
+                            if (rule.Name != null && rule.Action != null)
+                            {
+                                AddLog("Regel " + rule.Name + " aktiviert");
+                                rule.Action.Execute(e);
+                                rule.LastOccurence = DateTime.Now;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -263,7 +334,7 @@ namespace Sarah.Rules
             this.Timers.Clear();
             foreach (var rule in Rules)
             {
-                TimerCondition timerCondition = rule.Condition as TimerCondition;
+                TimerCondition? timerCondition = rule.Condition as TimerCondition;
                 if (timerCondition != null)
                 {
                     if (timerCondition.IsOneShot)
@@ -276,9 +347,11 @@ namespace Sarah.Rules
                     }
                     else
                     {
-                        this.Timers.Register(timerCondition.Recurrence);
-                        _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {NextTick} (recurring)", rule.Name, timerCondition.Recurrence.GetNext());
-
+                        if (timerCondition.Recurrence != null)
+                        {
+                            this.Timers.Register(timerCondition.Recurrence);
+                            _logger.LogDebug("RecurrenceTimer for {RuleName} ticks at {NextTick} (recurring)", rule.Name, timerCondition.Recurrence.GetNext());
+                        }
                     }
                 }
             }
@@ -332,7 +405,7 @@ namespace Sarah.Rules
             /// </summary>
             private readonly Timer _RecreateTimersTimer;
 
-            private void RecreateTimer_Tick(object state)
+            private void RecreateTimer_Tick(object? state)
             {
                 foreach (RecurrenceTimer item in this.RegisteredRecurrences.Where(timer => !timer.IsTimerCreated).ToList())
                 {
@@ -378,7 +451,7 @@ namespace Sarah.Rules
                 }
             }
 
-            private async void recurrence_elapsed(object sender, EventArgs e)
+            private async void recurrence_elapsed(object? sender, EventArgs e)
             {
                 var message = new TimerEventMessage(0);
                 await _rabbitMQ.PublishAsync(message);
@@ -399,28 +472,29 @@ namespace Sarah.Rules
             /// </summary>
             private sealed class RecurrenceTimer : IDisposable
             {
-                private TimerRecurrence RecurrenceDefinition { get; }
+                private TimerRecurrence? RecurrenceDefinition { get; }
                 private DateTime? OccuresOnceDate { get; }
 
-                private Timer _timer;
+                private Timer? _timer = null!;
 
                 public bool IsTimerCreated => this._timer != null;
-                private ILogger _logger;
+                private ILogger _logger = null!;
+                public event EventHandler? Tick = null!;
 
                 public RecurrenceTimer(TimerRecurrence recurrenceDefinition, ILogger logger)
                 {
                     this.RecurrenceDefinition = recurrenceDefinition;
                     this.OccuresOnceDate = null;
-                    this.CreateTimer();
                     this._logger = logger;
+                    this.CreateTimer();
                 }
 
                 public RecurrenceTimer(DateTime occurance, ILogger logger)
                 {
                     this.RecurrenceDefinition = null;
                     this.OccuresOnceDate = occurance;
-                    this.CreateTimer();
                     this._logger = logger;
+                    this.CreateTimer();
                 }
 
                 /// <summary>
@@ -446,7 +520,7 @@ namespace Sarah.Rules
                     }
                 }
 
-                private Timer CreateOneShotTimer(DateTime nextOccurence)
+                private Timer? CreateOneShotTimer(DateTime nextOccurence)
                 {
                     TimeSpan dueTime = (nextOccurence - DateTime.Now);
                     if (dueTime.TotalSeconds > 0 && dueTime.TotalMilliseconds < (Int32.MaxValue - 2))
@@ -465,10 +539,10 @@ namespace Sarah.Rules
                     }
                 }
 
-                private void timer_tick_internal(object state)
+                private void timer_tick_internal(object? state)
                 {
                     this.Tick?.Invoke(this, EventArgs.Empty);
-                    this._timer.Dispose();
+                    this._timer?.Dispose();
                     if (this.RecurrenceDefinition != null)
                     {
                         DateTime next = this.RecurrenceDefinition.GetNext();
@@ -487,8 +561,6 @@ namespace Sarah.Rules
                 {
                     this._timer?.Dispose();
                 }
-
-                public event EventHandler Tick;
             }
 
         }

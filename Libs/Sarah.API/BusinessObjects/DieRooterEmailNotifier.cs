@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Sarah.API.Interfaces;
+using System;
 using System.Net;
 using System.Security;
 
@@ -15,12 +16,12 @@ namespace Sarah.API.Businessobjects
 
         public DieRooterEmailNotifier(IConfiguration config)
         {
-            this._smptSender = config["EmailNotifier:SmtpSender"];
-            this._smtpServer = config["EmailNotifier:SmtpServer"];
-            this._smtpPort = int.Parse(config["EmailNotifier:SmtpPort"]);
-            this._smtpUser = config["EmailNotifier:SmtpUsername"];
+            this._smptSender = config["EmailNotifier:SmtpSender"] ?? throw new ArgumentNullException("EmailNotifier:SmtpSender configuration is missing");
+            this._smtpServer = config["EmailNotifier:SmtpServer"] ?? throw new ArgumentNullException("EmailNotifier:SmtpServer configuration is missing");
+            this._smtpPort = int.Parse(config["EmailNotifier:SmtpPort"] ?? throw new ArgumentNullException("EmailNotifier:SmtpPort configuration is missing"));
+            this._smtpUser = config["EmailNotifier:SmtpUsername"] ?? throw new ArgumentNullException("EmailNotifier:SmtpUsername configuration is missing");
             this._smtpPassword = new SecureString();
-            foreach (char c in config["EmailNotifier:SmtpPassword"]!)
+            foreach (char c in config["EmailNotifier:SmtpPassword"] ?? throw new ArgumentNullException("EmailNotifier:SmtpPassword configuration is missing"))
             {
                 this._smtpPassword.AppendChar(c);
             }

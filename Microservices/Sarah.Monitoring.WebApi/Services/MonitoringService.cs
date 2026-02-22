@@ -4,14 +4,15 @@ using Sarah.API.BusinessObjects;
 using Sarah.Monitoring.WebApi.Data;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.Monitoring.Monitors;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, IRuleService _rules, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger) : BackgroundService, IMonitoringService
+public class MonitoringService (IServiceProvider _serviceProvider, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory) : BackgroundService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
-    public IFerienInfoProvider Ferien => this.Monitors.OfType<IFerienInfoProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IFerienInfoProvider monitor available");
+    public FerienMonitor Ferien => this.Monitors.OfType<FerienMonitor>().FirstOrDefault() ?? throw new InvalidOperationException("No IFerienInfoProvider monitor available");
 
     private  IMonitor[] Monitors {get; set;} = Array.Empty<IMonitor>();
 
@@ -23,9 +24,12 @@ public class MonitoringService (ApplicationDbContext _db, IDeviceService _device
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>());
+        using var scope = _serviceProvider.CreateScope();
+        var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>(), _httpClientFactory);
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
-        var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>());
+        var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>(), _rabbitMQ);
         var doors = new Monitors.DoorMonitor(_db, _devices, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>());
         Monitors = new IMonitor[]
         {
@@ -35,7 +39,7 @@ public class MonitoringService (ApplicationDbContext _db, IDeviceService _device
             doors,
             ferien, 
             weather,
-            new Monitors.RuleMonitor(_rules, ferien, _rabbitMQ, _db, _devices, doors, weather, _loggerFactory.CreateLogger<Monitors.RuleMonitor>()),
+            // RuleMonitor has been moved to Sarah.Rules.WebApi as AlarmScheduleService and TemperatureScheduleService
         };
 
         await Task.WhenAll(Monitors.Select(m => m.Start()).ToArray());

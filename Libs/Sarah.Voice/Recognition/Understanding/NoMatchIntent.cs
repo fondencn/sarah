@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Voice.Recognition.Understanding
 {
@@ -21,7 +21,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Random _rng = new Random();
 
 
-        public NoMatchIntent(SpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<NoMatchIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public NoMatchIntent(SpeechService speechService, IDeviceService deviceServiceClient, ILogger<NoMatchIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
         }
 

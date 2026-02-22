@@ -15,8 +15,8 @@ public class StopAudioMessage : AbstractMessage
         Topic = MessageTopics.SpeechAudioStop;
     }
 
-    public StopAudioMessage(string targetSpeaker = "") : this()
+    public StopAudioMessage(string TargetSpeaker = "") : this()
     {
-        TargetSpeaker = targetSpeaker;
+        this.TargetSpeaker = TargetSpeaker;
     }
 }

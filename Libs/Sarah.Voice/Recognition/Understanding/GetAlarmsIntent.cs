@@ -1,6 +1,6 @@
 ﻿using Sarah.API.BusinessObjects.SpeakerRequests;
 using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -19,7 +19,7 @@ namespace Sarah.Voice.Recognition.Understanding
         /// ctor
         /// </summary>
         /// <param name="speechService"></param>
-        public GetAlarmsIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<GetAlarmsIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public GetAlarmsIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<GetAlarmsIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern = @"^.*(Termine|Erinnerungen).*(heute).*$";
             this.PatternMatchExpression= new Regex(matchPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);

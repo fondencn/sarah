@@ -30,11 +30,11 @@ public class PersonGeoFenceMessage : AbstractMessage
         Topic = MessageTopics.PersonGeoFence;
     }
 
-    public PersonGeoFenceMessage(long personId, string personName, string? currentGeoFenceName, string? previousGeoFenceName) : this()
+    public PersonGeoFenceMessage(long PersonId, string PersonName, string? CurrentGeoFenceName, string? PreviousGeoFenceName) : this()
     {
-        PersonId = personId;
-        PersonName = personName;
-        CurrentGeoFenceName = currentGeoFenceName;
-        PreviousGeoFenceName = previousGeoFenceName;
+        this.PersonId = PersonId;
+        this.PersonName = PersonName;
+        this.CurrentGeoFenceName = CurrentGeoFenceName;
+        this.PreviousGeoFenceName = PreviousGeoFenceName;
     }
 }

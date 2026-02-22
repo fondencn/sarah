@@ -29,9 +29,9 @@ namespace Sarah.Rules.Conditions
         /// <returns></returns>
         public override bool Evaluate(NetworkEvent evt)
         {
-            IWallPlug wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
+            IWallPlug? wallplug = this._devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
 
-            return wallplug.IsOn && (DateTime.Now -  wallplug.LastChangeToPowerLow).TotalSeconds < 60;
+            return wallplug != null && wallplug.IsOn && (DateTime.Now -  wallplug.LastChangeToPowerLow).TotalSeconds < 60;
         }
     }
 }

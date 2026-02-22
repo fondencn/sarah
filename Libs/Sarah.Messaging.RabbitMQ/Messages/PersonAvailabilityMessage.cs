@@ -25,10 +25,10 @@ public class PersonAvailabilityMessage : AbstractMessage
         Topic = MessageTopics.PersonAvailability;
     }
 
-    public PersonAvailabilityMessage(long personId, string personName, bool isAvailable) : this()
+    public PersonAvailabilityMessage(long PersonId, string PersonName, bool IsAvailable) : this()
     {
-        PersonId = personId;
-        PersonName = personName;
-        IsAvailable = isAvailable;
+        this.PersonId = PersonId;
+        this.PersonName = PersonName;
+        this.IsAvailable = IsAvailable;
     }
 }

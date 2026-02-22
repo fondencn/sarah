@@ -1,5 +1,5 @@
 ﻿using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -14,7 +14,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex DeactivatePatternMatchExpression { get; }
 
 
-        public SceneIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<SceneIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public SceneIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<SceneIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPatternActivate = "^.*(Aktiviere|Starte) (.+)$";
             string matchPatternDeactivate = "^.*(Deaktiviere|Beende) (.+)$";

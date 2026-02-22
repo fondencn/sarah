@@ -1,0 +1,53 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="deviceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB900;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFD93D;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="600" fill="url(#deviceGradient)"/>
+  
+  <!-- Light bulb icon (Fluent style) -->
+  <g transform="translate(300, 200)">
+    <!-- Bulb -->
+    <ellipse cx="0" cy="-20" rx="60" ry="70" fill="white" filter="url(#shadow)"/>
+    
+    <!-- Light rays -->
+    <g opacity="0.6">
+      <line x1="-80" y1="-40" x2="-95" y2="-50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <line x1="80" y1="-40" x2="95" y2="-50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-70" y1="0" x2="-90" y2="0" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <line x1="70" y1="0" x2="90" y2="0" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-80" y1="40" x2="-95" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <line x1="80" y1="40" x2="95" y2="50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Base -->
+    <rect x="-30" y="40" width="60" height="15" rx="3" fill="#E1DFDD" filter="url(#shadow)"/>
+    <rect x="-25" y="55" width="50" height="10" rx="2" fill="#E1DFDD" filter="url(#shadow)"/>
+    <rect x="-25" y="65" width="50" height="10" rx="2" fill="#E1DFDD" filter="url(#shadow)"/>
+    
+    <!-- Glow effect inside bulb -->
+    <ellipse cx="0" cy="-30" rx="30" ry="35" fill="#FFD93D" opacity="0.7"/>
+  </g>
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="100" r="40" fill="white" opacity="0.2"/>
+  <circle cx="500" cy="500" r="60" fill="white" opacity="0.15"/>
+  <rect x="450" y="100" width="80" height="80" fill="white" opacity="0.1" transform="rotate(45 490 140)"/>
+</svg>

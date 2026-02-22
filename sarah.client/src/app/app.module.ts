@@ -1,5 +1,5 @@
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; // Import HttpClientModule
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
@@ -13,6 +13,7 @@ import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
 import { environment } from '../environments/environment'; // Import environment configuration
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { AuthService } from './services/auth.service';
 import { EditDeviceModalComponent } from './devices/edit-device-modal/edit-device-modal.component'; 
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -55,15 +56,20 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
                 resourceServer: 
                 {
                     sendAccessToken: true,
-                    allowedUrls: ['https://localhost', 'https://pi']
+                    allowedUrls: ['http://localhost', 'http://pi']
                 }
             }), 
         FormsModule,
         HttpClientModule, 
-        ApiModule.forRoot(() => new Configuration({ basePath: environment.apiBaseUrl })), // Use environment configuration
         BrowserAnimationsModule
     ], 
     providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: (authService: AuthService) => () => authService.waitForInitialization(),
+            deps: [AuthService],
+            multi: true
+        },
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true } // Provide the interceptor
     ] })
 export class AppModule { }

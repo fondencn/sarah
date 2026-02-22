@@ -1,8 +1,14 @@
 <div class="container mt-4">
 
     <h2 class="mb-4">Persons List</h2>
-    <button (click)="retrievePersons()" class="btn btn-primary m-4">🔁 Refresh</button>
-    <button (click)="addPerson()" class="btn btn-secondary m-4">➕ Add</button>
+    <button (click)="retrievePersons()" class="btn btn-primary m-4">
+        <img src="assets/icons/refresh.svg" alt="Refresh" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+        Refresh
+    </button>
+    <button (click)="addPerson()" class="btn btn-secondary m-4">
+        <img src="assets/icons/add.svg" alt="Add" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+        Add
+    </button>
 
     <!-- Busy Indicator -->
     <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
@@ -33,12 +39,20 @@
                 <td>{{ person.currentPosition }}</td>
                 <td>{{ person.mobilePhoneHostname }}</td>
                 <td>
-                    <button (click)="editPerson(person)" class="btn btn-secondary btn-sm">✏️</button>
-                    <button (click)="deletePerson(person)" class="btn btn-danger btn-sm">🗑️</button>
+                    <button (click)="editPerson(person)" class="btn btn-secondary btn-sm">
+                        <img src="assets/icons/edit.svg" alt="Edit" style="width: 16px; height: 16px;">
+                    </button>
+                    <button (click)="deletePerson(person)" class="btn btn-danger btn-sm">
+                        <img src="assets/icons/delete.svg" alt="Delete" style="width: 16px; height: 16px;">
+                    </button>
                     <button *ngIf="person.isFavourite != true" (click)="setFavourite(person, true)"
-                        class="btn btn-secondary  btn-sm">⭐</button>
+                        class="btn btn-secondary  btn-sm">
+                        <img src="assets/icons/star.svg" alt="Favorite" style="width: 16px; height: 16px;">
+                    </button>
                     <button *ngIf="person.isFavourite === true" (click)="setFavourite(person, false)"
-                        class="btn btn-secondary  btn-sm">◼️</button>
+                        class="btn btn-secondary  btn-sm">
+                        <img src="assets/icons/unfavorite.svg" alt="Unfavorite" style="width: 16px; height: 16px;">
+                    </button>
                 </td>
             </tr>
         </tbody>

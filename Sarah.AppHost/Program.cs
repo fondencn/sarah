@@ -4,71 +4,115 @@
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
 
-// Add Keycloak IDP with realm import
-var keycloak = builder.AddKeycloak("keycloak", 8443)
+// Add Keycloak IDP with realm import (HTTP-only mode)
+var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
-    .WithBindMount("./keycloak-realm.json", "/opt/keycloak/data/import/realm.json")
-    .WithArgs("start-dev", "--import-realm");
+    .WithEnvironment("KC_HTTP_ENABLED", "true")
+    .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
+    .WithEnvironment("KC_HOSTNAME_STRICT", "false")
+    .WithEnvironment("KC_HOSTNAME", "localhost")
+    .WithArgs("--features=preview")
+    .WithArgs("--spi-connections-http-client-default-disable-trust-manager=true")
+    .WithOtlpExporter()
+    .WithRealmImport("./sarah-realm-realm.json");
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
 var postgres = builder.AddPostgres("postgres");
-
+ 
 var postgresDevices = postgres.AddDatabase("devicesdb");
 var postgresPersons = postgres.AddDatabase("personsdb");
 var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
 var postgresRooms = postgres.AddDatabase("roomsdb");
+var postgresDashboard = postgres.AddDatabase("dashboarddb");
 
 // Add microservices with their dependencies
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
-    .WithHttpsEndpoint(port: 5001, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5001, name: "http-api")
     .WithReference(postgresDevices, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithEnvironment("ZWave__SerialPortName", builder.Configuration["ZWave:SerialPortName"] ?? "/dev/ttyUSB0")
+    .WithEnvironment("TheThingsNetwork__ApiKey", builder.Configuration["TheThingsNetwork:ApiKey"] ?? "")
+    .WaitFor(rabbitmq);
 
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
-    .WithHttpsEndpoint(port: 5002, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5002, name: "http-api")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
 
 var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
-    .WithHttpsEndpoint(port: 5003, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5003, name: "http-api")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
-    .WithHttpsEndpoint(port: 5004, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5004, name: "http-api")
+    .WithReference(keycloak)
     .WithReference(postgresRooms, "PostgresConnection")
     .WithReference(keycloak);
 
 var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("monitoringservice")
-    .WithHttpsEndpoint(port: 5005, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5005, name: "http-api")
     .WithReference(postgresMonitoring, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
-    .WithHttpsEndpoint(port: 5006, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5006, name: "http-api")
     .WithReference(postgresRules, "PostgresConnection")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WithReference(personsService)
+    .WithEnvironment("EmailNotifier__SmtpSender", builder.Configuration["EmailNotifier:SmtpSender"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpServer", builder.Configuration["EmailNotifier:SmtpServer"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPort", builder.Configuration["EmailNotifier:SmtpPort"] ?? "25")
+    .WithEnvironment("EmailNotifier__SmtpUsername", builder.Configuration["EmailNotifier:SmtpUsername"] ?? "")
+    .WithEnvironment("EmailNotifier__SmtpPassword", builder.Configuration["EmailNotifier:SmtpPassword"] ?? "")
+    .WaitFor(rabbitmq);
 
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
-    .WithHttpsEndpoint(port: 5008, env: "ASPNETCORE_HTTPS_PORT")
+    .WithHttpEndpoint(port: 5008, name: "http-api")
     .WithReference(keycloak)
-    .WithReference(rabbitmq);
+    .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WaitFor(rabbitmq);
+
+var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
+    .WithHttpEndpoint(port: 5007, name: "http-api")
+    .WithReference(postgresDashboard, "PostgresConnection")
+    .WithReference(keycloak);
 
 // Add frontend (Angular client)
-var frontend = builder.AddProject<Projects.sarah_client>("frontend")
-    .WithHttpsEndpoint(port: 4200)
-    .WithExternalHttpEndpoints();
+var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
+    .WithNpm()
+    .WithReference(keycloak)
+    .WithRunScript("start");
+
+if (builder.Environment.IsDevelopment())
+{
+    deviceService.WithExplicitStart();
+    personsService.WithExplicitStart();
+    geofencesService.WithExplicitStart();
+    roomService.WithExplicitStart();
+    monitoringService.WithExplicitStart();
+    rulesService.WithExplicitStart();
+    speechServer.WithExplicitStart();
+    dashboardService.WithExplicitStart();
+    frontend.WithExplicitStart();
+}
 
 builder.Build().Run();
 

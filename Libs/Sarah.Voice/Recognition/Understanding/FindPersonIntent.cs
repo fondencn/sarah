@@ -1,6 +1,6 @@
 ﻿using Sarah.API.BusinessObjects.SpeakerRequests;
 using Sarah.API.Interfaces;
-using Services.Sarah.API.Interfaces.Service;
+using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -17,7 +17,7 @@ namespace Sarah.Voice.Recognition.Understanding
         private Regex PatternMatchExpression2 { get; }
         private Regex PatternMatchExpression3 { get; }
 
-        public FindPersonIntent(ISpeechService speechService, IDeviceServiceClient deviceServiceClient, ILogger<FindPersonIntent> logger) : base(speechService, deviceServiceClient, logger)
+        public FindPersonIntent(ISpeechService speechService, IDeviceService deviceServiceClient, ILogger<FindPersonIntent> logger) : base(speechService, deviceServiceClient, logger)
         {
             string matchPattern1 = @"^Wo ist (.+).*$";
             string matchPattern2 = @"^Finde (.+).*$";

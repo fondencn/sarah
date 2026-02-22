@@ -9,7 +9,7 @@ public static class EntityExtensions
     /// <summary>
     /// Extension method to get network item from DeviceInfoEntity
     /// </summary>
-    public static INetworkElement GetNetworkItem(this DeviceInfoEntity device, IDeviceService deviceService)
+    public static INetworkElement? GetNetworkItem(this DeviceInfoEntity device, IDeviceService deviceService)
     {
         return deviceService.GetNetworkItem(device.NodeID);
     }

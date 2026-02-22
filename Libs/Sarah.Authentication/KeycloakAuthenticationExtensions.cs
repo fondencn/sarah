@@ -47,14 +47,14 @@ public static class KeycloakAuthenticationExtensions
             .AddJwtBearer(options =>
             {
                 var authority = configuration["OIDCAuthority"] 
-                    ?? "https://keycloak:8443/realms/sarah-realm";
+                    ?? "http://keycloak:8080/realms/sarah-realm";
                 var audience = configuration["Jwt:Audience"] ?? "account";
                 
                 options.Authority = authority;
                 options.Audience = audience;
                 
-                // Only disable HTTPS metadata check in development
-                options.RequireHttpsMetadata = !environment.IsDevelopment();
+                // HTTP-only setup, so HTTPS metadata check must be disabled
+                options.RequireHttpsMetadata = false;
                 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {

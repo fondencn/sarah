@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using ZWave;
 using ZWave.CommandClasses;
 
+#pragma warning disable CS4014 // Intentional fire-and-forget async calls in property setters
+
 namespace Sarah.DeviceService.Model
 {
     /// <summary>
@@ -19,9 +21,9 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class DoorSensor : NetworkElement, IDoorSensor
     {
-        private readonly NetworkElementPublisher _publisher;
-        private SensorData _battery;
-        private SensorData _Temperature;
+        private readonly NetworkElementPublisher _publisher = null!;
+        private SensorData _battery = null!;
+        private SensorData _Temperature = null!;
         private DoorSensorState _state;
 
 

@@ -9,14 +9,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../Libs/Sarah.API/Sarah.API.csproj" />
-    <ProjectReference Include="../../Libs/Sarah.DeviceServiceClient/Sarah.DeviceServiceClient.csproj" />
+    <ProjectReference Include="../../Libs/Sarah.ServiceClients/Sarah.ServiceClients.csproj" />
     <ProjectReference Include="../../Libs/Sarah.LEDService/Sarah.LEDService.csproj" />
     <ProjectReference Include="../../Libs/Sarah.Voice/Sarah.Voice.csproj" />
-    <ProjectReference Include="..\..\Libs\Sarah.Messaging.RabbitMQ\Sarah.Messaging.RabbitMQ.csproj" />
+    <ProjectReference Include="../../Libs/Sarah.Messaging.RabbitMQ/Sarah.Messaging.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.ServiceDefaults\Sarah.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
