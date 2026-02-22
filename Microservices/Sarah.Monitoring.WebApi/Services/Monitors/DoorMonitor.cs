@@ -354,8 +354,8 @@ namespace Sarah.Monitoring.Monitors
                     }
                     catch (System.Threading.Tasks.TaskCanceledException) { /* Weiter laufen lassen, das bedeutet nur dass die Tür wieder zu ist */ }
 
-                    IDoorSensor sensor = (IDoorSensor)this.Device.GetNetworkItem(_devices);
-                    TimeSpan openTime = sensor.LastOpenDuration.GetValueOrDefault();
+                    IDoorSensor? sensor = (IDoorSensor?)this.Device.GetNetworkItem(_devices);
+                    TimeSpan openTime = sensor?.LastOpenDuration ?? TimeSpan.Zero;
 
 
                     if (!UpdateCancellationTokenSource.Token.IsCancellationRequested)

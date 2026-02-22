@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../environments/environment';
+import { AspireResourceService } from './aspire-resource.service';
 
+// Default auth config - will be updated with discovered endpoint if available
 export const authConfig: AuthConfig = {
   issuer: environment.keycloakIssuer ?? 'http://localhost:8080/realms/sarah-realm',
   redirectUri: window.location.origin,
@@ -14,30 +16,65 @@ export const authConfig: AuthConfig = {
   strictDiscoveryDocumentValidation: false,
   useHttpBasicAuth: false,
   disableAtHashCheck: true,
-  requireHttps: !window.location.origin.startsWith('http://localhost')
+  requireHttps: false
 };
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private initializationPromise: Promise<void>;
 
   constructor(
-    private oauthService: OAuthService) 
-    {
+    private oauthService: OAuthService,
+    private aspireResourceService: AspireResourceService
+  ) {
+    this.initializationPromise = this.initializeAuth();
+  }
+
+  /**
+   * Initialize authentication by discovering Keycloak endpoint (Aspire)
+   * Falls back to hardcoded endpoint if Aspire discovery fails
+   */
+  private async initializeAuth(): Promise<void> {
+    try {
+      console.log('[AUTH] Initializing authentication service...');
+      
+      // Try to discover Keycloak endpoint from Aspire
+      const discoveredIssuer = await this.aspireResourceService.discoverKeycloakIssuer();
+      
+      if (discoveredIssuer) {
+        console.log('[AUTH] ✓ Using Aspire-discovered endpoint:', discoveredIssuer);
+        authConfig.issuer = discoveredIssuer;
+      } else {
+        console.log('[AUTH] Using fallback hardcoded endpoint:', authConfig.issuer);
+      }
+
+      console.log('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
       this.oauthService.configure(authConfig);
       this.oauthService.setStorage(localStorage); // Use localStorage to store tokens
-      this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
-        console.log('Discovery document loaded');
-        if (!this.oauthService.hasValidAccessToken()) {
-          console.log('No valid access token found, you need to log in');
-          this.oauthService.initLoginFlow();
-        }
-      }).catch(err => {
-        console.error('Error loading discovery document', err);
-      });
+      
+      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+      console.log('[AUTH] Discovery document loaded');
+      
+      if (!this.oauthService.hasValidAccessToken()) {
+        console.log('[AUTH] No valid access token found');
+        this.oauthService.initLoginFlow();
+      }
+      
       this.oauthService.setupAutomaticSilentRefresh();
+    } catch (err) {
+      console.error('[AUTH] Error during initialization:', err);
+      throw err;
     }
+  }
+
+  /**
+   * Wait for auth initialization to complete before proceeding
+   */
+  async waitForInitialization(): Promise<void> {
+    await this.initializationPromise;
+  }
 
     
   /**

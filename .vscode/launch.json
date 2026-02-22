@@ -45,7 +45,7 @@
             "type": "chrome",
             "request": "attach",
             "name": "Attach to Chrome",
-            "url": "https://localhost:4200",
+            "url": "http://localhost:4200",
             "webRoot": "${workspaceFolder}/sarah.client"
         }
     ]

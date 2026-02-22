@@ -29,14 +29,14 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
 });
 
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
-    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "https://personsservice";
+    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);
 });
 
@@ -134,8 +134,6 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sarah Rules Service API v1");
     });
 }
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

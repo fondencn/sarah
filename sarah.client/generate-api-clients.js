@@ -101,7 +101,7 @@ async function generateAllClients() {
     
     for (const service of microservices) {
         try {
-            const specUrl = `https://localhost:${service.port}/swagger/v1/swagger.json`;
+            const specUrl = `http://localhost:${service.port}/swagger/v1/swagger.json`;
             const specPath = path.join(tempDir, `${service.name}.json`);
             
             console.log(`\nProcessing ${service.title}...`);

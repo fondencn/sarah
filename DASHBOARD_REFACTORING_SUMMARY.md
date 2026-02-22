@@ -224,7 +224,7 @@ npm test
 2. Test dashboard endpoints:
    ```bash
    # Create dashboard item
-   curl -X POST http://localhost:5007/api/Dashboard \
+  curl -X POST http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -235,16 +235,16 @@ npm test
      }'
    
    # Get all dashboard items
-   curl http://localhost:5007/api/Dashboard \
+  curl http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN"
    
    # Delete dashboard item
-   curl -X DELETE http://localhost:5007/api/Dashboard/1/0 \
+  curl -X DELETE http://localhost:5007/api/Dashboard/1/0 \
      -H "Authorization: Bearer $TOKEN"
    ```
 
 ### UI Testing
-1. Navigate to http://localhost:4200
+1. Navigate to https://localhost:4200
 2. Login with Keycloak credentials
 3. Verify dashboard items load correctly
 4. Check browser console for any errors
@@ -268,7 +268,7 @@ npm test
 3. **Populate Dashboard Items** (example):
    ```bash
    # Add your favorite devices to dashboard
-   curl -X POST http://localhost:5007/api/Dashboard \
+  curl -X POST http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{

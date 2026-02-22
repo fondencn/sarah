@@ -43,7 +43,7 @@ graph TB
     end
     
     subgraph "Identity & Access Management"
-        Keycloak["Keycloak IDP<br/>(Ports 8080/8443)<br/>OAuth2/OIDC"]
+        Keycloak["Keycloak IDP<br/>(Port 8080)<br/>OAuth2/OIDC"]
     end
     
     subgraph "Microservices Layer"
@@ -68,9 +68,9 @@ graph TB
     end
     
     %% Client connections
-    Angular -->|HTTPS/JWT| DeviceService
-    Angular -->|HTTPS/JWT| PersonsService
-    Angular -->|HTTPS/JWT| GeofencesService
+    Angular -->|HTTP/JWT| DeviceService
+    Angular -->|HTTP/JWT| PersonsService
+    Angular -->|HTTP/JWT| GeofencesService
     Angular -->|OAuth2/OIDC Login| Keycloak
     
     %% Microservice authentication
@@ -205,7 +205,7 @@ sequenceDiagram
   - Natural language processing
 
 #### Infrastructure Layer
-- **Keycloak** (Ports 8080 HTTP / 8443 HTTPS): Identity Provider
+- **Keycloak** (Port 8080 HTTP): Identity Provider
   - OAuth2 and OpenID Connect authentication
   - JWT token issuance and validation
   - User realm: `sarah-realm`
@@ -323,7 +323,7 @@ Once started, access:
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Aspire Dashboard** 🎯 | https://localhost:15888 | None (dev mode) |
+| **Aspire Dashboard** 🎯 | http://localhost:15888 | None (dev mode) |
 | **Angular Frontend** | http://localhost:4200 | `sarah-admin` / `TestPassword123!` |
 | **Keycloak Admin Console** | http://localhost:8080 | `admin` / `ChangeMe123!` |
 | **RabbitMQ Management** | http://localhost:15672 | `guest` / `guest` |
@@ -347,7 +347,7 @@ Aspire automatically configures:
 
 - **Keycloak Realm**: `sarah-realm` is created on startup
 - **Keycloak Client**: `sarah-client` configured for Angular SPA
-  - Redirect URIs: `http://localhost:4200/*`, `https://localhost:4200/*`
+  - Redirect URIs: `http://localhost:4200/*`
   - Direct access grants enabled
   - Standard flow (authorization code) enabled
 - **Test User**: Pre-created with credentials from appsettings
@@ -373,7 +373,7 @@ Press `Ctrl+C` in the terminal where Aspire is running. All services will stop g
 - Check Keycloak container logs for "Imported realm" message
 
 **Port conflicts**  
-- Ensure ports 4200, 8080, 8443, 5001-5006, 5672, 15672, 15888 are available
+- Ensure ports 4200, 8080, 5001-5006, 5672, 15672, 15888 are available
 - Stop any other instances of Docker Compose or manual services
 
 ---
@@ -444,8 +444,8 @@ This will start:
    - Client ID: `sarah-client`
    - Click **"Next"** → **"Save"**
 5. Configure client settings:
-   - **Valid redirect URIs**: `http://localhost:4200/*`
-   - **Web origins**: `http://localhost:4200`
+  - **Valid redirect URIs**: `http://localhost:4200/*`
+  - **Web origins**: `http://localhost:4200`
    - **Direct Access Grants**: Enable
    - Click **"Save"**
 
@@ -557,7 +557,7 @@ Each microservice can be configured via `appsettings.json`, environment variable
 }
 ```
 
-> **Note**: `RequireHttpsMetadata` is automatically set based on the environment (`false` in Development, `true` in Production) and is not read from configuration.
+> **Note**: `RequireHttpsMetadata` is disabled for HTTP-only local setup.
 
 **Environment Variables** (Docker Compose):
 ```bash
@@ -616,7 +616,6 @@ ConnectionStrings__PostgresConnection=Host=postgres-devices;Database=devicesdb;U
 | Rules Service | 8080 | 5006 | HTTP |
 | Speech Server | 8080 | 5011 | HTTP |
 | Keycloak | 8080 | 8080 | HTTP |
-| Keycloak (HTTPS) | 8443 | 8443 | HTTPS |
 | RabbitMQ AMQP | 5672 | 5672 | AMQP |
 | RabbitMQ Management | 15672 | 15672 | HTTP |
 | PostgreSQL (devices) | 5432 | 5432 | TCP |
@@ -970,9 +969,9 @@ Sarah's microservices architecture enables horizontal scaling:
 ### Production Deployment Checklist
 
 - [ ] Use strong, unique passwords for all services (`.env`)
-- [ ] Enable HTTPS/TLS for all services
+- [ ] Enable HTTPS/TLS for all services when moving to production
 - [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
-- [ ] Configure `Jwt__RequireHttpsMetadata=true`
+- [ ] Configure `Jwt__RequireHttpsMetadata=true` when HTTPS is enabled
 - [ ] Use managed databases (instead of containers)
 - [ ] Set up backup and disaster recovery
 - [ ] Configure monitoring and alerting

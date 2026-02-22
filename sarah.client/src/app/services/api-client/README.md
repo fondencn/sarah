@@ -190,7 +190,7 @@ First extend your `src/environments/*.ts` files by adding the corresponding base
 ```typescript
 export const environment = {
   production: false,
-  API_BASE_PATH: 'http://127.0.0.1:8080'
+  API_BASE_PATH: 'https://127.0.0.1:8080'
 };
 ```
 

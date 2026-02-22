@@ -4,7 +4,11 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Run `ng serve` for a dev server. Navigate to `https://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+### HTTPS required (Aspire)
+
+The frontend runs HTTPS-only to work with the Aspire OIDC identity provider. The `prestart` script exports the ASP.NET Core dev certificate and `ng serve` uses it automatically.
 
 ## Code scaffolding
 
