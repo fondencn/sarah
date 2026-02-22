@@ -10,6 +10,8 @@ using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -20,10 +22,6 @@ builder.Configuration
     .AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// Enable Aspire service discovery for outbound HTTP calls
-builder.Services.AddServiceDiscovery();
-builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
 
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>

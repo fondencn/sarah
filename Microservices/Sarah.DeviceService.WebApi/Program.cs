@@ -11,6 +11,8 @@ using Sarah.DeviceService.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 
