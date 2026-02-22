@@ -28,6 +28,7 @@
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.Dashboard.WebApi\Sarah.Dashboard.WebApi.csproj" />
     <ProjectReference Include="..\sarah.client\sarah.client.esproj" />
   </ItemGroup>
 
