@@ -33,11 +33,6 @@ var postgresRooms = postgres.AddDatabase("roomsdb");
 var postgresDashboard = postgres.AddDatabase("dashboarddb");
 
 // Add microservices with their dependencies
-var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
-    .WithHttpEndpoint(port: 5007, name: "http-api")
-    .WithReference(postgresDashboard, "PostgresConnection")
-    .WithReference(keycloak);
-
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
     .WithHttpEndpoint(port: 5001, name: "http-api")
     .WithReference(postgresDevices, "PostgresConnection")
@@ -95,6 +90,11 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
     .WithReference(deviceService)
     .WaitFor(rabbitmq);
 
+var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
+    .WithHttpEndpoint(port: 5007, name: "http-api")
+    .WithReference(postgresDashboard, "PostgresConnection")
+    .WithReference(keycloak);
+
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithNpm()
@@ -103,7 +103,6 @@ var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
 
 if (builder.Environment.IsDevelopment())
 {
-    dashboardService.WithExplicitStart();
     deviceService.WithExplicitStart();
     personsService.WithExplicitStart();
     geofencesService.WithExplicitStart();
@@ -111,6 +110,7 @@ if (builder.Environment.IsDevelopment())
     monitoringService.WithExplicitStart();
     rulesService.WithExplicitStart();
     speechServer.WithExplicitStart();
+    dashboardService.WithExplicitStart();
     frontend.WithExplicitStart();
 }
 
