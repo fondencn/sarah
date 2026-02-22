@@ -21,6 +21,7 @@ export const environment = {
   // Microservices API endpoints
   // Each service runs on its own port for development
   api: {
+    dashboardService: 'http://localhost:5007',   // Dashboard items and status
     deviceService: 'http://localhost:5001',      // Smart home devices (lamps, sensors, switches)
     personsService: 'http://localhost:5002',     // Persons and user profiles
     geofencesService: 'http://localhost:5003',   // Geofences and location automation

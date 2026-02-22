@@ -27,6 +27,7 @@ export const environment = {
   // Microservices API endpoints
   // Each service runs on its own port
   api: {
+    dashboardService: 'http://pi:5007',       // Dashboard items and status
     deviceService: 'http://pi:5001',      // Smart home devices (lamps, sensors, switches)
     personsService: 'http://pi:5002',     // Persons and user profiles
     geofencesService: 'http://pi:5003',   // Geofences and location automation
