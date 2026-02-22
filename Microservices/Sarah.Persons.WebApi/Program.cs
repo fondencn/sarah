@@ -9,16 +9,14 @@ using Sarah.ServiceClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
-
-// Enable Aspire service discovery for outbound HTTP calls
-builder.Services.AddServiceDiscovery();
-builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
