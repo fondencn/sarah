@@ -9,6 +9,12 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // Configuration for all microservices
 const microservices = [
     {
+        name: 'dashboard-service',
+        port: 5007,
+        title: 'Dashboard Service',
+        outputDir: './src/app/services/api/dashboard-service'
+    },
+    {
         name: 'device-service',
         port: 5001,
         title: 'Device Service',

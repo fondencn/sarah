@@ -30,8 +30,14 @@ var postgresPersons = postgres.AddDatabase("personsdb");
 var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
 var postgresRooms = postgres.AddDatabase("roomsdb");
+var postgresDashboard = postgres.AddDatabase("dashboarddb");
 
 // Add microservices with their dependencies
+var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
+    .WithHttpEndpoint(port: 5007, name: "http-api")
+    .WithReference(postgresDashboard, "PostgresConnection")
+    .WithReference(keycloak);
+
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
     .WithHttpEndpoint(port: 5001, name: "http-api")
     .WithReference(postgresDevices, "PostgresConnection")
@@ -97,6 +103,7 @@ var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
 
 if (builder.Environment.IsDevelopment())
 {
+    dashboardService.WithExplicitStart();
     deviceService.WithExplicitStart();
     personsService.WithExplicitStart();
     geofencesService.WithExplicitStart();

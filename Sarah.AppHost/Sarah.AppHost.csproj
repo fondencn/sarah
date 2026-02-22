@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microservices\Sarah.Dashboard.WebApi\Sarah.Dashboard.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.DeviceService.WebApi\Sarah.DeviceService.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Persons.WebApi\Sarah.Persons.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Geofences.WebApi\Sarah.Geofences.WebApi.csproj" />

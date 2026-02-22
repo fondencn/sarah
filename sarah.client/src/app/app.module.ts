@@ -7,7 +7,7 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
-import { ApiModule, Configuration } from './services/api-client'; // Import the generated client
+import { ApiModule, BASE_PATH } from './services/api-client'; // Import the generated client
 import { NavComponent } from './nav/nav.component';
 import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
@@ -70,6 +70,7 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
             deps: [AuthService],
             multi: true
         },
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true } // Provide the interceptor
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, // Provide the interceptor
+        { provide: BASE_PATH, useValue: environment.api.dashboardService } // Configure api-client base path for Dashboard WebAPI
     ] })
 export class AppModule { }
