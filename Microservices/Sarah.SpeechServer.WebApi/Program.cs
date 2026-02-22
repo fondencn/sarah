@@ -28,7 +28,7 @@ builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery())
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
 });
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
@@ -48,7 +48,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapOpenApi();
 app.MapControllers();
-app.UseHttpsRedirection();
 app.UseSpeechService(app.Configuration);
 
 app.Run();

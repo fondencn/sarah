@@ -16,13 +16,13 @@ The Sarah smart home system uses a microservice architecture with 7 independent 
 
 | Service | Port | Swagger URL | Description |
 |---------|------|-------------|-------------|
-| Device Service | 5001 | https://localhost:5001/swagger | Manages smart home devices |
-| Persons Service | 5002 | https://localhost:5002/swagger | Manages persons and user profiles |
-| Geofences Service | 5003 | https://localhost:5003/swagger | Manages geofences and location automation |
-| Room Service | 5004 | https://localhost:5004/swagger | Manages rooms and device organization |
-| Monitoring Service | 5005 | https://localhost:5005/swagger | System monitoring and health checks |
-| Rules Service | 5006 | https://localhost:5006/swagger | Automation rules engine |
-| Speech Server | 5008 | https://localhost:5008/swagger | Voice recognition and text-to-speech |
+| Device Service | 5001 | http://localhost:5001/swagger | Manages smart home devices |
+| Persons Service | 5002 | http://localhost:5002/swagger | Manages persons and user profiles |
+| Geofences Service | 5003 | http://localhost:5003/swagger | Manages geofences and location automation |
+| Room Service | 5004 | http://localhost:5004/swagger | Manages rooms and device organization |
+| Monitoring Service | 5005 | http://localhost:5005/swagger | System monitoring and health checks |
+| Rules Service | 5006 | http://localhost:5006/swagger | Automation rules engine |
+| Speech Server | 5008 | http://localhost:5008/swagger | Voice recognition and text-to-speech |
 
 ## Usage
 
@@ -238,12 +238,12 @@ All microservice endpoints are configured in environment files:
 // In environment.ts
 export const environment = {
   api: {
-    deviceService: 'https://localhost:5001',
-    personsService: 'https://localhost:5002',
-    geofencesService: 'https://localhost:5003',
-    eventProcessingService: 'https://localhost:5004',
-    monitoringService: 'https://localhost:5005',
-    rulesService: 'https://localhost:5006'
+    deviceService: 'http://localhost:5001',
+    personsService: 'http://localhost:5002',
+    geofencesService: 'http://localhost:5003',
+    eventProcessingService: 'http://localhost:5004',
+    monitoringService: 'http://localhost:5005',
+    rulesService: 'http://localhost:5006'
   }
 };
 ```

@@ -18,7 +18,7 @@ This refactoring implements a new microservice architecture for dashboard functi
 - **Authentication**: JWT with Keycloak
 - **Database**: Dedicated PostgreSQL instance (port 5438)
 - **API Port**: 5007
-- **Swagger**: Available at https://localhost:5007/swagger
+- **Swagger**: Available at http://localhost:5007/swagger
 
 #### Endpoints
 ```
@@ -224,7 +224,7 @@ npm test
 2. Test dashboard endpoints:
    ```bash
    # Create dashboard item
-  curl -X POST https://localhost:5007/api/Dashboard \
+  curl -X POST http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -235,11 +235,11 @@ npm test
      }'
    
    # Get all dashboard items
-  curl https://localhost:5007/api/Dashboard \
+  curl http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN"
    
    # Delete dashboard item
-  curl -X DELETE https://localhost:5007/api/Dashboard/1/0 \
+  curl -X DELETE http://localhost:5007/api/Dashboard/1/0 \
      -H "Authorization: Bearer $TOKEN"
    ```
 
@@ -268,7 +268,7 @@ npm test
 3. **Populate Dashboard Items** (example):
    ```bash
    # Add your favorite devices to dashboard
-  curl -X POST https://localhost:5007/api/Dashboard \
+  curl -X POST http://localhost:5007/api/Dashboard \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{

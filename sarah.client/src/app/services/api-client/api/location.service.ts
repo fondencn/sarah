@@ -34,7 +34,7 @@ import { Configuration }                                     from '../configurat
 })
 export class LocationService {
 
-    protected basePath = 'https://localhost';
+    protected basePath = 'http://localhost';
     public defaultHeaders = new HttpHeaders();
     public configuration = new Configuration();
     public encoder: HttpParameterCodec;

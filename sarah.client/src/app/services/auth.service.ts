@@ -5,7 +5,7 @@ import { AspireResourceService } from './aspire-resource.service';
 
 // Default auth config - will be updated with discovered endpoint if available
 export const authConfig: AuthConfig = {
-  issuer: environment.keycloakIssuer ?? 'https://localhost:25443/realms/sarah-realm',
+  issuer: environment.keycloakIssuer ?? 'http://localhost:8080/realms/sarah-realm',
   redirectUri: window.location.origin,
   postLogoutRedirectUri: window.location.origin,
   clientId: environment.keycloakClientId ?? 'sarah-client',
@@ -16,7 +16,7 @@ export const authConfig: AuthConfig = {
   strictDiscoveryDocumentValidation: false,
   useHttpBasicAuth: false,
   disableAtHashCheck: true,
-  requireHttps: true
+  requireHttps: false
 };
 
 @Injectable({

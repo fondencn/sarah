@@ -43,7 +43,7 @@ graph TB
     end
     
     subgraph "Identity & Access Management"
-        Keycloak["Keycloak IDP<br/>(Ports 8080/8443)<br/>OAuth2/OIDC"]
+        Keycloak["Keycloak IDP<br/>(Port 8080)<br/>OAuth2/OIDC"]
     end
     
     subgraph "Microservices Layer"
@@ -68,9 +68,9 @@ graph TB
     end
     
     %% Client connections
-    Angular -->|HTTPS/JWT| DeviceService
-    Angular -->|HTTPS/JWT| PersonsService
-    Angular -->|HTTPS/JWT| GeofencesService
+    Angular -->|HTTP/JWT| DeviceService
+    Angular -->|HTTP/JWT| PersonsService
+    Angular -->|HTTP/JWT| GeofencesService
     Angular -->|OAuth2/OIDC Login| Keycloak
     
     %% Microservice authentication
@@ -205,7 +205,7 @@ sequenceDiagram
   - Natural language processing
 
 #### Infrastructure Layer
-- **Keycloak** (Ports 8080 HTTP / 8443 HTTPS): Identity Provider
+- **Keycloak** (Port 8080 HTTP): Identity Provider
   - OAuth2 and OpenID Connect authentication
   - JWT token issuance and validation
   - User realm: `sarah-realm`
@@ -323,16 +323,16 @@ Once started, access:
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Aspire Dashboard** 🎯 | https://localhost:15888 | None (dev mode) |
-| **Angular Frontend** | https://localhost:4200 | `sarah-admin` / `TestPassword123!` |
-| **Keycloak Admin Console** | https://localhost:8443 | `admin` / `ChangeMe123!` |
-| **RabbitMQ Management** | https://localhost:15672 | `guest` / `guest` |
+| **Aspire Dashboard** 🎯 | http://localhost:15888 | None (dev mode) |
+| **Angular Frontend** | http://localhost:4200 | `sarah-admin` / `TestPassword123!` |
+| **Keycloak Admin Console** | http://localhost:8080 | `admin` / `ChangeMe123!` |
+| **RabbitMQ Management** | http://localhost:15672 | `guest` / `guest` |
 
 > 💡 **Tip**: The Aspire Dashboard shows all running services, their logs, traces, and metrics in real-time!
 
 #### Step 5: Login to Sarah
 
-1. Navigate to https://localhost:4200
+1. Navigate to http://localhost:4200
 2. You'll be redirected to Keycloak login
 3. Login with:
    - **Username**: `sarah-admin`
@@ -347,7 +347,7 @@ Aspire automatically configures:
 
 - **Keycloak Realm**: `sarah-realm` is created on startup
 - **Keycloak Client**: `sarah-client` configured for Angular SPA
-  - Redirect URIs: `https://localhost:4200/*`
+  - Redirect URIs: `http://localhost:4200/*`
   - Direct access grants enabled
   - Standard flow (authorization code) enabled
 - **Test User**: Pre-created with credentials from appsettings
@@ -373,7 +373,7 @@ Press `Ctrl+C` in the terminal where Aspire is running. All services will stop g
 - Check Keycloak container logs for "Imported realm" message
 
 **Port conflicts**  
-- Ensure ports 4200, 8080, 8443, 5001-5006, 5672, 15672, 15888 are available
+- Ensure ports 4200, 8080, 5001-5006, 5672, 15672, 15888 are available
 - Stop any other instances of Docker Compose or manual services
 
 ---
@@ -433,7 +433,7 @@ This will start:
 
 #### Step 4: Configure Keycloak (First Time Only)
 
-1. Open Keycloak Admin Console: https://localhost:8443
+1. Open Keycloak Admin Console: http://localhost:8080
 2. Login with credentials from your `.env` file (default: `admin`/`admin`)
 3. Create a new realm:
    - Click **"Create Realm"**
@@ -444,8 +444,8 @@ This will start:
    - Client ID: `sarah-client`
    - Click **"Next"** → **"Save"**
 5. Configure client settings:
-  - **Valid redirect URIs**: `https://localhost:4200/*`
-  - **Web origins**: `https://localhost:4200`
+  - **Valid redirect URIs**: `http://localhost:4200/*`
+  - **Web origins**: `http://localhost:4200`
    - **Direct Access Grants**: Enable
    - Click **"Save"**
 
@@ -455,15 +455,15 @@ Once all services are running, access them at:
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Frontend (Angular)** | https://localhost:4200 | (via Keycloak) |
-| **Device Service** | https://localhost:5001 | JWT required |
-| **Persons Service** | https://localhost:5002 | JWT required |
-| **Geofences Service** | https://localhost:5003 | JWT required |
-| **Monitoring Service** | https://localhost:5005 | JWT required |
-| **Rules Service** | https://localhost:5006 | JWT required |
-| **Speech Server** | https://localhost:5011 | JWT required |
-| **Keycloak Admin** | https://localhost:8443 | From `.env` |
-| **RabbitMQ Management** | https://localhost:15672 | From `.env` |
+| **Frontend (Angular)** | http://localhost:4200 | (via Keycloak) |
+| **Device Service** | http://localhost:5001 | JWT required |
+| **Persons Service** | http://localhost:5002 | JWT required |
+| **Geofences Service** | http://localhost:5003 | JWT required |
+| **Monitoring Service** | http://localhost:5005 | JWT required |
+| **Rules Service** | http://localhost:5006 | JWT required |
+| **Speech Server** | http://localhost:5011 | JWT required |
+| **Keycloak Admin** | http://localhost:8080 | From `.env` |
+| **RabbitMQ Management** | http://localhost:15672 | From `.env` |
 | **PostgreSQL** | localhost:5432-5437 | From `.env` |
 
 #### Step 6: Stop Services
@@ -536,7 +536,7 @@ npm start
 
 When running with `dotnet run`, services use ports from `launchSettings.json`. To match Docker Compose ports, use:
 ```bash
-dotnet run --urls "https://localhost:5001"
+dotnet run --urls "http://localhost:5001"
 ```
 
 ## Configuration
@@ -549,20 +549,20 @@ Each microservice can be configured via `appsettings.json`, environment variable
 
 ```json
 {
-  "OIDCAuthority": "https://keycloak:8443/realms/sarah-realm",
+  "OIDCAuthority": "http://keycloak:8080/realms/sarah-realm",
   "Jwt": {
-    "Issuer": "https://keycloak:8443/realms/sarah-realm",
+    "Issuer": "http://keycloak:8080/realms/sarah-realm",
     "Audience": "account"
   }
 }
 ```
 
-> **Note**: `RequireHttpsMetadata` is automatically set based on the environment (`false` in Development, `true` in Production) and is not read from configuration.
+> **Note**: `RequireHttpsMetadata` is disabled for HTTP-only local setup.
 
 **Environment Variables** (Docker Compose):
 ```bash
-OIDCAuthority=https://keycloak:8443/realms/sarah-realm
-Jwt__Issuer=https://keycloak:8443/realms/sarah-realm
+OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+Jwt__Issuer=http://keycloak:8080/realms/sarah-realm
 Jwt__Audience=account
 ```
 
@@ -608,14 +608,14 @@ ConnectionStrings__PostgresConnection=Host=postgres-devices;Database=devicesdb;U
 
 | Service | Internal Port | External Port | Protocol |
 |---------|--------------|---------------|----------|
-| Angular Frontend | 4200 | 4200 | HTTPS |
-| Device Service | 8080 | 5001 | HTTPS |
-| Persons Service | 8080 | 5002 | HTTPS |
-| Geofences Service | 8080 | 5003 | HTTPS |
-| Monitoring Service | 8080 | 5005 | HTTPS |
-| Rules Service | 8080 | 5006 | HTTPS |
-| Speech Server | 8080 | 5011 | HTTPS |
-| Keycloak | 8443 | 8443 | HTTPS |
+| Angular Frontend | 4200 | 4200 | HTTP |
+| Device Service | 8080 | 5001 | HTTP |
+| Persons Service | 8080 | 5002 | HTTP |
+| Geofences Service | 8080 | 5003 | HTTP |
+| Monitoring Service | 8080 | 5005 | HTTP |
+| Rules Service | 8080 | 5006 | HTTP |
+| Speech Server | 8080 | 5011 | HTTP |
+| Keycloak | 8080 | 8080 | HTTP |
 | RabbitMQ AMQP | 5672 | 5672 | AMQP |
 | RabbitMQ Management | 15672 | 15672 | HTTP |
 | PostgreSQL (devices) | 5432 | 5432 | TCP |
@@ -747,13 +747,13 @@ dotnet ef migrations script
 
 Each service exposes OpenAPI/Swagger documentation:
 
-- Device Service: https://localhost:5001/swagger
-- Persons Service: https://localhost:5002/swagger
-- Geofences Service: https://localhost:5003/swagger
-- Room Service: https://localhost:5004/swagger
-- Monitoring Service: https://localhost:5005/swagger
-- Rules Service: https://localhost:5006/swagger
-- Speech Server: https://localhost:5008/swagger
+- Device Service: http://localhost:5001/swagger
+- Persons Service: http://localhost:5002/swagger
+- Geofences Service: http://localhost:5003/swagger
+- Room Service: http://localhost:5004/swagger
+- Monitoring Service: http://localhost:5005/swagger
+- Rules Service: http://localhost:5006/swagger
+- Speech Server: http://localhost:5008/swagger
 
 ### Code Style and Linting
 
@@ -778,7 +778,7 @@ npm run lint -- --fix
 
 **Add a New Device**:
 ```bash
-curl -X POST https://localhost:5001/api/devices \
+curl -X POST http://localhost:5001/api/devices \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -790,7 +790,7 @@ curl -X POST https://localhost:5001/api/devices \
 
 **Control a Device**:
 ```bash
-curl -X PUT https://localhost:5001/api/devices/{id}/state \
+curl -X PUT http://localhost:5001/api/devices/{id}/state \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "state": "on", "brightness": 80 }'
@@ -800,7 +800,7 @@ curl -X PUT https://localhost:5001/api/devices/{id}/state \
 
 **Create an Automation Rule**:
 ```bash
-curl -X POST https://localhost:5006/api/rules \
+curl -X POST http://localhost:5006/api/rules \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -817,7 +817,7 @@ curl -X POST https://localhost:5006/api/rules \
 
 **Create a Geofence**:
 ```bash
-curl -X POST https://localhost:5003/api/geofences \
+curl -X POST http://localhost:5003/api/geofences \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -840,18 +840,18 @@ Each service exposes a status endpoint for health monitoring:
 
 ```bash
 # Device service status
-curl https://localhost:5001/api/devices/status
+curl http://localhost:5001/api/devices/status
 
 # Geofences service status
-curl https://localhost:5003/api/geofences/status
+curl http://localhost:5003/api/geofences/status
 
 # Rules service status
-curl https://localhost:5006/api/rules/status
+curl http://localhost:5006/api/rules/status
 ```
 
 ### RabbitMQ Management
 
-Access the RabbitMQ management console at https://localhost:15672 to:
+Access the RabbitMQ management console at http://localhost:15672 to:
 - Monitor message queues
 - View exchange configurations
 - Track message rates
@@ -969,9 +969,9 @@ Sarah's microservices architecture enables horizontal scaling:
 ### Production Deployment Checklist
 
 - [ ] Use strong, unique passwords for all services (`.env`)
-- [ ] Enable HTTPS/TLS for all services
+- [ ] Enable HTTPS/TLS for all services when moving to production
 - [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
-- [ ] Configure `Jwt__RequireHttpsMetadata=true`
+- [ ] Configure `Jwt__RequireHttpsMetadata=true` when HTTPS is enabled
 - [ ] Use managed databases (instead of containers)
 - [ ] Set up backup and disaster recovery
 - [ ] Configure monitoring and alerting
@@ -996,7 +996,7 @@ services:
           cpus: '0.5'
           memory: 256M
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost:8443/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

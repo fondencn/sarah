@@ -4,7 +4,7 @@
 
 Aspire assigns **dynamic TCP ports** to services each time it starts. With Keycloak, this means:
 - Aspire might assign port 35929 on run 1, then 37305 on run 2
-- The frontend can't use a hardcoded OIDC issuer URL like `https://localhost:8443/realms/sarah-realm` if the port changes
+- The frontend can't use a hardcoded OIDC issuer URL like `http://localhost:8080/realms/sarah-realm` if the port changes
 - Environment variables from Aspire weren't being passed to the npm process
 
 ## Solution: Aspire Resource Service Discovery
@@ -27,7 +27,7 @@ Instead of hardcoding ports, the frontend now **discovers** Keycloak's actual en
    - Builds the OIDC issuer URL: `https://localhost:{dynamicPort}/realms/sarah-realm`
 
 4. **Fallback**:
-   - If Aspire API is unavailable (offline dev, prod, etc.), falls back to hardcoded `https://localhost:25443/realms/sarah-realm`
+   - If Aspire API is unavailable (offline dev, prod, etc.), falls back to hardcoded `http://localhost:8080/realms/sarah-realm`
 
 ## Files Created/Modified
 
@@ -54,7 +54,7 @@ Just run Aspire normally (F5 in VS Code):
 ### In Development Without Aspire
 
 If Aspire API is unavailable:
-- Keycloak must be running on the fallback port: `https://localhost:25443`
+- Keycloak must be running on the fallback port: `http://localhost:8080`
 - Or you can manually set `environment.keycloakIssuer` to the correct URL
 
 ### In Production

@@ -64,7 +64,7 @@ or the directory doesn't exist → **Aspire is NOT passing env vars to npm proce
 ## Recommended Solutions
 
 ### Option A: Verify Current Configuration Works (Recommended First Step)
-Even if env vars aren't injecting dynamically, the hardcoded fallback (`https://localhost:8443/realms/sarah-realm`) might still work if:
+Even if env vars aren't injecting dynamically, the hardcoded fallback (`http://localhost:8080/realms/sarah-realm`) might still work if:
 - You use Docker compose or configure Keycloak to be on that port
 - Or there's a proxy/reverse proxy routing requests correctly
 
@@ -79,13 +79,13 @@ var keycloak = builder.AddKeycloak("keycloak")
     .WithHttpsEndpoint(port: 8443, targetPort: 8443, name: "https"); // Fixed port
 ```
 
-Then the hardcoded default `https://localhost:8443/realms/sarah-realm` will always work.
+Then the hardcoded default `http://localhost:8080/realms/sarah-realm` will always work.
 
 ### Option C: Use Hostname Resolution Instead of Port
 If running in Docker/containers, use the service hostname:
 ```typescript
 keycloakIssuer: 'KEYCLOAK_ISSUER_PLACEHOLDER'
-// Injects: https://keycloak:8443/realms/sarah-realm  (uses hostname not port)
+// Injects: http://keycloak:8080/realms/sarah-realm  (uses hostname not port)
 ```
 
 This works in containerized environments because `keycloak` is resolvable within the docker network.

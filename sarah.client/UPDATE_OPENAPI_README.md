@@ -30,13 +30,13 @@ Before running the update script:
 
 1. **Start all microservices** or at least the ones you want to update
 2. Ensure services are accessible at their configured ports:
-   - Device Service: https://localhost:5001
-   - Persons Service: https://localhost:5002
-   - Geofences Service: https://localhost:5003
-   - Room Service: https://localhost:5004
-   - Monitoring Service: https://localhost:5005
-   - Rules Service: https://localhost:5006
-   - Speech Server: https://localhost:5008
+   - Device Service: http://localhost:5001
+   - Persons Service: http://localhost:5002
+   - Geofences Service: http://localhost:5003
+   - Room Service: http://localhost:5004
+   - Monitoring Service: http://localhost:5005
+   - Rules Service: http://localhost:5006
+   - Speech Server: http://localhost:5008
 
 ## Common Use Cases
 

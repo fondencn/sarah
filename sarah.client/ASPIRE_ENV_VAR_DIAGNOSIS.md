@@ -6,7 +6,7 @@ When `npm start` runs, the Node process is **NOT receiving the `services__keyclo
 
 ### Evidence
 - Running `node replace-env-vars.js` manually shows: `[DEBUG] No Keycloak-related env vars found`
-- The script correctly falls back to hardcoded default: `https://localhost:8443/realms/sarah-realm`
+- The script correctly falls back to hardcoded default: `http://localhost:8080/realms/sarah-realm`
 - But Aspire assigns **dynamic ports** (e.g., `:37305`, `:38099`, `:35929`), which the frontend can't use with a fixed hardcoded value
 
 ## Root Cause
@@ -61,7 +61,7 @@ Modify AppHost to explicitly pass the keycloak endpoint to npm process using a c
 ### Option 2: Hardcode Keycloak Hostname, Use Service Discovery
 Since Keycloak runs as a named service in Aspire, it might be resolvable by hostname:
 - Docker network name: likely `sarah` or similar
-- Try: `https://keycloak:8443/realms/sarah-realm` when running in containers
+- Try: `http://keycloak:8080/realms/sarah-realm` when running in containers
 
 ### Option 3: Use .env File Generation
 Have a pre-startup script generate a `.env` file based on Aspire's resource endpoints (if accessible).

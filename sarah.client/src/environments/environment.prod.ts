@@ -4,9 +4,9 @@
  * This file defines the configuration for the Angular frontend in production mode.
  * 
  * Production Configuration:
- * - All services use HTTPS with proper SSL certificates
+ * - All services use HTTP
  * - Services are accessed via 'pi' hostname (production server)
- * - Keycloak runs on port 8443 (HTTPS)
+ * - Keycloak runs on port 8080 (HTTP)
  * 
  * Microservices API Endpoints:
  * All Sarah microservices are configured here with their base URLs.
@@ -18,21 +18,21 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://pi:7165',
+  apiBaseUrl: 'http://pi:7165',
   bingMapKey: 'FbEWoX5JtiPh8IKcxsSs~2vJ-df0A-rg8A6hMnc4kMA~Att-lde2tVaKCvxFdfh_hhRDuAQ3swla2wldMro8jGMKU9UisIASiabnUfaBs1JC',
-  // Keycloak configuration - fixed to port 8443 (standard HTTPS port for production on 'pi' hostname)
-  keycloakIssuer: 'https://pi:8443/realms/sarah-realm',
+  // Keycloak configuration - fixed to port 8080 (HTTP port for production on 'pi' hostname)
+  keycloakIssuer: 'http://pi:8080/realms/sarah-realm',
   keycloakClientId: 'sarah-client',
   keycloakRealm: 'sarah-realm',
   // Microservices API endpoints
   // Each service runs on its own port
   api: {
-    deviceService: 'https://pi:5001',      // Smart home devices (lamps, sensors, switches)
-    personsService: 'https://pi:5002',     // Persons and user profiles
-    geofencesService: 'https://pi:5003',   // Geofences and location automation
-    roomService: 'https://pi:5004',        // Rooms and device organization
-    monitoringService: 'https://pi:5005',  // System monitoring and health checks
-    rulesService: 'https://pi:5006',       // Automation rules engine
-    speechServer: 'https://pi:5008'        // Voice recognition and text-to-speech
+    deviceService: 'http://pi:5001',      // Smart home devices (lamps, sensors, switches)
+    personsService: 'http://pi:5002',     // Persons and user profiles
+    geofencesService: 'http://pi:5003',   // Geofences and location automation
+    roomService: 'http://pi:5004',        // Rooms and device organization
+    monitoringService: 'http://pi:5005',  // System monitoring and health checks
+    rulesService: 'http://pi:5006',       // Automation rules engine
+    speechServer: 'http://pi:5008'        // Voice recognition and text-to-speech
   }
 };

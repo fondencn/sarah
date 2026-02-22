@@ -4,14 +4,14 @@
  * Attempts to fetch endpoint info from Aspire's resource service if direct env vars aren't available
  */
 
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 
 const ASPIRE_RESOURCE_URL = process.env.ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL;
 
 /**
  * Try to fetch endpoint from Aspire's resource service
- * Format: https://localhost:15888/resources/keycloak/endpoints/https
+ * Format: http://localhost:15888/resources/keycloak/endpoints/http
  */
 async function fetchFromAspireService() {
   return new Promise((resolve) => {
@@ -23,12 +23,8 @@ async function fetchFromAspireService() {
 
     console.log('[ASPIRE-API] Attempting to fetch Keycloak endpoint from Aspire service:', ASPIRE_RESOURCE_URL);
 
-    // For self-signed certs from Aspire dev environment
-    const agent = new https.Agent({ rejectUnauthorized: false });
-
-    https.get(
-      `${ASPIRE_RESOURCE_URL}/resources/keycloak/endpoints/https`,
-      { agent },
+    http.get(
+      `${ASPIRE_RESOURCE_URL}/resources/keycloak/endpoints/http`,
       (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });
@@ -57,11 +53,11 @@ async function fetchFromAspireService() {
 
 async function resolveKeycloakEndpoint() {
   // Try direct env var first (most reliable)
-  const envEndpoint = process.env.services__keycloak__https__0 || 
-                      process.env.SERVICES__KEYCLOAK__HTTPS__0;
+  const envEndpoint = process.env.services__keycloak__http__0 || 
+                      process.env.SERVICES__KEYCLOAK__HTTP__0;
   
   if (envEndpoint) {
-    console.log('[KEYCLOAK-RESOLVER] Using env var: services__keycloak__https__0');
+    console.log('[KEYCLOAK-RESOLVER] Using env var: services__keycloak__http__0');
     return envEndpoint;
   }
 

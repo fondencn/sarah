@@ -56,7 +56,7 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
                 resourceServer: 
                 {
                     sendAccessToken: true,
-                    allowedUrls: ['https://localhost', 'https://pi']
+                    allowedUrls: ['http://localhost', 'http://pi']
                 }
             }), 
         FormsModule,

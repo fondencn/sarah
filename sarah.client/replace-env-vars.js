@@ -27,10 +27,10 @@ const resolveKeycloakIssuer = (defaultIssuer) => {
   }
 
   const keycloakEndpoint = getEnvValue([
-    'services__keycloak__https__0',
-    'SERVICES__KEYCLOAK__HTTPS__0',
-    'services__keycloak__https__0__url',
-    'SERVICES__KEYCLOAK__HTTPS__0__URL'
+    'services__keycloak__http__0',
+    'SERVICES__KEYCLOAK__HTTP__0',
+    'services__keycloak__http__0__url',
+    'SERVICES__KEYCLOAK__HTTP__0__URL'
   ]);
 
   if (!keycloakEndpoint) {
@@ -59,6 +59,6 @@ const replaceEnvVars = (filePath, defaultIssuer) => {
 };
 
 console.log('[STARTUP] Running environment variable substitution for frontend...');
-replaceEnvVars(environmentFilePath, 'https://localhost:8443/realms/sarah-realm');
-replaceEnvVars(environmentProdFilePath, 'https://pi:8443/realms/sarah-realm');
+replaceEnvVars(environmentFilePath, 'http://localhost:8080/realms/sarah-realm');
+replaceEnvVars(environmentProdFilePath, 'http://pi:8080/realms/sarah-realm');
 console.log('[STARTUP] Environment variables substitution complete');

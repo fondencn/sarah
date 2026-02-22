@@ -23,7 +23,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for Rules Service communication
 // builder.Services.AddHttpClient<IRuleService, RulesServiceClient>(client =>
 // {
-//     var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "https://localhost:7257";
+//     var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://localhost:7257";
 //     client.BaseAddress = new Uri(rulesServiceUrl);
 //     client.Timeout = TimeSpan.FromSeconds(30);
 // });
@@ -31,7 +31,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https://deviceservice";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -115,8 +115,6 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sarah Monitoring Service API v1");
     });
 }
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

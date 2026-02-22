@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 
 /**
  * Service for discovering service endpoints from Aspire's resource service API
- * Aspire exposes dynamic service discovery at https://localhost:15888/resources/{serviceName}/endpoints/{endpointName}
+ * Aspire exposes dynamic service discovery at http://localhost:15888/resources/{serviceName}/endpoints/{endpointName}
  */
 @Injectable({
   providedIn: 'root'
@@ -27,18 +27,18 @@ export class AspireResourceService {
     // In development, Aspire usually runs on localhost:15888
     // In production or custom setups, it might be different
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-      return `https://${window.location.hostname}:15888`;
+      return `http://${window.location.hostname}:15888`;
     }
-    return 'https://localhost:15888';
+    return 'http://localhost:15888';
   }
 
   /**
    * Discover a service endpoint from Aspire
    * @param serviceName The service name as configured in Aspire (e.g., 'keycloak')
-   * @param endpointName The endpoint name (e.g., 'https')
-   * @returns Promise<string> The full URL (e.g., 'https://localhost:xxxxx')
+  * @param endpointName The endpoint name (e.g., 'http')
+  * @returns Promise<string> The full URL (e.g., 'http://localhost:xxxxx')
    */
-  async discoverEndpoint(serviceName: string, endpointName: string = 'https'): Promise<string | null> {
+  async discoverEndpoint(serviceName: string, endpointName: string = 'http'): Promise<string | null> {
     try {
       const url = `${this.ASPIRE_API_URL}/resources/${serviceName}/endpoints/${endpointName}`;
       console.log('[ASPIRE] Discovering endpoint:', url);
@@ -57,7 +57,7 @@ export class AspireResourceService {
       );
 
       if (response && response.address) {
-        const fullUrl = `${response.scheme || 'https'}://${response.address}`;
+        const fullUrl = `${response.scheme || 'http'}://${response.address}`;
         console.log(`[ASPIRE] ✓ Discovered ${serviceName}:`, fullUrl);
         return fullUrl;
       }
@@ -72,11 +72,11 @@ export class AspireResourceService {
 
   /**
    * Discover Keycloak's endpoint and build the OIDC issuer URL
-   * @returns Promise<string | null> The Keycloak issuer URL (e.g., 'https://localhost:xxxxx/realms/sarah-realm')
+   * @returns Promise<string | null> The Keycloak issuer URL (e.g., 'http://localhost:xxxxx/realms/sarah-realm')
    */
   async discoverKeycloakIssuer(realm: string = 'sarah-realm'): Promise<string | null> {
     try {
-      const endpoint = await this.discoverEndpoint('keycloak', 'https');
+      const endpoint = await this.discoverEndpoint('keycloak', 'http');
       if (endpoint) {
         const issuer = `${endpoint}/realms/${realm}`;
         console.log('[ASPIRE] Built Keycloak issuer:', issuer);
