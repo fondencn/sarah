@@ -80,10 +80,15 @@ public class PersonsController : ControllerBase
             {
                 return BadRequest();
             }
-            await _personService.AddPersonAsync(personDto);
-            var created = await _database.Persons.OrderByDescending(p => p.Id).FirstOrDefaultAsync();
-            if (created == null) return StatusCode(500, "Person created but not found");
-            return Ok(MapToDto(created));
+            var entity = new PersonInfoEntity
+            {
+                Name = personDto.Name,
+                MobilePhoneHostname = personDto.MobilePhoneHostname,
+                GPSTrackerID = personDto.GPSTrackerID
+            };
+            await _database.Persons.AddAsync(entity);
+            await _database.SaveChangesAsync();
+            return Ok(MapToDto(entity));
         }
         catch (Exception ex)
         {

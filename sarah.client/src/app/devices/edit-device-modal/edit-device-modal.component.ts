@@ -65,7 +65,7 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
       nodeId: [0, Validators.required],
       name: ['', Validators.required],
       deviceType: [0, Validators.required], 
-      roomId: [0], 
+      roomId: [null], 
       isReadonly: [false], 
       id: [0]
     });

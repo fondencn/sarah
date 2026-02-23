@@ -88,7 +88,7 @@ public class RoomsController : ControllerBase
     /// Create a new room
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(RoomDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RoomDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] RoomDto roomDto, CancellationToken cancellationToken)
@@ -120,7 +120,7 @@ public class RoomsController : ControllerBase
                 IsFavourite = createdRoom.IsFavourite
             };
 
-            return Ok(result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
         catch (Exception ex)
         {
