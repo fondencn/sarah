@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PersonDto, TrackerDto } from '../../services/api-client';
+import { PersonDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
-import { CacheService } from '../../services/cache.service';
 
 @Component({
   selector: 'editPersonModal',
@@ -24,6 +23,9 @@ export class EditPersonModalComponent extends DialogContent {
     this._isNewPerson = value;
   }
 
+  // TODO: populate from actual service calls
+  public allTrackers: any[] = [];
+  public allMobilePhones: string[] = [];
 
   public get dataContext(): PersonDto | null {
     this._person = this.personForm.valid ? this.personForm.value : null;
@@ -43,17 +45,7 @@ export class EditPersonModalComponent extends DialogContent {
   }
 
 
-  public get allTrackers(): TrackerDto[] {
-    return this.cacheService.get<TrackerDto[]>(CacheService.TRACKERS_KEY) ?? [];
-  }
-
-  public get allMobilePhones(): string[] {
-    return this.cacheService.get<string[]>(CacheService.MOBILEPHONES_KEY) ?? [];
-  }
-  
-  
-
-  constructor(private fb: FormBuilder, dialogService: DialogService, public cacheService: CacheService) {
+  constructor(private fb: FormBuilder, dialogService: DialogService) {
     super(dialogService);
 
     this.personForm = this.fb.group({

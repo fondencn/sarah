@@ -1,13 +1,13 @@
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule, APP_INITIALIZER } from '@angular/core';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; // Import HttpClientModule
+import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; // Import HttpClientModule
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
-import { ApiModule, BASE_PATH } from './services/api-client'; // Import the generated client
+import { ApiModule, DevicesService, PersonsService, LocationService, RoomsService, DashboardService, StatusService } from './services/api-client'; // Import the generated client
 import { NavComponent } from './nav/nav.component';
 import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
@@ -71,6 +71,13 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
             multi: true
         },
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, // Provide the interceptor
-        { provide: BASE_PATH, useValue: environment.api.dashboardService } // Configure api-client base path for Dashboard WebAPI
+        // Configure base paths per service — each generated service is providedIn:'root' but
+        // shares a single BASE_PATH token, so we override with per-service factory providers.
+        { provide: DevicesService, useFactory: (http: HttpClient) => new DevicesService(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
+        { provide: PersonsService, useFactory: (http: HttpClient) => new PersonsService(http, environment.api.personsService, undefined!), deps: [HttpClient] },
+        { provide: LocationService, useFactory: (http: HttpClient) => new LocationService(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
+        { provide: RoomsService, useFactory: (http: HttpClient) => new RoomsService(http, environment.api.roomService, undefined!), deps: [HttpClient] },
+        { provide: DashboardService, useFactory: (http: HttpClient) => new DashboardService(http, environment.api.dashboardService, undefined!), deps: [HttpClient] },
+        { provide: StatusService, useFactory: (http: HttpClient) => new StatusService(http, environment.api.dashboardService, undefined!), deps: [HttpClient] }
     ] })
 export class AppModule { }

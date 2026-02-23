@@ -9,6 +9,8 @@ namespace Microsoft.Extensions.Hosting;
 
 public static class ServiceDefaultsExtensions
 {
+    internal const string CorsPolicy = "ServiceDefaultsCors";
+
     public static WebApplicationBuilder AddServiceDefaults(this WebApplicationBuilder builder)
     {
         builder.ConfigureOpenTelemetry();
@@ -18,6 +20,42 @@ public static class ServiceDefaultsExtensions
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
             http.AddServiceDiscovery();
+        });
+
+        builder.AddDefaultCors();
+
+        return builder;
+    }
+
+    public static WebApplication UseServiceDefaults(this WebApplication app)
+    {
+        app.UseCors(CorsPolicy);
+        return app;
+    }
+
+    private static WebApplicationBuilder AddDefaultCors(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicy, policy =>
+            {
+                var origins = builder.Configuration.GetSection("AllowedOrigins")
+                    .GetChildren().Select(c => c.Value).OfType<string>().ToArray();
+
+                if (origins is { Length: > 0 })
+                    policy.WithOrigins(origins);
+                else
+                    // Default: allow any localhost/127.0.0.1 origin regardless of port
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        var host = new Uri(origin).Host;
+                        return host == "localhost" || host == "127.0.0.1";
+                    });
+
+                policy.AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            });
         });
 
         return builder;
