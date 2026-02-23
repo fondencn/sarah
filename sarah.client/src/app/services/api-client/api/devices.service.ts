@@ -20,6 +20,11 @@ import { Observable }                                        from 'rxjs';
 import { DeviceDto } from '../model/deviceDto';
 
 // @ts-ignore
+import { NetworkElementDto } from '../model/networkElementDto';
+
+// @ts-ignore
+import { TrackerDto } from '../model/trackerDto';
+// @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 
@@ -873,6 +878,52 @@ export class DevicesService {
                 transferCache: localVarTransferCache,
                 reportProgress: reportProgress
             }
+        );
+    }
+
+    public devicesElementsGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<NetworkElementDto>>;
+    public devicesElementsGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<NetworkElementDto>>>;
+    public devicesElementsGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<NetworkElementDto>>>;
+    public devicesElementsGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        let localVarHeaders = this.defaultHeaders;
+        let localVarHttpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (localVarHttpHeaderAcceptSelected === undefined) {
+            localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(['application/json']);
+        }
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+        let localVarHttpContext: HttpContext | undefined = options && options.context;
+        if (localVarHttpContext === undefined) { localVarHttpContext = new HttpContext(); }
+        let localVarTransferCache: boolean | undefined = options && options.transferCache;
+        if (localVarTransferCache === undefined) { localVarTransferCache = true; }
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        let localVarPath = `/Devices/elements`;
+        return this.httpClient.request<Array<NetworkElementDto>>('get', `${this.configuration.basePath}${localVarPath}`,
+            { context: localVarHttpContext, responseType: <any>responseType_, withCredentials: this.configuration.withCredentials, headers: localVarHeaders, observe: observe, transferCache: localVarTransferCache, reportProgress: reportProgress }
+        );
+    }
+
+    public devicesTrackersGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<TrackerDto>>;
+    public devicesTrackersGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<TrackerDto>>>;
+    public devicesTrackersGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<TrackerDto>>>;
+    public devicesTrackersGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        let localVarHeaders = this.defaultHeaders;
+        let localVarHttpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (localVarHttpHeaderAcceptSelected === undefined) {
+            localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(['application/json']);
+        }
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+        let localVarHttpContext: HttpContext | undefined = options && options.context;
+        if (localVarHttpContext === undefined) { localVarHttpContext = new HttpContext(); }
+        let localVarTransferCache: boolean | undefined = options && options.transferCache;
+        if (localVarTransferCache === undefined) { localVarTransferCache = true; }
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        let localVarPath = `/Devices/trackers`;
+        return this.httpClient.request<Array<TrackerDto>>('get', `${this.configuration.basePath}${localVarPath}`,
+            { context: localVarHttpContext, responseType: <any>responseType_, withCredentials: this.configuration.withCredentials, headers: localVarHeaders, observe: observe, transferCache: localVarTransferCache, reportProgress: reportProgress }
         );
     }
 
