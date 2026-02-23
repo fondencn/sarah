@@ -30,10 +30,7 @@ public static class KeycloakAuthenticationExtensions
                     ? $"{keycloakBase.TrimEnd('/')}/realms/{realm}"
                     : configuration["OIDCAuthority"]
                       ?? $"http://keycloak:8080/realms/{realm}";
-                var audience = configuration["Jwt:Audience"] ?? "account";
-                
                 options.Authority = authority;
-                options.Audience = audience;
                 
                 // HTTP-only setup, so HTTPS metadata check must be disabled
                 options.RequireHttpsMetadata = false;
@@ -41,8 +38,7 @@ public static class KeycloakAuthenticationExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = audience,
+                    ValidateAudience = false,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     NameClaimType = "preferred_username"

@@ -1,4 +1,3 @@
-export * from './baseDataDto';
 export * from './createDashboardItemDto';
 export * from './dashboardItemDto';
 export * from './dashboardItemType';

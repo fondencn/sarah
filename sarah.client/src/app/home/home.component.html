@@ -25,7 +25,8 @@
             <p class="card-text">
               {{ statusMessage }}<br />
               Hostname: {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
-              Authenticated: {{ statusDto?.isAuthenticated ? statusDto?.username : "not authenticated"}}<br />
+              Authenticated: {{ statusDto?.isAuthenticated}}<br />
+	      Username: {{ statusDto?.username}} <br />
               Controller: {{ statusDto?.controllerStatus }}
             </p>
           </div>

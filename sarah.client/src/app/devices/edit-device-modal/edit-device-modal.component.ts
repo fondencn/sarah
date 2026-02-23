@@ -1,9 +1,8 @@
 import { Component} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DeviceDto, EnumDto, NetworkElementDto, RoomDto } from '../../services/api-client';
+import { DeviceDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
-import { CacheService } from '../../services/cache.service';
 
 @Component({
   selector: 'editDeviceModal',
@@ -26,17 +25,10 @@ export class EditDeviceModalComponent extends DialogContent {
     this._isNewDevice = value;
   }
 
-  public get allDeviceTypes(): EnumDto[] {
-    return this.cacheService.get<EnumDto[]>(CacheService.DEVICE_TYPES_KEY) ?? [];
-  }
-  
-  public get allRooms(): RoomDto[] {
-    return this.cacheService.get<RoomDto[]>(CacheService.ROOMS_KEY) ?? [];
-  }
-
-  public get allNetworkElements(): NetworkElementDto[] {
-    return this.cacheService.get<NetworkElementDto[]>(CacheService.NETWORK_ELEMENTS_KEY) ?? [];
-  }
+  // TODO: populate from actual service calls
+  public allDeviceTypes: any[] = [];
+  public allRooms: any[] = [];
+  public allNetworkElements: any[] = [];
 
   public get dataContext(): DeviceDto | null {
     this._device = this.deviceForm.valid ? this.deviceForm.value : null;
@@ -59,7 +51,7 @@ export class EditDeviceModalComponent extends DialogContent {
 
   
 
-  constructor(private fb: FormBuilder, dialogService: DialogService, public cacheService: CacheService) {
+  constructor(private fb: FormBuilder, dialogService: DialogService) {
     super(dialogService);
 
     this.deviceForm = this.fb.group({

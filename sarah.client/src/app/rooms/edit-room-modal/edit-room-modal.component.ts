@@ -3,7 +3,7 @@ import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RoomDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
-import { CacheService } from '../../services/cache.service';
+
 
 @Component({
   selector: 'editRoomModal',
@@ -42,7 +42,7 @@ export class EditRoomModalComponent extends DialogContent {
 
   
 
-  constructor(private fb: FormBuilder, dialogService: DialogService, public cacheService: CacheService) {
+  constructor(private fb: FormBuilder, dialogService: DialogService) {
     super(dialogService);
 
     this.roomForm = this.fb.group({

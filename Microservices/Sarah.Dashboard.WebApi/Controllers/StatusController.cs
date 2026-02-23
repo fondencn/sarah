@@ -34,8 +34,7 @@ public class StatusController : ControllerBase
         var port = request.Host.Port ?? (request.IsHttps ? 443 : 80);
 
         var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
-        var username = User.FindFirst("preferred_username")?.Value
-            ?? User.Identity?.Name;
+        var username = User.Identity?.Name;
 
         _logger.LogInformation("Status requested by user {Username}", username);
 
