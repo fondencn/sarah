@@ -56,19 +56,13 @@ public class DevicesController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Create([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
     {
-        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
-        {
-            return BadRequest("Device name is required");
-        }
-        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
-        {
-            return BadRequest("NodeId must be between 0 and 255");
-        }
+        var validationError = ValidateDeviceDto(deviceDto);
+        if (validationError != null) return validationError;
         try
         {
             var entity = new Data.Entities.DeviceInfoEntity
             {
-                Name = deviceDto.Name,
+                Name = deviceDto!.Name,
                 NodeID = (byte)deviceDto.NodeId,
                 Id_Room = deviceDto.RoomId,
                 SpecificType = deviceDto.DeviceType,
@@ -91,22 +85,16 @@ public class DevicesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Update([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
     {
-        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
-        {
-            return BadRequest("Device name is required");
-        }
-        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
-        {
-            return BadRequest("NodeId must be between 0 and 255");
-        }
+        var validationError = ValidateDeviceDto(deviceDto);
+        if (validationError != null) return validationError;
         try
         {
-            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceDto.Id, cancellationToken);
+            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceDto!.Id, cancellationToken);
             if (entity == null)
             {
                 return NotFound();
             }
-            entity.Name = deviceDto.Name;
+            entity.Name = deviceDto!.Name;
             entity.NodeID = (byte)deviceDto.NodeId;
             entity.Id_Room = deviceDto.RoomId;
             entity.SpecificType = deviceDto.DeviceType;
@@ -118,9 +106,18 @@ public class DevicesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating device {DeviceId}", deviceDto.Id);
+            _logger.LogError(ex, "Error updating device {DeviceId}", deviceDto!.Id);
             return StatusCode(500, "Internal server error");
         }
+    }
+
+    private BadRequestObjectResult? ValidateDeviceDto(DeviceDto? deviceDto)
+    {
+        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
+            return BadRequest("Device name is required");
+        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
+            return BadRequest("NodeId must be between 0 and 255");
+        return null;
     }
 
     [HttpDelete("{id}")]
