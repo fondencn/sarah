@@ -13,6 +13,7 @@ namespace Sarah.DeviceService.WebApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
+[Route("api/[controller]")]
 public class DevicesController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
@@ -53,8 +54,16 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<IActionResult> Create([FromBody] DeviceDto deviceDto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
     {
+        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
+        {
+            return BadRequest("Device name is required");
+        }
+        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
+        {
+            return BadRequest("NodeId must be between 0 and 255");
+        }
         try
         {
             var entity = new Data.Entities.DeviceInfoEntity
@@ -80,8 +89,16 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update([FromBody] DeviceDto deviceDto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
     {
+        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
+        {
+            return BadRequest("Device name is required");
+        }
+        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
+        {
+            return BadRequest("NodeId must be between 0 and 255");
+        }
         try
         {
             var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceDto.Id, cancellationToken);

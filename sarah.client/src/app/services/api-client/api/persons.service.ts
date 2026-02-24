@@ -490,27 +490,4 @@ export class PersonsService {
         );
     }
 
-    public apiPersonsMobilePhonesGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<string>>;
-    public apiPersonsMobilePhonesGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<string>>>;
-    public apiPersonsMobilePhonesGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<string>>>;
-    public apiPersonsMobilePhonesGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        let localVarHeaders = this.defaultHeaders;
-        let localVarHttpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
-        if (localVarHttpHeaderAcceptSelected === undefined) {
-            localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(['application/json']);
-        }
-        if (localVarHttpHeaderAcceptSelected !== undefined) {
-            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
-        }
-        let localVarHttpContext: HttpContext | undefined = options && options.context;
-        if (localVarHttpContext === undefined) { localVarHttpContext = new HttpContext(); }
-        let localVarTransferCache: boolean | undefined = options && options.transferCache;
-        if (localVarTransferCache === undefined) { localVarTransferCache = true; }
-        let responseType_: 'text' | 'json' | 'blob' = 'json';
-        let localVarPath = `/api/Persons/mobile-phones`;
-        return this.httpClient.request<Array<string>>('get', `${this.configuration.basePath}${localVarPath}`,
-            { context: localVarHttpContext, responseType: <any>responseType_, withCredentials: this.configuration.withCredentials, headers: localVarHeaders, observe: observe, transferCache: localVarTransferCache, reportProgress: reportProgress }
-        );
-    }
-
 }

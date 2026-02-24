@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PersonDto, PersonsService, DevicesService, TrackerDto } from '../../services/api-client';
+import { PersonDto, TrackerDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
+import { DevicesExtService } from '../../services/devices-ext.service';
+import { PersonsExtService } from '../../services/persons-ext.service';
 
 @Component({
   selector: 'editPersonModal',
@@ -51,7 +53,7 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
 
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private personsService: PersonsService, private devicesService: DevicesService) {
+              private devicesExtService: DevicesExtService, private personsExtService: PersonsExtService) {
     super(dialogService);
 
     this.personForm = this.fb.group({
@@ -68,14 +70,14 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
   }
 
   private loadTrackers(): void {
-    this.devicesService.devicesTrackersGet().subscribe({
+    this.devicesExtService.getTrackers().subscribe({
       next: (trackers: TrackerDto[]) => { this.allTrackers = trackers; },
       error: (err) => console.error('Error loading trackers:', err)
     });
   }
 
   private loadMobilePhones(): void {
-    this.personsService.apiPersonsMobilePhonesGet().subscribe({
+    this.personsExtService.getMobilePhones().subscribe({
       next: (phones: string[]) => { this.allMobilePhones = phones; },
       error: (err) => console.error('Error loading mobile phones:', err)
     });

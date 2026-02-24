@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DeviceDto, DevicesService, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto } from '../../services/api-client';
+import { DeviceDto, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
+import { DevicesExtService } from '../../services/devices-ext.service';
 
 @Component({
   selector: 'editDeviceModal',
@@ -61,7 +62,7 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   }
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private devicesService: DevicesService, private roomsService: RoomsService) {
+              private devicesExtService: DevicesExtService, private roomsService: RoomsService) {
     super(dialogService);
 
     this.deviceForm = this.fb.group({
@@ -94,7 +95,7 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   }
 
   private loadNetworkElements(): void {
-    this.devicesService.devicesElementsGet().subscribe({
+    this.devicesExtService.getElements().subscribe({
       next: (elements: NetworkElementDto[]) => { this.allNetworkElements = elements; },
       error: (err) => console.error('Error loading network elements:', err)
     });
