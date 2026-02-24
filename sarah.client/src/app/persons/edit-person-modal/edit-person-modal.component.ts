@@ -30,10 +30,10 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
     if (!this.personForm.valid) return null;
     const v = this.personForm.value;
     return {
-      id: v.id,
+      id: v.id != null ? Number(v.id) : 0,
       name: v.name,
       mobilePhoneHostname: v.mobilePhoneHostname,
-      gpsTrackerID: v.gpsTrackerID
+      gpsTrackerID: v.gpsTrackerID != null ? Number(v.gpsTrackerID) : 0
     } as PersonDto;
   }
 
