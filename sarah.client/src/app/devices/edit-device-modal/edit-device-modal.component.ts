@@ -32,12 +32,15 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   public get dataContext(): DeviceDto | null {
     if (!this.deviceForm.valid) return null;
     const v = this.deviceForm.value;
+    const nodeId = v.nodeId !== null && v.nodeId !== undefined ? Number(v.nodeId) : 0;
+    const deviceType = v.deviceType !== null && v.deviceType !== undefined ? Number(v.deviceType) : 0;
+    const roomId = v.roomId !== null && v.roomId !== undefined ? Number(v.roomId) : null;
     return {
       id: v.id,
       name: v.name,
-      nodeId: v.nodeId,
-      deviceType: v.deviceType,
-      roomId: v.roomId,
+      nodeId: nodeId,
+      deviceType: deviceType,
+      roomId: roomId,
       isReadonly: v.isReadonly,
       isFavourite: this._device?.isFavourite ?? false
     } as DeviceDto;
