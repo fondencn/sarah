@@ -33,5 +33,7 @@ namespace Sarah.API.BusinessObjects
         FibaroSmokeSensor = 17,
         FibaroKeyFob = 18,
         WifiWallPlug = 19,
+        ShellyWifiLamp = 20,
+        LoraWanGpsTracker = 21,
     }
 }

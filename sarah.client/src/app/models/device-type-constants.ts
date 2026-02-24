@@ -20,6 +20,8 @@ export const DEVICE_TYPE_FIBARO_WALLI_SWITCH          = KnownDeviceTypes.NUMBER_
 export const DEVICE_TYPE_FIBARO_SMOKE_SENSOR          = KnownDeviceTypes.NUMBER_17; // 17
 export const DEVICE_TYPE_FIBARO_KEY_FOB               = KnownDeviceTypes.NUMBER_18; // 18
 export const DEVICE_TYPE_WIFI_WALL_PLUG               = KnownDeviceTypes.NUMBER_19; // 19
+export const DEVICE_TYPE_SHELLY_WIFI_LAMP             = KnownDeviceTypes.NUMBER_20; // 20
+export const DEVICE_TYPE_LORA_WAN_GPS_TRACKER         = KnownDeviceTypes.NUMBER_21; // 21
 
 export const DEVICE_TYPE_LABELS: Record<number, string> = {
   [DEVICE_TYPE_UNKNOWN as number]:                     'Unknown',
@@ -41,5 +43,7 @@ export const DEVICE_TYPE_LABELS: Record<number, string> = {
   [DEVICE_TYPE_FIBARO_WALLI_SWITCH as number]:         'Fibaro Walli Switch',
   [DEVICE_TYPE_FIBARO_SMOKE_SENSOR as number]:         'Fibaro Smoke Sensor',
   [DEVICE_TYPE_FIBARO_KEY_FOB as number]:              'Fibaro Key Fob',
-  [DEVICE_TYPE_WIFI_WALL_PLUG as number]:              'WiFi Wall Plug (Bin Z-Wave)',
+  [DEVICE_TYPE_WIFI_WALL_PLUG as number]:              'WiFi Wall Plug',
+  [DEVICE_TYPE_SHELLY_WIFI_LAMP as number]:            'Shelly WiFi Lamp',
+  [DEVICE_TYPE_LORA_WAN_GPS_TRACKER as number]:        'LoRaWAN GPS Tracker',
 };

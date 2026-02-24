@@ -9,7 +9,7 @@
  */
 
 
-export type KnownDeviceTypes = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19;
+export type KnownDeviceTypes = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21;
 
 export const KnownDeviceTypes = {
     NUMBER_0: 0 as KnownDeviceTypes,
@@ -31,6 +31,8 @@ export const KnownDeviceTypes = {
     NUMBER_16: 16 as KnownDeviceTypes,
     NUMBER_17: 17 as KnownDeviceTypes,
     NUMBER_18: 18 as KnownDeviceTypes,
-    NUMBER_19: 19 as KnownDeviceTypes
+    NUMBER_19: 19 as KnownDeviceTypes,
+    NUMBER_20: 20 as KnownDeviceTypes,
+    NUMBER_21: 21 as KnownDeviceTypes
 };
 
