@@ -4,6 +4,7 @@ import { DeviceDto, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto }
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
 import { DevicesExtService } from '../../services/devices-ext.service';
+import { DEVICE_TYPE_LABELS } from '../../models/device-type-constants';
 
 @Component({
   selector: 'editDeviceModal',
@@ -81,32 +82,10 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
     this.loadNetworkElements();
   }
 
-  private readonly deviceTypeLabels: Record<number, string> = {
-    0: 'Unknown',
-    1: 'Fibaro Motion Sensor',
-    2: 'Aeotec Door Sensor',
-    3: 'Aeotec Z-Stick',
-    4: 'Fibaro The Button',
-    5: 'Popp Wall Controller',
-    6: 'Popp Wall Plug',
-    7: 'Fibaro Heat Controller',
-    8: 'Aeotec LED Bulb',
-    9: 'Fibaro RGBW Controller 2',
-    10: 'Aeotec Thermostat',
-    11: 'Aeotec Smart Switch 7',
-    12: 'Aeotec LED Bulb 6 White',
-    13: 'Fibaro Door/Window Sensor 2',
-    14: 'Fibaro Wall Plug',
-    15: 'Eutronic Air Quality Sensor',
-    16: 'Fibaro Walli Switch',
-    17: 'Fibaro Smoke Sensor',
-    18: 'Fibaro Key Fob',
-  };
-
   private loadDeviceTypes(): void {
     this.allDeviceTypes = Object.entries(KnownDeviceTypes)
       .filter(([, v]) => typeof v === 'number')
-      .map(([, v]) => ({ enumKey: v as number, enumValue: this.deviceTypeLabels[v as number] ?? `Unknown (${v})` }));
+      .map(([, v]) => ({ enumKey: v as number, enumValue: DEVICE_TYPE_LABELS[v as number] ?? `Unknown (${v})` }));
   }
 
   private loadRooms(): void {

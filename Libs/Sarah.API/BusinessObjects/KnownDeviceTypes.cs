@@ -32,5 +32,6 @@ namespace Sarah.API.BusinessObjects
         FibaroWalliSwitch = 16,
         FibaroSmokeSensor = 17,
         FibaroKeyFob = 18,
+        WifiWallPlug = 19,
     }
 }
