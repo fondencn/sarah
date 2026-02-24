@@ -108,6 +108,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseServiceDefaults();
 app.UseAuthentication();
 app.UseAuthorization();
 
