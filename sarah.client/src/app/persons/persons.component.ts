@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { PersonDto, PersonsService } from '../services/api-client';
+import { CreateDashboardItemDto, DashboardItemType, DashboardService, PersonDto, PersonsService } from '../services/api-client';
 import { Subscription } from 'rxjs';
 import { EditPersonModalComponent } from './edit-person-modal/edit-person-modal.component';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
@@ -42,7 +42,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
   private dialogClosedSubscription: Subscription | null = null;
 
 
-  constructor(private personsService: PersonsService, private dialogService: DialogService) { }
+  constructor(private personsService: PersonsService, private dialogService: DialogService, private dashboardService: DashboardService) { }
 
 
   public retrievePersons(): void {
@@ -135,6 +135,22 @@ export class PersonsComponent implements OnInit,OnDestroy {
     this.personsService.apiPersonsIdFavouriteIsFavouritePut((person.id as number), isFavourite).subscribe({
       next: () => {
         person.isFavourite = isFavourite;
+        if (isFavourite) {
+          const createDto: CreateDashboardItemDto = {
+            itemId: person.id,
+            itemType: DashboardItemType.NUMBER_3,
+            title: person.name,
+            description: person.isAtHome ? 'At home' : 'Away',
+            subtype: 'Person'
+          };
+          this.dashboardService.apiDashboardPost(createDto).subscribe({
+            error: (err) => console.error('Error adding person to dashboard:', err)
+          });
+        } else {
+          this.dashboardService.apiDashboardItemIdItemTypeDelete((person.id as number), DashboardItemType.NUMBER_3).subscribe({
+            error: (err) => console.error('Error removing person from dashboard:', err)
+          });
+        }
       },
       error: (error) => {
         console.error('Error setting favourite state:', error);

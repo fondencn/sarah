@@ -111,6 +111,11 @@
                   </div>
                 </div>
               </div>
+              <div class="card-footer text-end">
+                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                  <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
+                </button>
+              </div>
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_SCENE">
@@ -128,6 +133,11 @@
                   </div>
                 </div>
               </div>
+              <div class="card-footer text-end">
+                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                  <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
+                </button>
+              </div>
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_ROOM">
@@ -144,6 +154,11 @@
                     <img class="big-icon" src="assets/icons/home.svg" alt="Room">
                   </div>
                 </div>
+              </div>
+              <div class="card-footer text-end">
+                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                  <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
+                </button>
               </div>
             </div>
           </ng-container>
@@ -164,6 +179,11 @@
                   </div>
                 </div>
               </div>
+              <div class="card-footer text-end">
+                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                  <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
+                </button>
+              </div>
             </div>
           </ng-container>
           <ng-container *ngSwitchDefault>
@@ -172,6 +192,11 @@
                 <h5 class="card-title">{{ item.title }}</h5>
                 <div class="card-text" [innerHTML]="item.description"></div>
                 <!-- Add more content here as needed -->
+              </div>
+              <div class="card-footer text-end">
+                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                  <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
+                </button>
               </div>
             </div>
           </ng-container>
