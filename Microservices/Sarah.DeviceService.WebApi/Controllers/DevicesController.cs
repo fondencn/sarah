@@ -7,6 +7,7 @@ using Sarah.API.BusinessObjects.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Sarah.API.BusinessObjects;
 using System.Linq;
+using Sarah.API.Interfaces;
 
 namespace Sarah.DeviceService.WebApi.Controllers;
 
@@ -407,7 +408,8 @@ public class DevicesController : ControllerBase
                 DeviceType = device.SpecificType,
                 TypeName = device.SpecificType.ToString(),
                 IsReadonly = device.IsReadonly,
-                IsFavourite = device.IsFavourite
+                IsFavourite = device.IsFavourite,
+                ExtendedProperties = BuildExtendedProperties(device.NodeID)
             };
 
             return Ok(dto);
@@ -417,6 +419,27 @@ public class DevicesController : ControllerBase
             _logger.LogError(ex, "Error retrieving device {DeviceId}", id);
             return StatusCode(500, "Internal server error");
         }
+    }
+
+    private List<ExtendedPropertyDto> BuildExtendedProperties(byte nodeId)
+    {
+        var props = new List<ExtendedPropertyDto>();
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is ILamp lamp)
+        {
+            props.Add(new ExtendedPropertyDto { Key = "IsOn", Value = (lamp.Brightness > 0).ToString() });
+            props.Add(new ExtendedPropertyDto { Key = "Color", Value = lamp.Color });
+            props.Add(new ExtendedPropertyDto { Key = "Brightness", Value = lamp.Brightness.ToString() });
+        }
+        else if (networkItem is IWallPlug wallPlug)
+        {
+            props.Add(new ExtendedPropertyDto { Key = "IsOn", Value = wallPlug.IsOn.ToString() });
+            if (networkItem is Sarah.DeviceService.Model.WallPlug concreteWallPlug && concreteWallPlug.Meter_W != null)
+            {
+                props.Add(new ExtendedPropertyDto { Key = "Meter_W", Value = concreteWallPlug.Meter_W.Value.ToString() });
+            }
+        }
+        return props;
     }
 
     [HttpGet("node/{nodeId}")]

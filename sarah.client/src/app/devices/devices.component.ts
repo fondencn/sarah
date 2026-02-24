@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { DeviceDto, DevicesService, KnownDeviceTypes, NetworkElementDto } from '../services/api-client'; // Import the generated client
+import { CreateDashboardItemDto, DashboardItemType, DashboardService, DeviceDto, DevicesService, KnownDeviceTypes, NetworkElementDto } from '../services/api-client'; // Import the generated client
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 import { Subscription } from 'rxjs';
@@ -20,7 +20,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
-  constructor(private devicesService: DevicesService, private dialogService: DialogService) { }
+  constructor(private devicesService: DevicesService, private dialogService: DialogService, private dashboardService: DashboardService) { }
 
   ngOnInit(): void {
     this.onLoad();
@@ -183,6 +183,22 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this.devicesService.devicesIdFavouriteIsFavouritePut((device.id as number), isFavourite).subscribe({
       next: () => {
         device.isFavourite = isFavourite;
+        if (isFavourite) {
+          const createDto: CreateDashboardItemDto = {
+            itemId: device.id,
+            itemType: DashboardItemType.NUMBER_0,
+            title: device.name,
+            description: device.info,
+            subtype: device.typeName
+          };
+          this.dashboardService.apiDashboardPost(createDto).subscribe({
+            error: (err) => console.error('Error adding device to dashboard:', err)
+          });
+        } else {
+          this.dashboardService.apiDashboardItemIdItemTypeDelete((device.id as number), DashboardItemType.NUMBER_0).subscribe({
+            error: (err) => console.error('Error removing device from dashboard:', err)
+          });
+        }
       },
       error: (error) => {
         console.error('Error setting favourite state:', error);

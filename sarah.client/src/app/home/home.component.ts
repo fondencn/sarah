@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DevicesService, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
+import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DashboardItemType, DevicesService, PersonsService, PersonDto, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
@@ -26,6 +26,7 @@ export class HomeComponent implements OnInit {
     private statusService: StatusService, 
     private dashboardService : DashboardService, 
     private devicesService : DevicesService,
+    private personsService : PersonsService,
     private cdr: ChangeDetectorRef) { }  
 
   currentUserName: string = this.authService.currentUserName;
@@ -146,6 +147,24 @@ export class HomeComponent implements OnInit {
               // Still add the item but without device data
               return new DashboardItemViewModel(item);
             }
+          } else if (item.itemType === this.ITEM_TYPE_PERSON && item.itemId) {
+            // Fetch person details
+            try {
+              const person = await this.personsService.apiPersonsIdGet(item.itemId).toPromise();
+              if (person) {
+                const enrichedItem: DashboardItemDto = {
+                  itemId: item.itemId,
+                  itemType: item.itemType,
+                  title: person.name,
+                  description: person.isAtHome ? 'At home' : 'Away',
+                  subtype: 'Person'
+                };
+                return new DashboardItemViewModel(enrichedItem);
+              }
+            } catch (error) {
+              console.error(`Error fetching person ${item.itemId}:`, error);
+              return new DashboardItemViewModel(item);
+            }
           }
           
           // For non-device items (or if device fetch fails), just use the dashboard metadata
@@ -157,6 +176,17 @@ export class HomeComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
+      }
+    });
+  }
+
+  removeDashboardItem(item: DashboardItemViewModel): void {
+    this.dashboardService.apiDashboardItemIdItemTypeDelete(item.itemId, item.itemType as number as DashboardItemType).subscribe({
+      next: () => {
+        this.dashboardItems = this.dashboardItems.filter(i => !(i.itemId === item.itemId && i.itemType === item.itemType));
+      },
+      error: (error) => {
+        console.error('Error removing dashboard item:', error);
       }
     });
   }
@@ -184,6 +214,16 @@ export class HomeComponent implements OnInit {
               }
             } catch (error) {
               console.error(`Error updating device ${dashboardItem.itemId}:`, error);
+            }
+          } else if (existingItem && dashboardItem.itemType === this.ITEM_TYPE_PERSON && dashboardItem.itemId) {
+            try {
+              const person = await this.personsService.apiPersonsIdGet(dashboardItem.itemId).toPromise();
+              if (person) {
+                existingItem.title = person.name as string;
+                existingItem.description = person.isAtHome ? 'At home' : 'Away';
+              }
+            } catch (error) {
+              console.error(`Error updating person ${dashboardItem.itemId}:`, error);
             }
           }
         });

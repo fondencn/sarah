@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sarah.API.BusinessObjects;
 
 namespace Sarah.API.BusinessObjects.DTOs
@@ -16,6 +17,7 @@ namespace Sarah.API.BusinessObjects.DTOs
         public bool IsFavourite { get; set; }
         
         public PositionDto? Position { get; set; }
+        public List<ExtendedPropertyDto>? ExtendedProperties { get; set; }
     }
 
     public class PositionDto
