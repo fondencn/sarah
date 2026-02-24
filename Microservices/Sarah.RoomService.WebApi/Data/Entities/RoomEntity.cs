@@ -29,4 +29,8 @@ public class RoomEntity
     [Display(Name = "Aktualisiert am")]
     [Column]
     public DateTime? UpdatedAt { get; set; }
+
+    [Display(Name = "Favorit")]
+    [Column]
+    public bool IsFavourite { get; set; }
 }

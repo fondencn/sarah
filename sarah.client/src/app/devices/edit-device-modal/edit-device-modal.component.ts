@@ -1,8 +1,9 @@
-import { Component} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DeviceDto } from '../../services/api-client';
+import { DeviceDto, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
+import { DevicesExtService } from '../../services/devices-ext.service';
 
 @Component({
   selector: 'editDeviceModal',
@@ -10,7 +11,7 @@ import { DialogContent } from '../../services/dialogcontent';
   styleUrls: ['./edit-device-modal.component.css']
 })
 
-export class EditDeviceModalComponent extends DialogContent {
+export class EditDeviceModalComponent extends DialogContent implements OnInit {
   
   deviceForm: FormGroup;
   private _device: DeviceDto | null = null;
@@ -25,21 +26,32 @@ export class EditDeviceModalComponent extends DialogContent {
     this._isNewDevice = value;
   }
 
-  // TODO: populate from actual service calls
-  public allDeviceTypes: any[] = [];
-  public allRooms: any[] = [];
-  public allNetworkElements: any[] = [];
+  public allDeviceTypes: { enumKey: number, enumValue: string }[] = [];
+  public allRooms: RoomDto[] = [];
+  public allNetworkElements: NetworkElementDto[] = [];
 
   public get dataContext(): DeviceDto | null {
-    this._device = this.deviceForm.valid ? this.deviceForm.value : null;
-    return this._device;
+    if (!this.deviceForm.valid) return null;
+    const v = this.deviceForm.value;
+    const nodeId = v.nodeId !== null && v.nodeId !== undefined ? Number(v.nodeId) : 0;
+    const deviceType = v.deviceType !== null && v.deviceType !== undefined ? Number(v.deviceType) : 0;
+    const roomId = v.roomId !== null && v.roomId !== undefined ? Number(v.roomId) : null;
+    return {
+      id: v.id,
+      name: v.name,
+      nodeId: nodeId,
+      deviceType: deviceType,
+      roomId: roomId,
+      isReadonly: v.isReadonly,
+      isFavourite: this._device?.isFavourite ?? false
+    } as DeviceDto;
   }
 
   public set dataContext(device: DeviceDto | null) {
     this._device = device;
     if (device) {
       this.deviceForm.patchValue({
-        nodeID: device.nodeId,
+        nodeId: device.nodeId,
         name: device.name,
         deviceType: device.deviceType,
         roomId: device.roomId,
@@ -49,21 +61,45 @@ export class EditDeviceModalComponent extends DialogContent {
     }
   }
 
-  
-
-  constructor(private fb: FormBuilder, dialogService: DialogService) {
+  constructor(private fb: FormBuilder, dialogService: DialogService,
+              private devicesExtService: DevicesExtService, private roomsService: RoomsService) {
     super(dialogService);
 
     this.deviceForm = this.fb.group({
       nodeId: [0, Validators.required],
       name: ['', Validators.required],
       deviceType: [0, Validators.required], 
-      roomId: [0, Validators.required], 
+      roomId: [null], 
       isReadonly: [false], 
       id: [0]
     });
   }
 
+  ngOnInit(): void {
+    this.loadDeviceTypes();
+    this.loadRooms();
+    this.loadNetworkElements();
+  }
+
+  private loadDeviceTypes(): void {
+    this.allDeviceTypes = Object.entries(KnownDeviceTypes)
+      .filter(([, v]) => typeof v === 'number')
+      .map(([k, v]) => ({ enumKey: v as number, enumValue: k }));
+  }
+
+  private loadRooms(): void {
+    this.roomsService.apiRoomsGet().subscribe({
+      next: (rooms: RoomDto[]) => { this.allRooms = rooms; },
+      error: (err) => console.error('Error loading rooms:', err)
+    });
+  }
+
+  private loadNetworkElements(): void {
+    this.devicesExtService.getElements().subscribe({
+      next: (elements: NetworkElementDto[]) => { this.allNetworkElements = elements; },
+      error: (err) => console.error('Error loading network elements:', err)
+    });
+  }
 
   protected override canOk(): boolean {
     return this.deviceForm.valid;

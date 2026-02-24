@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Sarah.Persons.WebApi.Data;
+using Sarah.DeviceService.WebApi.Data;
 
 #nullable disable
 
-namespace Sarah.Persons.WebApi.Migrations
+namespace Sarah.DeviceService.WebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260223225424_AddIsFavourite")]
+    partial class AddIsFavourite
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,7 @@ namespace Sarah.Persons.WebApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Sarah.Persons.WebApi.Data.Entities.PersonEntity", b =>
+            modelBuilder.Entity("Sarah.DeviceService.WebApi.Data.Entities.DeviceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,34 +34,41 @@ namespace Sarah.Persons.WebApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<bool>("IsPresent")
+                    b.Property<bool>("IsOnline")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastSeen")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("MacAddress")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("Metadata")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("LegacyPersons", (string)null);
+                    b.HasIndex("Name");
+
+                    b.ToTable("LegacyDevices", (string)null);
                 });
 
-            modelBuilder.Entity("Sarah.Persons.WebApi.Data.Entities.PersonInfoEntity", b =>
+            modelBuilder.Entity("Sarah.DeviceService.WebApi.Data.Entities.DeviceInfoEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,26 +76,30 @@ namespace Sarah.Persons.WebApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<byte>("GPSTrackerID")
-                        .HasColumnType("smallint");
+                    b.Property<long?>("Id_Room")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("IsFavourite")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MobilePhoneHostname")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("IsReadonly")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<byte>("NodeID")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("SpecificType")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Persons", (string)null);
+                    b.ToTable("Devices", (string)null);
                 });
 
-            modelBuilder.Entity("Sarah.Persons.WebApi.Data.Entities.UserFavouriteEntity", b =>
+            modelBuilder.Entity("Sarah.DeviceService.WebApi.Data.Entities.DeviceTraceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -93,19 +107,24 @@ namespace Sarah.Persons.WebApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<long>("ItemId")
-                        .HasColumnType("bigint");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ItemType")
-                        .HasColumnType("int");
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
+                    b.Property<byte>("NodeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Property")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserFavourites", (string)null);
+                    b.ToTable("DeviceTraces", (string)null);
                 });
 #pragma warning restore 612, 618
         }

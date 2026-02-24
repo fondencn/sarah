@@ -23,9 +23,10 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="gpsTrackerId">Tracker</label>
-            <select id="gpsTrackerId" class="form-control" formControlName="gpsTrackerId">
-              <option *ngFor="let tracker of allTrackers" [value]="tracker.id">
+            <label for="gpsTrackerID">Tracker</label>
+            <select id="gpsTrackerID" class="form-control" formControlName="gpsTrackerID">
+              <option [ngValue]="0">-- None --</option>
+              <option *ngFor="let tracker of allTrackers" [ngValue]="tracker.id">
                 {{ tracker.name}}
               </option>
             </select>

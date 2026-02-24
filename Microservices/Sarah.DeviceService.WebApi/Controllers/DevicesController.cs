@@ -12,6 +12,7 @@ namespace Sarah.DeviceService.WebApi.Controllers;
 
 [Authorize]
 [ApiController]
+[Route("[controller]")]
 [Route("api/[controller]")]
 public class DevicesController : ControllerBase
 {
@@ -24,6 +25,141 @@ public class DevicesController : ControllerBase
         _deviceService = deviceService;
         _dbContext = dbContext;
         _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await _dbContext.Devices.ToListAsync(cancellationToken);
+            var dtos = devices.Select(d => new DeviceDto
+            {
+                Id = d.Id,
+                RoomId = d.Id_Room,
+                Name = d.Name,
+                NodeId = d.NodeID,
+                DeviceType = d.SpecificType,
+                TypeName = d.SpecificType.ToString(),
+                IsReadonly = d.IsReadonly,
+                IsFavourite = d.IsFavourite
+            }).ToList();
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all devices");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> Create([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
+    {
+        var validationError = ValidateDeviceDto(deviceDto);
+        if (validationError != null) return validationError;
+        try
+        {
+            var entity = new Data.Entities.DeviceInfoEntity
+            {
+                Name = deviceDto!.Name,
+                NodeID = (byte)deviceDto.NodeId,
+                Id_Room = deviceDto.RoomId,
+                SpecificType = deviceDto.DeviceType,
+                IsReadonly = deviceDto.IsReadonly,
+                IsFavourite = deviceDto.IsFavourite
+            };
+            _dbContext.Devices.Add(entity);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            deviceDto.Id = entity.Id;
+            deviceDto.TypeName = entity.SpecificType.ToString();
+            return Ok(deviceDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating device");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Update([FromBody] DeviceDto? deviceDto, CancellationToken cancellationToken)
+    {
+        var validationError = ValidateDeviceDto(deviceDto);
+        if (validationError != null) return validationError;
+        try
+        {
+            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceDto!.Id, cancellationToken);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            entity.Name = deviceDto!.Name;
+            entity.NodeID = (byte)deviceDto.NodeId;
+            entity.Id_Room = deviceDto.RoomId;
+            entity.SpecificType = deviceDto.DeviceType;
+            entity.IsReadonly = deviceDto.IsReadonly;
+            entity.IsFavourite = deviceDto.IsFavourite;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            deviceDto.TypeName = entity.SpecificType.ToString();
+            return Ok(deviceDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating device {DeviceId}", deviceDto!.Id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    private BadRequestObjectResult? ValidateDeviceDto(DeviceDto? deviceDto)
+    {
+        if (deviceDto == null || string.IsNullOrWhiteSpace(deviceDto.Name))
+            return BadRequest("Device name is required");
+        if (deviceDto.NodeId < 0 || deviceDto.NodeId > 255)
+            return BadRequest("NodeId must be between 0 and 255");
+        return null;
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            _dbContext.Devices.Remove(entity);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting device {DeviceId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPut("{id}/favourite/{isFavourite}")]
+    public async Task<IActionResult> SetFavourite(long id, bool isFavourite, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+            entity.IsFavourite = isFavourite;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting favourite for device {DeviceId}", id);
+            return StatusCode(500, "Internal server error");
+        }
     }
 
 
@@ -218,12 +354,35 @@ public class DevicesController : ControllerBase
     {
         try
         {
-            var elements = _deviceService.Elements.Select(e => e.ToDto()).ToList();
+            var elements = _deviceService.Elements.Select(e => new
+            {
+                id = (int)e.NodeID,
+                type = e.ClassDescription ?? e.StateInfo ?? e.NodeID.ToString()
+            }).ToList();
             return Ok(elements);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving network elements");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("trackers")]
+    public IActionResult GetTrackers()
+    {
+        try
+        {
+            var trackers = _deviceService.GPSTrackers.Select(t => new
+            {
+                id = (int)t.NodeID,
+                name = t.ClassDescription ?? t.StateInfo ?? $"Tracker {t.NodeID}"
+            }).ToList();
+            return Ok(trackers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving trackers");
             return StatusCode(500, "Internal server error");
         }
     }
@@ -244,9 +403,11 @@ public class DevicesController : ControllerBase
                 Id = device.Id,
                 RoomId = device.Id_Room,
                 Name = device.Name,
-                NodeID = device.NodeID,
-                DeviceType = device.SpecificType.ToString(),
-                IsReadonly = device.IsReadonly
+                NodeId = device.NodeID,
+                DeviceType = device.SpecificType,
+                TypeName = device.SpecificType.ToString(),
+                IsReadonly = device.IsReadonly,
+                IsFavourite = device.IsFavourite
             };
 
             return Ok(dto);

@@ -24,6 +24,9 @@ public class PersonInfoEntity : IPerson
     [Column]
     public byte GPSTrackerID { get; set; }
 
+    [Column]
+    public bool IsFavourite { get; set; }
+
     [NotMapped]
     public bool IsAtHome { get; set; }
 

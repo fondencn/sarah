@@ -31,4 +31,8 @@ public class DeviceInfoEntity
     [Display(Name = "Schreibgeschützt")]
     [Column]
     public bool IsReadonly { get; set; }
+
+    [Display(Name = "Favorit")]
+    [Column]
+    public bool IsFavourite { get; set; }
 }

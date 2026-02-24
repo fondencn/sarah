@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PersonDto } from '../../services/api-client';
+import { PersonDto, TrackerDto } from '../../services/api-client';
 import { DialogService } from '../../services/dialog.service';
+import { DevicesExtService } from '../../services/devices-ext.service';
+import { PersonsExtService } from '../../services/persons-ext.service';
 
 @Component({
   selector: 'editPersonModal',
   templateUrl: './edit-person-modal.component.html',
   styleUrl: './edit-person-modal.component.css'
 })
-export class EditPersonModalComponent extends DialogContent {
+export class EditPersonModalComponent extends DialogContent implements OnInit {
   personForm: FormGroup;
   private _person: PersonDto | null = null;
   okButtonText : string = "Save";
@@ -23,13 +25,18 @@ export class EditPersonModalComponent extends DialogContent {
     this._isNewPerson = value;
   }
 
-  // TODO: populate from actual service calls
-  public allTrackers: any[] = [];
+  public allTrackers: TrackerDto[] = [];
   public allMobilePhones: string[] = [];
 
   public get dataContext(): PersonDto | null {
-    this._person = this.personForm.valid ? this.personForm.value : null;
-    return this._person;
+    if (!this.personForm.valid) return null;
+    const v = this.personForm.value;
+    return {
+      id: v.id != null ? Number(v.id) : 0,
+      name: v.name,
+      mobilePhoneHostname: v.mobilePhoneHostname,
+      gpsTrackerID: v.gpsTrackerID != null ? Number(v.gpsTrackerID) : 0
+    } as PersonDto;
   }
 
   public set dataContext(person: PersonDto | null) {
@@ -39,23 +46,42 @@ export class EditPersonModalComponent extends DialogContent {
         name: person.name,
         id : person.id,
         mobilePhoneHostname: person.mobilePhoneHostname,
-        gpsTrackerId: person.gpsTrackerID
+        gpsTrackerID: person.gpsTrackerID
       });
     }
   }
 
 
-  constructor(private fb: FormBuilder, dialogService: DialogService) {
+  constructor(private fb: FormBuilder, dialogService: DialogService,
+              private devicesExtService: DevicesExtService, private personsExtService: PersonsExtService) {
     super(dialogService);
 
     this.personForm = this.fb.group({
       name: ['', Validators.required],
       mobilePhoneHostname: [''],
-      gpsTrackerId: [0],
+      gpsTrackerID: [0],
       id: [0]
     });
   }
 
+  ngOnInit(): void {
+    this.loadTrackers();
+    this.loadMobilePhones();
+  }
+
+  private loadTrackers(): void {
+    this.devicesExtService.getTrackers().subscribe({
+      next: (trackers: TrackerDto[]) => { this.allTrackers = trackers; },
+      error: (err) => console.error('Error loading trackers:', err)
+    });
+  }
+
+  private loadMobilePhones(): void {
+    this.personsExtService.getMobilePhones().subscribe({
+      next: (phones: string[]) => { this.allMobilePhones = phones; },
+      error: (err) => console.error('Error loading mobile phones:', err)
+    });
+  }
 
   protected override canOk(): boolean {
     return this.personForm.valid;

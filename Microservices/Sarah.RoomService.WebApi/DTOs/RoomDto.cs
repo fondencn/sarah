@@ -7,4 +7,5 @@ public class RoomDto
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public bool IsFavourite { get; set; }
 }

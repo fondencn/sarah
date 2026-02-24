@@ -1,4 +1,5 @@
 using System;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.API.BusinessObjects.DTOs
 {
@@ -7,9 +8,12 @@ namespace Sarah.API.BusinessObjects.DTOs
         public long Id { get; set; }
         public long? RoomId { get; set; }
         public string? Name { get; set; }
-        public byte NodeID { get; set; }
-        public string? DeviceType { get; set; }
+        public int NodeId { get; set; }
+        public KnownDeviceTypes DeviceType { get; set; }
+        public string? TypeName { get; set; }
+        public string? Info { get; set; }
         public bool IsReadonly { get; set; }
+        public bool IsFavourite { get; set; }
         
         public PositionDto? Position { get; set; }
     }

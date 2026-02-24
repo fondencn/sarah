@@ -76,6 +76,9 @@ namespace Sarah.DeviceService.WebApi.Migrations
                     b.Property<long?>("Id_Room")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("IsFavourite")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsReadonly")
                         .HasColumnType("boolean");
 
