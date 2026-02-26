@@ -4,6 +4,7 @@ import { DeviceDto, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto }
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
 import { DevicesExtService } from '../../services/devices-ext.service';
+import { DEVICE_TYPE_LABELS } from '../../models/device-type-constants';
 
 @Component({
   selector: 'editDeviceModal',
@@ -84,7 +85,7 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   private loadDeviceTypes(): void {
     this.allDeviceTypes = Object.entries(KnownDeviceTypes)
       .filter(([, v]) => typeof v === 'number')
-      .map(([k, v]) => ({ enumKey: v as number, enumValue: k }));
+      .map(([, v]) => ({ enumKey: v as number, enumValue: DEVICE_TYPE_LABELS[v as number] ?? `Unknown (${v})` }));
   }
 
   private loadRooms(): void {

@@ -3,6 +3,7 @@ import { CreateDashboardItemDto, DashboardItemType, DashboardService, DeviceDto,
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 import { Subscription } from 'rxjs';
+import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
 
 
 @Component({
@@ -88,7 +89,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
     newDevice.nodeId = 0;
     newDevice.name = '';
     newDevice.info = '';
-    newDevice.deviceType = KnownDeviceTypes.NUMBER_0;
+    newDevice.deviceType = DEVICE_TYPE_UNKNOWN;
     newDevice.isReadonly = false;
     newDevice.id = 0;
 
