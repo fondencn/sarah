@@ -28,7 +28,8 @@ builder.Services.AddScoped<HomeNetworkService>();
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("https+http://deviceservice");
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
