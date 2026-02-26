@@ -148,28 +148,6 @@ namespace Sarah.ServiceClients
             }
         }
 
-        public async Task<string[]> GetMobilePhones()
-        {
-            try
-            {
-                Uri uri = new Uri(GetBaseUri(), "/api/persons/mobile-phones");
-                _logger?.LogDebug("HTTP GET To " + uri);
-
-                HttpResponseMessage response = await _httpClient.GetAsync(uri);
-                response.EnsureSuccessStatusCode();
-
-                string json = await response.Content.ReadAsStringAsync();
-                var phones = JsonConvert.DeserializeObject<string[]>(json);
-
-                return phones ?? Array.Empty<string>();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error getting mobile phones");
-                throw;
-            }
-        }
-
         public async Task<string[]> GetKnownHomeNetworkDevices()
         {
             try

@@ -115,18 +115,6 @@ namespace Sarah.Persons.WebApi.Services
             _logger.LogInformation("Person {PersonName} updated successfully.", person.Name);
         }
 
-        public async Task<string[]> GetMobilePhones()
-        {
-            await _homeNetworkService.Initialize(this._config);
-            return _homeNetworkService.KnownHosts?
-                .Where(item => item.IsConnected)
-                .Select(item => item.Hostname)
-                .Where(hostname => !string.IsNullOrWhiteSpace(hostname))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(hostname => hostname, StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? [];
-        }
-
         public async Task<string[]> GetKnownHomeNetworkDevices()
         {
             await _homeNetworkService.Initialize(this._config);

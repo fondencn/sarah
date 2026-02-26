@@ -163,21 +163,6 @@ public class PersonsController : ControllerBase
         }
     }
 
-    [HttpGet("mobile-phones")]
-    public async Task<IActionResult> GetMobilePhones()
-    {
-        try
-        {
-            var phones = await _personService.GetMobilePhones();
-            return Ok(phones);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving mobile phones");
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
     [HttpGet("known-home-network-devices")]
     public async Task<IActionResult> GetKnownHomeNetworkDevices()
     {

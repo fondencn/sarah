@@ -78,8 +78,8 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
 
   private loadMobilePhones(): void {
     this.personsExtService.getKnownHomeNetworkDevices().subscribe({
-      next: (phones: string[]) => { this.allMobilePhones = phones; },
-      error: (err) => console.error('Error loading mobile phones:', err)
+      next: (devices: string[]) => { this.allMobilePhones = devices; },
+      error: (err) => console.error('Error loading known home network devices:', err)
     });
   }
 
