@@ -27,15 +27,13 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
-    client.BaseAddress = new Uri(deviceServiceUrl);
+    client.BaseAddress = new Uri("https+http://deviceservice");
 });
 
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
-    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "http://personsservice";
-    client.BaseAddress = new Uri(personServiceUrl);
+    client.BaseAddress = new Uri("https+http://personsservice");
 });
 
 // Register RabbitMQ client
