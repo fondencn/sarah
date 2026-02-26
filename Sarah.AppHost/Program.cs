@@ -23,7 +23,9 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
-var postgres = builder.AddPostgres("postgres");
+var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume()
+    .WithLifetime(ContainerLifetime.Persistent);
  
 var postgresDevices = postgres.AddDatabase("devicesdb");
 var postgresPersons = postgres.AddDatabase("personsdb");
