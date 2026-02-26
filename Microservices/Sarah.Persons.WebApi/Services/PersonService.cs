@@ -123,6 +123,13 @@ namespace Sarah.Persons.WebApi.Services
                 .Select(item => item.Hostname).ToArray() ?? [];
         }
 
+        public async Task<string[]> GetKnownHomeNetworkDevices()
+        {
+            await _homeNetworkService.Initialize(this._config);
+            return _homeNetworkService.KnownHosts?
+                .Select(item => item.Hostname).ToArray() ?? [];
+        }
+
         private async Task LoadLocationInfos(PersonInfoEntity p)
         {
 

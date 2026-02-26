@@ -170,6 +170,28 @@ namespace Sarah.ServiceClients
             }
         }
 
+        public async Task<string[]> GetKnownHomeNetworkDevices()
+        {
+            try
+            {
+                Uri uri = new Uri(GetBaseUri(), "/api/persons/known-home-network-devices");
+                _logger?.LogDebug("HTTP GET To " + uri);
+
+                HttpResponseMessage response = await _httpClient.GetAsync(uri);
+                response.EnsureSuccessStatusCode();
+
+                string json = await response.Content.ReadAsStringAsync();
+                var devices = JsonConvert.DeserializeObject<string[]>(json);
+
+                return devices ?? Array.Empty<string>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error getting known home network devices");
+                throw;
+            }
+        }
+
         public async Task<bool> IsSomeonePresent()
         {
             try

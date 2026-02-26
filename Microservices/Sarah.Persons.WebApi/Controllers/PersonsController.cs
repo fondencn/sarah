@@ -178,6 +178,21 @@ public class PersonsController : ControllerBase
         }
     }
 
+    [HttpGet("known-home-network-devices")]
+    public async Task<IActionResult> GetKnownHomeNetworkDevices()
+    {
+        try
+        {
+            var devices = await _personService.GetKnownHomeNetworkDevices();
+            return Ok(devices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving known home network devices");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpGet("status")]
     [AllowAnonymous]
     public IActionResult GetStatus()

@@ -19,4 +19,9 @@ export class PersonsExtService {
   getMobilePhones(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/api/Persons/mobile-phones`);
   }
+
+  /** GET /api/Persons/known-home-network-devices — list of all known home network device hostnames */
+  getKnownHomeNetworkDevices(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/api/Persons/known-home-network-devices`);
+  }
 }
