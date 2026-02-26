@@ -26,7 +26,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    client.BaseAddress = new Uri("https+http://deviceservice");
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
 });
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
 

@@ -42,18 +42,19 @@ var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("dev
     .WithEnvironment("TheThingsNetwork__ApiKey", builder.Configuration["TheThingsNetwork:ApiKey"] ?? "")
     .WaitFor(rabbitmq);
 
+var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
+    .WithHttpEndpoint(port: 5003, name: "http-api")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
+
 var personsService = builder.AddProject<Projects.Sarah_Persons_WebApi>("personsservice")
     .WithHttpEndpoint(port: 5002, name: "http-api")
     .WithReference(postgresPersons, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
     .WithReference(deviceService)
-    .WaitFor(rabbitmq);
-
-var geofencesService = builder.AddProject<Projects.Sarah_Geofences_WebApi>("geofencesservice")
-    .WithHttpEndpoint(port: 5003, name: "http-api")
-    .WithReference(keycloak)
-    .WithReference(rabbitmq)
+    .WithReference(geofencesService)
     .WaitFor(rabbitmq);
 
 var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomservice")
