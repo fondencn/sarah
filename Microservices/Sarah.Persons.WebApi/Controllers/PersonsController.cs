@@ -163,17 +163,17 @@ public class PersonsController : ControllerBase
         }
     }
 
-    [HttpGet("mobile-phones")]
-    public async Task<IActionResult> GetMobilePhones()
+    [HttpGet("known-home-network-devices")]
+    public async Task<IActionResult> GetKnownHomeNetworkDevices()
     {
         try
         {
-            var phones = await _personService.GetMobilePhones();
-            return Ok(phones);
+            var devices = await _personService.GetKnownHomeNetworkDevices();
+            return Ok(devices);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving mobile phones");
+            _logger.LogError(ex, "Error retrieving known home network devices");
             return StatusCode(500, "Internal server error");
         }
     }
