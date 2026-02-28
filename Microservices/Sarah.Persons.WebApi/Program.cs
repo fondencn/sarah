@@ -28,7 +28,7 @@ builder.Services.AddScoped<HomeNetworkService>();
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
+    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -36,7 +36,7 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 // Register HTTP client for GeoFence Service communication
 builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
 {
-    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "http://geofencesservice";
+    var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "https+http://geofencesservice";
     client.BaseAddress = new Uri(geofenceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
