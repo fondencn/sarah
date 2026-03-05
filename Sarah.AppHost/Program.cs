@@ -4,6 +4,18 @@
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
 
+var postgresUserName = builder.AddParameter(
+    "postgres-username",
+    builder.Configuration["Postgres:Username"] ?? "postgres",
+    publishValueAsDefault: true,
+    secret: false);
+
+var postgresPassword = builder.AddParameter(
+    "postgres-password",
+    builder.Configuration["Postgres:Password"] ?? "postgres",
+    publishValueAsDefault: false,
+    secret: true);
+
 // Add Keycloak IDP with realm import (HTTP-only mode)
 var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
@@ -23,7 +35,7 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
-var postgres = builder.AddPostgres("postgres")
+var postgres = builder.AddPostgres("postgres", postgresUserName, postgresPassword)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
  
