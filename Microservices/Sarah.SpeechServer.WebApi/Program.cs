@@ -7,6 +7,7 @@ using Sarah.Voice;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;
+using Sarah.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,8 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
     var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
-});
+})
+.AddBearerTokenForwarding();
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
 
 // Register MessageBasedWeatherProvider as IWeatherProvider and as IHostedService

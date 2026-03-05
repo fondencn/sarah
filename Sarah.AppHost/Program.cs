@@ -108,7 +108,9 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
 var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
     .WithHttpEndpoint(port: 5007, name: "http-api")
     .WithReference(postgresDashboard, "PostgresConnection")
-    .WithReference(keycloak);
+    .WithReference(keycloak)
+    .WithReference(deviceService)
+    .WithReference(personsService);
 
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")

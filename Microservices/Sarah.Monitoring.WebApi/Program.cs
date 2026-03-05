@@ -7,6 +7,7 @@ using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.Monitoring;
 using Sarah.ServiceClients;
+using Sarah.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +37,8 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
     var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
-});
+})
+.AddBearerTokenForwarding();
 
 
 // Register RabbitMQ client

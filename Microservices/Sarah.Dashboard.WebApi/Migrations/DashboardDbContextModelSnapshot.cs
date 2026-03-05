@@ -37,9 +37,6 @@ namespace Sarah.Dashboard.WebApi.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ExtendedPropertiesJson")
-                        .HasColumnType("jsonb");
-
                     b.Property<int>("ItemId")
                         .HasColumnType("integer");
 

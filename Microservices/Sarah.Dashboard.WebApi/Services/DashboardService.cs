@@ -1,8 +1,9 @@
 using Sarah.Dashboard.WebApi.Data.Entities;
 using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.DTOs;
-using System.Text.Json;
 using Sarah.API.BusinessObjects;
+using Sarah.ServiceClients;
+using DeviceDto = Sarah.API.BusinessObjects.DTOs.DeviceDto;
 
 namespace Sarah.Dashboard.WebApi.Services;
 
@@ -23,26 +24,33 @@ public interface IDashboardService
 public class DashboardService : IDashboardService
 {
     private readonly IRepository<DashboardItemEntity> _repository;
+    private readonly DeviceServiceClient _deviceServiceClient;
+    private readonly PersonServiceClient _personServiceClient;
     private readonly ILogger<DashboardService> _logger;
 
     public DashboardService(
         IRepository<DashboardItemEntity> repository,
+        DeviceServiceClient deviceServiceClient,
+        PersonServiceClient personServiceClient,
         ILogger<DashboardService> logger)
     {
         _repository = repository;
+        _deviceServiceClient = deviceServiceClient;
+        _personServiceClient = personServiceClient;
         _logger = logger;
     }
 
     public async Task<IEnumerable<DashboardItemDto>> GetAllDashboardItemsAsync()
     {
         var entities = await _repository.GetAllAsync();
-        return entities.Select(MapToDto);
+        var mappedItems = await Task.WhenAll(entities.Select(MapToDtoAsync));
+        return mappedItems;
     }
 
     public async Task<DashboardItemDto?> GetDashboardItemAsync(int id)
     {
         var entity = await _repository.GetByIdAsync(id);
-        return entity != null ? MapToDto(entity) : null;
+        return entity != null ? await MapToDtoAsync(entity) : null;
     }
 
     public async Task<DashboardItemDto> CreateDashboardItemAsync(CreateDashboardItemDto createDto)
@@ -57,16 +65,23 @@ public class DashboardService : IDashboardService
                 $"Dashboard item with ItemId {createDto.ItemId} and ItemType {createDto.ItemType} already exists.");
         }
 
+        var subtype = createDto.Subtype;
+        if (createDto.ItemType == DashboardItemType.Device)
+        {
+            var sourceDevice = await _deviceServiceClient.GetDeviceByIdAsync(createDto.ItemId);
+            if (sourceDevice != null)
+            {
+                subtype = ResolveDeviceSubtype(sourceDevice);
+            }
+        }
+
         var entity = new DashboardItemEntity
         {
             ItemId = createDto.ItemId,
             ItemType = createDto.ItemType,
             Title = createDto.Title,
             Description = createDto.Description,
-            Subtype = createDto.Subtype,
-            ExtendedPropertiesJson = createDto.ExtendedProperties != null 
-                ? JsonSerializer.Serialize(createDto.ExtendedProperties) 
-                : null,
+            Subtype = subtype,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -74,7 +89,7 @@ public class DashboardService : IDashboardService
         var created = await _repository.AddAsync(entity);
         _logger.LogInformation("Created dashboard item: {ItemType} - {ItemId}", created.ItemType, created.ItemId);
         
-        return MapToDto(created);
+        return await MapToDtoAsync(created);
     }
 
     public async Task<bool> DeleteDashboardItemAsync(int itemId, DashboardItemType itemType)
@@ -94,32 +109,79 @@ public class DashboardService : IDashboardService
         return true;
     }
 
-    private static DashboardItemDto MapToDto(DashboardItemEntity entity)
+    private async Task<DashboardItemDto> MapToDtoAsync(DashboardItemEntity entity)
     {
-        List<ExtendedPropertyDto>? extendedProperties = null;
-        
-        if (!string.IsNullOrEmpty(entity.ExtendedPropertiesJson))
-        {
-            try
-            {
-                extendedProperties = JsonSerializer.Deserialize<List<ExtendedPropertyDto>>(
-                    entity.ExtendedPropertiesJson);
-            }
-            catch (JsonException)
-            {
-                // Log error but don't fail the mapping
-                extendedProperties = null;
-            }
-        }
-
-        return new DashboardItemDto
+        var dto = new DashboardItemDto
         {
             ItemId = entity.ItemId,
             ItemType = entity.ItemType,
             Title = entity.Title,
             Description = entity.Description,
             Subtype = entity.Subtype,
-            ExtendedProperties = extendedProperties
+            ExtendedProperties = null
+        };
+
+        if (entity.ItemType == DashboardItemType.Device)
+        {
+            try
+            {
+                var device = await _deviceServiceClient.GetDeviceByIdAsync(entity.ItemId);
+                if (device != null)
+                {
+                    dto.Title = string.IsNullOrWhiteSpace(dto.Title) ? device.Name : dto.Title;
+                    dto.Description = string.IsNullOrWhiteSpace(dto.Description) ? device.Info : dto.Description;
+                    dto.Subtype = string.IsNullOrWhiteSpace(dto.Subtype) ? ResolveDeviceSubtype(device) : dto.Subtype;
+                    dto.ExtendedProperties = device.ExtendedProperties?.Select(p => new ExtendedPropertyDto
+                    {
+                        Key = p.Key,
+                        Value = p.Value
+                    }).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load live device data for dashboard item {ItemId}", entity.ItemId);
+            }
+        }
+        else if (entity.ItemType == DashboardItemType.Person)
+        {
+            try
+            {
+                var person = await _personServiceClient.GetPersonByIdAsync(entity.ItemId);
+                if (person != null)
+                {
+                    dto.Title = person.Name;
+                    dto.Description = person.IsAtHome ? "At home" : "Away";
+                    dto.Subtype ??= "Person";
+                    dto.ExtendedProperties = new List<ExtendedPropertyDto>
+                    {
+                        new() { Key = "IsAtHome", Value = person.IsAtHome ? "True" : "False" }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load live person data for dashboard item {ItemId}", entity.ItemId);
+            }
+        }
+
+        return dto;
+    }
+
+    private static string? ResolveDeviceSubtype(DeviceDto sourceDevice)
+    {
+        return sourceDevice.DeviceType switch
+        {
+            KnownDeviceTypes.LoraWanGpsTracker => "LoraWanGpsTracker",
+            KnownDeviceTypes.AeotecLedBulb
+                or KnownDeviceTypes.AeotecLedBulb6White
+                or KnownDeviceTypes.FibaroRGBWController2
+                or KnownDeviceTypes.ShellyWifiLamp => "Lampe",
+            KnownDeviceTypes.AeotecSmartSwitch7
+                or KnownDeviceTypes.FibaroWallPlug
+                or KnownDeviceTypes.PoppWallPlug
+                or KnownDeviceTypes.WifiWallPlug => "Steckdose",
+            _ => sourceDevice.TypeName
         };
     }
 }

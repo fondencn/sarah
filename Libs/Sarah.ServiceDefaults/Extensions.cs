@@ -15,6 +15,9 @@ public static class ServiceDefaultsExtensions
     {
         builder.ConfigureOpenTelemetry();
 
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddTransient<Sarah.ServiceDefaults.BearerTokenForwardingHandler>();
+
         builder.Services.AddServiceDiscovery();
 
         builder.Services.ConfigureHttpClientDefaults(http =>

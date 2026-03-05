@@ -5,6 +5,8 @@ using Sarah.Dashboard.WebApi.Data;
 using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.Services;
 using Sarah.Dashboard.WebApi.Data.Entities;
+using Sarah.ServiceClients;
+using Sarah.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,26 @@ builder.Services.AddScoped<IRepository<DashboardItemEntity>, Repository<Dashboar
 
 // Register services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+// Register HTTP client for DeviceService communication
+builder.Services.AddHttpClient<DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+})
+.AddBearerTokenForwarding();
+
+// Register HTTP client for PersonService communication
+builder.Services.AddHttpClient<PersonServiceClient>(client =>
+{
+    var personServiceUrl = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["PersonServiceUrl"]
+        ?? "https+http://personsservice";
+    client.BaseAddress = new Uri(personServiceUrl);
+})
+.AddBearerTokenForwarding();
 
 // Add services to the container.
 builder.Services.AddControllers();

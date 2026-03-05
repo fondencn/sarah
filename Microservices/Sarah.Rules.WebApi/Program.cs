@@ -8,6 +8,7 @@ using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;
 using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
+using Sarah.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,14 +30,16 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
     var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
-});
+})
+.AddBearerTokenForwarding();
 
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
     var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "https+http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);
-});
+})
+.AddBearerTokenForwarding();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

@@ -6,6 +6,7 @@ using Sarah.Persons.WebApi.Data.Repositories;
 using Sarah.Persons.WebApi.Services;
 using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;
+using Sarah.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +32,8 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
     var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
-});
+})
+.AddBearerTokenForwarding();
 
 // Register HTTP client for GeoFence Service communication
 builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =>
@@ -39,7 +41,8 @@ builder.Services.AddHttpClient<IGeoFenceService, GeoFenceServiceClient>(client =
     var geofenceServiceUrl = builder.Configuration["GeoFenceServiceUrl"] ?? "https+http://geofencesservice";
     client.BaseAddress = new Uri(geofenceServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
-});
+})
+.AddBearerTokenForwarding();
 
 // Add services to the container.
 builder.Services.AddControllers();
