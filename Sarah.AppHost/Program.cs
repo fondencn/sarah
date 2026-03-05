@@ -36,6 +36,7 @@ var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
 var postgres = builder.AddPostgres("postgres", postgresUserName, postgresPassword)
+    .WithPgAdmin()
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
  
