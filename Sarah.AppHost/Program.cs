@@ -128,8 +128,9 @@ if (builder.Environment.IsDevelopment())
     monitoringService.WithExplicitStart();
     rulesService.WithExplicitStart();
     speechServer.WithExplicitStart();
-    dashboardService.WithExplicitStart();
-    frontend.WithExplicitStart();
+    // Always start at least frontend and the home screen's backing service.
+    //dashboardService.WithExplicitStart();
+    //frontend.WithExplicitStart();
 }
 
 builder.Build().Run();
