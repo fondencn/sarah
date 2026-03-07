@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  <div class="row overflow-auto" [@popIn]>
+  <div class="row overflow-auto">
     <div class="col-md-4 m-3 p-2">
       <div class="card shadow-lg h-100 ">
         <div class="card-body">
@@ -41,7 +41,7 @@
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
     <div class="row overflow-auto" >
-      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems" [@popIn]="animateItems ? 'in' : 'out'">
+      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem" [@popIn]="animateItems ? 'enabled' : 'disabled'">
 
         <ng-container [ngSwitch]="item.itemType">
           <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">

@@ -142,28 +142,6 @@ public class DevicesController : ControllerBase
         }
     }
 
-    [HttpPut("{id}/favourite/{isFavourite}")]
-    public async Task<IActionResult> SetFavourite(long id, bool isFavourite, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-            if (entity == null)
-            {
-                return NotFound();
-            }
-            entity.IsFavourite = isFavourite;
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error setting favourite for device {DeviceId}", id);
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-
     [HttpGet("lamps")]
     public IActionResult GetLamps()
     {

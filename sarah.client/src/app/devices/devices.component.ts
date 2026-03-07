@@ -181,30 +181,32 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * @param isFavourite true if the device should be marked as favourite, false if not
    */
   public setFavourite(device: DeviceDto, isFavourite: boolean) {
-    this.devicesService.devicesIdFavouriteIsFavouritePut((device.id as number), isFavourite).subscribe({
-      next: () => {
-        device.isFavourite = isFavourite;
-        if (isFavourite) {
-          const createDto: CreateDashboardItemDto = {
-            itemId: device.id,
-            itemType: DashboardItemType.NUMBER_0,
-            title: device.name,
-            description: device.info,
-            subtype: device.typeName
-          };
-          this.dashboardService.apiDashboardPost(createDto).subscribe({
-            error: (err) => console.error('Error adding device to dashboard:', err)
-          });
-        } else {
-          this.dashboardService.apiDashboardItemIdItemTypeDelete((device.id as number), DashboardItemType.NUMBER_0).subscribe({
-            error: (err) => console.error('Error removing device from dashboard:', err)
-          });
+    if (isFavourite) {
+      const createDto: CreateDashboardItemDto = {
+        itemId: device.id,
+        itemType: DashboardItemType.NUMBER_0,
+        title: device.name,
+        description: device.info,
+        subtype: device.typeName
+      };
+      this.dashboardService.apiDashboardPost(createDto).subscribe({
+        next: () => {
+          device.isFavourite = true;
+        },
+        error: (err) => {
+          console.error('Error adding device to dashboard:', err);
         }
-      },
-      error: (error) => {
-        console.error('Error setting favourite state:', error);
-      }
-    });
+      });
+    } else {
+      this.dashboardService.apiDashboardItemIdItemTypeDelete((device.id as number), DashboardItemType.NUMBER_0).subscribe({
+        next: () => {
+          device.isFavourite = false;
+        },
+        error: (err) => {
+          console.error('Error removing device from dashboard:', err);
+        }
+      });
+    }
   }
 
 }
