@@ -7,8 +7,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <DcpDir>$(HOME)/.nuget/packages/aspire.hosting.orchestration.linux-arm64/13.0.0/tools/</DcpDir>
-    <AspireDashboardDir>$(HOME)/.nuget/packages/aspire.dashboard.sdk.linux-arm64/13.0.0/tools/</AspireDashboardDir>
     <UserSecretsId>5edff633-419b-430d-9113-6b68d0605eda</UserSecretsId>
   </PropertyGroup>
 

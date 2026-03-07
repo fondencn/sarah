@@ -20,9 +20,11 @@ var postgresPassword = builder.AddParameter(
 var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
+    .WithEndpoint("management", endpoint => endpoint.UriScheme = "http")
     .WithEnvironment("KEYCLOAK_ADMIN", keycloakAdminUser)
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
+    .WithEnvironment("KC_HTTP_MANAGEMENT_SCHEME", "http")
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_HOSTNAME", "localhost")
@@ -30,6 +32,12 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithArgs("--spi-connections-http-client-default-disable-trust-manager=true")
     .WithOtlpExporter()
     .WithRealmImport("./sarah-realm-realm.json");
+
+keycloak.OnResourceEndpointsAllocated((_, _, _) =>
+{
+    keycloak.WithEndpoint("management", endpoint => endpoint.UriScheme = "http");
+    return Task.CompletedTask;
+});
 
 // Add RabbitMQ message broker
 var rabbitmq = builder.AddRabbitMQ("rabbitmq");
