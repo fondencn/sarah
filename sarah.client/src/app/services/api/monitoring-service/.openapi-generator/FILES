@@ -1,0 +1,16 @@
+.gitignore
+README.md
+api.module.ts
+api/api.ts
+api/monitoring.service.ts
+api/monitoring.serviceInterface.ts
+configuration.ts
+encoder.ts
+git_push.sh
+index.ts
+model/models.ts
+ng-package.json
+package.json
+param.ts
+tsconfig.json
+variables.ts

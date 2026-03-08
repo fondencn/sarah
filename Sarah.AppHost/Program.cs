@@ -119,19 +119,19 @@ var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithReference(keycloak)
     .WithRunScript("start");
 
-if (builder.Environment.IsDevelopment())
-{
-    deviceService.WithExplicitStart();
-    personsService.WithExplicitStart();
-    geofencesService.WithExplicitStart();
-    roomService.WithExplicitStart();
-    monitoringService.WithExplicitStart();
-    rulesService.WithExplicitStart();
-    speechServer.WithExplicitStart();
-    // Always start at least frontend and the home screen's backing service.
-    //dashboardService.WithExplicitStart();
-    //frontend.WithExplicitStart();
-}
+// if (builder.Environment.IsDevelopment())
+// {
+//     deviceService.WithExplicitStart();
+//     personsService.WithExplicitStart();
+//     geofencesService.WithExplicitStart();
+//     roomService.WithExplicitStart();
+//     monitoringService.WithExplicitStart();
+//     rulesService.WithExplicitStart();
+//     speechServer.WithExplicitStart();
+//     // Always start at least frontend and the home screen's backing service.
+//     //dashboardService.WithExplicitStart();
+//     //frontend.WithExplicitStart();
+// }
 
 builder.Build().Run();
 

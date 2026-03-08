@@ -1,5 +1,8 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { CreateDashboardItemDto, DashboardItemType, DashboardService, DeviceDto, DevicesService, KnownDeviceTypes, NetworkElementDto } from '../services/api-client'; // Import the generated client
+import { DevicesClient } from '../services/api/device-service/api/api';
+import { DeviceDtoModel as DeviceDto, KnownDeviceTypesModel as KnownDeviceTypes } from '../services/api/device-service/model/models';
+import { CreateDashboardItemDto, DashboardItemType, NetworkElementDto } from '../models/api-types';
+import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 import { Subscription } from 'rxjs';
@@ -21,7 +24,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
-  constructor(private devicesService: DevicesService, private dialogService: DialogService, private dashboardService: DashboardService) { }
+  constructor(private devicesService: DevicesClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
 
   ngOnInit(): void {
     this.onLoad();
@@ -68,7 +71,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
    */
   public retrieveDevices() {
     this.isLoading = true; // Set the loading state to true
-    this.devicesService.devicesGet().subscribe({
+    this.devicesService.devicesGetAllGETApiDevices().subscribe({
       next: (response: DeviceDto[]) => {
         this.devices = response; // Save the devices list in the member variable
       },
@@ -108,7 +111,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   public onDeviceAdded(success: boolean) {
     if (success) {
       let addedDevice: DeviceDto = this.editDeviceModal.dataContext as DeviceDto;
-      this.devicesService.devicesPut(addedDevice).subscribe({
+      this.devicesService.devicesCreatePUTApiDevices(addedDevice).subscribe({
         next: (response: DeviceDto) => {
           this.devices.push(response);
         },
@@ -140,7 +143,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
    */
   public onDeviceEdited(success: boolean) {
     if (success) {
-      this.devicesService.devicesPost(this.editDeviceModal.dataContext as DeviceDto).subscribe({
+      this.devicesService.devicesUpdatePOSTApiDevices(this.editDeviceModal.dataContext as DeviceDto).subscribe({
         next: (response: DeviceDto) => {
           const index = this.devices.findIndex(d => d.nodeId === response.nodeId);
           this.devices[index] = response;
@@ -161,7 +164,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this.dialogService.showConfirmDialog('Are you sure you want to delete this device?', 'Confirm Deletion')
       .then((result: boolean) => {
         if (result) {
-          this.devicesService.devicesIdDelete(device.id as number).subscribe({
+          this.devicesService.devicesDeleteDELETEApiDevicesId(device.id as number).subscribe({
             next: () => {
               this.devices = this.devices.filter(d => d.nodeId !== device.nodeId);
             },

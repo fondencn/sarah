@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DeviceDto, KnownDeviceTypes, NetworkElementDto, RoomsService, RoomDto } from '../../services/api-client';
+import { RoomsClient } from '../../services/api/room-service/api/api';
+import { DeviceDtoModel as DeviceDto, KnownDeviceTypesModel as KnownDeviceTypes } from '../../services/api/device-service/model/models';
+import { RoomDtoModel as RoomDto } from '../../services/api/room-service/model/models';
+import { NetworkElementDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
 import { DevicesExtService } from '../../services/devices-ext.service';
@@ -63,7 +66,7 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   }
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private devicesExtService: DevicesExtService, private roomsService: RoomsService) {
+              private devicesExtService: DevicesExtService, private roomsService: RoomsClient) {
     super(dialogService);
 
     this.deviceForm = this.fb.group({

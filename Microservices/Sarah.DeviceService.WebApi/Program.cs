@@ -8,6 +8,7 @@ using Sarah.DeviceService.WebApi.Extensions;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces;
 using Sarah.DeviceService.WebApi.Services;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +78,25 @@ builder.Services.AddSwaggerGen(c =>
             },
             Array.Empty<string>()
         }
+    });
+
+    c.CustomOperationIds(apiDesc =>
+    {
+        var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
+        var action = apiDesc.ActionDescriptor.RouteValues["action"];
+        var method = apiDesc.HttpMethod ?? "Unknown";
+        var relativePath = apiDesc.RelativePath ?? string.Empty;
+
+        var sanitizedPath = Regex
+            .Replace(relativePath, "[^a-zA-Z0-9]+", "_")
+            .Trim('_');
+
+        if (!string.IsNullOrWhiteSpace(controller) && !string.IsNullOrWhiteSpace(action))
+        {
+            return $"{controller}_{action}_{method}_{sanitizedPath}";
+        }
+
+        return null;
     });
 });
 

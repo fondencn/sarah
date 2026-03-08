@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DashboardItemType, DevicesService, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
+import { DevicesClient } from '../services/api/device-service/api/api';
+import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, StatusDto } from '../models/api-types';
+import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
+import { StatusRuntimeService } from '../services/status-runtime.service';
+import { DevicesExtService } from '../services/devices-ext.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 
 @Component({
@@ -21,9 +25,10 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
 export class HomeComponent implements OnInit {
 
   constructor(public authService: AuthService, 
-    private statusService: StatusService, 
-    private dashboardService : DashboardService, 
-    private devicesService : DevicesService) { }  
+    private statusService: StatusRuntimeService, 
+    private dashboardService : DashboardRuntimeService, 
+    private devicesService : DevicesClient,
+    private devicesExtService: DevicesExtService) { }  
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
@@ -179,7 +184,7 @@ export class HomeComponent implements OnInit {
 
 
   private setLampColorInternal(itemId: number, color: string) {
-    this.devicesService.devicesLampIdColorColorPost(itemId,color).subscribe({
+    this.devicesExtService.setLampColor(itemId, color).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampColor:', response);
       },
@@ -190,7 +195,7 @@ export class HomeComponent implements OnInit {
   }
 
   private setLampBrightness(itemId: number, brightness: number) {
-    this.devicesService.devicesLampIdBrightnessBrightnessPost(itemId, brightness).subscribe({
+    this.devicesService.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness(itemId, brightness).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampBrightness:', response);
       },
@@ -201,7 +206,7 @@ export class HomeComponent implements OnInit {
   }
 
   private setWallplugState(itemId: number, state: boolean) {
-    this.devicesService.devicesWallplugIdIsOnPost(itemId, state).subscribe({
+    this.devicesExtService.setWallplugState(itemId, state).subscribe({
       next: (response: StatusDto) => {
         console.log('setWallplugState:', response);
       },

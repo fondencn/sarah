@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RoomDto } from '../../services/api-client';
+import { RoomDtoModel as RoomDto } from '../../services/api/room-service/model/models';
 import { DialogService } from '../../services/dialog.service';
 
 

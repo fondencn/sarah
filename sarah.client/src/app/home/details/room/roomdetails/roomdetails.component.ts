@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { RoomDto, RoomsService } from '../../../../services/api-client';
+import { RoomsClient } from '../../../../services/api/room-service/api/api';
+import { RoomDtoModel as RoomDto } from '../../../../services/api/room-service/model/models';
 
 @Component({
   selector: 'app-roomdetails',
@@ -11,7 +12,7 @@ export class RoomdetailsComponent implements OnInit {
   roomDetails: RoomDto | null = null;
   lastUpdated : string = "";
 
-  constructor(private roomsService: RoomsService) {}
+  constructor(private roomsService: RoomsClient) {}
 
   ngOnInit(): void {
     this.loadRoomDetails();

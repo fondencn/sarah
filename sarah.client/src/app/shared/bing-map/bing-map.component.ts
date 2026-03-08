@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
-import { NamedLocationDto } from '../../services/api-client';
+import { NamedLocationDto } from '../../models/api-types';
 import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
 
 @Component({

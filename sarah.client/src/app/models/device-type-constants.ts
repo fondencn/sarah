@@ -1,4 +1,4 @@
-import { KnownDeviceTypes } from '../services/api-client';
+import { KnownDeviceTypesModel as KnownDeviceTypes } from '../services/api/device-service/model/models';
 
 export const DEVICE_TYPE_UNKNOWN                      = KnownDeviceTypes.NUMBER_0;  // 0
 export const DEVICE_TYPE_FIBARO_MOTION_SENSOR         = KnownDeviceTypes.NUMBER_1;  // 1

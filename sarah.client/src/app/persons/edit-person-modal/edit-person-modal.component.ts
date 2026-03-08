@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PersonDto, TrackerDto } from '../../services/api-client';
+import { PersonDto, TrackerDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
 import { DevicesExtService } from '../../services/devices-ext.service';
 import { PersonsExtService } from '../../services/persons-ext.service';

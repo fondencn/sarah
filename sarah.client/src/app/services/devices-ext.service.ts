@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { NetworkElementDto, TrackerDto } from './api-client';
+import { NetworkElementDto, TrackerDto } from '../models/api-types';
 import { environment } from '../../environments/environment';
 
 /**
@@ -24,5 +24,15 @@ export class DevicesExtService {
   /** GET /Devices/trackers — list of GPS trackers (id + name) */
   getTrackers(): Observable<TrackerDto[]> {
     return this.http.get<TrackerDto[]>(`${this.baseUrl}/Devices/trackers`);
+  }
+
+  /** POST /Devices/lamp/{id}/color/{color} */
+  setLampColor(id: number, color: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Devices/lamp/${id}/color/${encodeURIComponent(color)}`, {});
+  }
+
+  /** POST /Devices/wallplug/{id}/{isOn} */
+  setWallplugState(id: number, isOn: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Devices/wallplug/${id}/${isOn}`, {});
   }
 }

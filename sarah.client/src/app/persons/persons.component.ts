@@ -1,5 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { CreateDashboardItemDto, DashboardItemType, DashboardService, PersonDto, PersonsService } from '../services/api-client';
+import { PersonsClient } from '../services/api/persons-service/api/api';
+import { CreateDashboardItemDto, DashboardItemType, PersonDto } from '../models/api-types';
+import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { Subscription } from 'rxjs';
 import { EditPersonModalComponent } from './edit-person-modal/edit-person-modal.component';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
@@ -42,14 +44,14 @@ export class PersonsComponent implements OnInit,OnDestroy {
   private dialogClosedSubscription: Subscription | null = null;
 
 
-  constructor(private personsService: PersonsService, private dialogService: DialogService, private dashboardService: DashboardService) { }
+  constructor(private personsService: PersonsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
 
 
   public retrievePersons(): void {
     this.isLoading = true; // Set the loading state to true
     this.personsService.apiPersonsGet().subscribe({
-      next: (response: PersonDto[]) => {
-        this.persons = response; // Save the devices list in the member variable
+      next: (response: any[]) => {
+        this.persons = response as PersonDto[]; // API may return richer shape than generated model
       },
       error: (error) => {
         console.error('Error fetching persons:', error);
@@ -89,7 +91,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
   public onPersonEdited(success: boolean) {
     if (success) {
       var personDto = this.editPersonModal.dataContext as PersonDto;
-      this.personsService.apiPersonsIdPut(personDto.id as number, personDto).subscribe({
+      this.personsService.apiPersonsIdPut(personDto.id as number, personDto as any).subscribe({
         next: (response: PersonDto) => {
           const index = this.persons.findIndex(d => d.id === response.id);
           this.persons[index] = response;
@@ -118,7 +120,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
     public onPersonAdded(success: boolean) {
       if (success) {
         let addedPerson: PersonDto = this.editPersonModal.dataContext as PersonDto;
-        this.personsService.apiPersonsPost(addedPerson).subscribe({
+        this.personsService.apiPersonsPost(addedPerson as any).subscribe({
           next: (response: PersonDto) => {
             this.persons.push(response);
           },

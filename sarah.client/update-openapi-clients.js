@@ -22,9 +22,21 @@
  */
 
 const { exec } = require('child_process');
+const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+
+const OPENAPI_TOOLS_CONFIG = path.join(__dirname, 'openapitools.json');
+let useDockerGenerator = false;
+if (fs.existsSync(OPENAPI_TOOLS_CONFIG)) {
+    try {
+        const config = JSON.parse(fs.readFileSync(OPENAPI_TOOLS_CONFIG, 'utf8'));
+        useDockerGenerator = config?.['generator-cli']?.useDocker === true;
+    } catch {
+        useDockerGenerator = false;
+    }
+}
 
 // Configuration constants
 const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB for large OpenAPI specs
@@ -126,14 +138,14 @@ const microservices = [
         title: 'Rules Service',
         outputDir: './src/app/services/api/rules-service',
         description: 'Automation rules engine'
-    },
-    {
-        name: 'speech-server',
-        port: 5008,
-        title: 'Speech Server',
-        outputDir: './src/app/services/api/speech-server',
-        description: 'Voice recognition and text-to-speech'
-    }
+    } //speech-server commented out because no direct access from frontend needed
+    // {
+    //     name: 'speech-server',
+    //     port: 5008,
+    //     title: 'Speech Server',
+    //     outputDir: './src/app/services/api/speech-server',
+    //     description: 'Voice recognition and text-to-speech'
+    // }
 ];
 
 /**
@@ -188,21 +200,23 @@ ${'='.repeat(70)}
 function downloadSpec(url, dest) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(dest);
+        const requestUrl = new URL(url);
+        const client = requestUrl.protocol === 'https:' ? https : http;
         
-        // Use the HTTPS agent with relaxed certificate validation for development
-        const requestOptions = {
-            ...new URL(url),
-            agent: httpsAgent
-        };
+        // Only pass custom https agent for https requests
+        const requestOptions = requestUrl.protocol === 'https:'
+            ? { ...requestUrl, agent: httpsAgent }
+            : requestUrl;
         
-        https.get(requestOptions, (response) => {
+        client.get(requestOptions, (response) => {
             if (response.statusCode === 302 || response.statusCode === 301) {
                 // Follow redirect with same agent
-                const redirectOptions = {
-                    ...new URL(response.headers.location),
-                    agent: httpsAgent
-                };
-                https.get(redirectOptions, (redirectResponse) => {
+                const redirectUrl = new URL(response.headers.location);
+                const redirectClient = redirectUrl.protocol === 'https:' ? https : http;
+                const redirectOptions = redirectUrl.protocol === 'https:'
+                    ? { ...redirectUrl, agent: httpsAgent }
+                    : redirectUrl;
+                redirectClient.get(redirectOptions, (redirectResponse) => {
                     if (redirectResponse.statusCode !== 200) {
                         reject(new Error(`Failed to get '${url}' (${redirectResponse.statusCode})`));
                         return;
@@ -240,6 +254,16 @@ function downloadSpec(url, dest) {
  */
 function generateClient(specPath, outputDir, serviceName) {
     return new Promise((resolve, reject) => {
+        const relativeSpecPath = path.relative(process.cwd(), specPath);
+        const relativeOutputDir = path.relative(process.cwd(), outputDir);
+
+        const generatorInputPath = useDockerGenerator
+            ? `/local/${relativeSpecPath.replace(/\\/g, '/')}`
+            : relativeSpecPath;
+        const generatorOutputPath = useDockerGenerator
+            ? `/local/${relativeOutputDir.replace(/\\/g, '/')}`
+            : relativeOutputDir;
+
         // Additional properties for Angular 18+ compatibility
         const additionalProps = [
             'ngVersion=18',
@@ -253,7 +277,7 @@ function generateClient(specPath, outputDir, serviceName) {
             'providedInRoot=true'
         ].join(',');
         
-        const command = `npx @openapitools/openapi-generator-cli generate -i ${specPath} -g typescript-angular -o ${outputDir} --additional-properties=${additionalProps}`;
+        const command = `npx @openapitools/openapi-generator-cli generate -i ${generatorInputPath} -g typescript-angular -o ${generatorOutputPath} --additional-properties=${additionalProps}`;
         
         console.log(`  Generating TypeScript client...`);
         

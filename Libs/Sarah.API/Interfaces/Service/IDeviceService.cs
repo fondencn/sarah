@@ -36,6 +36,8 @@ namespace Sarah.API.Interfaces.Services
         INetworkElement? GetNetworkItem(byte sourceNodeId);
         IParameterProvider?GetParameterProvider(KnownDeviceTypes specificType);
 
+        Task SetLampBrightness(byte nodeId, byte brightness);
+
         Task<IAssociationGroup[]> GetAssociationGroups(byte nodeID);
         Task SetAssociationGroup(byte nodeID, byte groupId, byte[] nodeIds);
 
