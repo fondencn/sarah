@@ -24,6 +24,8 @@ export const authConfig: AuthConfig = {
 })
 export class AuthService {
   private initializationPromise: Promise<void>;
+  private readonly authInitTimeoutMs = 8000;
+  private discoveryReady = false;
 
   constructor(
     private oauthService: OAuthService,
@@ -39,33 +41,72 @@ export class AuthService {
   private async initializeAuth(): Promise<void> {
     try {
       console.log('[AUTH] Initializing authentication service...');
-      
-      // Try to discover Keycloak endpoint from Aspire
-      const discoveredIssuer = await this.aspireResourceService.discoverKeycloakIssuer();
-      
-      if (discoveredIssuer) {
-        console.log('[AUTH] ✓ Using Aspire-discovered endpoint:', discoveredIssuer);
-        authConfig.issuer = discoveredIssuer;
+
+      if (environment.useAspireRuntimeDiscovery) {
+        // Optional runtime discovery for environments where Aspire resource API is browser-accessible.
+        const discoveredIssuer = await this.aspireResourceService.discoverKeycloakIssuer();
+
+        if (discoveredIssuer) {
+          console.log('[AUTH] ✓ Using Aspire-discovered endpoint:', discoveredIssuer);
+          authConfig.issuer = discoveredIssuer;
+        } else {
+          console.log('[AUTH] Runtime discovery failed, using configured endpoint:', authConfig.issuer);
+        }
       } else {
-        console.log('[AUTH] Using fallback hardcoded endpoint:', authConfig.issuer);
+        console.log('[AUTH] Runtime discovery disabled, using configured endpoint:', authConfig.issuer);
       }
 
       console.log('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
       this.oauthService.configure(authConfig);
       this.oauthService.setStorage(localStorage); // Use localStorage to store tokens
-      
-      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
-      console.log('[AUTH] Discovery document loaded');
-      
-      if (!this.oauthService.hasValidAccessToken()) {
-        console.log('[AUTH] No valid access token found');
-        this.oauthService.initLoginFlow();
+
+      await this.loadDiscoveryWithTimeout();
+
+      if (this.oauthService.hasValidAccessToken()) {
+        this.oauthService.setupAutomaticSilentRefresh();
+      } else {
+        console.log('[AUTH] No valid access token found. Waiting for user login action.');
       }
-      
-      this.oauthService.setupAutomaticSilentRefresh();
     } catch (err) {
       console.error('[AUTH] Error during initialization:', err);
-      throw err;
+      // APP_INITIALIZER must resolve so the app can render even if auth bootstrap fails.
+    }
+  }
+
+  private async loadDiscoveryWithTimeout(): Promise<void> {
+    const discoveryPromise = this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    const timeoutPromise = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        console.warn(`[AUTH] Discovery/login timed out after ${this.authInitTimeoutMs}ms; continuing startup.`);
+        resolve();
+      }, this.authInitTimeoutMs);
+    });
+
+    await Promise.race([
+      discoveryPromise
+        .then(() => {
+          this.discoveryReady = true;
+          console.log('[AUTH] Discovery document loaded');
+        })
+        .catch((error) => {
+          console.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
+        }),
+      timeoutPromise
+    ]);
+  }
+
+  private async ensureDiscoveryReady(): Promise<boolean> {
+    if (this.discoveryReady) {
+      return true;
+    }
+
+    try {
+      await this.oauthService.loadDiscoveryDocument();
+      this.discoveryReady = true;
+      return true;
+    } catch (error) {
+      console.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', authConfig.issuer, error);
+      return false;
     }
   }
 
@@ -106,8 +147,14 @@ export class AuthService {
    * 
    * Logins auth service
    */
-  public login(): void {
-    console.log("Calling initLoginFlow...");
+  public async login(): Promise<void> {
+    console.log('Calling initLoginFlow...');
+
+    const ready = await this.ensureDiscoveryReady();
+    if (!ready) {
+      return;
+    }
+
     this.oauthService.initLoginFlow();
   }
 

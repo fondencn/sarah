@@ -18,6 +18,9 @@ export const environment = {
   keycloakIssuer: 'http://localhost:8080/realms/sarah-realm',
   keycloakClientId: 'sarah-client',
   keycloakRealm: 'sarah-realm',
+  // Browser calls to Aspire's resource endpoint often fail due CORS/auth redirects.
+  // Keep this off by default and rely on build-time env substitution in replace-env-vars.js.
+  useAspireRuntimeDiscovery: false,
   // Microservices API endpoints
   // Each service runs on its own port for development
   api: {

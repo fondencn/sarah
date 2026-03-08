@@ -24,6 +24,8 @@ export const environment = {
   keycloakIssuer: 'http://pi:8080/realms/sarah-realm',
   keycloakClientId: 'sarah-client',
   keycloakRealm: 'sarah-realm',
+  // Keep runtime discovery disabled in browser; use configured issuer instead.
+  useAspireRuntimeDiscovery: false,
   // Microservices API endpoints
   // Each service runs on its own port
   api: {
