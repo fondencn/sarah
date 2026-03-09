@@ -277,63 +277,19 @@ namespace Sarah.DeviceService
         /// <returns></returns>
         public async Task SetLampColor(byte nodeId, string color)
         {
-            Node? n = this.GetNodeInternal(nodeId);
-            if (n != null)
+            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == nodeId);
+            if(lamp != null)
             {
-                Color c = n.GetCommandClass<Color>();
-                System.Drawing.Color cc = ColorConverter.FromHex(color);
-
-                /* via https://aeotec.freshdesk.com/support/solutions/articles/6000202221-led-bulb-6-multi-color-user-guide-
-                 * Switch Color SET Command Class.
-
-                    LED Bulb 6 uses SWITCH COLOR Command Class to allow you to change between Warm White, Cold White, or a mixture of RGB colors. Warm White takes the highest priority and will default to this setting on factory reset values.
-
-                    Capability ID
-                    Color
-                    0
-                    Warm White
-                    1
-                    Cold White
-                    2
-                    Red
-                    3
-                    Green
-                    4
-                    Blue
-
-                    Notes:
-                    Warm white takes highest priority over all other colors.
-                    In order for Cold White to appear, Warm White must be disabled or set to 0% intensity
-                    For RGB color mixes to work, both Cold White and Warm White must be disabled or set to 0% intensity.
-                 *
-                 */
-                ColorComponent warmWhite = new ColorComponent(ColorComponentType.WarmWhite, 0);
-                ColorComponent coldWhite = new ColorComponent(ColorComponentType.CoolWhite, 0);
-                ColorComponent r = new ColorComponent(ColorComponentType.Red, cc.R);
-                ColorComponent g = new ColorComponent(ColorComponentType.Green, cc.G);
-                ColorComponent b = new ColorComponent(ColorComponentType.Blue, cc.B);
-
-                await c.Set(new ColorComponent[] { warmWhite, coldWhite, r, g, b });
+                await lamp.SetColor(color);
             }
         }
 
         public async Task SetLampBrightness(byte nodeId, byte brightness)
         {
-            Node? n = this.GetNodeInternal(nodeId);
-            if (n != null)
+            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == nodeId);
+            if(lamp != null)
             {
-                Basic basic = n.GetCommandClass<Basic>();
-                await basic.Set(brightness);
-
-
-                //Color c = n.GetCommandClass<Color>();
-
-
-                //ColorComponent fade = new ColorComponent(1, 2); // FadeIn FadeOut; 1= DirectColor
-                //ColorComponent r = new ColorComponent(2, 255);
-                //ColorComponent g = new ColorComponent(3, 10);
-                //ColorComponent b = new ColorComponent(4, 10);
-                //await c.Set(new ColorComponent[] { fade, r, g, b });
+                await lamp.SetBrightness(brightness);
             }
         }
 

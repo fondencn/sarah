@@ -16,10 +16,6 @@
             "node_modules/@types"
         ]
     },
-
-  "angularCompilerOptions": {
-    "strictTemplates": true
-  },
     "exclude": [
         "node_modules",
         "dist"

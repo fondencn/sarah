@@ -3,7 +3,7 @@ import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PersonDto, TrackerDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
-import { DevicesExtService } from '../../services/devices-ext.service';
+import { DevicesClient } from '../../services/api/device-service/api/api';
 import { PersonsExtService } from '../../services/persons-ext.service';
 
 @Component({
@@ -53,7 +53,7 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
 
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private devicesExtService: DevicesExtService, private personsExtService: PersonsExtService) {
+              private devicesService: DevicesClient, private personsExtService: PersonsExtService) {
     super(dialogService);
 
     this.personForm = this.fb.group({
@@ -70,7 +70,7 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
   }
 
   private loadTrackers(): void {
-    this.devicesExtService.getTrackers().subscribe({
+    this.devicesService.devicesGetTrackersGETApiDevicesTrackers().subscribe({
       next: (trackers: TrackerDto[]) => { this.allTrackers = trackers; },
       error: (err) => console.error('Error loading trackers:', err)
     });

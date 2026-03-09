@@ -350,6 +350,38 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
+     * @param id 
+     * @param color 
+     */
+    devicesSetLampColorPOSTApiDevicesLampIdColorColor(id: number, color: string, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param color 
+     */
+    devicesSetLampColorPOSTDevicesLampIdColorColor(id: number, color: string, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param isOn 
+     */
+    devicesSetWallplugStateByDeviceIdPOSTApiDevicesWallplugIdStateIsOn(id: number, isOn: boolean, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param isOn 
+     */
+    devicesSetWallplugStateByDeviceIdPOSTDevicesWallplugIdStateIsOn(id: number, isOn: boolean, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
      * @param deviceDtoModel 
      */
     devicesUpdatePOSTApiDevices(deviceDtoModel?: DeviceDtoModel, extraHttpRequestParams?: any): Observable<{}>;
