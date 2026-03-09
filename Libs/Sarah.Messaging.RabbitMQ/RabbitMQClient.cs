@@ -124,6 +124,12 @@ public class RabbitMQClient : IDisposable
         CancellationToken cancellationToken = default) 
         where T : AbstractMessage
     {
+        if (typeof(T).IsAbstract || typeof(T).IsInterface)
+        {
+            throw new InvalidOperationException(
+                $"SubscribeAsync requires a concrete message type. '{typeof(T).FullName}' is not supported.");
+        }
+
         await this.ConnectAsync(cancellationToken);
 
         if (_channel == null)

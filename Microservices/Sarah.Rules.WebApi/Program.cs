@@ -28,7 +28,10 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
+    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
 })
 .AddBearerTokenForwarding();
@@ -36,7 +39,10 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
-    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "https+http://personsservice";
+    var personServiceUrl = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["services__personsservice__http-api__0"]
+        ?? builder.Configuration["PersonServiceUrl"]
+        ?? "https+http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);
 })
 .AddBearerTokenForwarding();

@@ -48,7 +48,7 @@ namespace Sarah.ServiceClients
 
         public async Task ToggleLampByRoom(string roomName, string lampName)
         {
-            HttpClient http = _httpClient ?? new HttpClient();
+            HttpClient http = _httpClient;
 
             SetLampByRoomRequest request = new SetLampByRoomRequest()
             {
@@ -65,7 +65,7 @@ namespace Sarah.ServiceClients
 
         public async Task SetLampByRoom(string roomName, string lampName, bool on)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             SetLampByRoomRequest request = new SetLampByRoomRequest()
             {
@@ -82,7 +82,7 @@ namespace Sarah.ServiceClients
 
         public async Task SetTemperatureByRoom(string roomName, float temperature)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             SetTemperatureByRoomRequest request = new SetTemperatureByRoomRequest()
             {
@@ -99,7 +99,7 @@ namespace Sarah.ServiceClients
 
         public async Task<GetOpenDoorsResponse> GetOpenDoors()
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetOpenDoors");
             _logger?.LogDebug("HTTP GET To " + uri);
@@ -113,7 +113,7 @@ namespace Sarah.ServiceClients
 
         public async Task<GetDeseaseInfoResponse> GetDeseaseInfo()
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetDeseaseInfo");
             _logger?.LogDebug("HTTP GET To " + uri);
@@ -128,7 +128,7 @@ namespace Sarah.ServiceClients
 
         public async Task SetAlarmSchedule(string text, DateTime alarmTime, string speakerHostname)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             SetAlarmScheduleRequest request = new SetAlarmScheduleRequest()
             {
@@ -145,7 +145,7 @@ namespace Sarah.ServiceClients
 
         public async Task<GetAlarmSchedulesResponse> GetAlarmSchedules()
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetAlarmSchedules");
             _logger?.LogDebug("HTTP GET To " + uri);
@@ -160,7 +160,7 @@ namespace Sarah.ServiceClients
 
         public async Task<GetPersonLocationResponse> GetPersonLocation(string personName)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/GetPersonLocation?personName=" + personName);
             _logger?.LogDebug("HTTP GET To " + uri);
@@ -174,7 +174,7 @@ namespace Sarah.ServiceClients
 
         public async Task ActivateScene(string sceneName)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             ActivateSceneRequest request = new ActivateSceneRequest()
             {
@@ -190,7 +190,7 @@ namespace Sarah.ServiceClients
 
         public async Task DeactivateScene(string sceneName)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             DeactivateSceneRequest request = new DeactivateSceneRequest()
             {
@@ -205,7 +205,7 @@ namespace Sarah.ServiceClients
 
         public async Task RegisterSpeaker()
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             var content = new StringContent(JsonConvert.SerializeObject(Environment.MachineName), Encoding.UTF8, "application/json");
             Uri uri = new Uri(GetBaseUri(), "/api/DeviceApi/RegisterSpeaker");
@@ -216,7 +216,7 @@ namespace Sarah.ServiceClients
 
         public async Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId)
         {
-            HttpClient http = new HttpClient();
+            HttpClient http = _httpClient;
 
             Uri uri = new Uri(GetBaseUri(), $"/api/Devices/gpstracker/{nodeId}");
             _logger?.LogDebug("HTTP GET To " + uri);

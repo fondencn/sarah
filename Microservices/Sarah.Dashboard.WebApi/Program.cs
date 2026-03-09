@@ -30,6 +30,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddHttpClient<DeviceServiceClient>(client =>
 {
     var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
         ?? builder.Configuration["DeviceServiceUrl"]
         ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
@@ -40,6 +41,7 @@ builder.Services.AddHttpClient<DeviceServiceClient>(client =>
 builder.Services.AddHttpClient<PersonServiceClient>(client =>
 {
     var personServiceUrl = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["services__personsservice__http-api__0"]
         ?? builder.Configuration["PersonServiceUrl"]
         ?? "https+http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);

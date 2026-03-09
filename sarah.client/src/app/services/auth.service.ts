@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { AuthConfig, OAuthEvent, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../environments/environment';
 import { AspireResourceService } from './aspire-resource.service';
 
@@ -23,15 +23,23 @@ export const authConfig: AuthConfig = {
   providedIn: 'root'
 })
 export class AuthService {
+  // Shared across all injections to avoid duplicate init runs from APP_INITIALIZER + component injection.
+  private static sharedInitializationPromise: Promise<void> | null = null;
+
   private initializationPromise: Promise<void>;
   private readonly authInitTimeoutMs = 8000;
+  private readonly discoveryAttemptTimeoutMs = 2000;
   private discoveryReady = false;
+  private loginInProgress = false;
 
   constructor(
     private oauthService: OAuthService,
     private aspireResourceService: AspireResourceService
   ) {
-    this.initializationPromise = this.initializeAuth();
+    if (!AuthService.sharedInitializationPromise) {
+      AuthService.sharedInitializationPromise = this.initializeAuth();
+    }
+    this.initializationPromise = AuthService.sharedInitializationPromise;
   }
 
   /**
@@ -42,15 +50,19 @@ export class AuthService {
     try {
       console.log('[AUTH] Initializing authentication service...');
 
-      if (environment.useAspireRuntimeDiscovery) {
-        // Optional runtime discovery for environments where Aspire resource API is browser-accessible.
-        const discoveredIssuer = await this.aspireResourceService.discoverKeycloakIssuer();
+      const shouldTryRuntimeDiscovery = this.shouldAttemptRuntimeDiscovery();
+      if (shouldTryRuntimeDiscovery) {
+        const realm = environment.keycloakRealm ?? 'sarah-realm';
+        const discoveredIssuer = await this.withTimeout(
+          this.aspireResourceService.discoverKeycloakIssuer(realm),
+          this.discoveryAttemptTimeoutMs
+        );
 
         if (discoveredIssuer) {
-          console.log('[AUTH] ✓ Using Aspire-discovered endpoint:', discoveredIssuer);
+          console.log('[AUTH] Using Aspire-discovered issuer:', discoveredIssuer);
           authConfig.issuer = discoveredIssuer;
         } else {
-          console.log('[AUTH] Runtime discovery failed, using configured endpoint:', authConfig.issuer);
+          console.log('[AUTH] Runtime discovery unavailable, using configured issuer:', authConfig.issuer);
         }
       } else {
         console.log('[AUTH] Runtime discovery disabled, using configured endpoint:', authConfig.issuer);
@@ -59,11 +71,15 @@ export class AuthService {
       console.log('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
       this.oauthService.configure(authConfig);
       this.oauthService.setStorage(localStorage); // Use localStorage to store tokens
+      this.subscribeToAuthEvents();
 
       await this.loadDiscoveryWithTimeout();
 
-      if (this.oauthService.hasValidAccessToken()) {
+      if (this.discoveryReady) {
         this.oauthService.setupAutomaticSilentRefresh();
+      }
+      if (this.oauthService.hasValidAccessToken()) {
+        console.log('[AUTH] Valid access token found.');
       } else {
         console.log('[AUTH] No valid access token found. Waiting for user login action.');
       }
@@ -73,26 +89,73 @@ export class AuthService {
     }
   }
 
+  private shouldAttemptRuntimeDiscovery(): boolean {
+    if (environment.useAspireRuntimeDiscovery) {
+      return true;
+    }
+
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    // Auto-enable discovery for local dev where Aspire resource discovery is usually reachable.
+    const host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  }
+
+  private subscribeToAuthEvents(): void {
+    this.oauthService.events.subscribe((event: OAuthEvent) => {
+      if (event.type === 'token_received') {
+        this.loginInProgress = false;
+      }
+
+      // Do not trigger interactive login on token_expires to avoid callback/login loops.
+      if (event.type === 'session_terminated' || event.type === 'session_error') {
+        void this.login();
+      }
+    });
+  }
+
   private async loadDiscoveryWithTimeout(): Promise<void> {
-    const discoveryPromise = this.oauthService.loadDiscoveryDocumentAndTryLogin();
-    const timeoutPromise = new Promise<void>((resolve) => {
-      setTimeout(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const timeoutPromise = new Promise<'timeout'>((resolve) => {
+      timeoutId = setTimeout(() => {
         console.warn(`[AUTH] Discovery/login timed out after ${this.authInitTimeoutMs}ms; continuing startup.`);
-        resolve();
+        resolve('timeout');
       }, this.authInitTimeoutMs);
     });
 
-    await Promise.race([
-      discoveryPromise
-        .then(() => {
-          this.discoveryReady = true;
-          console.log('[AUTH] Discovery document loaded');
-        })
-        .catch((error) => {
-          console.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
-        }),
-      timeoutPromise
-    ]);
+    const discoveryPromise = this.oauthService
+      .loadDiscoveryDocumentAndTryLogin()
+      .then(() => {
+        this.discoveryReady = true;
+        console.log('[AUTH] Discovery document loaded');
+        return 'discovery' as const;
+      })
+      .catch((error) => {
+        console.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
+        return 'failed' as const;
+      });
+
+    const result = await Promise.race([discoveryPromise, timeoutPromise]);
+    if (result !== 'timeout' && timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<null>((resolve) => {
+      timeoutId = setTimeout(() => resolve(null), timeoutMs);
+    });
+
+    const result = await Promise.race([promise, timeoutPromise]);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    return result as T | null;
   }
 
   private async ensureDiscoveryReady(): Promise<boolean> {
@@ -148,10 +211,17 @@ export class AuthService {
    * Logins auth service
    */
   public async login(): Promise<void> {
+    // Prevent overlapping redirects when multiple API calls fail at once.
+    if (this.loginInProgress) {
+      return;
+    }
+
+    this.loginInProgress = true;
     console.log('Calling initLoginFlow...');
 
     const ready = await this.ensureDiscoveryReady();
     if (!ready) {
+      this.loginInProgress = false;
       return;
     }
 
