@@ -164,6 +164,27 @@ public class DashboardService : IDashboardService
                 _logger.LogWarning(ex, "Failed to load live person data for dashboard item {ItemId}", entity.ItemId);
             }
         }
+        else if (entity.ItemType == DashboardItemType.Room)
+        {
+            try
+            {
+                dto.Subtype ??= "Room";
+                var summary = await _deviceServiceClient.GetRoomSummaryAsync(entity.ItemId);
+                if (summary != null)
+                {
+                    dto.ExtendedProperties = new List<ExtendedPropertyDto>
+                    {
+                        new() { Key = "AverageTemperature", Value = summary.AverageTemperature?.ToString("F1") ?? "" },
+                        new() { Key = "AnyDoorOpen", Value = summary.AnyDoorOpen ? "True" : "False" },
+                        new() { Key = "AnyPresence", Value = summary.AnyPresence ? "True" : "False" }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load live room data for dashboard item {ItemId}", entity.ItemId);
+            }
+        }
 
         return dto;
     }

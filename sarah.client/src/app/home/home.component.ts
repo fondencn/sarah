@@ -230,6 +230,20 @@ export class DashboardItemViewModel {
     return Number(this.item.extendedProperties?.find(x => x.key === 'Meter_W')?.value ?? "0");
   }
 
+  get averageTemperature(): number | null | undefined {
+    const val = this.item.extendedProperties?.find(x => x.key === 'AverageTemperature')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    return Number(val);
+  }
+
+  get anyDoorOpen(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'AnyDoorOpen')?.value === 'True';
+  }
+
+  get anyPresence(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'AnyPresence')?.value === 'True';
+  }
+
   get itemId(): number {
     return this.item.itemId as number;
   }
