@@ -1,0 +1,27 @@
+<div class="alarms-container container-fluid mt-4">
+  <h2 class="mb-4">
+    <img src="assets/icons/alarm.svg" alt="" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+    Alarm Schedule
+  </h2>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <span class="ms-3">Loading alarms...</span>
+  </div>
+
+  <!-- Calendar -->
+  <div [class.d-none]="isLoading">
+    <full-calendar [options]="calendarOptions"></full-calendar>
+  </div>
+
+  <!-- Hint text -->
+  <p class="text-muted mt-2 small">
+    <em>Click on a date or time slot to create a new alarm. Click an existing alarm to edit it.</em>
+  </p>
+
+  <!-- Edit / Create Modal -->
+  <alarm-edit-modal (alarmSaved)="onAlarmSaved()"></alarm-edit-modal>
+</div>
