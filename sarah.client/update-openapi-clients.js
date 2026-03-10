@@ -24,6 +24,7 @@
 const { exec } = require('child_process');
 const http = require('http');
 const https = require('https');
+const { urlToHttpOptions } = require('url');
 const fs = require('fs');
 const path = require('path');
 
@@ -205,8 +206,8 @@ function downloadSpec(url, dest) {
         
         // Only pass custom https agent for https requests
         const requestOptions = requestUrl.protocol === 'https:'
-            ? { ...requestUrl, agent: httpsAgent }
-            : requestUrl;
+            ? { ...urlToHttpOptions(requestUrl), agent: httpsAgent }
+            : urlToHttpOptions(requestUrl);
         
         client.get(requestOptions, (response) => {
             if (response.statusCode === 302 || response.statusCode === 301) {
@@ -214,8 +215,8 @@ function downloadSpec(url, dest) {
                 const redirectUrl = new URL(response.headers.location);
                 const redirectClient = redirectUrl.protocol === 'https:' ? https : http;
                 const redirectOptions = redirectUrl.protocol === 'https:'
-                    ? { ...redirectUrl, agent: httpsAgent }
-                    : redirectUrl;
+                    ? { ...urlToHttpOptions(redirectUrl), agent: httpsAgent }
+                    : urlToHttpOptions(redirectUrl);
                 redirectClient.get(redirectOptions, (redirectResponse) => {
                     if (redirectResponse.statusCode !== 200) {
                         reject(new Error(`Failed to get '${url}' (${redirectResponse.statusCode})`));
