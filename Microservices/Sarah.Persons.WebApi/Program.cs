@@ -24,7 +24,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register services
 builder.Services.AddScoped<IPersonService, PersonService>();
-builder.Services.AddScoped<HomeNetworkService>();
+builder.Services.AddSingleton<HomeNetworkService>();
 
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>

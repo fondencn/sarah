@@ -33,7 +33,7 @@ public class RabbitMQClient : IDisposable
     {
         if(this._isConnected)
         {
-            _logger.LogWarning("RabbitMQClient is already connected.");
+            _logger.LogDebug("RabbitMQClient is already connected.");
             return;
         }
         var factory = new ConnectionFactory();
