@@ -11,7 +11,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "start:windows": "ng serve --host=127.0.0.1",
-    "start:default": "node -e \"const vars = Object.fromEntries(Object.entries(process.env).filter(([k]) => k.toLowerCase().startsWith('services__'))); console.log('[NG-SERVE-START] Services env vars:', vars);\" && ng serve --host=127.0.0.1",
+    "start:default": "node -e \"const vars = Object.fromEntries(Object.entries(process.env).filter(([k]) => k.toLowerCase().startsWith('services__'))); console.log('[NG-SERVE-START] Services env vars:', vars);\" && ng serve --host=localhost",
     "update-openapi": "node update-openapi-clients.js"
   },
   "private": true,

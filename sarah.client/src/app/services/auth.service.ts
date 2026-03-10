@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { AuthConfig, OAuthEvent, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../environments/environment';
 import { AspireResourceService } from './aspire-resource.service';
 
@@ -23,13 +23,23 @@ export const authConfig: AuthConfig = {
   providedIn: 'root'
 })
 export class AuthService {
+  // Shared across all injections to avoid duplicate init runs from APP_INITIALIZER + component injection.
+  private static sharedInitializationPromise: Promise<void> | null = null;
+
   private initializationPromise: Promise<void>;
+  private readonly authInitTimeoutMs = 8000;
+  private readonly discoveryAttemptTimeoutMs = 2000;
+  private discoveryReady = false;
+  private loginInProgress = false;
 
   constructor(
     private oauthService: OAuthService,
     private aspireResourceService: AspireResourceService
   ) {
-    this.initializationPromise = this.initializeAuth();
+    if (!AuthService.sharedInitializationPromise) {
+      AuthService.sharedInitializationPromise = this.initializeAuth();
+    }
+    this.initializationPromise = AuthService.sharedInitializationPromise;
   }
 
   /**
@@ -39,33 +49,127 @@ export class AuthService {
   private async initializeAuth(): Promise<void> {
     try {
       console.log('[AUTH] Initializing authentication service...');
-      
-      // Try to discover Keycloak endpoint from Aspire
-      const discoveredIssuer = await this.aspireResourceService.discoverKeycloakIssuer();
-      
-      if (discoveredIssuer) {
-        console.log('[AUTH] ✓ Using Aspire-discovered endpoint:', discoveredIssuer);
-        authConfig.issuer = discoveredIssuer;
+
+      const shouldTryRuntimeDiscovery = this.shouldAttemptRuntimeDiscovery();
+      if (shouldTryRuntimeDiscovery) {
+        const realm = environment.keycloakRealm ?? 'sarah-realm';
+        const discoveredIssuer = await this.withTimeout(
+          this.aspireResourceService.discoverKeycloakIssuer(realm),
+          this.discoveryAttemptTimeoutMs
+        );
+
+        if (discoveredIssuer) {
+          console.log('[AUTH] Using Aspire-discovered issuer:', discoveredIssuer);
+          authConfig.issuer = discoveredIssuer;
+        } else {
+          console.log('[AUTH] Runtime discovery unavailable, using configured issuer:', authConfig.issuer);
+        }
       } else {
-        console.log('[AUTH] Using fallback hardcoded endpoint:', authConfig.issuer);
+        console.log('[AUTH] Runtime discovery disabled, using configured endpoint:', authConfig.issuer);
       }
 
       console.log('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
       this.oauthService.configure(authConfig);
       this.oauthService.setStorage(localStorage); // Use localStorage to store tokens
-      
-      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
-      console.log('[AUTH] Discovery document loaded');
-      
-      if (!this.oauthService.hasValidAccessToken()) {
-        console.log('[AUTH] No valid access token found');
-        this.oauthService.initLoginFlow();
+      this.subscribeToAuthEvents();
+
+      await this.loadDiscoveryWithTimeout();
+
+      if (this.discoveryReady) {
+        this.oauthService.setupAutomaticSilentRefresh();
       }
-      
-      this.oauthService.setupAutomaticSilentRefresh();
+      if (this.oauthService.hasValidAccessToken()) {
+        console.log('[AUTH] Valid access token found.');
+      } else {
+        console.log('[AUTH] No valid access token found. Waiting for user login action.');
+      }
     } catch (err) {
       console.error('[AUTH] Error during initialization:', err);
-      throw err;
+      // APP_INITIALIZER must resolve so the app can render even if auth bootstrap fails.
+    }
+  }
+
+  private shouldAttemptRuntimeDiscovery(): boolean {
+    if (environment.useAspireRuntimeDiscovery) {
+      return true;
+    }
+
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    // Auto-enable discovery for local dev where Aspire resource discovery is usually reachable.
+    const host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  }
+
+  private subscribeToAuthEvents(): void {
+    this.oauthService.events.subscribe((event: OAuthEvent) => {
+      if (event.type === 'token_received') {
+        this.loginInProgress = false;
+      }
+
+      // Do not trigger interactive login on token_expires to avoid callback/login loops.
+      if (event.type === 'session_terminated' || event.type === 'session_error') {
+        void this.login();
+      }
+    });
+  }
+
+  private async loadDiscoveryWithTimeout(): Promise<void> {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const timeoutPromise = new Promise<'timeout'>((resolve) => {
+      timeoutId = setTimeout(() => {
+        console.warn(`[AUTH] Discovery/login timed out after ${this.authInitTimeoutMs}ms; continuing startup.`);
+        resolve('timeout');
+      }, this.authInitTimeoutMs);
+    });
+
+    const discoveryPromise = this.oauthService
+      .loadDiscoveryDocumentAndTryLogin()
+      .then(() => {
+        this.discoveryReady = true;
+        console.log('[AUTH] Discovery document loaded');
+        return 'discovery' as const;
+      })
+      .catch((error) => {
+        console.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
+        return 'failed' as const;
+      });
+
+    const result = await Promise.race([discoveryPromise, timeoutPromise]);
+    if (result !== 'timeout' && timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<null>((resolve) => {
+      timeoutId = setTimeout(() => resolve(null), timeoutMs);
+    });
+
+    const result = await Promise.race([promise, timeoutPromise]);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    return result as T | null;
+  }
+
+  private async ensureDiscoveryReady(): Promise<boolean> {
+    if (this.discoveryReady) {
+      return true;
+    }
+
+    try {
+      await this.oauthService.loadDiscoveryDocument();
+      this.discoveryReady = true;
+      return true;
+    } catch (error) {
+      console.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', authConfig.issuer, error);
+      return false;
     }
   }
 
@@ -106,8 +210,21 @@ export class AuthService {
    * 
    * Logins auth service
    */
-  public login(): void {
-    console.log("Calling initLoginFlow...");
+  public async login(): Promise<void> {
+    // Prevent overlapping redirects when multiple API calls fail at once.
+    if (this.loginInProgress) {
+      return;
+    }
+
+    this.loginInProgress = true;
+    console.log('Calling initLoginFlow...');
+
+    const ready = await this.ensureDiscoveryReady();
+    if (!ready) {
+      this.loginInProgress = false;
+      return;
+    }
+
     this.oauthService.initLoginFlow();
   }
 

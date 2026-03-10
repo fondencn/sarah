@@ -8,6 +8,8 @@ using Sarah.API.Interfaces.Services;
 using Sarah.ServiceClients;
 using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
+using Sarah.ServiceDefaults;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,11 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
+        .ConfigureWarnings(warnings => warnings.Log(
+            (RelationalEventId.CommandExecuting, LogLevel.Debug),
+            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -27,16 +33,24 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["DeviceServiceUrl"] ?? "https+http://deviceservice";
+    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
-});
+})
+.AddBearerTokenForwarding();
 
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
-    var personServiceUrl = builder.Configuration["PersonServiceUrl"] ?? "https+http://personsservice";
+    var personServiceUrl = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["services__personsservice__http-api__0"]
+        ?? builder.Configuration["PersonServiceUrl"]
+        ?? "https+http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);
-});
+})
+.AddBearerTokenForwarding();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

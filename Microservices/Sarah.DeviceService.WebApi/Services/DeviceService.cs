@@ -1,4 +1,4 @@
-﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.Interfaces;
 using Sarah.DeviceService.Model;
@@ -11,6 +11,8 @@ using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Extensions;
 using Microsoft.Extensions.Hosting;
+using Sarah.DeviceService.WebApi.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sarah.DeviceService
 {
@@ -20,6 +22,7 @@ namespace Sarah.DeviceService
         private readonly INodeFactory _nodeFactory;
         private readonly ILogger<DeviceService> _logger;
         private readonly NetworkElementPublisher _publisher;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private Task? UpdateTask { get; set; }
         private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
@@ -27,12 +30,13 @@ namespace Sarah.DeviceService
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger, IServiceScopeFactory serviceScopeFactory)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
             this._publisher = publisher;
             this._logger = logger;
+            this._serviceScopeFactory = serviceScopeFactory;
         }
 
 
@@ -277,63 +281,28 @@ namespace Sarah.DeviceService
         /// <returns></returns>
         public async Task SetLampColor(byte nodeId, string color)
         {
-            Node? n = this.GetNodeInternal(nodeId);
-            if (n != null)
+            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == nodeId);
+            if(lamp != null)
             {
-                Color c = n.GetCommandClass<Color>();
-                System.Drawing.Color cc = ColorConverter.FromHex(color);
-
-                /* via https://aeotec.freshdesk.com/support/solutions/articles/6000202221-led-bulb-6-multi-color-user-guide-
-                 * Switch Color SET Command Class.
-
-                    LED Bulb 6 uses SWITCH COLOR Command Class to allow you to change between Warm White, Cold White, or a mixture of RGB colors. Warm White takes the highest priority and will default to this setting on factory reset values.
-
-                    Capability ID
-                    Color
-                    0
-                    Warm White
-                    1
-                    Cold White
-                    2
-                    Red
-                    3
-                    Green
-                    4
-                    Blue
-
-                    Notes:
-                    Warm white takes highest priority over all other colors.
-                    In order for Cold White to appear, Warm White must be disabled or set to 0% intensity
-                    For RGB color mixes to work, both Cold White and Warm White must be disabled or set to 0% intensity.
-                 *
-                 */
-                ColorComponent warmWhite = new ColorComponent(ColorComponentType.WarmWhite, 0);
-                ColorComponent coldWhite = new ColorComponent(ColorComponentType.CoolWhite, 0);
-                ColorComponent r = new ColorComponent(ColorComponentType.Red, cc.R);
-                ColorComponent g = new ColorComponent(ColorComponentType.Green, cc.G);
-                ColorComponent b = new ColorComponent(ColorComponentType.Blue, cc.B);
-
-                await c.Set(new ColorComponent[] { warmWhite, coldWhite, r, g, b });
+                await lamp.SetColor(color);
             }
         }
 
-        public async Task SetLampBrightness(byte nodeId, byte brightness)
+        public async Task SetLampBrightness(long deviceId, byte brightness)
         {
-            Node? n = this.GetNodeInternal(nodeId);
-            if (n != null)
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceId);
+            if (device == null)
             {
-                Basic basic = n.GetCommandClass<Basic>();
-                await basic.Set(brightness);
+                _logger.LogWarning("SetLampBrightness: no device found for deviceId {DeviceId}", deviceId);
+                return;
+            }
 
-
-                //Color c = n.GetCommandClass<Color>();
-
-
-                //ColorComponent fade = new ColorComponent(1, 2); // FadeIn FadeOut; 1= DirectColor
-                //ColorComponent r = new ColorComponent(2, 255);
-                //ColorComponent g = new ColorComponent(3, 10);
-                //ColorComponent b = new ColorComponent(4, 10);
-                //await c.Set(new ColorComponent[] { fade, r, g, b });
+            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == device.NodeID);
+            if(lamp != null)
+            {
+                await lamp.SetBrightness(brightness);
             }
         }
 

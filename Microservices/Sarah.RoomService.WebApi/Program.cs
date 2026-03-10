@@ -1,6 +1,7 @@
 using Sarah.Authentication;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Sarah.RoomService.WebApi.Data;
 using Sarah.RoomService.WebApi.Data.Repositories;
 
@@ -13,7 +14,11 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
+        .ConfigureWarnings(warnings => warnings.Log(
+            (RelationalEventId.CommandExecuting, LogLevel.Debug),
+            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

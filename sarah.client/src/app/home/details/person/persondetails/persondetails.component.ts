@@ -1,5 +1,7 @@
 import { Component, Input, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { LocationService, NamedLocationDto, PersonDto, PersonsService } from '../../../../services/api-client';
+import { PersonsClient } from '../../../../services/api/persons-service/api/api';
+import { LocationRuntimeService } from '../../../../services/location-runtime.service';
+import { NamedLocationDto, PersonDto } from '../../../../models/api-types';
 import { BingMapComponent } from '../../../../shared/bing-map/bing-map.component';
 
 @Component({
@@ -18,7 +20,7 @@ export class PersondetailsComponent implements OnDestroy {
   zuhause: NamedLocationDto | null = null;
   @ViewChild('map') mapElement: BingMapComponent | null = null;
 
-  constructor(private personsService: PersonsService, private locationService: LocationService) { }
+  constructor(private personsService: PersonsClient, private locationService: LocationRuntimeService) { }
 
   ngOnInit(): void {
     this.loadPersonDetails();
@@ -64,7 +66,7 @@ export class PersondetailsComponent implements OnDestroy {
   loadPersonDetails(): void {
     if (this.id) {
       this.personsService.apiPersonsIdGet(this.id).subscribe(person => {
-        this.personDetails = person;
+        this.personDetails = person as PersonDto;
         this.lastUpdated = new Date().toLocaleString('de-DE');
       });
       this.locationService.apiLocationWellknownlocationsGet().subscribe(locations => {

@@ -84,6 +84,7 @@ Configured centrally in `Sarah.ServiceDefaults`. Default policy allows any `loca
 - Realm defaults to `"sarah-realm"`; override with `"Keycloak": { "Realm": "other-realm" }` in appsettings
 - JWT audience defaults to `"account"`; override with `"Jwt": { "Audience": "..." }`
 - All controllers use `[Authorize]`
+- For inter-service HTTP calls created via `AddHttpClient(...)` and backed by `Sarah.ServiceClients`, always chain `.AddBearerTokenForwarding()` so the incoming user bearer token is propagated to downstream services.
 
 ### Repository pattern
 All data access uses the generic `Repository<T>` from `Libs/` (implements `IRepository<T>`). Register per entity:

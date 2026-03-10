@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\Sarah.API\Sarah.API.csproj" />
     <ProjectReference Include="..\..\Libs\Sarah.Authentication\Sarah.Authentication.csproj" />
+    <ProjectReference Include="..\..\Libs\Sarah.ServiceClients\Sarah.ServiceClients.csproj" />
     <ProjectReference Include="..\..\Libs\Sarah.ServiceDefaults\Sarah.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

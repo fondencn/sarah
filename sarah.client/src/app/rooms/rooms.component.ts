@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { RoomDto, RoomsService } from '../services/api-client';
+import { RoomsClient } from '../services/api/room-service/api/api';
+import { RoomDtoModel as RoomDto } from '../services/api/room-service/model/models';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { Subscription } from 'rxjs';
 import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
@@ -11,7 +12,7 @@ import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.compon
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsService, private dialogService: DialogService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService) { }
 
 
   rooms: RoomDto[] = [];

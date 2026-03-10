@@ -1,7 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { StatusService, StatusDto, DashboardItemDto, DashboardService, DashboardItemTypeDto, DashboardItemType, DevicesService, PersonsService, PersonDto, ExtendedPropertyDto } from '../services/api-client'; // Import the generated client
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { DevicesClient } from '../services/api/device-service/api/api';
+import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, StatusDto } from '../models/api-types';
+import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
+import { StatusRuntimeService } from '../services/status-runtime.service';
+import { trigger, transition, style, animate, state } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
@@ -9,13 +12,11 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   styleUrls: ['./home.component.css'],
   animations: [
     trigger('popIn', [
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'scale(0.5)' }),
-          stagger(300, [
-            animate('0.5s ease-out', style({ opacity: 1, transform: 'scale(1)' }))
-          ])
-        ], { optional: true })
+      state('enabled', style({ opacity: 1, transform: 'scale(1)' })),
+      state('disabled', style({ opacity: 1, transform: 'scale(1)' })),
+      transition('void => enabled', [
+        style({ opacity: 0, transform: 'scale(0.5)' }),
+        animate('0.5s ease-out', style({ opacity: 1, transform: 'scale(1)' }))
       ])
     ])
   ]
@@ -23,11 +24,9 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
 export class HomeComponent implements OnInit {
 
   constructor(public authService: AuthService, 
-    private statusService: StatusService, 
-    private dashboardService : DashboardService, 
-    private devicesService : DevicesService,
-    private personsService : PersonsService,
-    private cdr: ChangeDetectorRef) { }  
+    private statusService: StatusRuntimeService, 
+    private dashboardService : DashboardRuntimeService, 
+    private devicesService : DevicesClient) { }  
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
@@ -40,6 +39,7 @@ export class HomeComponent implements OnInit {
   ITEM_TYPE_SCENE  : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_1;
   ITEM_TYPE_ROOM   : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
   ITEM_TYPE_PERSON : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_3;
+  
   UPDATE_MILLISECONDS : number = 3000;
 
   ngOnInit(): void {
@@ -121,58 +121,8 @@ export class HomeComponent implements OnInit {
   private loadDashboardItems(): void {
     this.animateItems = true;
     this.dashboardService.apiDashboardGet().subscribe({
-      next: async (items: DashboardItemDto[]) => {
-        console.log('Dashboard items (metadata):', items);
-        
-        // Enrich dashboard items with actual data from respective services concurrently
-        const enrichmentPromises = items.map(async (item) => {
-          if (item.itemType === this.ITEM_TYPE_DEVICE && item.itemId) {
-            // Fetch device details
-            try {
-              const device = await this.devicesService.devicesIdGet(item.itemId).toPromise();
-              if (device) {
-                // Merge metadata from dashboard with device data
-                const enrichedItem: DashboardItemDto = {
-                  itemId: item.itemId,
-                  itemType: item.itemType,
-                  title: item.title || device.name,
-                  description: item.description || device.info,
-                  subtype: item.subtype || device.typeName,
-                  extendedProperties: device.extendedProperties
-                };
-                return new DashboardItemViewModel(enrichedItem);
-              }
-            } catch (error) {
-              console.error(`Error fetching device ${item.itemId}:`, error);
-              // Still add the item but without device data
-              return new DashboardItemViewModel(item);
-            }
-          } else if (item.itemType === this.ITEM_TYPE_PERSON && item.itemId) {
-            // Fetch person details
-            try {
-              const person = await this.personsService.apiPersonsIdGet(item.itemId).toPromise();
-              if (person) {
-                const enrichedItem: DashboardItemDto = {
-                  itemId: item.itemId,
-                  itemType: item.itemType,
-                  title: person.name,
-                  description: person.isAtHome ? 'At home' : 'Away',
-                  subtype: 'Person'
-                };
-                return new DashboardItemViewModel(enrichedItem);
-              }
-            } catch (error) {
-              console.error(`Error fetching person ${item.itemId}:`, error);
-              return new DashboardItemViewModel(item);
-            }
-          }
-          
-          // For non-device items (or if device fetch fails), just use the dashboard metadata
-          return new DashboardItemViewModel(item);
-        });
-        
-        // Wait for all enrichments to complete
-        this.dashboardItems = await Promise.all(enrichmentPromises);
+      next: (items: DashboardItemDto[]) => {
+        this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
       },
       error: (error) => {
         console.error('Error fetching dashboard items:', error);
@@ -196,49 +146,17 @@ export class HomeComponent implements OnInit {
   updateDashboardItems(): void {
     this.animateItems = false;
     this.dashboardService.apiDashboardGet().subscribe({
-      next: async (items: DashboardItemDto[]) => {
-        // Create update promises for all dashboard items
-        const updatePromises = items.map(async (dashboardItem) => {
-          const existingItem = this.dashboardItems.find(
-            i => i.itemId === dashboardItem.itemId && i.itemType === dashboardItem.itemType
-          );
-          
-          if (existingItem && dashboardItem.itemType === this.ITEM_TYPE_DEVICE && dashboardItem.itemId) {
-            try {
-              const device = await this.devicesService.devicesIdGet(dashboardItem.itemId).toPromise();
-              if (device) {
-                // Update with fresh device data
-                existingItem.description = device.info as string;
-                existingItem.extendedProperties = device.extendedProperties as ExtendedPropertyDto[];
-                existingItem.title = device.name as string;
-              }
-            } catch (error) {
-              console.error(`Error updating device ${dashboardItem.itemId}:`, error);
-            }
-          } else if (existingItem && dashboardItem.itemType === this.ITEM_TYPE_PERSON && dashboardItem.itemId) {
-            try {
-              const person = await this.personsService.apiPersonsIdGet(dashboardItem.itemId).toPromise();
-              if (person) {
-                existingItem.title = person.name as string;
-                existingItem.description = person.isAtHome ? 'At home' : 'Away';
-              }
-            } catch (error) {
-              console.error(`Error updating person ${dashboardItem.itemId}:`, error);
-            }
-          }
-        });
-        
-        // Wait for all updates to complete
-        await Promise.all(updatePromises);
-        
-        // Trigger change detection after all updates
-        this.cdr.markForCheck();
-        this.cdr.detectChanges();
+      next: (items: DashboardItemDto[]) => {
+        this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
       },
       error: (error) => {
         console.error('Error updating dashboard items:', error);
       }
     });
+  }
+
+  trackByDashboardItem(index: number, item: DashboardItemViewModel): string {
+    return `${item.itemType}-${item.itemId}`;
   }
 
 
@@ -264,7 +182,7 @@ export class HomeComponent implements OnInit {
 
 
   private setLampColorInternal(itemId: number, color: string) {
-    this.devicesService.devicesLampIdColorColorPost(itemId,color).subscribe({
+    this.devicesService.devicesSetLampColorPOSTApiDevicesLampIdColorColor(itemId, color).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampColor:', response);
       },
@@ -275,7 +193,7 @@ export class HomeComponent implements OnInit {
   }
 
   private setLampBrightness(itemId: number, brightness: number) {
-    this.devicesService.devicesLampIdBrightnessBrightnessPost(itemId, brightness).subscribe({
+    this.devicesService.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness(itemId, brightness).subscribe({
       next: (response: StatusDto) => {
         console.log('setLampBrightness:', response);
       },
@@ -286,7 +204,7 @@ export class HomeComponent implements OnInit {
   }
 
   private setWallplugState(itemId: number, state: boolean) {
-    this.devicesService.devicesWallplugIdIsOnPost(itemId, state).subscribe({
+    this.devicesService.devicesSetWallplugStateByDeviceIdPOSTApiDevicesWallplugIdStateIsOn(itemId, state).subscribe({
       next: (response: StatusDto) => {
         console.log('setWallplugState:', response);
       },

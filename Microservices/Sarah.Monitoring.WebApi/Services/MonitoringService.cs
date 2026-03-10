@@ -46,7 +46,7 @@ public class MonitoringService (IServiceProvider _serviceProvider, IDeviceServic
 
         _logger.LogInformation("MonitoringService started, subscribing to NetworkEvents");
 
-        await _rabbitMQ.SubscribeAsync<NetworkEventMessage>("network.events", async (message) =>
+        await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>("network.events", async (message) =>
         {
             // Convert the generic message to a more specific NetworkEvent type if possible
             // For now, create a basic NetworkEvent with the source node ID

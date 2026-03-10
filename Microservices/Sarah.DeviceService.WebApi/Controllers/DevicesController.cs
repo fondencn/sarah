@@ -142,28 +142,6 @@ public class DevicesController : ControllerBase
         }
     }
 
-    [HttpPut("{id}/favourite/{isFavourite}")]
-    public async Task<IActionResult> SetFavourite(long id, bool isFavourite, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var entity = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-            if (entity == null)
-            {
-                return NotFound();
-            }
-            entity.IsFavourite = isFavourite;
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error setting favourite for device {DeviceId}", id);
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-
     [HttpGet("lamps")]
     public IActionResult GetLamps()
     {
@@ -482,7 +460,114 @@ public class DevicesController : ControllerBase
         }
     }
 
+    [HttpPost("lamp/{id}/brightness/{brightness}")]
+    public async Task<IActionResult> SetLampBrightness(long id, byte brightness)
+    {
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
 
+            await _deviceService.SetLampBrightness(id, brightness);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting brightness for lamp {LampId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("wallplug/{id}/{isOn}")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> SetWallplugState(long id, bool isOn)
+    {
+        if (id < byte.MinValue || id > byte.MaxValue)
+        {
+            return BadRequest("Wallplug id must be between 0 and 255");
+        }
+
+        try
+        {
+            var networkItem = _deviceService.GetNetworkItem((byte)id);
+            if (networkItem is not IWallPlug wallPlug)
+            {
+                return NotFound($"No wallplug found for node id {id}");
+            }
+
+            await wallPlug.SetState(isOn);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting state {IsOn} for wallplug {WallplugId}", isOn, id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+
+
+    [HttpPost("lamp/{id}/color/{color}")]
+    public async Task<IActionResult> SetLampColor(long id, string color)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+        {
+            return BadRequest("Color is required");
+        }
+
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+            if (networkItem is not ILamp lamp)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            await lamp.SetColor(color);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting color for lamp {LampId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("wallplug/{id}/state/{isOn}")]
+    public async Task<IActionResult> SetWallplugStateByDeviceId(long id, bool isOn)
+    {
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No wallplug found for device id {id}");
+            }
+
+            var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+            if (networkItem is not IWallPlug wallPlug)
+            {
+                return NotFound($"No wallplug found for device id {id}");
+            }
+
+            await wallPlug.SetState(isOn);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting state {IsOn} for wallplug {WallplugId}", isOn, id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
     [HttpGet("nodes/{nodeId}/association-groups")]
     public async Task<IActionResult> GetAssociationGroups(byte nodeId)
     {

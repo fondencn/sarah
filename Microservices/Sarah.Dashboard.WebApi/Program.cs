@@ -5,6 +5,9 @@ using Sarah.Dashboard.WebApi.Data;
 using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.Services;
 using Sarah.Dashboard.WebApi.Data.Entities;
+using Sarah.ServiceClients;
+using Sarah.ServiceDefaults;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +18,11 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<DashboardDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
+        .ConfigureWarnings(warnings => warnings.Log(
+            (RelationalEventId.CommandExecuting, LogLevel.Debug),
+            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
 
 // Register repositories
 builder.Services.AddScoped<IRepository<DashboardItemEntity>, Repository<DashboardItemEntity>>(sp =>
@@ -23,6 +30,28 @@ builder.Services.AddScoped<IRepository<DashboardItemEntity>, Repository<Dashboar
 
 // Register services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+// Register HTTP client for DeviceService communication
+builder.Services.AddHttpClient<DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+})
+.AddBearerTokenForwarding();
+
+// Register HTTP client for PersonService communication
+builder.Services.AddHttpClient<PersonServiceClient>(client =>
+{
+    var personServiceUrl = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["services__personsservice__http-api__0"]
+        ?? builder.Configuration["PersonServiceUrl"]
+        ?? "https+http://personsservice";
+    client.BaseAddress = new Uri(personServiceUrl);
+})
+.AddBearerTokenForwarding();
 
 // Add services to the container.
 builder.Services.AddControllers();

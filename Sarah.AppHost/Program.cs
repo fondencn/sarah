@@ -36,6 +36,7 @@ var rabbitmq = builder.AddRabbitMQ("rabbitmq");
 
 // Add single PostgreSQL instance with multiple databases
 var postgres = builder.AddPostgres("postgres", postgresUserName, postgresPassword)
+    .WithPgAdmin()
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
  
@@ -108,7 +109,9 @@ var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speec
 var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dashboardservice")
     .WithHttpEndpoint(port: 5007, name: "http-api")
     .WithReference(postgresDashboard, "PostgresConnection")
-    .WithReference(keycloak);
+    .WithReference(keycloak)
+    .WithReference(deviceService)
+    .WithReference(personsService);
 
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
@@ -116,18 +119,19 @@ var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")
     .WithReference(keycloak)
     .WithRunScript("start");
 
-if (builder.Environment.IsDevelopment())
-{
-    deviceService.WithExplicitStart();
-    personsService.WithExplicitStart();
-    geofencesService.WithExplicitStart();
-    roomService.WithExplicitStart();
-    monitoringService.WithExplicitStart();
-    rulesService.WithExplicitStart();
-    speechServer.WithExplicitStart();
-    dashboardService.WithExplicitStart();
-    frontend.WithExplicitStart();
-}
+// if (builder.Environment.IsDevelopment())
+// {
+//     deviceService.WithExplicitStart();
+//     personsService.WithExplicitStart();
+//     geofencesService.WithExplicitStart();
+//     roomService.WithExplicitStart();
+//     monitoringService.WithExplicitStart();
+//     rulesService.WithExplicitStart();
+//     speechServer.WithExplicitStart();
+//     // Always start at least frontend and the home screen's backing service.
+//     //dashboardService.WithExplicitStart();
+//     //frontend.WithExplicitStart();
+// }
 
 builder.Build().Run();
 

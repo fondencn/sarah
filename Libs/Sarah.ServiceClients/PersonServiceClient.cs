@@ -5,6 +5,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects.DTOs;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace Sarah.ServiceClients
@@ -107,7 +108,23 @@ namespace Sarah.ServiceClients
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();
-                var person = JsonConvert.DeserializeObject<PersonDto>(json);
+                var payload = JsonConvert.DeserializeObject<JObject>(json);
+                if (payload == null)
+                {
+                    return null;
+                }
+
+                var person = new PersonDto
+                {
+                    Id = payload.Value<long?>("id") ?? id,
+                    Name = payload.Value<string>("name") ?? string.Empty,
+                    GPSTrackerID = payload.Value<byte?>("gpsTrackerID") ?? 0,
+                    MobilePhoneHostname = payload.Value<string>("mobilePhoneHostname") ?? string.Empty,
+                    IsAtHome = payload.Value<bool?>("isAtHome") ?? false,
+                    TrackerDeviceName = payload.Value<string>("gpsTrackerName") ?? string.Empty,
+                    CurrentGeoFence = null,
+                    GPSTracker = null
+                };
 
                 return person;
             }

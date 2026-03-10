@@ -1,5 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { DeviceDto, DevicesService } from '../../../../services/api-client';
+import { DevicesClient } from '../../../../services/api/device-service/api/api';
+import { DeviceDtoModel as DeviceDto } from '../../../../services/api/device-service/model/models';
+import { ExtendedPropertyDtoModel } from '../../../../services/api/device-service/model/models';
 
 @Component({
   selector: 'app-devicedetails',
@@ -11,16 +13,16 @@ export class DevicedetailsComponent implements OnInit {
   deviceDetails: DeviceDto | null = null;
   lastUpdated : string = "";
 
-  constructor(private deviceService: DevicesService) {}
+  constructor(private deviceService: DevicesClient) {}
 
   ngOnInit(): void {
     this.loadDeviceDetails();
   }
 
   loadDeviceDetails(): void {
-    this.deviceService.devicesIdGet(this.id).subscribe(device => {
+    this.deviceService.devicesGetDeviceByIdGETApiDevicesId(this.id).subscribe(device => {
       this.deviceDetails = device; // Assign the device details to the property
-      this.lastUpdated = device.extendedProperties?.find(item => item.key === "LastStateChange")?.value || "";
+      this.lastUpdated = device.extendedProperties?.find((item: ExtendedPropertyDtoModel) => item.key === "LastStateChange")?.value || "";
     });
   }
 }

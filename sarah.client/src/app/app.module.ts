@@ -1,4 +1,3 @@
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; // Import HttpClientModule
 import { BrowserModule } from '@angular/platform-browser';
@@ -7,7 +6,12 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
-import { ApiModule, DevicesService, PersonsService, LocationService, RoomsService, DashboardService, StatusService } from './services/api-client'; // Import the generated client
+import { DevicesClient } from './services/api/device-service/api/api';
+import { PersonsClient } from './services/api/persons-service/api/api';
+import { RoomsClient } from './services/api/room-service/api/api';
+import { DashboardRuntimeService } from './services/dashboard-runtime.service';
+import { LocationRuntimeService } from './services/location-runtime.service';
+import { StatusRuntimeService } from './services/status-runtime.service';
 import { NavComponent } from './nav/nav.component';
 import { DevicesComponent } from './devices/devices.component';
 import { AdminComponent } from './admin/admin.component';
@@ -73,11 +77,11 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, // Provide the interceptor
         // Configure base paths per service — each generated service is providedIn:'root' but
         // shares a single BASE_PATH token, so we override with per-service factory providers.
-        { provide: DevicesService, useFactory: (http: HttpClient) => new DevicesService(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
-        { provide: PersonsService, useFactory: (http: HttpClient) => new PersonsService(http, environment.api.personsService, undefined!), deps: [HttpClient] },
-        { provide: LocationService, useFactory: (http: HttpClient) => new LocationService(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
-        { provide: RoomsService, useFactory: (http: HttpClient) => new RoomsService(http, environment.api.roomService, undefined!), deps: [HttpClient] },
-        { provide: DashboardService, useFactory: (http: HttpClient) => new DashboardService(http, environment.api.dashboardService, undefined!), deps: [HttpClient] },
-        { provide: StatusService, useFactory: (http: HttpClient) => new StatusService(http, environment.api.dashboardService, undefined!), deps: [HttpClient] }
+        { provide: DevicesClient, useFactory: (http: HttpClient) => new DevicesClient(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
+        { provide: PersonsClient, useFactory: (http: HttpClient) => new PersonsClient(http, environment.api.personsService, undefined!), deps: [HttpClient] },
+        { provide: RoomsClient, useFactory: (http: HttpClient) => new RoomsClient(http, environment.api.roomService, undefined!), deps: [HttpClient] },
+        { provide: DashboardRuntimeService, useFactory: (http: HttpClient) => new DashboardRuntimeService(http), deps: [HttpClient] },
+        { provide: LocationRuntimeService, useFactory: (http: HttpClient) => new LocationRuntimeService(http), deps: [HttpClient] },
+        { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] }
     ] })
 export class AppModule { }

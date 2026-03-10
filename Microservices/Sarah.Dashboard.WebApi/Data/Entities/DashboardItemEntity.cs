@@ -48,12 +48,6 @@ public class DashboardItemEntity
     public string? Subtype { get; set; }
     
     /// <summary>
-    /// Extended properties stored as JSON
-    /// </summary>
-    [Column(TypeName = "jsonb")]
-    public string? ExtendedPropertiesJson { get; set; }
-    
-    /// <summary>
     /// When the item was created
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
