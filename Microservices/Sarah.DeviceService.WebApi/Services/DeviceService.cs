@@ -1,4 +1,4 @@
-﻿using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.Interfaces;
 using Sarah.DeviceService.Model;
@@ -11,6 +11,8 @@ using ZWave.CommandClasses;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Extensions;
 using Microsoft.Extensions.Hosting;
+using Sarah.DeviceService.WebApi.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sarah.DeviceService
 {
@@ -20,6 +22,7 @@ namespace Sarah.DeviceService
         private readonly INodeFactory _nodeFactory;
         private readonly ILogger<DeviceService> _logger;
         private readonly NetworkElementPublisher _publisher;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private Task? UpdateTask { get; set; }
         private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
@@ -27,12 +30,13 @@ namespace Sarah.DeviceService
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger, IServiceScopeFactory serviceScopeFactory)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
             this._publisher = publisher;
             this._logger = logger;
+            this._serviceScopeFactory = serviceScopeFactory;
         }
 
 
@@ -284,9 +288,18 @@ namespace Sarah.DeviceService
             }
         }
 
-        public async Task SetLampBrightness(byte nodeId, byte brightness)
+        public async Task SetLampBrightness(long deviceId, byte brightness)
         {
-            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == nodeId);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.Id == deviceId);
+            if (device == null)
+            {
+                _logger.LogWarning("SetLampBrightness: no device found for deviceId {DeviceId}", deviceId);
+                return;
+            }
+
+            var lamp = this.Lamps.FirstOrDefault(item => item.NodeID == device.NodeID);
             if(lamp != null)
             {
                 await lamp.SetBrightness(brightness);
