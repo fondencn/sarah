@@ -106,7 +106,9 @@ export class AlarmEditModalComponent {
     this.isEditing = true;
     this.currentAlarmId = alarm.id;
 
-    const alarmTime = alarm.alarmTime.substring(0, 16);
+    // Format datetime-local value (YYYY-MM-DDTHH:mm), guard against short/malformed strings
+    const raw = alarm.alarmTime ?? '';
+    const alarmTime = raw.length >= 16 ? raw.substring(0, 16) : raw;
 
     let recurrence = { freq: 'weekly', interval: 1, byweekday: [] as string[], until: '' };
     if (alarm.hasRecurrence && alarm.serializedRecurrence) {
@@ -187,11 +189,23 @@ export class AlarmEditModalComponent {
       serializedRecurrence = JSON.stringify(rec);
     }
 
+    // Validate volume value against enum before assignment
+    const rawVolume = Number(v.volume);
+    const validVolumes: number[] = [
+      SpeechVolumeModel.NUMBER_0,
+      SpeechVolumeModel.NUMBER_1,
+      SpeechVolumeModel.NUMBER_2,
+      SpeechVolumeModel.NUMBER_3
+    ];
+    const volume: SpeechVolumeModel = validVolumes.includes(rawVolume)
+      ? (rawVolume as SpeechVolumeModel)
+      : SpeechVolumeModel.NUMBER_1;
+
     const alarm: AlarmScheduleEntityModel = {
       id: this.currentAlarmId,
       text: v.text,
       alarmTime,
-      volume: Number(v.volume) as SpeechVolumeModel,
+      volume,
       targetSpeaker: v.targetSpeaker || null,
       isActive: v.isActive,
       hasRecurrence: v.hasRecurrence,
