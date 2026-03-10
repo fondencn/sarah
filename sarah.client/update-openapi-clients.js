@@ -210,8 +210,8 @@ function downloadSpec(url, dest) {
         
         client.get(requestOptions, (response) => {
             if (response.statusCode === 302 || response.statusCode === 301) {
-                // Follow redirect with same agent
-                const redirectUrl = new URL(response.headers.location);
+                // Follow redirect with same agent; resolve relative Location URLs against the original request URL
+                const redirectUrl = new URL(response.headers.location, requestUrl);
                 const redirectClient = redirectUrl.protocol === 'https:' ? https : http;
                 const redirectOptions = redirectUrl.protocol === 'https:'
                     ? { ...redirectUrl, agent: httpsAgent }
