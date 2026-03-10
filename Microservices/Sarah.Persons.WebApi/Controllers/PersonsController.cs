@@ -5,6 +5,7 @@ using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Persons.WebApi.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
+using Sarah.Persons.WebApi.DTOs;
 
 namespace Sarah.Persons.WebApi.Controllers;
 
@@ -24,21 +25,21 @@ public class PersonsController : ControllerBase
         _logger = logger;
     }
 
-    private static object MapToDto(API.Interfaces.IPerson p) => new
+    private static PersonResponseDto MapToDto(API.Interfaces.IPerson p) => new PersonResponseDto
     {
-        id = p.Id,
-        name = p.Name,
-        gpsTrackerID = p.GPSTrackerID,
-        gpsTrackerName = p.TrackerDeviceName,
-        currentGeoFence = p.CurrentGeoFence?.Name,
-        currentPosition = (string?)null,
-        isAtHome = p.IsAtHome,
-        mobilePhoneHostname = p.MobilePhoneHostname,
-        isFavourite = (p as PersonInfoEntity)?.IsFavourite ?? false
+        Id = p.Id,
+        Name = p.Name,
+        GpsTrackerID = p.GPSTrackerID,
+        GpsTrackerName = p.TrackerDeviceName,
+        CurrentGeoFence = p.CurrentGeoFence?.Name,
+        CurrentPosition = null,
+        IsAtHome = p.IsAtHome,
+        MobilePhoneHostname = p.MobilePhoneHostname,
+        IsFavourite = (p as PersonInfoEntity)?.IsFavourite ?? false
     };
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<IEnumerable<PersonResponseDto>>> GetAll()
     {
         try
         {
@@ -53,7 +54,7 @@ public class PersonsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(long id)
+    public async Task<ActionResult<PersonResponseDto>> GetById(long id)
     {
         try
         {
@@ -72,7 +73,7 @@ public class PersonsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] PersonDto personDto)
+    public async Task<ActionResult<PersonResponseDto>> Create([FromBody] PersonDto personDto)
     {
         try
         {
@@ -98,7 +99,7 @@ public class PersonsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, [FromBody] PersonDto personDto)
+    public async Task<ActionResult<PersonResponseDto>> Update(long id, [FromBody] PersonDto personDto)
     {
         try
         {

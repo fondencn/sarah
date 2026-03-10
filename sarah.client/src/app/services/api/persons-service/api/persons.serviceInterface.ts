@@ -12,6 +12,7 @@ import { HttpHeaders }                                       from '@angular/comm
 import { Observable }                                        from 'rxjs';
 
 import { PersonDtoModel } from '../model/models';
+import { PersonResponseDtoModel } from '../model/models';
 
 
 import { Configuration }                                     from '../configuration';
@@ -26,7 +27,7 @@ export interface PersonsClientInterface {
      * 
      * 
      */
-    apiPersonsGet(extraHttpRequestParams?: any): Observable<{}>;
+    apiPersonsGet(extraHttpRequestParams?: any): Observable<Array<PersonResponseDtoModel>>;
 
     /**
      * 
@@ -48,7 +49,7 @@ export interface PersonsClientInterface {
      * 
      * @param id 
      */
-    apiPersonsIdGet(id: number, extraHttpRequestParams?: any): Observable<{}>;
+    apiPersonsIdGet(id: number, extraHttpRequestParams?: any): Observable<PersonResponseDtoModel>;
 
     /**
      * 
@@ -56,7 +57,7 @@ export interface PersonsClientInterface {
      * @param id 
      * @param personDtoModel 
      */
-    apiPersonsIdPut(id: number, personDtoModel?: PersonDtoModel, extraHttpRequestParams?: any): Observable<{}>;
+    apiPersonsIdPut(id: number, personDtoModel?: PersonDtoModel, extraHttpRequestParams?: any): Observable<PersonResponseDtoModel>;
 
     /**
      * 
@@ -69,7 +70,7 @@ export interface PersonsClientInterface {
      * 
      * @param personDtoModel 
      */
-    apiPersonsPost(personDtoModel?: PersonDtoModel, extraHttpRequestParams?: any): Observable<{}>;
+    apiPersonsPost(personDtoModel?: PersonDtoModel, extraHttpRequestParams?: any): Observable<PersonResponseDtoModel>;
 
     /**
      * 

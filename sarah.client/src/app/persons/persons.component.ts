@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { PersonsClient } from '../services/api/persons-service/api/api';
+import { PersonResponseDtoModel, PersonDtoModel } from '../services/api/persons-service/model/models';
 import { CreateDashboardItemDto, DashboardItemType, PersonDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { Subscription } from 'rxjs';
@@ -38,7 +39,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
     }
   }
 
-  persons: PersonDto[] = [];
+  persons: PersonResponseDtoModel[] = [];
   isLoading: boolean = false;
   @ViewChild(EditPersonModalComponent) editPersonModal!: EditPersonModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
@@ -48,21 +49,21 @@ export class PersonsComponent implements OnInit,OnDestroy {
 
 
   public retrievePersons(): void {
-    this.isLoading = true; // Set the loading state to true
+    this.isLoading = true;
     this.personsService.apiPersonsGet().subscribe({
-      next: (response: any[]) => {
-        this.persons = response as PersonDto[]; // API may return richer shape than generated model
+      next: (response: PersonResponseDtoModel[]) => {
+        this.persons = response;
       },
       error: (error) => {
         console.error('Error fetching persons:', error);
       },
       complete: () => {
-        this.isLoading = false; // Set the loading state to false
+        this.isLoading = false;
       }
     });
   }
 
-  public deletePerson(person: PersonDto) {
+  public deletePerson(person: PersonResponseDtoModel) {
     this.dialogService.showConfirmDialog('Are you sure you want to delete this person?', 'Confirm Deletion')
     .then((result: boolean) => {
       if (result) {
@@ -80,8 +81,8 @@ export class PersonsComponent implements OnInit,OnDestroy {
     });
   }
 
-  public editPerson(person: PersonDto) {
-    this.editPersonModal.dataContext = person;
+  public editPerson(person: PersonResponseDtoModel) {
+    this.editPersonModal.dataContext = this.toPersonDto(person);
     this.editPersonModal.isNewPerson = false;
     this.editPersonModal.okButtonText = 'Save changes';
     this.dialogService.showDialog('editPersonModal');
@@ -90,9 +91,15 @@ export class PersonsComponent implements OnInit,OnDestroy {
 
   public onPersonEdited(success: boolean) {
     if (success) {
-      var personDto = this.editPersonModal.dataContext as PersonDto;
-      this.personsService.apiPersonsIdPut(personDto.id as number, personDto as any).subscribe({
-        next: (response: PersonDto) => {
+      const personDto = this.editPersonModal.dataContext as PersonDto;
+      const requestModel: PersonDtoModel = {
+        id: personDto.id,
+        name: personDto.name,
+        mobilePhoneHostname: personDto.mobilePhoneHostname,
+        gpsTrackerID: personDto.gpsTrackerID
+      };
+      this.personsService.apiPersonsIdPut(personDto.id as number, requestModel).subscribe({
+        next: (response: PersonResponseDtoModel) => {
           const index = this.persons.findIndex(d => d.id === response.id);
           this.persons[index] = response;
         },
@@ -105,9 +112,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
 
 
   public addPerson() {
-      var newPerson = {} as PersonDto;
-      newPerson.name = '';
-      newPerson.id = 0;
+      const newPerson: PersonDto = { name: '', id: 0 };
   
       this.editPersonModal.dataContext = newPerson;
       this.editPersonModal.isNewPerson = true;
@@ -119,13 +124,18 @@ export class PersonsComponent implements OnInit,OnDestroy {
 
     public onPersonAdded(success: boolean) {
       if (success) {
-        let addedPerson: PersonDto = this.editPersonModal.dataContext as PersonDto;
-        this.personsService.apiPersonsPost(addedPerson as any).subscribe({
-          next: (response: PersonDto) => {
+        const addedPerson = this.editPersonModal.dataContext as PersonDto;
+        const requestModel: PersonDtoModel = {
+          name: addedPerson.name,
+          mobilePhoneHostname: addedPerson.mobilePhoneHostname,
+          gpsTrackerID: addedPerson.gpsTrackerID
+        };
+        this.personsService.apiPersonsPost(requestModel).subscribe({
+          next: (response: PersonResponseDtoModel) => {
             this.persons.push(response);
           },
           error: (error) => {
-            console.error('Error adding room:', error);
+            console.error('Error adding person:', error);
           }
         });
       }
@@ -133,7 +143,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
   
 
 
-  public setFavourite(person: PersonDto, isFavourite: boolean) {
+  public setFavourite(person: PersonResponseDtoModel, isFavourite: boolean) {
     this.personsService.apiPersonsIdFavouriteIsFavouritePut((person.id as number), isFavourite).subscribe({
       next: () => {
         person.isFavourite = isFavourite;
@@ -158,5 +168,19 @@ export class PersonsComponent implements OnInit,OnDestroy {
         console.error('Error setting favourite state:', error);
       }
     });
+  }
+
+  private toPersonDto(person: PersonResponseDtoModel): PersonDto {
+    return {
+      id: person.id,
+      name: person.name,
+      mobilePhoneHostname: person.mobilePhoneHostname,
+      gpsTrackerID: person.gpsTrackerID,
+      gpsTrackerName: person.gpsTrackerName,
+      currentGeoFence: person.currentGeoFence,
+      currentPosition: person.currentPosition,
+      isAtHome: person.isAtHome,
+      isFavourite: person.isFavourite
+    };
   }
 }
