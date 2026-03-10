@@ -123,7 +123,7 @@ export class PersondetailsComponent implements OnDestroy {
       longitude: longitude,
       name: this.personDetails?.name ?? 'Person'
     };
-    this.mapElement.AddPushPin(personLocation, this.batteryStatus, '📍');
+    this.mapElement.UpdatePersonPin(personLocation, this.batteryStatus);
   }
 
   private loadBatteryStatus(): void {

@@ -145,8 +145,7 @@ export class PersonMapModalComponent implements OnDestroy {
       name: this.personName
     };
 
-    this.mapElement.SetCenter(personLocation, 14);
-    this.mapElement.AddPushPin(personLocation, this.batteryStatus, '📍');
+    this.mapElement.UpdatePersonPin(personLocation, this.batteryStatus, 14);
   }
 
   private startRefresh(): void {
