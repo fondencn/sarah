@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
+import { Component, Input, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { NamedLocationDto } from '../../models/api-types';
 import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
 
@@ -10,6 +10,7 @@ import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
 export class BingMapComponent implements OnInit, AfterViewInit {
   @Input() latitude: number = 0;
   @Input() longitude: number = 0;
+  @ViewChild('mapContainer') mapContainer!: ElementRef;
   private zoom: number = 10;
 
   private map: Microsoft.Maps.Map | null = null;
@@ -27,7 +28,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   }
 
   loadMap(): void {
-    this.map = new Microsoft.Maps.Map(document.getElementById('myMap')!, {
+    this.map = new Microsoft.Maps.Map(this.mapContainer.nativeElement, {
       center: new Microsoft.Maps.Location(this.latitude, this.longitude),
       zoom: this.zoom,
       mapTypeId: Microsoft.Maps.MapTypeId.aerial
