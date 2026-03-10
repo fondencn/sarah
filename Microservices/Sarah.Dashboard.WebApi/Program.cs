@@ -7,6 +7,7 @@ using Sarah.Dashboard.WebApi.Services;
 using Sarah.Dashboard.WebApi.Data.Entities;
 using Sarah.ServiceClients;
 using Sarah.ServiceDefaults;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,11 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<DashboardDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
+        .ConfigureWarnings(warnings => warnings.Log(
+            (RelationalEventId.CommandExecuting, LogLevel.Debug),
+            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
 
 // Register repositories
 builder.Services.AddScoped<IRepository<DashboardItemEntity>, Repository<DashboardItemEntity>>(sp =>

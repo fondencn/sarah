@@ -9,6 +9,7 @@ using Sarah.ServiceClients;
 using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
 using Sarah.ServiceDefaults;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,11 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 // Configure Entity Framework Core with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
+        .ConfigureWarnings(warnings => warnings.Log(
+            (RelationalEventId.CommandExecuting, LogLevel.Debug),
+            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
