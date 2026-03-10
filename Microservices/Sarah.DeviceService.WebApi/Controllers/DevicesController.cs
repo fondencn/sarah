@@ -471,7 +471,7 @@ public class DevicesController : ControllerBase
                 return NotFound($"No lamp found for device id {id}");
             }
 
-            await _deviceService.SetLampBrightness(device.NodeID, brightness);
+            await _deviceService.SetLampBrightness(id, brightness);
             return Ok();
         }
         catch (Exception ex)

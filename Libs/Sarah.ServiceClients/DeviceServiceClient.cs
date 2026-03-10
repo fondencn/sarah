@@ -233,9 +233,9 @@ namespace Sarah.ServiceClients
             return responseContent;
         }
 
-        public async Task SetLampBrightness(byte nodeId, byte brightness)
+        public async Task SetLampBrightness(long deviceId, byte brightness)
         {
-            Uri uri = new Uri(GetBaseUri(), $"/api/Devices/lamp/{nodeId}/brightness/{brightness}");
+            Uri uri = new Uri(GetBaseUri(), $"/api/Devices/lamp/{deviceId}/brightness/{brightness}");
             _logger?.LogDebug("HTTP POST To " + uri);
 
             HttpResponseMessage response = await _httpClient.PostAsync(uri, null);
