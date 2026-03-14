@@ -176,6 +176,11 @@ export class PersonMapModalComponent implements OnDestroy {
   }
 
   private startRefresh(): void {
+    // Avoid creating multiple intervals if startRefresh is called repeatedly
+    if (this.refreshInterval) {
+      return;
+    }
+
     // Only refresh the person's position on the interval; geofences are static and loaded once
     this.refreshInterval = setInterval(() => {
       if (this.mapElement && this.isVisible) {
