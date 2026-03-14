@@ -620,4 +620,55 @@ public class DevicesController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+
+    [HttpGet("room/{roomId}/summary")]
+    public async Task<IActionResult> GetRoomSummary(long roomId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devicesInRoom = await _dbContext.Devices
+                .Where(d => d.Id_Room == roomId)
+                .ToListAsync(cancellationToken);
+
+            var temperatures = new List<float>();
+            bool anyDoorOpen = false;
+            bool anyPresence = false;
+
+            foreach (var device in devicesInRoom)
+            {
+                var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+                if (networkItem == null) continue;
+
+                if (networkItem is ITemperatureSensor tempSensor && tempSensor.Temperature != null)
+                {
+                    temperatures.Add(tempSensor.Temperature.Value);
+                }
+
+                if (networkItem is IDoorSensor doorSensor && doorSensor.State == DoorSensorState.Offen)
+                {
+                    anyDoorOpen = true;
+                }
+
+                if (networkItem is IMultiSensor multiSensor && multiSensor.Presence != null && multiSensor.Presence.Value > 0)
+                {
+                    anyPresence = true;
+                }
+            }
+
+            var summary = new RoomSummaryDto
+            {
+                RoomId = roomId,
+                AverageTemperature = temperatures.Count > 0 ? Math.Round(temperatures.Average(), 1) : null,
+                AnyDoorOpen = anyDoorOpen,
+                AnyPresence = anyPresence
+            };
+
+            return Ok(summary);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving room summary for room {RoomId}", roomId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
 }
