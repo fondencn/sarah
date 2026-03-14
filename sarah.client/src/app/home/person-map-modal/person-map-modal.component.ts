@@ -37,6 +37,7 @@ export class PersonMapModalComponent implements OnDestroy {
   currentGeoFenceName: string = '';
   private bootstrapModal: any = null;
   private refreshInterval: any = null;
+  private readonly MAP_INIT_MAX_RETRIES: number = 20;
 
   constructor(
     private locationService: LocationRuntimeService,
@@ -60,7 +61,7 @@ export class PersonMapModalComponent implements OnDestroy {
           this.stopRefresh();
           this.bootstrapModal = null;
         }, { once: true });
-        setTimeout(() => this.loadMapData(), 300);
+        this.scheduleLoadMapData();
       }
     });
   }
@@ -69,6 +70,32 @@ export class PersonMapModalComponent implements OnDestroy {
     if (this.bootstrapModal) {
       this.bootstrapModal.hide();
     }
+  }
+
+  private scheduleLoadMapData(retry: number = 0): void {
+    // If modal is no longer visible, do not proceed with loading.
+    if (!this.isVisible) {
+      return;
+    }
+
+    const mapIsReady =
+      this.mapElement &&
+      (typeof (this.mapElement as any).isMapReady === 'function'
+        ? (this.mapElement as any).isMapReady()
+        : true);
+
+    if (mapIsReady) {
+      this.loadMapData();
+      return;
+    }
+
+    if (retry >= this.MAP_INIT_MAX_RETRIES) {
+      console.warn('Map did not report ready state in time; loading data anyway.');
+      this.loadMapData();
+      return;
+    }
+
+    setTimeout(() => this.scheduleLoadMapData(retry + 1), 100);
   }
 
   private loadMapData(): void {
