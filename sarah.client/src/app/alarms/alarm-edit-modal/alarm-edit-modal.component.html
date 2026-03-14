@@ -86,6 +86,31 @@
             <label class="form-check-label fw-semibold" for="isActive">Active</label>
           </div>
 
+          <!-- Holiday restrictions -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Holiday restriction</label>
+            <div class="form-check form-switch mb-1">
+              <input
+                type="checkbox"
+                id="isNurInFerien"
+                class="form-check-input"
+                formControlName="isNurInFerien"
+                role="switch"
+              >
+              <label class="form-check-label" for="isNurInFerien">Only during school holidays</label>
+            </div>
+            <div class="form-check form-switch">
+              <input
+                type="checkbox"
+                id="isNichtInFerien"
+                class="form-check-input"
+                formControlName="isNichtInFerien"
+                role="switch"
+              >
+              <label class="form-check-label" for="isNichtInFerien">Not during school holidays</label>
+            </div>
+          </div>
+
           <!-- Recurrence toggle -->
           <div class="mb-3 form-check form-switch">
             <input

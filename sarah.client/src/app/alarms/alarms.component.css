@@ -2,16 +2,3 @@
   max-width: 1200px;
   margin: 0 auto;
 }
-
-:host ::ng-deep .fc-event {
-  cursor: pointer;
-}
-
-:host ::ng-deep .fc-toolbar-title {
-  font-size: 1.4rem;
-}
-
-:host ::ng-deep .fc-daygrid-event {
-  white-space: nowrap;
-  overflow: hidden;
-}

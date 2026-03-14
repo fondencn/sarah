@@ -7,7 +7,7 @@ import rrulePlugin from '@fullcalendar/rrule';
 
 import { RulesClient } from '../services/api/rules-service/api/rules.service';
 import { AlarmScheduleEntityModel } from '../services/api/rules-service/model/alarmScheduleEntity';
-import { AlarmEditModalComponent } from './alarm-edit-modal/alarm-edit-modal.component';
+import { AlarmEditModalComponent, AlarmRecurrence } from './alarm-edit-modal/alarm-edit-modal.component';
 
 @Component({
   selector: 'app-alarms',
@@ -93,8 +93,20 @@ export class AlarmsComponent implements OnInit {
 
   handleEventDrop(dropInfo: EventDropArg): void {
     const alarm = dropInfo.event.extendedProps['alarm'] as AlarmScheduleEntityModel;
-    const newStart = dropInfo.event.startStr;
-    const updatedAlarm: AlarmScheduleEntityModel = { ...alarm, alarmTime: newStart };
+    // Normalize to UTC ISO string for consistent backend storage
+    const newStartUtc = new Date(dropInfo.event.startStr).toISOString();
+    const updatedAlarm: AlarmScheduleEntityModel = { ...alarm, alarmTime: newStartUtc };
+
+    // For recurring alarms also update dtstart in serializedRecurrence so
+    // the rrule stays in sync and the drag is reflected after reload.
+    if (alarm.hasRecurrence && alarm.serializedRecurrence) {
+      try {
+        const rec = JSON.parse(alarm.serializedRecurrence) as AlarmRecurrence;
+        rec.dtstart = newStartUtc;
+        updatedAlarm.serializedRecurrence = JSON.stringify(rec);
+      } catch { /* ignore malformed recurrence */ }
+    }
+
     this.rulesClient.apiRulesAlarmsIdPut(alarm.id!, updatedAlarm).subscribe({
       next: () => this.loadAlarms(),
       error: (err) => {

@@ -108,3 +108,18 @@ body {
   border-bottom: 1px solid var(--acrylic-border);
   box-shadow: var(--shadow-depth-8);
 }
+
+/* FullCalendar v6 injects its own CSS at runtime; the rules below override
+   FullCalendar internals globally, scoped to the alarms page wrapper. */
+.alarms-container .fc-event {
+  cursor: pointer;
+}
+
+.alarms-container .fc-toolbar-title {
+  font-size: 1.4rem;
+}
+
+.alarms-container .fc-daygrid-event {
+  white-space: nowrap;
+  overflow: hidden;
+}

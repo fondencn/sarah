@@ -13,6 +13,12 @@ export interface AlarmRecurrence {
   dtstart: string;
 }
 
+/** Format a Date as the local-timezone value required by a datetime-local input (YYYY-MM-DDTHH:mm). */
+function toLocalDatetimeInput(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 @Component({
   selector: 'alarm-edit-modal',
   templateUrl: './alarm-edit-modal.component.html',
@@ -59,6 +65,8 @@ export class AlarmEditModalComponent {
       volume: [SpeechVolumeModel.NUMBER_1, Validators.required],
       targetSpeaker: [''],
       isActive: [true],
+      isNurInFerien: [false],
+      isNichtInFerien: [false],
       hasRecurrence: [false],
       recurrence: this.fb.group({
         freq: ['weekly'],
@@ -81,12 +89,15 @@ export class AlarmEditModalComponent {
     this.isEditing = false;
     this.currentAlarmId = undefined;
 
-    // Convert selection to datetime-local format (YYYY-MM-DDTHH:mm)
+    // Convert FullCalendar's startStr to local datetime-local format.
+    // For all-day slots dateStr is YYYY-MM-DD; default to 08:00 local time.
+    // For time slots dateStr may include offset (e.g. 2024-03-14T10:00:00+01:00);
+    // parse via Date and reformat to local time.
     let alarmTime: string;
     if (allDay) {
       alarmTime = dateStr.substring(0, 10) + 'T08:00';
     } else {
-      alarmTime = dateStr.substring(0, 16);
+      alarmTime = toLocalDatetimeInput(new Date(dateStr));
     }
 
     this.form.reset({
@@ -95,6 +106,8 @@ export class AlarmEditModalComponent {
       volume: SpeechVolumeModel.NUMBER_1,
       targetSpeaker: '',
       isActive: true,
+      isNurInFerien: false,
+      isNichtInFerien: false,
       hasRecurrence: false,
       recurrence: { freq: 'weekly', interval: 1, byweekday: [], until: '' }
     });
@@ -106,9 +119,9 @@ export class AlarmEditModalComponent {
     this.isEditing = true;
     this.currentAlarmId = alarm.id;
 
-    // Format datetime-local value (YYYY-MM-DDTHH:mm), guard against short/malformed strings
+    // Convert UTC ISO string from API to local datetime-local format (YYYY-MM-DDTHH:mm).
     const raw = alarm.alarmTime ?? '';
-    const alarmTime = raw.length >= 16 ? raw.substring(0, 16) : raw;
+    const alarmTime = raw ? toLocalDatetimeInput(new Date(raw)) : '';
 
     let recurrence = { freq: 'weekly', interval: 1, byweekday: [] as string[], until: '' };
     if (alarm.hasRecurrence && alarm.serializedRecurrence) {
@@ -129,6 +142,8 @@ export class AlarmEditModalComponent {
       volume: alarm.volume,
       targetSpeaker: alarm.targetSpeaker ?? '',
       isActive: alarm.isActive,
+      isNurInFerien: alarm.isNurInFerien ?? false,
+      isNichtInFerien: alarm.isNichtInFerien ?? false,
       hasRecurrence: alarm.hasRecurrence,
       recurrence
     });
@@ -210,8 +225,10 @@ export class AlarmEditModalComponent {
       isActive: v.isActive,
       hasRecurrence: v.hasRecurrence,
       serializedRecurrence,
-      isNurInFerienNotNull: false,
-      isNichtInFerienNotNull: false
+      isNurInFerien: v.isNurInFerien || null,
+      isNichtInFerien: v.isNichtInFerien || null,
+      isNurInFerienNotNull: !!v.isNurInFerien,
+      isNichtInFerienNotNull: !!v.isNichtInFerien
     };
 
     if (this.isEditing && this.currentAlarmId !== undefined) {
