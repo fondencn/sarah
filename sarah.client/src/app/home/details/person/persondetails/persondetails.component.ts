@@ -142,16 +142,26 @@ export class PersondetailsComponent implements OnDestroy {
     });
   }
 
+  private scheduleGeofenceLoading(retries: number = 10, delayMs: number = 200): void {
+    if (!this.mapElement) {
+      if (retries <= 0) {
+        return;
+      }
+
+      setTimeout(() => this.scheduleGeofenceLoading(retries - 1, delayMs), delayMs);
+      return;
+    }
+
+    this.loadGeofencesOnMap();
+  }
+
   loadPersonDetails(): void {
     if (this.id) {
       this.personsService.apiPersonsIdGet(this.id).subscribe(person => {
         this.personDetails = person as PersonDto;
         this.lastUpdated = new Date().toLocaleString('de-DE');
         this.loadBatteryStatus();
-        // Delay geofence loading slightly to ensure the map has finished initializing
-        setTimeout(() => {
-          this.loadGeofencesOnMap();
-        }, 500);
+        this.scheduleGeofenceLoading();
       });
       this.locationService.apiLocationWellknownlocationsGet().subscribe(locations => {
         var isarray: boolean = Array.isArray(locations);
