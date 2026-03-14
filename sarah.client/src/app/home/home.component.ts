@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { DevicesClient } from '../services/api/device-service/api/api';
+import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, StatusDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { StatusRuntimeService } from '../services/status-runtime.service';

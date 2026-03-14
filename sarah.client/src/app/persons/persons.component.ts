@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { PersonsClient } from '../services/api/persons-service/api/api';
+import { PersonsClient } from '../services/api/persons-service/api/persons.service';
 import { PersonResponseDtoModel, PersonDtoModel } from '../services/api/persons-service/model/models';
 import { CreateDashboardItemDto, DashboardItemType, PersonDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';

@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { PersonsClient } from '../../../../services/api/persons-service/api/api';
+import { PersonsClient } from '../../../../services/api/persons-service/api/persons.service';
 import { LocationRuntimeService } from '../../../../services/location-runtime.service';
 import { NamedLocationDto, PersonDto } from '../../../../models/api-types';
 import { BingMapComponent } from '../../../../shared/bing-map/bing-map.component';
