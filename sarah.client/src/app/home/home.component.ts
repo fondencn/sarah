@@ -233,7 +233,8 @@ export class DashboardItemViewModel {
   get averageTemperature(): number | null | undefined {
     const val = this.item.extendedProperties?.find(x => x.key === 'AverageTemperature')?.value;
     if (val === undefined || val === null || val === '') return null;
-    return Number(val);
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
   }
 
   get anyDoorOpen(): boolean {

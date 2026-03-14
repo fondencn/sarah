@@ -43,12 +43,10 @@
                         class="btn btn-secondary  btn-sm">
                         <img src="assets/icons/unfavorite.svg" alt="Unfavorite" style="width: 16px; height: 16px;">
                     </button>
-                    <button (click)="pinToDashboard(room)" class="btn btn-primary btn-sm"
-                        [title]="pinnedRoomIds.has(room.id!) ? 'Already on dashboard' : 'Pin to Dashboard'"
-                        [disabled]="pinnedRoomIds.has(room.id!)">
-                        <img src="assets/icons/home.svg" alt="Pin" style="width: 16px; height: 16px;">
-                        {{ pinnedRoomIds.has(room.id!) ? 'Pinned' : 'Pin' }}
-                    </button>
+                    <app-pin-to-dashboard-button
+                        [isPinned]="pinnedRoomIds.has(room.id!)"
+                        (pinClicked)="pinToDashboard(room)">
+                    </app-pin-to-dashboard-button>
                 </td>
             </tr>
         </tbody>

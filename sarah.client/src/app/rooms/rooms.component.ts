@@ -5,7 +5,7 @@ import { DialogClosedEventArgs, DialogService } from '../services/dialog.service
 import { Subscription } from 'rxjs';
 import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
-import { CreateDashboardItemDto, DashboardItemType } from '../models/api-types';
+import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
 
 @Component({
   selector: 'app-rooms',
@@ -15,6 +15,8 @@ import { CreateDashboardItemDto, DashboardItemType } from '../models/api-types';
 export class RoomsComponent implements OnInit,OnDestroy {
 
   constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
+
+  readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
 
   rooms: RoomDto[] = [];
@@ -155,7 +157,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
   public pinToDashboard(room: RoomDto) {
     const dto: CreateDashboardItemDto = {
       itemId: room.id as number,
-      itemType: DashboardItemType.NUMBER_2,
+      itemType: this.ITEM_TYPE_ROOM,
       title: room.name,
       description: room.description,
       subtype: 'Room'
@@ -165,7 +167,9 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.pinnedRoomIds.add(room.id as number);
       },
       error: (error) => {
-        if (error.status === 409 || (error.status === 500 && error.error?.includes?.('already exists'))) {
+        // 400 BadRequest = duplicate (DashboardController returns BadRequest for already-existing items)
+        // Also handle legacy 409/500 in case backend evolves
+        if (error.status === 400 || error.status === 409 || error.status === 500) {
           this.pinnedRoomIds.add(room.id as number);
         } else {
           console.error('Error pinning room to dashboard:', error);

@@ -3,6 +3,7 @@ using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.DTOs;
 using Sarah.API.BusinessObjects;
 using Sarah.ServiceClients;
+using System.Globalization;
 using DeviceDto = Sarah.API.BusinessObjects.DTOs.DeviceDto;
 
 namespace Sarah.Dashboard.WebApi.Services;
@@ -174,7 +175,7 @@ public class DashboardService : IDashboardService
                 {
                     dto.ExtendedProperties = new List<ExtendedPropertyDto>
                     {
-                        new() { Key = "AverageTemperature", Value = summary.AverageTemperature?.ToString("F1") ?? "" },
+                        new() { Key = "AverageTemperature", Value = summary.AverageTemperature?.ToString("F1", CultureInfo.InvariantCulture) ?? "" },
                         new() { Key = "AnyDoorOpen", Value = summary.AnyDoorOpen ? "True" : "False" },
                         new() { Key = "AnyPresence", Value = summary.AnyPresence ? "True" : "False" }
                     };
