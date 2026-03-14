@@ -1,0 +1,16 @@
+.person-map-header {
+  background: linear-gradient(135deg, var(--fluent-blue-light, #00b7ff) 0%, var(--fluent-blue, #0078d4) 100%);
+  color: white;
+  border-bottom: none;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+}
+
+app-bing-map {
+  display: block;
+}

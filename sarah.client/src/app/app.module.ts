@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { DevicesClient } from './services/api/device-service/api/api';
 import { PersonsClient } from './services/api/persons-service/api/api';
 import { RoomsClient } from './services/api/room-service/api/api';
+import { GeofencesClient } from './services/api/geofences-service/api/geofences.service';
 import { DashboardRuntimeService } from './services/dashboard-runtime.service';
 import { LocationRuntimeService } from './services/location-runtime.service';
 import { StatusRuntimeService } from './services/status-runtime.service';
@@ -31,6 +32,7 @@ import { PersondetailsComponent } from './home/details/person/persondetails/pers
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 import { DevicedetailsComponent } from './home/details/device/devicedetails/devicedetails.component';
 import { BingMapComponent } from './shared/bing-map/bing-map.component';
+import { PersonMapModalComponent } from './home/person-map-modal/person-map-modal.component';
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 
 @NgModule({ declarations: [
@@ -49,6 +51,7 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         RoomdetailsComponent,
         DevicedetailsComponent,
         BingMapComponent,
+        PersonMapModalComponent,
         PinToDashboardButtonComponent
     ],
     bootstrap: [AppComponent], 
@@ -82,6 +85,7 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         { provide: DevicesClient, useFactory: (http: HttpClient) => new DevicesClient(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
         { provide: PersonsClient, useFactory: (http: HttpClient) => new PersonsClient(http, environment.api.personsService, undefined!), deps: [HttpClient] },
         { provide: RoomsClient, useFactory: (http: HttpClient) => new RoomsClient(http, environment.api.roomService, undefined!), deps: [HttpClient] },
+        { provide: GeofencesClient, useFactory: (http: HttpClient) => new GeofencesClient(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
         { provide: DashboardRuntimeService, useFactory: (http: HttpClient) => new DashboardRuntimeService(http), deps: [HttpClient] },
         { provide: LocationRuntimeService, useFactory: (http: HttpClient) => new LocationRuntimeService(http), deps: [HttpClient] },
         { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] }

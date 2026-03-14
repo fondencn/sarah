@@ -1,0 +1,26 @@
+<div class="modal fade" id="personMapModal" tabindex="-1" aria-labelledby="personMapModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header person-map-header">
+        <div class="d-flex align-items-center gap-2">
+          <img src="assets/icons/person.svg" alt="Person" style="width:28px;height:28px;filter:brightness(0) invert(1);">
+          <h5 class="modal-title mb-0" id="personMapModalLabel">
+            {{ personName }}
+            <small *ngIf="currentGeoFenceName" class="ms-2 badge bg-light text-dark fw-normal">
+              📍 {{ currentGeoFenceName }}
+            </small>
+          </h5>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span *ngIf="batteryStatus" class="badge bg-light text-dark">
+            🔋 {{ batteryStatus }}
+          </span>
+          <button type="button" class="btn-close btn-close-white" (click)="hide()" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0" *ngIf="isVisible">
+        <app-bing-map #map style="display:block;width:100%;height:500px;"></app-bing-map>
+      </div>
+    </div>
+  </div>
+</div>

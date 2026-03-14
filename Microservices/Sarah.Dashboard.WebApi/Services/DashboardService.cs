@@ -152,11 +152,18 @@ public class DashboardService : IDashboardService
                 if (person != null)
                 {
                     dto.Title = person.Name;
-                    dto.Description = person.IsAtHome ? "At home" : "Away";
+                    var description = person.IsAtHome ? "At home" : "Away";
+                    if (person.CurrentGeoFence != null)
+                    {
+                        description = $"{description} · {person.CurrentGeoFence.Name}";
+                    }
+                    dto.Description = description;
                     dto.Subtype ??= "Person";
                     dto.ExtendedProperties = new List<ExtendedPropertyDto>
                     {
-                        new() { Key = "IsAtHome", Value = person.IsAtHome ? "True" : "False" }
+                        new() { Key = "IsAtHome", Value = person.IsAtHome ? "True" : "False" },
+                        new() { Key = "CurrentGeoFence", Value = person.CurrentGeoFence?.Name },
+                        new() { Key = "GpsTrackerID", Value = person.GPSTrackerID.ToString() }
                     };
                 }
             }
