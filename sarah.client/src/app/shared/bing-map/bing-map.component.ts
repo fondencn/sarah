@@ -38,8 +38,8 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   }
 
   public SetCenter(center: NamedLocationDto, zoom: number = 10): void {
-    this.latitude = center.longitude ?? 0;
-    this.longitude = center.latitude ?? 0;
+    this.latitude = center.latitude ?? 0;
+    this.longitude = center.longitude ?? 0;
     this.zoom = zoom;
 
     if (this.map) {
@@ -60,11 +60,14 @@ export class BingMapComponent implements OnInit, AfterViewInit {
 
   public AddPushPin(location: NamedLocationDto, subtitle: string = "", text: string = ""): void {
     if (this.map) {
-      const pin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(location.longitude ?? 0, location.latitude ?? 0), {
-        title: location.name ?? "Unknown",
-        subTitle: subtitle,
-        text: text
-      });
+      const pin = new Microsoft.Maps.Pushpin(
+        new Microsoft.Maps.Location(location.latitude ?? 0, location.longitude ?? 0),
+        {
+          title: location.name ?? "Unknown",
+          subTitle: subtitle,
+          text: text
+        }
+      );
 
       this.map.entities.push(pin);
     }
