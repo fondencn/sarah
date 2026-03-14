@@ -51,7 +51,7 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         RoomdetailsComponent,
         DevicedetailsComponent,
         BingMapComponent,
-        PersonMapModalComponent
+        PersonMapModalComponent,
         PinToDashboardButtonComponent
     ],
     bootstrap: [AppComponent], 
