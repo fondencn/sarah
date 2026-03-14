@@ -42,12 +42,10 @@
           <button (click)="deleteDevice(device)" class="btn btn-danger btn-sm">
             <img src="assets/icons/delete.svg" alt="Delete" style="width: 16px; height: 16px;">
           </button>
-          <button *ngIf="device.isFavourite != true" (click)="setFavourite(device, true)" class="btn btn-secondary  btn-sm">
-            <img src="assets/icons/star.svg" alt="Favorite" style="width: 16px; height: 16px;">
-          </button>
-          <button *ngIf="device.isFavourite === true" (click)="setFavourite(device, false)" class="btn btn-secondary  btn-sm">
-            <img src="assets/icons/unfavorite.svg" alt="Unfavorite" style="width: 16px; height: 16px;">
-          </button>
+          <app-pin-to-dashboard-button
+            [isPinned]="device.isFavourite === true"
+            (pinClicked)="setFavourite(device, device.isFavourite !== true)">
+          </app-pin-to-dashboard-button>
         </td>
       </tr>
     </tbody>

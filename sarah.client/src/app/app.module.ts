@@ -31,6 +31,7 @@ import { PersondetailsComponent } from './home/details/person/persondetails/pers
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 import { DevicedetailsComponent } from './home/details/device/devicedetails/devicedetails.component';
 import { BingMapComponent } from './shared/bing-map/bing-map.component';
+import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -47,7 +48,8 @@ import { BingMapComponent } from './shared/bing-map/bing-map.component';
         PersondetailsComponent,
         RoomdetailsComponent,
         DevicedetailsComponent,
-        BingMapComponent
+        BingMapComponent,
+        PinToDashboardButtonComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

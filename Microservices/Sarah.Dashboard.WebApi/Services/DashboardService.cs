@@ -3,6 +3,7 @@ using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.DTOs;
 using Sarah.API.BusinessObjects;
 using Sarah.ServiceClients;
+using System.Globalization;
 using DeviceDto = Sarah.API.BusinessObjects.DTOs.DeviceDto;
 
 namespace Sarah.Dashboard.WebApi.Services;
@@ -162,6 +163,27 @@ public class DashboardService : IDashboardService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to load live person data for dashboard item {ItemId}", entity.ItemId);
+            }
+        }
+        else if (entity.ItemType == DashboardItemType.Room)
+        {
+            try
+            {
+                dto.Subtype ??= "Room";
+                var summary = await _deviceServiceClient.GetRoomSummaryAsync(entity.ItemId);
+                if (summary != null)
+                {
+                    dto.ExtendedProperties = new List<ExtendedPropertyDto>
+                    {
+                        new() { Key = "AverageTemperature", Value = summary.AverageTemperature?.ToString("F1", CultureInfo.InvariantCulture) ?? "" },
+                        new() { Key = "AnyDoorOpen", Value = summary.AnyDoorOpen ? "True" : "False" },
+                        new() { Key = "AnyPresence", Value = summary.AnyPresence ? "True" : "False" }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load live room data for dashboard item {ItemId}", entity.ItemId);
             }
         }
 

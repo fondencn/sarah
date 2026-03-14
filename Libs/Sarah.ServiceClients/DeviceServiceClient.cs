@@ -260,6 +260,22 @@ namespace Sarah.ServiceClients
             return responseContent;
         }
 
+        public async Task<RoomSummaryDto?> GetRoomSummaryAsync(long roomId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/room/{roomId}/summary");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<RoomSummaryDto>(json);
+        }
+
         // IDeviceService implementation - stub properties since this is an HTTP client
         public IEnumerable<ILamp> Lamps => Enumerable.Empty<ILamp>();
         public IEnumerable<IWallPlug> WallPlugs => Enumerable.Empty<IWallPlug>();
