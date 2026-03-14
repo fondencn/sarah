@@ -310,6 +310,8 @@ export class DashboardItemViewModel {
   }
 
   get gpsTrackerID(): number {
-    return Number(this.item.extendedProperties?.find(x => x.key === 'GpsTrackerID')?.value ?? '0');
+    const raw = this.item.extendedProperties?.find(x => x.key === 'GpsTrackerID')?.value ?? '';
+    const parsed = parseInt(raw, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 }
