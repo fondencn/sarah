@@ -45,14 +45,10 @@
                     <button (click)="deletePerson(person)" class="btn btn-danger btn-sm">
                         <img src="assets/icons/delete.svg" alt="Delete" style="width: 16px; height: 16px;">
                     </button>
-                    <button *ngIf="person.isFavourite != true" (click)="setFavourite(person, true)"
-                        class="btn btn-secondary  btn-sm">
-                        <img src="assets/icons/star.svg" alt="Favorite" style="width: 16px; height: 16px;">
-                    </button>
-                    <button *ngIf="person.isFavourite === true" (click)="setFavourite(person, false)"
-                        class="btn btn-secondary  btn-sm">
-                        <img src="assets/icons/unfavorite.svg" alt="Unfavorite" style="width: 16px; height: 16px;">
-                    </button>
+                    <app-pin-to-dashboard-button
+                        [isPinned]="person.isFavourite === true"
+                        (pinClicked)="setFavourite(person, person.isFavourite !== true)">
+                    </app-pin-to-dashboard-button>
                 </td>
             </tr>
         </tbody>
