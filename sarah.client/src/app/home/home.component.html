@@ -86,7 +86,7 @@
                             (change)="toggleWallplug(item.itemId, $event.target)">
                           <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
                         </div>
-                        <span>Leistung: {{item.powerConsumption}}</span>
+                        <span>Power Consumption: {{item.powerConsumption}} W</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
