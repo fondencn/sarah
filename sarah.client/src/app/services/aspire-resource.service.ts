@@ -51,7 +51,7 @@ export class AspireResourceService {
           withCredentials: false
         }).pipe(
           catchError(err => {
-            this.logger.warn(`[ASPIRE] Failed to discover ${serviceName}/${endpointName}:`, err.status);
+            this.logger.warn(`[ASPIRE] Failed to discover ${serviceName}/${endpointName}:`, err);
             return of(null);
           })
         )

@@ -170,7 +170,7 @@ export class AuthService {
       this.discoveryReady = true;
       return true;
     } catch (error) {
-      this.logger.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', authConfig.issuer);
+      this.logger.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', error);
       return false;
     }
   }
