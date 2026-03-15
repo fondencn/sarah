@@ -5,6 +5,7 @@ import { GeofencesClient } from '../../../../services/api/geofences-service/api/
 import { DevicesClient } from '../../../../services/api/device-service/api/api';
 import { NamedLocationDto, PersonDto } from '../../../../models/api-types';
 import { BingMapComponent } from '../../../../shared/bing-map/bing-map.component';
+import { LoggingService } from '../../../../services/logging.service';
 
 interface GeoFencePoint {
   latitude?: { value: number };
@@ -42,7 +43,8 @@ export class PersondetailsComponent implements OnDestroy {
     private personsService: PersonsClient,
     private locationService: LocationRuntimeService,
     private geofencesService: GeofencesClient,
-    private devicesService: DevicesClient
+    private devicesService: DevicesClient,
+    private logger: LoggingService
   ) { }
 
   ngOnInit(): void {
@@ -81,9 +83,9 @@ export class PersondetailsComponent implements OnDestroy {
     if (this.zuhause && this.mapElement) {
       this.mapElement.SetCenter(this.zuhause);
     } else if (!this.mapElement) {
-      console.error('No map element found');
+      this.logger.error('No map element found');
     } else {
-      console.error('No home location found');
+      this.logger.error('No home location found');
     }
   }
 
@@ -111,7 +113,7 @@ export class PersondetailsComponent implements OnDestroy {
           this.geofencesLoaded = true;
         }
       },
-      error: (err) => console.error('Error loading geofences:', err)
+      error: (err) => this.logger.error('Error loading geofences:', err)
     });
   }
 

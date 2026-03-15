@@ -8,6 +8,7 @@ import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
 import { DevicesClient } from '../../services/api/device-service/api/api';
 import { DEVICE_TYPE_LABELS } from '../../models/device-type-constants';
+import { LoggingService } from '../../services/logging.service';
 
 @Component({
   selector: 'editDeviceModal',
@@ -66,7 +67,8 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   }
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private devicesService: DevicesClient, private roomsService: RoomsClient) {
+              private devicesService: DevicesClient, private roomsService: RoomsClient,
+              private logger: LoggingService) {
     super(dialogService);
 
     this.deviceForm = this.fb.group({
@@ -94,14 +96,14 @@ export class EditDeviceModalComponent extends DialogContent implements OnInit {
   private loadRooms(): void {
     this.roomsService.apiRoomsGet().subscribe({
       next: (rooms: RoomDto[]) => { this.allRooms = rooms; },
-      error: (err) => console.error('Error loading rooms:', err)
+      error: (err) => this.logger.error('Error loading rooms:', err)
     });
   }
 
   private loadNetworkElements(): void {
     this.devicesService.devicesGetNetworkElementsGETApiDevicesElements().subscribe({
       next: (elements: NetworkElementDto[]) => { this.allNetworkElements = elements; },
-      error: (err) => console.error('Error loading network elements:', err)
+      error: (err) => this.logger.error('Error loading network elements:', err)
     });
   }
 

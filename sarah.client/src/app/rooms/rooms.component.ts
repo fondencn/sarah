@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
+import { LoggingService } from '../services/logging.service';
 
 @Component({
   selector: 'app-rooms',
@@ -14,7 +15,7 @@ import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-type
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
 
   readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
@@ -63,7 +64,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.rooms = response; // Save the devices list in the member variable
       },
       error: (error) => {
-        console.error('Error fetching rooms:', error);
+        this.logger.error('Error fetching rooms:', error);
       },
       complete: () => {
         this.isLoading = false; // Set the loading state to false
@@ -81,12 +82,12 @@ export class RoomsComponent implements OnInit,OnDestroy {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
           },
           error: (error) => {
-            console.error('Error deleting room:', error);
+            this.logger.error('Error deleting room:', error);
           }
         });
       }
     }).catch((error) => {
-      console.error('Error showing confirm dialog:', error);
+      this.logger.error('Error showing confirm dialog:', error);
     });
   }
 
@@ -106,7 +107,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
           this.rooms[index] = response;
         },
         error: (error) => {
-          console.error('Error editing device:', error);
+          this.logger.error('Error editing room:', error);
         }
       });
     }
@@ -133,7 +134,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
           this.rooms.push(response);
         },
         error: (error) => {
-          console.error('Error adding room:', error);
+          this.logger.error('Error adding room:', error);
         }
       });
     }
@@ -147,7 +148,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         room.isFavourite = isFavourite;
       },
       error: (error) => {
-        console.error('Error setting favourite state:', error);
+        this.logger.error('Error setting favourite state:', error);
       }
     });
   }
@@ -172,7 +173,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         if (error.status === 400 || error.status === 409 || error.status === 500) {
           this.pinnedRoomIds.add(room.id as number);
         } else {
-          console.error('Error pinning room to dashboard:', error);
+          this.logger.error('Error pinning room to dashboard:', error);
         }
       }
     });

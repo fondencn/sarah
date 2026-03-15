@@ -34,6 +34,7 @@ import { DevicedetailsComponent } from './home/details/device/devicedetails/devi
 import { BingMapComponent } from './shared/bing-map/bing-map.component';
 import { PersonMapModalComponent } from './home/person-map-modal/person-map-modal.component';
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
+import { ToastContainerComponent } from './shared/toast/toast-container.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -52,7 +53,8 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         DevicedetailsComponent,
         BingMapComponent,
         PersonMapModalComponent,
-        PinToDashboardButtonComponent
+        PinToDashboardButtonComponent,
+        ToastContainerComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

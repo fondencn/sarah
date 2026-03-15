@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { LoggingService } from './logging.service';
 
 /**
  * Service for discovering service endpoints from Aspire's resource service API
@@ -16,8 +17,8 @@ export class AspireResourceService {
   // But can be overridden by ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL env var
   private readonly ASPIRE_API_URL = this.getAspireApiUrl();
 
-  constructor(private http: HttpClient) {
-    console.log('[ASPIRE] Resource discovery service initialized, API URL:', this.ASPIRE_API_URL);
+  constructor(private http: HttpClient, private logger: LoggingService) {
+    this.logger.debug('[ASPIRE] Resource discovery service initialized, API URL:', this.ASPIRE_API_URL);
   }
 
   /**
@@ -41,7 +42,7 @@ export class AspireResourceService {
   async discoverEndpoint(serviceName: string, endpointName: string = 'http'): Promise<string | null> {
     try {
       const url = `${this.ASPIRE_API_URL}/resources/${serviceName}/endpoints/${endpointName}`;
-      console.log('[ASPIRE] Discovering endpoint:', url);
+      this.logger.debug('[ASPIRE] Discovering endpoint:', url);
 
       // Aspire uses self-signed certs in development, so we need custom headers
       const response = await firstValueFrom(
@@ -50,7 +51,7 @@ export class AspireResourceService {
           withCredentials: false
         }).pipe(
           catchError(err => {
-            console.warn(`[ASPIRE] Failed to discover ${serviceName}/${endpointName}:`, err.status, err.message);
+            this.logger.warn(`[ASPIRE] Failed to discover ${serviceName}/${endpointName}:`, err.status);
             return of(null);
           })
         )
@@ -58,14 +59,14 @@ export class AspireResourceService {
 
       if (response && response.address) {
         const fullUrl = `${response.scheme || 'http'}://${response.address}`;
-        console.log(`[ASPIRE] ✓ Discovered ${serviceName}:`, fullUrl);
+        this.logger.debug(`[ASPIRE] ✓ Discovered ${serviceName}:`, fullUrl);
         return fullUrl;
       }
 
-      console.log(`[ASPIRE] No address in response for ${serviceName}`);
+      this.logger.debug(`[ASPIRE] No address in response for ${serviceName}`);
       return null;
     } catch (error: any) {
-      console.warn('[ASPIRE] Exception discovering endpoint:', error?.message);
+      this.logger.warn('[ASPIRE] Exception discovering endpoint:', error?.message);
       return null;
     }
   }
@@ -79,12 +80,12 @@ export class AspireResourceService {
       const endpoint = await this.discoverEndpoint('keycloak', 'http');
       if (endpoint) {
         const issuer = `${endpoint}/realms/${realm}`;
-        console.log('[ASPIRE] Built Keycloak issuer:', issuer);
+        this.logger.debug('[ASPIRE] Built Keycloak issuer:', issuer);
         return issuer;
       }
       return null;
     } catch (error: any) {
-      console.warn('[ASPIRE] Failed to discover Keycloak issuer:', error?.message);
+      this.logger.warn('[ASPIRE] Failed to discover Keycloak issuer:', error?.message);
       return null;
     }
   }
