@@ -4,6 +4,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import rrulePlugin from '@fullcalendar/rrule';
+import bootstrap5Plugin from '@fullcalendar/bootstrap5';
+import deLocale from '@fullcalendar/core/locales/de';
 
 import { RulesClient } from '../services/api/rules-service/api/rules.service';
 import { AlarmScheduleEntityModel } from '../services/api/rules-service/model/alarmScheduleEntity';
@@ -20,7 +22,10 @@ export class AlarmsComponent implements OnInit {
   isLoading = false;
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin],
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin, bootstrap5Plugin],
+    themeSystem: 'bootstrap5',
+    locale: deLocale,
+    buttonText: { prev: '‹', next: '›' },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
