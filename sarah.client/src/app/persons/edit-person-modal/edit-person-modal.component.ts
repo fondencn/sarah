@@ -3,7 +3,7 @@ import { DialogContent } from '../../services/dialogcontent';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PersonDto, TrackerDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
-import { DevicesClient } from '../../services/api/device-service/api/api';
+import { DevicesClient } from '../../services/api/device-service/api/devices.service';
 import { PersonsExtService } from '../../services/persons-ext.service';
 
 @Component({

@@ -1,0 +1,214 @@
+<!-- Modal backdrop -->
+<div class="modal-backdrop fade show" *ngIf="isVisible" (click)="close()"></div>
+
+<!-- Modal dialog -->
+<div
+  class="modal fade show"
+  [style.display]="isVisible ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="alarmEditModalLabel"
+  aria-modal="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="alarmEditModalLabel">
+          {{ isEditing ? 'Edit Alarm' : 'New Alarm' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form [formGroup]="form" novalidate>
+
+          <!-- Title / Text -->
+          <div class="mb-3">
+            <label for="alarmText" class="form-label fw-semibold">Title / Text <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              id="alarmText"
+              class="form-control"
+              formControlName="text"
+              placeholder="Alarm description"
+              [class.is-invalid]="form.get('text')?.invalid && form.get('text')?.touched"
+            >
+            <div class="invalid-feedback">Title is required.</div>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="mb-3">
+            <label for="alarmTime" class="form-label fw-semibold">Date &amp; Time <span class="text-danger">*</span></label>
+            <input
+              type="datetime-local"
+              id="alarmTime"
+              class="form-control"
+              formControlName="alarmTime"
+              [class.is-invalid]="form.get('alarmTime')?.invalid && form.get('alarmTime')?.touched"
+            >
+            <div class="invalid-feedback">Date &amp; time is required.</div>
+          </div>
+
+          <div class="row">
+            <!-- Volume -->
+            <div class="col-md-6 mb-3">
+              <label for="alarmVolume" class="form-label fw-semibold">Volume</label>
+              <select id="alarmVolume" class="form-select" formControlName="volume">
+                <option *ngFor="let v of volumeOptions" [value]="v.value">{{ v.label }}</option>
+              </select>
+            </div>
+
+            <!-- Target Speaker -->
+            <div class="col-md-6 mb-3">
+              <label for="targetSpeaker" class="form-label fw-semibold">Target Speaker</label>
+              <input
+                type="text"
+                id="targetSpeaker"
+                class="form-control"
+                formControlName="targetSpeaker"
+                placeholder="e.g. living-room-speaker"
+              >
+            </div>
+          </div>
+
+          <!-- Active toggle -->
+          <div class="mb-3 form-check form-switch">
+            <input
+              type="checkbox"
+              id="isActive"
+              class="form-check-input"
+              formControlName="isActive"
+              role="switch"
+            >
+            <label class="form-check-label fw-semibold" for="isActive">Active</label>
+          </div>
+
+          <!-- Holiday restrictions -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Holiday restriction</label>
+            <div class="form-check form-switch mb-1">
+              <input
+                type="checkbox"
+                id="isNurInFerien"
+                class="form-check-input"
+                formControlName="isNurInFerien"
+                role="switch"
+              >
+              <label class="form-check-label" for="isNurInFerien">Only during school holidays</label>
+            </div>
+            <div class="form-check form-switch">
+              <input
+                type="checkbox"
+                id="isNichtInFerien"
+                class="form-check-input"
+                formControlName="isNichtInFerien"
+                role="switch"
+              >
+              <label class="form-check-label" for="isNichtInFerien">Not during school holidays</label>
+            </div>
+          </div>
+
+          <!-- Recurrence toggle -->
+          <div class="mb-3 form-check form-switch">
+            <input
+              type="checkbox"
+              id="hasRecurrence"
+              class="form-check-input"
+              formControlName="hasRecurrence"
+              role="switch"
+            >
+            <label class="form-check-label fw-semibold" for="hasRecurrence">Recurring event</label>
+          </div>
+
+          <!-- Recurrence settings -->
+          <div *ngIf="hasRecurrence" class="card p-3 mb-3 bg-light border-primary" formGroupName="recurrence">
+            <h6 class="card-title mb-3">Recurrence Settings</h6>
+
+            <!-- Frequency -->
+            <div class="mb-3">
+              <label for="recurrenceFreq" class="form-label">Repeat</label>
+              <select id="recurrenceFreq" class="form-select" formControlName="freq">
+                <option *ngFor="let f of frequencyOptions" [value]="f.value">{{ f.label }}</option>
+              </select>
+            </div>
+
+            <!-- Interval -->
+            <div class="mb-3">
+              <label for="recurrenceInterval" class="form-label">Every</label>
+              <div class="input-group" style="max-width: 200px;">
+                <input
+                  type="number"
+                  id="recurrenceInterval"
+                  class="form-control"
+                  formControlName="interval"
+                  min="1"
+                >
+                <span class="input-group-text">{{ freqLabel(selectedFreq) }}</span>
+              </div>
+            </div>
+
+            <!-- Days of week (only for weekly) -->
+            <div class="mb-3" *ngIf="selectedFreq === 'weekly'">
+              <label class="form-label">Day(s) of week</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  *ngFor="let day of weekdays"
+                  class="btn btn-sm"
+                  [class.btn-primary]="isWeekdaySelected(day.key)"
+                  [class.btn-outline-secondary]="!isWeekdaySelected(day.key)"
+                  (click)="toggleWeekday(day.key)"
+                >
+                  {{ day.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- End date -->
+            <div class="mb-2">
+              <label for="recurrenceUntil" class="form-label">End date <span class="text-muted">(optional)</span></label>
+              <input
+                type="date"
+                id="recurrenceUntil"
+                class="form-control"
+                formControlName="until"
+                style="max-width: 200px;"
+              >
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          *ngIf="isEditing"
+          type="button"
+          class="btn btn-danger me-auto"
+          (click)="delete()"
+          [disabled]="isSaving"
+        >
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Delete
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="isSaving">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="save()"
+          [disabled]="form.invalid || isSaving"
+        >
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          {{ isSaving ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

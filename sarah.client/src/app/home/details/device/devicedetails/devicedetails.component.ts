@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { DevicesClient } from '../../../../services/api/device-service/api/api';
+import { DevicesClient } from '../../../../services/api/device-service/api/devices.service';
 import { DeviceDtoModel as DeviceDto } from '../../../../services/api/device-service/model/models';
 import { ExtendedPropertyDtoModel } from '../../../../services/api/device-service/model/models';
 

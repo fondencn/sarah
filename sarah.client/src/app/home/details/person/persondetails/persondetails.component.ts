@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { PersonsClient } from '../../../../services/api/persons-service/api/api';
+import { PersonsClient } from '../../../../services/api/persons-service/api/persons.service';
 import { LocationRuntimeService } from '../../../../services/location-runtime.service';
 import { GeofencesClient } from '../../../../services/api/geofences-service/api/geofences.service';
 import { DevicesClient } from '../../../../services/api/device-service/api/api';

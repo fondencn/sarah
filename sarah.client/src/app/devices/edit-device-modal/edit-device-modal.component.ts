@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RoomsClient } from '../../services/api/room-service/api/api';
+import { RoomsClient } from '../../services/api/room-service/api/rooms.service';
 import { DeviceDtoModel as DeviceDto, KnownDeviceTypesModel as KnownDeviceTypes } from '../../services/api/device-service/model/models';
 import { RoomDtoModel as RoomDto } from '../../services/api/room-service/model/models';
 import { NetworkElementDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
 import { DialogContent } from '../../services/dialogcontent';
-import { DevicesClient } from '../../services/api/device-service/api/api';
+import { DevicesClient } from '../../services/api/device-service/api/devices.service';
 import { DEVICE_TYPE_LABELS } from '../../models/device-type-constants';
 
 @Component({

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { RoomsClient } from '../../../../services/api/room-service/api/api';
+import { RoomsClient } from '../../../../services/api/room-service/api/rooms.service';
 import { RoomDtoModel as RoomDto } from '../../../../services/api/room-service/model/models';
 
 @Component({

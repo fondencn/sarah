@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { DevicesClient } from '../services/api/device-service/api/api';
+import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { DeviceDtoModel as DeviceDto, KnownDeviceTypesModel as KnownDeviceTypes } from '../services/api/device-service/model/models';
 import { CreateDashboardItemDto, DashboardItemType, NetworkElementDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';

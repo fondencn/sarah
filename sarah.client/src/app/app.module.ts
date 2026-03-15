@@ -6,9 +6,10 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
-import { DevicesClient } from './services/api/device-service/api/api';
-import { PersonsClient } from './services/api/persons-service/api/api';
-import { RoomsClient } from './services/api/room-service/api/api';
+import { DevicesClient } from './services/api/device-service/api/devices.service';
+import { PersonsClient } from './services/api/persons-service/api/persons.service';
+import { RoomsClient } from './services/api/room-service/api/rooms.service';
+import { RulesClient } from './services/api/rules-service/api/rules.service';
 import { GeofencesClient } from './services/api/geofences-service/api/geofences.service';
 import { DashboardRuntimeService } from './services/dashboard-runtime.service';
 import { LocationRuntimeService } from './services/location-runtime.service';
@@ -32,6 +33,9 @@ import { PersondetailsComponent } from './home/details/person/persondetails/pers
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 import { DevicedetailsComponent } from './home/details/device/devicedetails/devicedetails.component';
 import { BingMapComponent } from './shared/bing-map/bing-map.component';
+import { AlarmsComponent } from './alarms/alarms.component';
+import { AlarmEditModalComponent } from './alarms/alarm-edit-modal/alarm-edit-modal.component';
+import { FullCalendarModule } from '@fullcalendar/angular';
 import { PersonMapModalComponent } from './home/person-map-modal/person-map-modal.component';
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 
@@ -51,6 +55,8 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         RoomdetailsComponent,
         DevicedetailsComponent,
         BingMapComponent,
+        AlarmsComponent,
+        AlarmEditModalComponent
         PersonMapModalComponent,
         PinToDashboardButtonComponent
     ],
@@ -70,7 +76,8 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
             }), 
         FormsModule,
         HttpClientModule, 
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
+        FullCalendarModule
     ], 
     providers: [
         {
@@ -85,6 +92,7 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         { provide: DevicesClient, useFactory: (http: HttpClient) => new DevicesClient(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
         { provide: PersonsClient, useFactory: (http: HttpClient) => new PersonsClient(http, environment.api.personsService, undefined!), deps: [HttpClient] },
         { provide: RoomsClient, useFactory: (http: HttpClient) => new RoomsClient(http, environment.api.roomService, undefined!), deps: [HttpClient] },
+        { provide: RulesClient, useFactory: (http: HttpClient) => new RulesClient(http, environment.api.rulesService, undefined!), deps: [HttpClient] },
         { provide: GeofencesClient, useFactory: (http: HttpClient) => new GeofencesClient(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
         { provide: DashboardRuntimeService, useFactory: (http: HttpClient) => new DashboardRuntimeService(http), deps: [HttpClient] },
         { provide: LocationRuntimeService, useFactory: (http: HttpClient) => new LocationRuntimeService(http), deps: [HttpClient] },
