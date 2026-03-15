@@ -22,6 +22,7 @@ export const DEVICE_TYPE_FIBARO_KEY_FOB               = KnownDeviceTypes.NUMBER_
 export const DEVICE_TYPE_WIFI_WALL_PLUG               = KnownDeviceTypes.NUMBER_19; // 19
 export const DEVICE_TYPE_SHELLY_WIFI_LAMP             = KnownDeviceTypes.NUMBER_20; // 20
 export const DEVICE_TYPE_LORA_WAN_GPS_TRACKER         = KnownDeviceTypes.NUMBER_21; // 21
+export const DEVICE_TYPE_SHELLY_TRV                   = KnownDeviceTypes.NUMBER_22; // 22
 
 export const DEVICE_TYPE_LABELS: Record<number, string> = {
   [DEVICE_TYPE_UNKNOWN as number]:                     'Unknown',
@@ -46,4 +47,5 @@ export const DEVICE_TYPE_LABELS: Record<number, string> = {
   [DEVICE_TYPE_WIFI_WALL_PLUG as number]:              'WiFi Wall Plug',
   [DEVICE_TYPE_SHELLY_WIFI_LAMP as number]:            'Shelly WiFi Lamp',
   [DEVICE_TYPE_LORA_WAN_GPS_TRACKER as number]:        'LoRaWAN GPS Tracker',
+  [DEVICE_TYPE_SHELLY_TRV as number]:                  'Shelly TRV Gen3',
 };

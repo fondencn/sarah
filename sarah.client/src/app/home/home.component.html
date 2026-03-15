@@ -91,6 +91,31 @@
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
                       </ng-container>
+                      <ng-container *ngSwitchCase="'Heizung'">
+                        <ul class="list-unstyled mt-1 mb-0 small">
+                          <li>
+                            🌡️ Gemessen: {{ item.trvTemperature !== null ? (item.trvTemperature | number:'1.1-1') + ' °C' : '–' }}
+                          </li>
+                          <li>
+                            🎯 Ziel: {{ item.trvTemperatureSetpoint !== null ? (item.trvTemperatureSetpoint | number:'1.1-1') + ' °C' : '–' }}
+                          </li>
+                          <li>
+                            🔋 Batterie: {{ item.trvBattery !== null ? (item.trvBattery | number:'1.0-0') + ' %' : '–' }}
+                          </li>
+                        </ul>
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                          <label class="small mb-0" for="trvTemp_{{item.itemId}}">Neue Zieltemperatur:</label>
+                          <input type="number" id="trvTemp_{{item.itemId}}" class="form-control form-control-sm" style="width:80px;"
+                            min="4.5" max="30" step="0.5"
+                            [value]="item.trvTemperatureSetpoint ?? 20"
+                            #trvTempInput>
+                          <button class="btn btn-sm btn-primary"
+                            aria-label="Zieltemperatur setzen"
+                            (click)="setThermostatTemperature(item.itemId, trvTempInput)">
+                            ✓
+                          </button>
+                        </div>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
                           &nbsp;
@@ -108,6 +133,9 @@
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         <img class="big-icon" src="assets/icons/location.svg" [alt]="item.subType" [title]="item.subType">
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'Heizung'">
+                        <span style="font-size: 2.5rem;" [title]="item.subType">🌡️</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">

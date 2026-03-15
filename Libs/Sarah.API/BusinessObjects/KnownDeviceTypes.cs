@@ -35,5 +35,6 @@ namespace Sarah.API.BusinessObjects
         WifiWallPlug = 19,
         ShellyWifiLamp = 20,
         LoraWanGpsTracker = 21,
+        ShellyTrv = 22,
     }
 }

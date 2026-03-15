@@ -417,6 +417,15 @@ public class DevicesController : ControllerBase
                 props.Add(new ExtendedPropertyDto { Key = "Meter_W", Value = concreteWallPlug.Meter_W.Value.ToString() });
             }
         }
+        else if (networkItem is IThermoElement thermoElement)
+        {
+            if (networkItem is ITemperatureSensor tempSensor && tempSensor.Temperature != null)
+                props.Add(new ExtendedPropertyDto { Key = "Temperature", Value = tempSensor.Temperature.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            if (thermoElement.TemperatureSetpoint != null)
+                props.Add(new ExtendedPropertyDto { Key = "TemperatureSetpoint", Value = thermoElement.TemperatureSetpoint.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            if (networkItem is IBatterySensor batterySensor && batterySensor.Battery != null)
+                props.Add(new ExtendedPropertyDto { Key = "Battery", Value = batterySensor.Battery.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+        }
         return props;
     }
 
@@ -619,6 +628,38 @@ public class DevicesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error setting state {IsOn} for wallplug {WallplugId}", isOn, id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("thermostat/{id}/temperature/{temperature}")]
+    public async Task<IActionResult> SetThermostatTemperature(long id, float temperature)
+    {
+        if (temperature < 4.5f || temperature > 30.0f)
+        {
+            return BadRequest("Temperature must be between 4.5 and 30.0 °C");
+        }
+
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No thermostat found for device id {id}");
+            }
+
+            var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+            if (networkItem is not IThermoElement thermostat)
+            {
+                return NotFound($"No thermostat found for device id {id}");
+            }
+
+            await thermostat.SetTemperature(temperature);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting temperature {Temperature} for thermostat {ThermostatId}", temperature, id);
             return StatusCode(500, "Internal server error");
         }
     }
