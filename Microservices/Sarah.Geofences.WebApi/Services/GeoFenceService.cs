@@ -88,6 +88,62 @@ namespace Sarah.Geofences
             }
         };
 
+        public static readonly GeoFence Mannheim = new GeoFence()
+        {
+            Name = "Mannheim + Ludwigshafen + Viernheim",
+            Points = new LocatorPosition[]
+            {
+                     // Large urban boundary including Mannheim, Ludwigshafen and Viernheim
+                     new LocatorPosition(new API.Business.SensorData(49.600000f, "°"), new API.Business.SensorData(8.350000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.620000f, "°"), new API.Business.SensorData(8.520000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.580000f, "°"), new API.Business.SensorData(8.610000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.500000f, "°"), new API.Business.SensorData(8.630000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.420000f, "°"), new API.Business.SensorData(8.610000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.390000f, "°"), new API.Business.SensorData(8.520000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.410000f, "°"), new API.Business.SensorData(8.420000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.470000f, "°"), new API.Business.SensorData(8.360000f, "°")),
+            }
+        };
+
+        public static readonly GeoFence Schwetzingen = new GeoFence()
+        {
+            Name = "Schwetzingen",
+            Points = new LocatorPosition[]
+            {
+                     new LocatorPosition(new API.Business.SensorData(49.430000f, "°"), new API.Business.SensorData(8.500000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.425000f, "°"), new API.Business.SensorData(8.615000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.335000f, "°"), new API.Business.SensorData(8.620000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.325000f, "°"), new API.Business.SensorData(8.500000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.370000f, "°"), new API.Business.SensorData(8.470000f, "°")),
+            }
+        };
+
+        public static readonly GeoFence Speyer = new GeoFence()
+        {
+            Name = "Speyer",
+            Points = new LocatorPosition[]
+            {
+                     new LocatorPosition(new API.Business.SensorData(49.350000f, "°"), new API.Business.SensorData(8.370000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.345000f, "°"), new API.Business.SensorData(8.500000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.250000f, "°"), new API.Business.SensorData(8.505000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.245000f, "°"), new API.Business.SensorData(8.365000f, "°")),
+            }
+        };
+
+        public static readonly GeoFence FuerthNuremberg = new GeoFence()
+        {
+            Name = "Nürnberg/Fürth",
+            Points = new LocatorPosition[]
+            {
+                     // Urban area covering Fuerth and Nuremberg
+                     new LocatorPosition(new API.Business.SensorData(49.525000f, "°"), new API.Business.SensorData(10.930000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.510000f, "°"), new API.Business.SensorData(11.180000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.390000f, "°"), new API.Business.SensorData(11.180000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.360000f, "°"), new API.Business.SensorData(10.960000f, "°")),
+                     new LocatorPosition(new API.Business.SensorData(49.430000f, "°"), new API.Business.SensorData(10.900000f, "°")),
+            }
+        };
+
 
         public static IEnumerable<GeoFence> All
         {
@@ -99,6 +155,10 @@ namespace Sarah.Geofences
                 yield return SentrisKammererstr;
                 yield return Henrik;
                 yield return Karate;
+                yield return Mannheim;
+                yield return Schwetzingen;
+                yield return Speyer;
+                yield return FuerthNuremberg;
             }
         }
 
