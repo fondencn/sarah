@@ -271,7 +271,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
             itemId: person.id,
             itemType: DashboardItemType.NUMBER_3,
             title: person.name,
-            description: person.isAtHome ? 'At home' : 'Away',
+            description: '',
             subtype: 'Person'
           };
           this.dashboardService.apiDashboardPost(createDto).subscribe({
