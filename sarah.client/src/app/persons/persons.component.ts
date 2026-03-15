@@ -208,7 +208,9 @@ export class PersonsComponent implements OnInit,OnDestroy {
           this.enrichPerson(response).subscribe({
             next: (enrichedPerson: PersonResponseDtoModel) => {
               const index = this.persons.findIndex(d => d.id === enrichedPerson.id);
-              this.persons[index] = enrichedPerson;
+              if (index !== -1) {
+                this.persons[index] = enrichedPerson;
+              }
             },
             error: (error) => {
               this.logger.error('Error enriching edited person:', error);
