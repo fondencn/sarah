@@ -1,8 +1,7 @@
 import { Component, Input, OnDestroy, ViewChild } from '@angular/core';
-import { LocationRuntimeService } from '../../services/location-runtime.service';
 import { GeofencesClient } from '../../services/api/geofences-service/api/geofences.service';
 import { DevicesClient } from '../../services/api/device-service/api/api';
-import { BingMapComponent } from '../../shared/bing-map/bing-map.component';
+import { OsmMapComponent } from '../../shared/osm-map/osm-map.component';
 import { NamedLocationDto } from '../../models/api-types';
 import { LoggingService } from '../../services/logging.service';
 
@@ -16,9 +15,11 @@ interface GeoFenceData {
   points?: GeoFencePoint[];
 }
 
-interface GpsTrackerData {
-  battery?: { value: number; unit: string };
-  position?: { latitude?: { value: number }; longtitude?: { value: number }; isValid?: boolean }; // Note: 'longtitude' matches the backend API typo
+interface TrackerDto {
+  id?: number;
+  name?: string;
+  position?: { latitude?: number; longitude?: number; isValid?: boolean };
+  batteryLevel?: number;
 }
 
 @Component({
@@ -31,17 +32,18 @@ export class PersonMapModalComponent implements OnDestroy {
   @Input() personName: string = '';
   @Input() gpsTrackerID: number = 0;
 
-  @ViewChild('map') mapElement: BingMapComponent | null = null;
+  @ViewChild('map') mapElement: OsmMapComponent | null = null;
 
   isVisible: boolean = false;
   batteryStatus: string = '';
   currentGeoFenceName: string = '';
+  personLatitude: number = 0;
+  personLongitude: number = 0;
   private bootstrapModal: any = null;
   private refreshInterval: any = null;
   private readonly MAP_INIT_MAX_RETRIES: number = 20;
 
   constructor(
-    private locationService: LocationRuntimeService,
     private geofencesService: GeofencesClient,
     private devicesService: DevicesClient,
     private logger: LoggingService
@@ -58,6 +60,9 @@ export class PersonMapModalComponent implements OnDestroy {
       if (modalEl) {
         this.bootstrapModal = new (window as any).bootstrap.Modal(modalEl);
         this.bootstrapModal.show();
+        modalEl.addEventListener('shown.bs.modal', () => {
+          this.mapElement?.invalidateSize();
+        }, { once: true });
         modalEl.addEventListener('hidden.bs.modal', () => {
           this.isVisible = false;
           this.stopRefresh();
@@ -75,10 +80,7 @@ export class PersonMapModalComponent implements OnDestroy {
   }
 
   private scheduleLoadMapData(retry: number = 0): void {
-    // If modal is no longer visible, do not proceed with loading.
-    if (!this.isVisible) {
-      return;
-    }
+    if (!this.isVisible) return;
 
     const mapIsReady =
       this.mapElement &&
@@ -105,6 +107,7 @@ export class PersonMapModalComponent implements OnDestroy {
 
     this.mapElement.ClearMap();
 
+    // Load geofence polygons + Zuhause home pin once from the geofences service
     this.geofencesService.apiGeofencesGet().subscribe({
       next: (data: any) => {
         const geofences: GeoFenceData[] = data as GeoFenceData[];
@@ -124,95 +127,64 @@ export class PersonMapModalComponent implements OnDestroy {
             }
           }
         }
-        this.loadPersonPosition();
+        this.loadHomePinAndTrackerPosition();
       },
       error: (err) => {
         this.logger.error('Error loading geofences for map:', err);
-        this.loadPersonPosition();
+        this.loadHomePinAndTrackerPosition();
       }
     });
 
     this.startRefresh();
   }
 
-  private loadPersonPosition(): void {
+  private loadHomePinAndTrackerPosition(): void {
+    // Place Zuhause home pin once
+    this.geofencesService.apiGeofencesWellknownlocationsGet().subscribe({
+      next: (locations: any) => {
+        if (Array.isArray(locations) && locations.length > 0) {
+          this.mapElement?.AddHomePushPin(locations[0]);
+        }
+      },
+      error: (err) => this.logger.error('Error loading well-known locations:', err)
+    });
+    this.pollTrackerPosition();
+  }
+
+  private pollTrackerPosition(): void {
     if (!this.gpsTrackerID) return;
 
-    this.locationService.apiLocationTrackerIdGet(this.gpsTrackerID).subscribe({
-      next: (location) => {
-        if (!location?.latitude && !location?.longitude) return;
+    this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(this.gpsTrackerID).subscribe({
+      next: (data: any) => {
+        const tracker = data as TrackerDto;
+        const pos = tracker?.position;
+        if (!pos?.isValid || (pos.latitude === 0 && pos.longitude === 0)) return;
 
-        if (this.gpsTrackerID) {
-          this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(this.gpsTrackerID).subscribe({
-            next: (trackerData: any) => {
-              const tracker = trackerData as GpsTrackerData;
-              const battery = tracker?.battery;
-              this.batteryStatus = battery
-                ? `Battery: ${Math.round(battery.value)}${battery.unit ?? '%'}`
-                : '';
-              this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
-            },
-            error: () => {
-              this.batteryStatus = '';
-              this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
-            }
-          });
-        } else {
-          this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
-        }
+        this.batteryStatus = tracker.batteryLevel != null
+          ? `Battery: ${Math.round(tracker.batteryLevel)}%`
+          : '';
+        this.personLatitude = pos.latitude ?? 0;
+        this.personLongitude = pos.longitude ?? 0;
+
+        this.mapElement?.UpdatePersonPin(
+          { latitude: pos.latitude, longitude: pos.longitude, name: this.personName },
+          this.batteryStatus,
+          14
+        );
       },
       error: (err) => this.logger.error('Error loading person position:', err)
     });
   }
 
-  private placePersonPin(latitude: number, longitude: number): void {
-    if (!this.mapElement) return;
-
-    const personLocation: NamedLocationDto = {
-      latitude: latitude,
-      longitude: longitude,
-      name: this.personName
-    };
-
-    this.mapElement.UpdatePersonPin(personLocation, this.batteryStatus, 14);
-  }
-
   private startRefresh(): void {
-    // Avoid creating multiple intervals if startRefresh is called repeatedly
-    if (this.refreshInterval) {
-      return;
-    }
+    if (this.refreshInterval) return;
 
-    // Only refresh the person's position on the interval; geofences are static and loaded once
+    // Only the tracker position is polled; geofences are static and loaded once
     this.refreshInterval = setInterval(() => {
       if (this.mapElement && this.isVisible) {
-        this.refreshPersonPosition();
+        this.pollTrackerPosition();
       }
-    }, 10000);
-  }
-
-  private refreshPersonPosition(): void {
-    if (!this.gpsTrackerID || !this.mapElement) return;
-
-    this.locationService.apiLocationTrackerIdGet(this.gpsTrackerID).subscribe({
-      next: (location) => {
-        if (!location?.latitude && !location?.longitude) return;
-        this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(this.gpsTrackerID).subscribe({
-          next: (trackerData: any) => {
-            const tracker = trackerData as GpsTrackerData;
-            const battery = tracker?.battery;
-            this.batteryStatus = battery
-              ? `Battery: ${Math.round(battery.value)}${battery.unit ?? '%'}`
-              : '';
-            this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
-          },
-          error: () => {
-            this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
-          }
-        });
-      },
-      error: (err) => this.logger.error('Error refreshing person position:', err)
-    });
+    }, 60000);
   }
 
   private stopRefresh(): void {

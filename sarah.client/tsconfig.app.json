@@ -3,9 +3,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": [
-      "bingmaps"
-     ]
+    "types": []
   },
   "files": [
     "src/main.ts"

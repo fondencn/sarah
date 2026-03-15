@@ -15,11 +15,14 @@
           <span *ngIf="batteryStatus" class="badge bg-light text-dark">
             🔋 {{ batteryStatus }}
           </span>
+          <span *ngIf="personLatitude || personLongitude" class="font-monospace small text-white-50">
+            📍 {{ personLatitude | number:'1.5-6' }}°N &nbsp; {{ personLongitude | number:'1.5-6' }}°E
+          </span>
           <button type="button" class="btn-close btn-close-white" (click)="hide()" aria-label="Close"></button>
         </div>
       </div>
       <div class="modal-body p-0" *ngIf="isVisible">
-        <app-bing-map #map style="display:block;width:100%;height:500px;"></app-bing-map>
+        <app-osm-map #map style="display:block;width:100%;height:500px;"></app-osm-map>
       </div>
     </div>
   </div>

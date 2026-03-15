@@ -1,10 +1,9 @@
 import { Component, Input, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { PersonsClient } from '../../../../services/api/persons-service/api/persons.service';
-import { LocationRuntimeService } from '../../../../services/location-runtime.service';
 import { GeofencesClient } from '../../../../services/api/geofences-service/api/geofences.service';
 import { DevicesClient } from '../../../../services/api/device-service/api/api';
 import { NamedLocationDto, PersonDto } from '../../../../models/api-types';
-import { BingMapComponent } from '../../../../shared/bing-map/bing-map.component';
+import { OsmMapComponent } from '../../../../shared/osm-map/osm-map.component';
 import { LoggingService } from '../../../../services/logging.service';
 
 interface GeoFencePoint {
@@ -17,8 +16,11 @@ interface GeoFenceData {
   points?: GeoFencePoint[];
 }
 
-interface GpsTrackerData {
-  battery?: { value: number; unit: string };
+interface TrackerDto {
+  id?: number;
+  name?: string;
+  position?: { latitude?: number; longitude?: number; isValid?: boolean };
+  batteryLevel?: number;
 }
 
 @Component({
@@ -37,11 +39,11 @@ export class PersondetailsComponent implements OnDestroy {
   refreshInterval: any | null = null;
   zuhause: NamedLocationDto | null = null;
   geofencesLoaded: boolean = false;
-  @ViewChild('map') mapElement: BingMapComponent | null = null;
+  homePinAdded: boolean = false;
+  @ViewChild('map') mapElement: OsmMapComponent | null = null;
 
   constructor(
     private personsService: PersonsClient,
-    private locationService: LocationRuntimeService,
     private geofencesService: GeofencesClient,
     private devicesService: DevicesClient,
     private logger: LoggingService
@@ -58,8 +60,8 @@ export class PersondetailsComponent implements OnDestroy {
 
   startLocationRefresh(): void {
     this.refreshInterval = setInterval(() => {
-      this.refreshLocation();
-    }, 5000); // Refresh every 5 seconds
+      this.pollTrackerPosition();
+    }, 60000);
   }
 
   stopLocationRefresh(): void {
@@ -68,15 +70,33 @@ export class PersondetailsComponent implements OnDestroy {
     }
   }
 
-  refreshLocation(): void {
-    if (this.personDetails?.gpsTrackerID) {
-      this.locationService.apiLocationTrackerIdGet(this.personDetails.gpsTrackerID).subscribe(location => {
-        this.personlatitude = location?.longitude ?? 0;
-        this.personlongitude = location?.latitude ?? 0;
+  /** Single call to the device service for both position and battery status. */
+  private pollTrackerPosition(): void {
+    const trackerId = this.personDetails?.gpsTrackerID;
+    if (!trackerId) return;
+
+    this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(trackerId).subscribe({
+      next: (data: any) => {
+        const tracker = data as TrackerDto;
+        const pos = tracker?.position;
+        if (!pos?.isValid || (pos.latitude === 0 && pos.longitude === 0)) return;
+
+        this.batteryStatus = tracker.batteryLevel != null
+          ? `Battery: ${Math.round(tracker.batteryLevel)}%`
+          : '';
+        this.personlatitude = pos.latitude ?? 0;
+        this.personlongitude = pos.longitude ?? 0;
         this.lastUpdated = new Date().toLocaleString('de-DE');
-        this.updatePersonPinOnMap(location?.latitude ?? 0, location?.longitude ?? 0);
-      });
-    }
+
+        if (this.mapElement && (pos.latitude || pos.longitude)) {
+          this.mapElement.UpdatePersonPin(
+            { latitude: pos.latitude, longitude: pos.longitude, name: this.personDetails?.name ?? 'Person' },
+            this.batteryStatus
+          );
+        }
+      },
+      error: (err) => this.logger.error('Error polling tracker position:', err)
+    });
   }
 
   centerHomeOnMap(): void {
@@ -117,44 +137,24 @@ export class PersondetailsComponent implements OnDestroy {
     });
   }
 
-  private updatePersonPinOnMap(latitude: number, longitude: number): void {
-    if (!this.mapElement || (!latitude && !longitude)) return;
-
-    const personLocation: NamedLocationDto = {
-      latitude: latitude,
-      longitude: longitude,
-      name: this.personDetails?.name ?? 'Person'
-    };
-    this.mapElement.UpdatePersonPin(personLocation, this.batteryStatus);
-  }
-
-  private loadBatteryStatus(): void {
-    const trackerId = this.personDetails?.gpsTrackerID;
-    if (!trackerId) return;
-
-    this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(trackerId).subscribe({
-      next: (data: any) => {
-        const tracker = data as GpsTrackerData;
-        const battery = tracker?.battery;
-        this.batteryStatus = battery
-          ? `Battery: ${Math.round(battery.value)}${battery.unit ?? '%'}`
-          : '';
-      },
-      error: () => { this.batteryStatus = ''; }
-    });
-  }
-
   private scheduleGeofenceLoading(retries: number = 10, delayMs: number = 200): void {
     if (!this.mapElement) {
-      if (retries <= 0) {
-        return;
-      }
-
+      if (retries <= 0) return;
       setTimeout(() => this.scheduleGeofenceLoading(retries - 1, delayMs), delayMs);
       return;
     }
-
     this.loadGeofencesOnMap();
+  }
+
+  private scheduleHomePinPlacement(retries: number = 10, delayMs: number = 200): void {
+    if (this.homePinAdded || !this.zuhause) return;
+    if (!this.mapElement) {
+      if (retries <= 0) return;
+      setTimeout(() => this.scheduleHomePinPlacement(retries - 1, delayMs), delayMs);
+      return;
+    }
+    this.mapElement.AddHomePushPin(this.zuhause);
+    this.homePinAdded = true;
   }
 
   loadPersonDetails(): void {
@@ -162,16 +162,17 @@ export class PersondetailsComponent implements OnDestroy {
       this.personsService.apiPersonsIdGet(this.id).subscribe(person => {
         this.personDetails = person as PersonDto;
         this.lastUpdated = new Date().toLocaleString('de-DE');
-        this.loadBatteryStatus();
+        this.pollTrackerPosition();
         this.scheduleGeofenceLoading();
       });
-      this.locationService.apiLocationWellknownlocationsGet().subscribe(locations => {
-        var isarray: boolean = Array.isArray(locations);
+      this.geofencesService.apiGeofencesWellknownlocationsGet().subscribe((locations: any) => {
+        const isarray: boolean = Array.isArray(locations);
         if (isarray && locations.length > 0) {
           this.zuhause = locations[0];
           if (this.zuhause && this.mapElement) {
-            this.mapElement?.SetCenter(this.zuhause);
+            this.mapElement.SetCenter(this.zuhause);
           }
+          this.scheduleHomePinPlacement();
         }
       });
     }

@@ -64,12 +64,43 @@ public class GeofencesController : ControllerBase
     {
         try
         {
-            var geofences = _geoFenceService.GetAll();
+            var geofences = _geoFenceService.GetAll()
+                .OfType<Sarah.Geofences.GeoFence>()
+                .Select(gf => new
+                {
+                    name = gf.Name,
+                    points = gf.Points.Select(p => new
+                    {
+                        latitude  = new { value = p.Latitude.Value },
+                        longtitude = new { value = p.Longtitude.Value }
+                    })
+                });
             return Ok(geofences);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving all geofences");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("wellknownlocations")]
+    public IActionResult GetWellKnownLocations()
+    {
+        try
+        {
+            var home = _geoFenceService.GetZuhause() as Sarah.Geofences.GeoFence;
+            if (home?.Points == null || home.Points.Length == 0)
+                return Ok(Array.Empty<object>());
+
+            var lat = home.Points.Average(p => (double)p.Latitude.Value);
+            var lng = home.Points.Average(p => (double)p.Longtitude.Value);
+
+            return Ok(new[] { new { latitude = lat, longitude = lng, name = home.Name } });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving well-known locations");
             return StatusCode(500, "Internal server error");
         }
     }
