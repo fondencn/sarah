@@ -7,6 +7,7 @@ import { DialogClosedEventArgs, DialogService } from '../services/dialog.service
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
 import { Subscription } from 'rxjs';
 import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
+import { LoggingService } from '../services/logging.service';
 
 
 @Component({
@@ -24,7 +25,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
-  constructor(private devicesService: DevicesClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
+  constructor(private devicesService: DevicesClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
 
   ngOnInit(): void {
     this.onLoad();
@@ -43,7 +44,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
    */
   onLoad(): void {
     // Add your logic here that should be executed after the component is loaded
-    console.log('DevicesComponent loaded');
+    this.logger.debug('DevicesComponent loaded');
 
     // Call the API to load the devices list
     this.retrieveDevices();
@@ -76,7 +77,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
         this.devices = response; // Save the devices list in the member variable
       },
       error: (error) => {
-        console.error('Error fetching devices:', error);
+        this.logger.error('Error fetching devices:', error);
       },
       complete: () => {
         this.isLoading = false; // Set the loading state to false
@@ -116,7 +117,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
           this.devices.push(response);
         },
         error: (error) => {
-          console.error('Error adding device:', error);
+          this.logger.error('Error adding device:', error);
         }
       });
     }
@@ -149,7 +150,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
           this.devices[index] = response;
         },
         error: (error) => {
-          console.error('Error editing device:', error);
+          this.logger.error('Error editing device:', error);
         }
       });
     }
@@ -169,12 +170,12 @@ export class DevicesComponent implements OnInit, OnDestroy {
               this.devices = this.devices.filter(d => d.nodeId !== device.nodeId);
             },
             error: (error) => {
-              console.error('Error deleting device:', error);
+              this.logger.error('Error deleting device:', error);
             }
           });
         }
       }).catch((error) => {
-        console.error('Error showing confirm dialog:', error);
+        this.logger.error('Error showing confirm dialog:', error);
       });
   }
 
@@ -197,7 +198,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
           device.isFavourite = true;
         },
         error: (err) => {
-          console.error('Error adding device to dashboard:', err);
+          this.logger.error('Error adding device to dashboard:', err);
         }
       });
     } else {
@@ -206,7 +207,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
           device.isFavourite = false;
         },
         error: (err) => {
-          console.error('Error removing device from dashboard:', err);
+          this.logger.error('Error removing device from dashboard:', err);
         }
       });
     }

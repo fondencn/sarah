@@ -1,0 +1,23 @@
+<div class="toast-container" aria-live="polite" aria-atomic="false">
+  <div
+    *ngFor="let toast of toasts; trackBy: trackById"
+    class="toast-tile"
+    [class.toast-tile--info]="toast.level === 'info'"
+    [class.toast-tile--warn]="toast.level === 'warn'"
+    [class.toast-tile--error]="toast.level === 'error'"
+    role="alert"
+  >
+    <div class="toast-tile__icon">
+      <span *ngIf="toast.level === 'info'">&#x2139;</span>
+      <span *ngIf="toast.level === 'warn'">&#x26A0;</span>
+      <span *ngIf="toast.level === 'error'">&#x274C;</span>
+    </div>
+    <div class="toast-tile__message">{{ toast.message }}</div>
+    <button
+      class="toast-tile__close"
+      type="button"
+      (click)="dismiss(toast.id)"
+      aria-label="Dismiss"
+    >&times;</button>
+  </div>
+</div>

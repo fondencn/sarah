@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AuthConfig, OAuthEvent, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../environments/environment';
 import { AspireResourceService } from './aspire-resource.service';
+import { LoggingService } from './logging.service';
 
 // Default auth config - will be updated with discovered endpoint if available
 export const authConfig: AuthConfig = {
@@ -34,7 +35,8 @@ export class AuthService {
 
   constructor(
     private oauthService: OAuthService,
-    private aspireResourceService: AspireResourceService
+    private aspireResourceService: AspireResourceService,
+    private logger: LoggingService
   ) {
     if (!AuthService.sharedInitializationPromise) {
       AuthService.sharedInitializationPromise = this.initializeAuth();
@@ -48,7 +50,7 @@ export class AuthService {
    */
   private async initializeAuth(): Promise<void> {
     try {
-      console.log('[AUTH] Initializing authentication service...');
+      this.logger.debug('[AUTH] Initializing authentication service...');
 
       const shouldTryRuntimeDiscovery = this.shouldAttemptRuntimeDiscovery();
       if (shouldTryRuntimeDiscovery) {
@@ -59,16 +61,16 @@ export class AuthService {
         );
 
         if (discoveredIssuer) {
-          console.log('[AUTH] Using Aspire-discovered issuer:', discoveredIssuer);
+          this.logger.debug('[AUTH] Using Aspire-discovered issuer:', discoveredIssuer);
           authConfig.issuer = discoveredIssuer;
         } else {
-          console.log('[AUTH] Runtime discovery unavailable, using configured issuer:', authConfig.issuer);
+          this.logger.debug('[AUTH] Runtime discovery unavailable, using configured issuer:', authConfig.issuer);
         }
       } else {
-        console.log('[AUTH] Runtime discovery disabled, using configured endpoint:', authConfig.issuer);
+        this.logger.debug('[AUTH] Runtime discovery disabled, using configured endpoint:', authConfig.issuer);
       }
 
-      console.log('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
+      this.logger.debug('[AUTH] Configuring OAuth with issuer:', authConfig.issuer);
       this.oauthService.configure(authConfig);
       this.oauthService.setStorage(localStorage); // Use localStorage to store tokens
       this.subscribeToAuthEvents();
@@ -79,12 +81,12 @@ export class AuthService {
         this.oauthService.setupAutomaticSilentRefresh();
       }
       if (this.oauthService.hasValidAccessToken()) {
-        console.log('[AUTH] Valid access token found.');
+        this.logger.debug('[AUTH] Valid access token found.');
       } else {
-        console.log('[AUTH] No valid access token found. Waiting for user login action.');
+        this.logger.debug('[AUTH] No valid access token found. Waiting for user login action.');
       }
     } catch (err) {
-      console.error('[AUTH] Error during initialization:', err);
+      this.logger.error('[AUTH] Error during initialization:', err);
       // APP_INITIALIZER must resolve so the app can render even if auth bootstrap fails.
     }
   }
@@ -121,7 +123,7 @@ export class AuthService {
 
     const timeoutPromise = new Promise<'timeout'>((resolve) => {
       timeoutId = setTimeout(() => {
-        console.warn(`[AUTH] Discovery/login timed out after ${this.authInitTimeoutMs}ms; continuing startup.`);
+        this.logger.warn(`[AUTH] Discovery/login timed out after ${this.authInitTimeoutMs}ms; continuing startup.`);
         resolve('timeout');
       }, this.authInitTimeoutMs);
     });
@@ -130,11 +132,11 @@ export class AuthService {
       .loadDiscoveryDocumentAndTryLogin()
       .then(() => {
         this.discoveryReady = true;
-        console.log('[AUTH] Discovery document loaded');
+        this.logger.debug('[AUTH] Discovery document loaded');
         return 'discovery' as const;
       })
       .catch((error) => {
-        console.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
+        this.logger.warn('[AUTH] Discovery/login failed, continuing without active session:', error);
         return 'failed' as const;
       });
 
@@ -168,7 +170,7 @@ export class AuthService {
       this.discoveryReady = true;
       return true;
     } catch (error) {
-      console.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', authConfig.issuer, error);
+      this.logger.error('[AUTH] Unable to load discovery document. Is Keycloak reachable at issuer?', error);
       return false;
     }
   }
@@ -217,7 +219,7 @@ export class AuthService {
     }
 
     this.loginInProgress = true;
-    console.log('Calling initLoginFlow...');
+    this.logger.debug('Calling initLoginFlow...');
 
     const ready = await this.ensureDiscoveryReady();
     if (!ready) {

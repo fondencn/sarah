@@ -5,6 +5,7 @@ import { PersonDto, TrackerDto } from '../../models/api-types';
 import { DialogService } from '../../services/dialog.service';
 import { DevicesClient } from '../../services/api/device-service/api/devices.service';
 import { PersonsExtService } from '../../services/persons-ext.service';
+import { LoggingService } from '../../services/logging.service';
 
 @Component({
   selector: 'editPersonModal',
@@ -53,7 +54,8 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
 
 
   constructor(private fb: FormBuilder, dialogService: DialogService,
-              private devicesService: DevicesClient, private personsExtService: PersonsExtService) {
+              private devicesService: DevicesClient, private personsExtService: PersonsExtService,
+              private logger: LoggingService) {
     super(dialogService);
 
     this.personForm = this.fb.group({
@@ -72,14 +74,14 @@ export class EditPersonModalComponent extends DialogContent implements OnInit {
   private loadTrackers(): void {
     this.devicesService.devicesGetTrackersGETApiDevicesTrackers().subscribe({
       next: (trackers: TrackerDto[]) => { this.allTrackers = trackers; },
-      error: (err) => console.error('Error loading trackers:', err)
+      error: (err) => this.logger.error('Error loading trackers:', err)
     });
   }
 
   private loadMobilePhones(): void {
     this.personsExtService.getKnownHomeNetworkDevices().subscribe({
       next: (devices: string[]) => { this.allMobilePhones = devices; },
-      error: (err) => console.error('Error loading known home network devices:', err)
+      error: (err) => this.logger.error('Error loading known home network devices:', err)
     });
   }
 

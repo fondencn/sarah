@@ -4,6 +4,7 @@ import { GeofencesClient } from '../../services/api/geofences-service/api/geofen
 import { DevicesClient } from '../../services/api/device-service/api/api';
 import { BingMapComponent } from '../../shared/bing-map/bing-map.component';
 import { NamedLocationDto } from '../../models/api-types';
+import { LoggingService } from '../../services/logging.service';
 
 interface GeoFencePoint {
   latitude?: { value: number };
@@ -42,7 +43,8 @@ export class PersonMapModalComponent implements OnDestroy {
   constructor(
     private locationService: LocationRuntimeService,
     private geofencesService: GeofencesClient,
-    private devicesService: DevicesClient
+    private devicesService: DevicesClient,
+    private logger: LoggingService
   ) {}
 
   ngOnDestroy(): void {
@@ -90,7 +92,7 @@ export class PersonMapModalComponent implements OnDestroy {
     }
 
     if (retry >= this.MAP_INIT_MAX_RETRIES) {
-      console.warn('Map did not report ready state in time; loading data anyway.');
+      this.logger.warn('Map did not report ready state in time; loading data anyway.');
       this.loadMapData();
       return;
     }
@@ -125,7 +127,7 @@ export class PersonMapModalComponent implements OnDestroy {
         this.loadPersonPosition();
       },
       error: (err) => {
-        console.error('Error loading geofences for map:', err);
+        this.logger.error('Error loading geofences for map:', err);
         this.loadPersonPosition();
       }
     });
@@ -159,7 +161,7 @@ export class PersonMapModalComponent implements OnDestroy {
           this.placePersonPin(location.latitude ?? 0, location.longitude ?? 0);
         }
       },
-      error: (err) => console.error('Error loading person position:', err)
+      error: (err) => this.logger.error('Error loading person position:', err)
     });
   }
 
@@ -209,7 +211,7 @@ export class PersonMapModalComponent implements OnDestroy {
           }
         });
       },
-      error: (err) => console.error('Error refreshing person position:', err)
+      error: (err) => this.logger.error('Error refreshing person position:', err)
     });
   }
 

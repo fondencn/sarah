@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { NamedLocationDto } from '../../models/api-types';
 import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
+import { LoggingService } from '../../services/logging.service';
 
 @Component({
   selector: 'app-bing-map',
@@ -16,7 +17,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   private map: Microsoft.Maps.Map | null = null;
   private personPin: Microsoft.Maps.Pushpin | null = null;
 
-  constructor(private bingMapsLoader: BingMapsLoaderService) {}
+  constructor(private bingMapsLoader: BingMapsLoaderService, private logger: LoggingService) {}
 
   ngOnInit(): void {}
 
@@ -24,7 +25,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
     this.bingMapsLoader.load().then(() => {
       this.loadMap();
     }).catch(error => {
-      console.error('Error loading Bing Maps API:', error);
+      this.logger.error('Error loading Bing Maps API:', error);
     });
   }
 
@@ -34,7 +35,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
       zoom: this.zoom,
       mapTypeId: Microsoft.Maps.MapTypeId.aerial
     });
-    console.info('Map loaded:', this.map.getCenter());
+    this.logger.debug('Map loaded:', this.map.getCenter());
   }
 
   public SetCenter(center: NamedLocationDto, zoom: number = 10): void {

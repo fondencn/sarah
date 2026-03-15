@@ -6,6 +6,7 @@ import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { StatusRuntimeService } from '../services/status-runtime.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import { PersonMapModalComponent } from './person-map-modal/person-map-modal.component';
+import { LoggingService } from '../services/logging.service';
 
 @Component({
   selector: 'app-home',
@@ -29,7 +30,8 @@ export class HomeComponent implements OnInit {
   constructor(public authService: AuthService, 
     private statusService: StatusRuntimeService, 
     private dashboardService : DashboardRuntimeService, 
-    private devicesService : DevicesClient) { }  
+    private devicesService : DevicesClient,
+    private logger: LoggingService) { }  
 
   currentUserName: string = this.authService.currentUserName;
   currentUserDisplayName: string = this.authService.currentUserDisplayName;
@@ -52,7 +54,7 @@ export class HomeComponent implements OnInit {
 
   onComponentLoad(): void {
     // Add your logic here that should be executed after the component is loaded
-    console.log('HomeComponent loaded');
+    this.logger.debug('HomeComponent loaded');
     this.loadStatus();
     this.loadDashboardItems();
   }
@@ -128,7 +130,7 @@ export class HomeComponent implements OnInit {
         this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
       },
       error: (error) => {
-        console.error('Error fetching dashboard items:', error);
+        this.logger.error('Error fetching dashboard items:', error);
       }
     });
   }
@@ -139,7 +141,7 @@ export class HomeComponent implements OnInit {
         this.dashboardItems = this.dashboardItems.filter(i => !(i.itemId === item.itemId && i.itemType === item.itemType));
       },
       error: (error) => {
-        console.error('Error removing dashboard item:', error);
+        this.logger.error('Error removing dashboard item:', error);
       }
     });
   }
@@ -161,7 +163,7 @@ export class HomeComponent implements OnInit {
         this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
       },
       error: (error) => {
-        console.error('Error updating dashboard items:', error);
+        this.logger.error('Error updating dashboard items:', error);
       }
     });
   }
@@ -178,12 +180,12 @@ export class HomeComponent implements OnInit {
     // Call the /status endpoint using the generated client
     this.statusService.statusGet().subscribe({
       next: (response: StatusDto) => {
-        console.log('Status:', response);
+        this.logger.debug('Status:', response);
         this.statusDto = response;
         this.statusMessage = "Status fetched successfully.";
       },
       error: (error) => {
-        console.error('Error fetching status:', error);
+        this.logger.error('Error fetching status:', error);
         this.statusMessage = "Error fetching status.";
         this.statusDto = null;
       }
@@ -195,10 +197,10 @@ export class HomeComponent implements OnInit {
   private setLampColorInternal(itemId: number, color: string) {
     this.devicesService.devicesSetLampColorPOSTApiDevicesLampIdColorColor(itemId, color).subscribe({
       next: (response: StatusDto) => {
-        console.log('setLampColor:', response);
+        this.logger.debug('setLampColor:', response);
       },
       error: (error) => {
-        console.error('Error setting lamp color:', error);
+        this.logger.error('Error setting lamp color:', error);
       }
     });
   }
@@ -206,10 +208,10 @@ export class HomeComponent implements OnInit {
   private setLampBrightness(itemId: number, brightness: number) {
     this.devicesService.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness(itemId, brightness).subscribe({
       next: (response: StatusDto) => {
-        console.log('setLampBrightness:', response);
+        this.logger.debug('setLampBrightness:', response);
       },
       error: (error) => {
-        console.error('Error setting lamp brightness:', error);
+        this.logger.error('Error setting lamp brightness:', error);
       }
     });
   }
@@ -217,10 +219,10 @@ export class HomeComponent implements OnInit {
   private setWallplugState(itemId: number, state: boolean) {
     this.devicesService.devicesSetWallplugStateByDeviceIdPOSTApiDevicesWallplugIdStateIsOn(itemId, state).subscribe({
       next: (response: StatusDto) => {
-        console.log('setWallplugState:', response);
+        this.logger.debug('setWallplugState:', response);
       },
       error: (error) => {
-        console.error('Error setting lamp brightness:', error);
+        this.logger.error('Error setting wallplug state:', error);
       }
     });
   }

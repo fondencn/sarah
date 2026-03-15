@@ -6,6 +6,7 @@ import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { Subscription } from 'rxjs';
 import { EditPersonModalComponent } from './edit-person-modal/edit-person-modal.component';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
+import { LoggingService } from '../services/logging.service';
 
 @Component({
   selector: 'app-persons',
@@ -45,7 +46,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
   private dialogClosedSubscription: Subscription | null = null;
 
 
-  constructor(private personsService: PersonsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
+  constructor(private personsService: PersonsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
 
 
   public retrievePersons(): void {
@@ -55,7 +56,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
         this.persons = response;
       },
       error: (error) => {
-        console.error('Error fetching persons:', error);
+        this.logger.error('Error fetching persons:', error);
       },
       complete: () => {
         this.isLoading = false;
@@ -72,12 +73,12 @@ export class PersonsComponent implements OnInit,OnDestroy {
             this.persons = this.persons.filter(d => d.id !== person.id);
           },
           error: (error) => {
-            console.error('Error deleting person:', error);
+            this.logger.error('Error deleting person:', error);
           }
         });
       }
     }).catch((error) => {
-      console.error('Error showing confirm dialog:', error);
+      this.logger.error('Error showing confirm dialog:', error);
     });
   }
 
@@ -104,7 +105,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
           this.persons[index] = response;
         },
         error: (error) => {
-          console.error('Error editing person:', error);
+          this.logger.error('Error editing person:', error);
         }
       });
     }
@@ -135,7 +136,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
             this.persons.push(response);
           },
           error: (error) => {
-            console.error('Error adding person:', error);
+            this.logger.error('Error adding person:', error);
           }
         });
       }
@@ -156,16 +157,16 @@ export class PersonsComponent implements OnInit,OnDestroy {
             subtype: 'Person'
           };
           this.dashboardService.apiDashboardPost(createDto).subscribe({
-            error: (err) => console.error('Error adding person to dashboard:', err)
+            error: (err) => this.logger.error('Error adding person to dashboard:', err)
           });
         } else {
           this.dashboardService.apiDashboardItemIdItemTypeDelete((person.id as number), DashboardItemType.NUMBER_3).subscribe({
-            error: (err) => console.error('Error removing person from dashboard:', err)
+            error: (err) => this.logger.error('Error removing person from dashboard:', err)
           });
         }
       },
       error: (error) => {
-        console.error('Error setting favourite state:', error);
+        this.logger.error('Error setting favourite state:', error);
       }
     });
   }

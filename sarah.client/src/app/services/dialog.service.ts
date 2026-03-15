@@ -1,4 +1,5 @@
 import { Injectable, EventEmitter } from '@angular/core';
+import { LoggingService } from './logging.service';
 
 @Injectable({
   providedIn: 'root'
@@ -6,7 +7,7 @@ import { Injectable, EventEmitter } from '@angular/core';
 export class DialogService {
 
 
-  constructor() { }
+  constructor(private logger: LoggingService) { }
 
   private isDialogOpen: boolean = false;
   private currentDialog : any | null = null;
@@ -20,7 +21,7 @@ export class DialogService {
         this.isDialogOpen = true;
         const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
         this.currentDialog = bootstrapModal
-        console.log("Showing Dialog: " + modalId);
+        this.logger.debug("Showing Dialog: " + modalId);
         bootstrapModal.show();
         bootstrapModal._element.addEventListener('hidden.bs.modal', () => {
           this.closeDialog(false);
@@ -32,7 +33,7 @@ export class DialogService {
   public closeDialog(success: boolean): void {
     if(this.currentDialog != null) {
       var dialogId = this.currentDialog._element.id;
-      console.log("Closing Dialog: " + dialogId);
+      this.logger.debug("Closing Dialog: " + dialogId);
       this.currentDialog.hide();
       this.isDialogOpen = false;
       this.currentDialog = null;
@@ -43,7 +44,7 @@ export class DialogService {
 
   
   showConfirmDialog(msg: string, title: string): Promise<boolean> {
-    console.log("showConfirmDialog");
+    this.logger.debug("showConfirmDialog");
     return new Promise((resolve) => {
       const modalId = 'confirmDialog';
       let modalElement = document.getElementById(modalId);

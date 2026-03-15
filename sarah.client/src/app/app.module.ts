@@ -38,6 +38,7 @@ import { AlarmEditModalComponent } from './alarms/alarm-edit-modal/alarm-edit-mo
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { PersonMapModalComponent } from './home/person-map-modal/person-map-modal.component';
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
+import { ToastContainerComponent } from './shared/toast/toast-container.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -58,7 +59,8 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
         AlarmsComponent,
         AlarmEditModalComponent
         PersonMapModalComponent,
-        PinToDashboardButtonComponent
+        PinToDashboardButtonComponent,
+        ToastContainerComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
