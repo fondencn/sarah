@@ -45,10 +45,10 @@ namespace Sarah.API.BusinessObjects
         /// <summary>
         /// ctor
         /// </summary>
-        public LocatorPosition(SensorData lon, SensorData lat)
+        public LocatorPosition(SensorData lat, SensorData lon)
         {
-            this.Longtitude = lon;
             this.Latitude = lat;
+            this.Longtitude = lon;
             this.MeasureTime = DateTime.Now;
         }
 
@@ -79,8 +79,8 @@ namespace Sarah.API.BusinessObjects
             }
 
             const double R = 6371; // Radius der Erde in Kilometern
-            var lat1Rad = DegreesToRadians(this.Longtitude.Value); // Achtung: Long und Lat vertauscht!!
-            var lon1Rad = DegreesToRadians(this.Latitude.Value);
+            var lat1Rad = DegreesToRadians(this.Latitude.Value);
+            var lon1Rad = DegreesToRadians(this.Longtitude.Value);
             var lat2Rad = DegreesToRadians(other.Latitude.Value);
             var lon2Rad = DegreesToRadians(other.Longtitude.Value);
 
