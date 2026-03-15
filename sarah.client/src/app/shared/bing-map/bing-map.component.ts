@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
+import { Component, Input, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { NamedLocationDto } from '../../models/api-types';
 import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
 
@@ -10,9 +10,11 @@ import { BingMapsLoaderService } from '../../services/bing-maps-loader.service';
 export class BingMapComponent implements OnInit, AfterViewInit {
   @Input() latitude: number = 0;
   @Input() longitude: number = 0;
+  @ViewChild('mapContainer') mapContainer!: ElementRef;
   private zoom: number = 10;
 
   private map: Microsoft.Maps.Map | null = null;
+  private personPin: Microsoft.Maps.Pushpin | null = null;
 
   constructor(private bingMapsLoader: BingMapsLoaderService) {}
 
@@ -27,7 +29,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   }
 
   loadMap(): void {
-    this.map = new Microsoft.Maps.Map(document.getElementById('myMap')!, {
+    this.map = new Microsoft.Maps.Map(this.mapContainer.nativeElement, {
       center: new Microsoft.Maps.Location(this.latitude, this.longitude),
       zoom: this.zoom,
       mapTypeId: Microsoft.Maps.MapTypeId.aerial
@@ -36,8 +38,8 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   }
 
   public SetCenter(center: NamedLocationDto, zoom: number = 10): void {
-    this.latitude = center.longitude ?? 0;
-    this.longitude = center.latitude ?? 0;
+    this.latitude = center.latitude ?? 0;
+    this.longitude = center.longitude ?? 0;
     this.zoom = zoom;
 
     if (this.map) {
@@ -58,14 +60,40 @@ export class BingMapComponent implements OnInit, AfterViewInit {
 
   public AddPushPin(location: NamedLocationDto, subtitle: string = "", text: string = ""): void {
     if (this.map) {
-      const pin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(location.longitude ?? 0, location.latitude ?? 0), {
-        title: location.name ?? "Unknown",
-        subTitle: subtitle,
-        text: text
-      });
+      const pin = new Microsoft.Maps.Pushpin(
+        new Microsoft.Maps.Location(location.latitude ?? 0, location.longitude ?? 0),
+        {
+          title: location.name ?? "Unknown",
+          subTitle: subtitle,
+          text: text
+        }
+      );
 
       this.map.entities.push(pin);
     }
+  }
+
+  /** Places (or replaces) the tracked person pushpin. Removes the previous one before adding a new one. */
+  public UpdatePersonPin(location: NamedLocationDto, subtitle: string = "", zoom: number = 14): void {
+    if (!this.map) return;
+
+    if (this.personPin) {
+      this.map.entities.remove(this.personPin);
+    }
+
+    this.map.setView({
+      center: new Microsoft.Maps.Location(location.latitude ?? 0, location.longitude ?? 0),
+      zoom: zoom
+    });
+
+    this.personPin = new Microsoft.Maps.Pushpin(
+      new Microsoft.Maps.Location(location.latitude ?? 0, location.longitude ?? 0),
+      {
+        title: location.name ?? 'Person',
+        subTitle: subtitle
+      }
+    );
+    this.map.entities.push(this.personPin);
   }
 
   public DrawPolygon(vertices: NamedLocationDto[], fillColor: string = 'rgba(0, 0, 255, 0.5)', strokeColor: string = 'blue', strokeThickness: number = 2): void {
@@ -84,6 +112,7 @@ export class BingMapComponent implements OnInit, AfterViewInit {
   public ClearMap(): void {
     if (this.map) {
       this.map.entities.clear();
+      this.personPin = null;
     }
   }
 }

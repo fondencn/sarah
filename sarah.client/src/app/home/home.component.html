@@ -144,13 +144,27 @@
             <div class="card shadow-lg h-100 card-room">
               <div class="card-body">
                 <div class="row">
-                  <div class="col-10">
+                  <div class="col-9">
                     <h5 class="card-title">
                       <a [routerLink]="['/home/details']" [queryParams]="{ type: 'room', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
                     </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
+                    <ul class="list-unstyled mt-2 mb-0 small">
+                      <li *ngIf="item.averageTemperature !== null && item.averageTemperature !== undefined">
+                        🌡️ {{ item.averageTemperature }} °C
+                      </li>
+                      <li *ngIf="item.averageTemperature === null || item.averageTemperature === undefined">
+                        🌡️ –
+                      </li>
+                      <li>
+                        🚪 {{ item.anyDoorOpen ? 'Door open' : 'All doors closed' }}
+                      </li>
+                      <li>
+                        🧍 {{ item.anyPresence ? 'Presence detected' : 'No presence' }}
+                      </li>
+                    </ul>
                   </div>
-                  <div class="col-2 d-flex align-items-center justify-content-center">
+                  <div class="col-3 d-flex align-items-center justify-content-center">
                     <img class="big-icon" src="assets/icons/home.svg" alt="Room">
                   </div>
                 </div>
@@ -163,23 +177,35 @@
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_PERSON">
-            <div class="card shadow-lg h-100 card-person">
+            <div class="card shadow-lg h-100 card-person" style="cursor:pointer;" (click)="showPersonMap(item)">
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
                     
                     <h5 class="card-title">
-                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'person', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
+                      {{ item.title }}
                     </h5>
 
                     <div class="card-text" [innerHTML]="item.description"></div>
+
+                    <div *ngIf="item.currentGeoFence" class="mt-2">
+                      <span class="badge bg-light text-dark">
+                        📍 {{ item.currentGeoFence }}
+                      </span>
+                    </div>
+
+                    <div class="mt-2">
+                      <small class="text-white-50">
+                        <img src="assets/icons/location.svg" alt="Map" style="width:12px;height:12px;filter:brightness(0) invert(1);opacity:0.7;"> Click to show on map
+                      </small>
+                    </div>
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <img class="big-icon" src="assets/icons/person.svg" alt="Person">
                   </div>
                 </div>
               </div>
-              <div class="card-footer text-end">
+              <div class="card-footer text-end" (click)="$event.stopPropagation()">
                 <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
                 </button>
@@ -205,3 +231,6 @@
     </div>
   </div>
 </ng-container>
+
+<app-person-map-modal #personMapModal></app-person-map-modal>
+

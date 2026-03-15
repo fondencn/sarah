@@ -4,6 +4,8 @@ import { RoomDtoModel as RoomDto } from '../services/api/room-service/model/mode
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { Subscription } from 'rxjs';
 import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
+import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
+import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
 
 @Component({
   selector: 'app-rooms',
@@ -12,7 +14,9 @@ import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.compon
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService) { }
+
+  readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
 
   rooms: RoomDto[] = [];
@@ -144,6 +148,32 @@ export class RoomsComponent implements OnInit,OnDestroy {
       },
       error: (error) => {
         console.error('Error setting favourite state:', error);
+      }
+    });
+  }
+
+  pinnedRoomIds: Set<number> = new Set<number>();
+
+  public pinToDashboard(room: RoomDto) {
+    const dto: CreateDashboardItemDto = {
+      itemId: room.id as number,
+      itemType: this.ITEM_TYPE_ROOM,
+      title: room.name,
+      description: room.description,
+      subtype: 'Room'
+    };
+    this.dashboardService.apiDashboardPost(dto).subscribe({
+      next: () => {
+        this.pinnedRoomIds.add(room.id as number);
+      },
+      error: (error) => {
+        // 400 BadRequest = duplicate (DashboardController returns BadRequest for already-existing items)
+        // Also handle legacy 409/500 in case backend evolves
+        if (error.status === 400 || error.status === 409 || error.status === 500) {
+          this.pinnedRoomIds.add(room.id as number);
+        } else {
+          console.error('Error pinning room to dashboard:', error);
+        }
       }
     });
   }

@@ -114,6 +114,7 @@ namespace Sarah.ServiceClients
                     return null;
                 }
 
+                var geoFenceName = payload.Value<string>("currentGeoFence");
                 var person = new PersonDto
                 {
                     Id = payload.Value<long?>("id") ?? id,
@@ -122,7 +123,7 @@ namespace Sarah.ServiceClients
                     MobilePhoneHostname = payload.Value<string>("mobilePhoneHostname") ?? string.Empty,
                     IsAtHome = payload.Value<bool?>("isAtHome") ?? false,
                     TrackerDeviceName = payload.Value<string>("gpsTrackerName") ?? string.Empty,
-                    CurrentGeoFence = null,
+                    CurrentGeoFence = geoFenceName != null ? new GeoFenceDto { Name = geoFenceName } : null,
                     GPSTracker = null
                 };
 

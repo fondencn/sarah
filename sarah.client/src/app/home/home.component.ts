@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, StatusDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { StatusRuntimeService } from '../services/status-runtime.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
+import { PersonMapModalComponent } from './person-map-modal/person-map-modal.component';
 
 @Component({
   selector: 'app-home',
@@ -22,6 +23,8 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
   ]
 })
 export class HomeComponent implements OnInit {
+
+  @ViewChild('personMapModal') personMapModal!: PersonMapModalComponent;
 
   constructor(public authService: AuthService, 
     private statusService: StatusRuntimeService, 
@@ -141,6 +144,14 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  showPersonMap(item: DashboardItemViewModel): void {
+    this.personMapModal.personId = item.itemId;
+    this.personMapModal.personName = item.title;
+    this.personMapModal.gpsTrackerID = item.gpsTrackerID;
+    this.personMapModal.currentGeoFenceName = item.currentGeoFence ?? '';
+    this.personMapModal.show();
+  }
+
 
 
   updateDashboardItems(): void {
@@ -230,6 +241,21 @@ export class DashboardItemViewModel {
     return Number(this.item.extendedProperties?.find(x => x.key === 'Meter_W')?.value ?? "0");
   }
 
+  get averageTemperature(): number | null | undefined {
+    const val = this.item.extendedProperties?.find(x => x.key === 'AverageTemperature')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get anyDoorOpen(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'AnyDoorOpen')?.value === 'True';
+  }
+
+  get anyPresence(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'AnyPresence')?.value === 'True';
+  }
+
   get itemId(): number {
     return this.item.itemId as number;
   }
@@ -276,5 +302,16 @@ export class DashboardItemViewModel {
 
   set extendedProperties(value: any[]) {
     this.item.extendedProperties = value;
+  }
+
+  get currentGeoFence(): string | null | undefined {
+    const val = this.item.extendedProperties?.find(x => x.key === 'CurrentGeoFence')?.value;
+    return val && val.trim().length > 0 ? val : null;
+  }
+
+  get gpsTrackerID(): number {
+    const raw = this.item.extendedProperties?.find(x => x.key === 'GpsTrackerID')?.value ?? '';
+    const parsed = parseInt(raw, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 }
