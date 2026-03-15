@@ -25,8 +25,8 @@ public class GeofencesController : ControllerBase
         try
         {
             var position = new LocatorPosition(
-                new API.Business.SensorData(latitude, "°"),
-                new API.Business.SensorData(longitude, "°")
+                new API.Business.SensorData(longitude, "°"),
+                new API.Business.SensorData(latitude, "°")
             );
             
             var geofence = _geoFenceService.GetCurrent(position);

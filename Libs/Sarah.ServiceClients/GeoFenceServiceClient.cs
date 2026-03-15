@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Globalization;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
@@ -21,7 +22,9 @@ public class GeoFenceServiceClient : IGeoFenceService
     {
         try
         {
-            var response = _httpClient.GetAsync($"api/geofences/current?latitude={pos.Latitude.Value}&longitude={pos.Longtitude.Value}").Result;
+            var latitude = Uri.EscapeDataString(pos.Latitude.Value.ToString("R", CultureInfo.InvariantCulture));
+            var longitude = Uri.EscapeDataString(pos.Longtitude.Value.ToString("R", CultureInfo.InvariantCulture));
+            var response = _httpClient.GetAsync($"api/geofences/current?latitude={latitude}&longitude={longitude}").Result;
             if (response.IsSuccessStatusCode)
             {
                 var geofence = response.Content.ReadFromJsonAsync<GeoFenceDto>().Result;

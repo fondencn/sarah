@@ -3,6 +3,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.Data.Entities;
+using System;
 namespace Sarah.Persons.WebApi.Services
 {
     public class PersonService : IPersonService
@@ -128,6 +129,9 @@ namespace Sarah.Persons.WebApi.Services
 
         private async Task LoadLocationInfos(PersonInfoEntity p)
         {
+            p.CurrentGeoFence = null;
+
+            var isAtHome = false;
 
             // Check if person's mobile phone is at home
             if(p.MobilePhoneHostname != null) 
@@ -135,7 +139,7 @@ namespace Sarah.Persons.WebApi.Services
                 var device = _homeNetworkService.KnownHosts?.FirstOrDefault(item => item.Hostname == p.MobilePhoneHostname);
                 if(device != null) 
                 {
-                    p.IsAtHome = device.IsConnected;
+                    isAtHome = device.IsConnected;
                 }
             }
 
@@ -150,11 +154,27 @@ namespace Sarah.Persons.WebApi.Services
                         new Sarah.API.Business.SensorData(trackerDevice.Position.Latitude, "°"));
                     
                     var geofence = _geoFenceService.GetCurrent(position);
-                    p.IsAtHome |= geofence == _geoFenceService.GetZuhause();
                     p.CurrentGeoFence = geofence;
+
+                    if (IsHomeGeoFence(geofence))
+                    {
+                        isAtHome = true;
+                    }
                 }
             }
-            
+
+            p.IsAtHome = isAtHome;
+        }
+
+        private bool IsHomeGeoFence(IGeoFence? geofence)
+        {
+            if (geofence?.Name == null)
+            {
+                return false;
+            }
+
+            var zuhause = _geoFenceService.GetZuhause();
+            return string.Equals(geofence.Name, zuhause?.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task<bool> IsSomeonePresent()

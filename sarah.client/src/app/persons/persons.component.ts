@@ -116,7 +116,7 @@ export class PersonsComponent implements OnInit,OnDestroy {
           });
         }
 
-        return this.geofencesService.apiGeofencesCurrentGet(position.latitude, position.longitude).pipe(
+        return this.geofencesService.apiGeofencesCurrentGet(position.longitude,position.latitude).pipe(
           map((geofence: CurrentGeofenceDto | null | undefined) => ({
             ...enrichedPerson,
             currentGeoFence: geofence?.name ?? '-'

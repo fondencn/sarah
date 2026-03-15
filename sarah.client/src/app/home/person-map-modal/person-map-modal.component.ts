@@ -1,6 +1,8 @@
 import { Component, Input, OnDestroy, ViewChild } from '@angular/core';
 import { GeofencesClient } from '../../services/api/geofences-service/api/geofences.service';
 import { DevicesClient } from '../../services/api/device-service/api/api';
+import { PersonsClient } from '../../services/api/persons-service/api/persons.service';
+import { PersonResponseDtoModel } from '../../services/api/persons-service/model/personResponseDto';
 import { OsmMapComponent } from '../../shared/osm-map/osm-map.component';
 import { NamedLocationDto } from '../../models/api-types';
 import { LoggingService } from '../../services/logging.service';
@@ -45,6 +47,7 @@ export class PersonMapModalComponent implements OnDestroy {
   private readonly MAP_INIT_MAX_RETRIES: number = 20;
 
   constructor(
+    private personsService: PersonsClient,
     private geofencesService: GeofencesClient,
     private devicesService: DevicesClient,
     private logger: LoggingService
@@ -56,6 +59,7 @@ export class PersonMapModalComponent implements OnDestroy {
 
   show(): void {
     this.isVisible = true;
+    this.loadPersonContext();
     setTimeout(() => {
       const modalEl = document.getElementById('personMapModal');
       if (modalEl) {
@@ -137,6 +141,25 @@ export class PersonMapModalComponent implements OnDestroy {
     });
 
     this.startRefresh();
+  }
+
+  private loadPersonContext(): void {
+    if (!this.personId) {
+      return;
+    }
+
+    this.personsService.apiPersonsIdGet(this.personId).subscribe({
+      next: (person: PersonResponseDtoModel) => {
+        this.currentGeoFenceName = person.currentGeoFence?.trim() ?? 'Not at known location';
+        if (person.name?.trim()) {
+          this.personName = person.name;
+        }
+        if (person.gpsTrackerID) {
+          this.gpsTrackerID = person.gpsTrackerID;
+        }
+      },
+      error: (err) => this.logger.error('Error loading person details for map modal:', err)
+    });
   }
 
   private loadHomePinAndTrackerPosition(): void {
