@@ -157,16 +157,16 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  removeDashboardItem(item: DashboardItemViewModel): void {
-    this.dashboardService.apiDashboardItemIdItemTypeDelete(item.itemId, item.itemType as number as DashboardItemType).subscribe({
-      next: () => {
-        this.dashboardItems = this.dashboardItems.filter(i => !(i.itemId === item.itemId && i.itemType === item.itemType));
-      },
-      error: (error) => {
-        this.logger.error('Error removing dashboard item:', error);
-      }
-    });
-  }
+  // removeDashboardItem(item: DashboardItemViewModel): void {
+  //   this.dashboardService.apiDashboardItemIdItemTypeDelete(item.itemId, item.itemType as number as DashboardItemType).subscribe({
+  //     next: () => {
+  //       this.dashboardItems = this.dashboardItems.filter(i => !(i.itemId === item.itemId && i.itemType === item.itemType));
+  //     },
+  //     error: (error) => {
+  //       this.logger.error('Error removing dashboard item:', error);
+  //     }
+  //   });
+  // }
 
   showPersonMap(item: DashboardItemViewModel): void {
     this.personMapModal.personId = item.itemId;

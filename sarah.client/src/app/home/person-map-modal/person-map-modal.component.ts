@@ -39,6 +39,7 @@ export class PersonMapModalComponent implements OnDestroy {
   currentGeoFenceName: string = '';
   personLatitude: number = 0;
   personLongitude: number = 0;
+  lastRefresh: Date | null = null;
   private bootstrapModal: any = null;
   private refreshInterval: any = null;
   private readonly MAP_INIT_MAX_RETRIES: number = 20;
@@ -152,6 +153,8 @@ export class PersonMapModalComponent implements OnDestroy {
   }
 
   private pollTrackerPosition(): void {
+    this.lastRefresh = new Date();
+
     if (!this.gpsTrackerID) return;
 
     this.devicesService.devicesGetGpsTrackerByNodeIdGETApiDevicesGpstrackerNodeId(this.gpsTrackerID).subscribe({
@@ -165,6 +168,7 @@ export class PersonMapModalComponent implements OnDestroy {
           : '';
         this.personLatitude = pos.latitude ?? 0;
         this.personLongitude = pos.longitude ?? 0;
+        
 
         this.mapElement?.UpdatePersonPin(
           { latitude: pos.latitude, longitude: pos.longitude, name: this.personName },
