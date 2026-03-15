@@ -57,7 +57,7 @@ import { ToastContainerComponent } from './shared/toast/toast-container.componen
         DevicedetailsComponent,
         BingMapComponent,
         AlarmsComponent,
-        AlarmEditModalComponent
+	AlarmEditModalComponent,
         PersonMapModalComponent,
         PinToDashboardButtonComponent,
         ToastContainerComponent
