@@ -123,7 +123,7 @@ export class PersonMapModalComponent implements OnDestroy {
                   name: gf.name ?? ''
                 }));
               if (vertices.length > 0) {
-                this.mapElement?.DrawPolygon(vertices, 'rgba(0, 120, 212, 0.2)', '#0078d4', 2);
+                this.mapElement?.DrawPolygon(vertices, 'rgba(0, 120, 212, 0.68)', '#0078d4', 2, gf.name ?? '');
               }
             }
           }

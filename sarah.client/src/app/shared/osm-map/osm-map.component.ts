@@ -146,18 +146,27 @@ export class OsmMapComponent implements AfterViewInit, OnDestroy {
     vertices: NamedLocationDto[],
     fillColor: string = 'rgba(0, 120, 212, 0.2)',
     strokeColor: string = '#0078d4',
-    strokeThickness: number = 2
+    strokeThickness: number = 2,
+    labelText: string = ''
   ): void {
     if (!this.map || vertices.length < 2) return;
 
     const latlngs: L.LatLngTuple[] = vertices.map(v => [v.latitude ?? 0, v.longitude ?? 0]);
 
-    L.polygon(latlngs, {
+    const polygon = L.polygon(latlngs, {
       color: strokeColor,
       weight: strokeThickness,
       fillColor: fillColor,
       fillOpacity: 0.3
     }).addTo(this.map);
+
+    if (labelText.trim().length > 0) {
+      polygon.bindTooltip(labelText, {
+        permanent: true,
+        direction: 'center',
+        className: 'osm-geofence-label'
+      });
+    }
   }
 
   public ClearMap(): void {
