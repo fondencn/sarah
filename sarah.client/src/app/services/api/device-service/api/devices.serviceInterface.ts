@@ -382,6 +382,20 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
+     * @param id 
+     */
+    devicesSetLampWarmWhitePOSTApiDevicesLampIdWarmwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    devicesSetLampColdWhitePOSTApiDevicesLampIdColdwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
      * @param deviceDtoModel 
      */
     devicesUpdatePOSTApiDevices(deviceDtoModel?: DeviceDtoModel, extraHttpRequestParams?: any): Observable<{}>;

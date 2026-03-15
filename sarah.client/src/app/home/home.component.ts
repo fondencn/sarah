@@ -119,6 +119,28 @@ export class HomeComponent implements OnInit {
     this.setLampColorInternal(itemId, element.value);
   }
 
+  setLampWarmWhite(itemId: number | undefined) {
+    this.devicesService.devicesSetLampWarmWhitePOSTApiDevicesLampIdWarmwhite(itemId as number).subscribe({
+      next: () => {
+        this.logger.debug('setLampWarmWhite:', itemId);
+      },
+      error: (error) => {
+        this.logger.error('Error setting lamp warm white:', error);
+      }
+    });
+  }
+
+  setLampColdWhite(itemId: number | undefined) {
+    this.devicesService.devicesSetLampColdWhitePOSTApiDevicesLampIdColdwhite(itemId as number).subscribe({
+      next: () => {
+        this.logger.debug('setLampColdWhite:', itemId);
+      },
+      error: (error) => {
+        this.logger.error('Error setting lamp cold white:', error);
+      }
+    });
+  }
+
 
 
 

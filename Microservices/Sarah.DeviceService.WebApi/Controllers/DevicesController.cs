@@ -510,6 +510,60 @@ public class DevicesController : ControllerBase
 
 
 
+    [HttpPost("lamp/{id}/warmwhite")]
+    public async Task<IActionResult> SetLampWarmWhite(long id)
+    {
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+            if (networkItem is not ILamp lamp)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            await lamp.SetWarmWhite();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting warm white for lamp {LampId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("lamp/{id}/coldwhite")]
+    public async Task<IActionResult> SetLampColdWhite(long id)
+    {
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.Id == id);
+            if (device == null)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            var networkItem = _deviceService.GetNetworkItem(device.NodeID);
+            if (networkItem is not ILamp lamp)
+            {
+                return NotFound($"No lamp found for device id {id}");
+            }
+
+            await lamp.SetColdWhite();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting cold white for lamp {LampId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
     [HttpPost("lamp/{id}/color/{color}")]
     public async Task<IActionResult> SetLampColor(long id, string color)
     {
