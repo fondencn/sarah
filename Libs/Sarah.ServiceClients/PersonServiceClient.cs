@@ -81,9 +81,16 @@ namespace Sarah.ServiceClients
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();
-                var persons = JsonConvert.DeserializeObject<List<PersonDto>>(json);
+                var payload = JsonConvert.DeserializeObject<JArray>(json);
+                if (payload == null)
+                {
+                    return new List<PersonDto>();
+                }
 
-                return persons ?? new List<PersonDto>();
+                return payload
+                    .OfType<JObject>()
+                    .Select(MapPersonPayload)
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -114,20 +121,7 @@ namespace Sarah.ServiceClients
                     return null;
                 }
 
-                var geoFenceName = payload.Value<string>("currentGeoFence");
-                var person = new PersonDto
-                {
-                    Id = payload.Value<long?>("id") ?? id,
-                    Name = payload.Value<string>("name") ?? string.Empty,
-                    GPSTrackerID = payload.Value<byte?>("gpsTrackerID") ?? 0,
-                    MobilePhoneHostname = payload.Value<string>("mobilePhoneHostname") ?? string.Empty,
-                    IsAtHome = payload.Value<bool?>("isAtHome") ?? false,
-                    TrackerDeviceName = payload.Value<string>("gpsTrackerName") ?? string.Empty,
-                    CurrentGeoFence = geoFenceName != null ? new GeoFenceDto { Name = geoFenceName } : null,
-                    GPSTracker = null
-                };
-
-                return person;
+                return MapPersonPayload(payload);
             }
             catch (Exception ex)
             {
@@ -186,6 +180,25 @@ namespace Sarah.ServiceClients
                 _logger?.LogError(ex, "Error getting known home network devices");
                 throw;
             }
+        }
+
+        private static PersonDto MapPersonPayload(JObject payload)
+        {
+            var geoFenceName = payload.Value<string>("currentGeoFence");
+
+            return new PersonDto
+            {
+                Id = payload.Value<long?>("id") ?? 0,
+                Name = payload.Value<string>("name") ?? string.Empty,
+                GPSTrackerID = payload.Value<byte?>("gpsTrackerID") ?? 0,
+                MobilePhoneHostname = payload.Value<string>("mobilePhoneHostname") ?? string.Empty,
+                IsAtHome = payload.Value<bool?>("isAtHome") ?? false,
+                TrackerDeviceName = payload.Value<string>("gpsTrackerName") ?? string.Empty,
+                CurrentGeoFence = string.IsNullOrWhiteSpace(geoFenceName)
+                    ? null
+                    : new GeoFenceDto { Name = geoFenceName },
+                GPSTracker = null
+            };
         }
 
         public async Task<bool> IsSomeonePresent()

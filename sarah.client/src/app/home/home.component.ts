@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { DevicesClient } from '../services/api/device-service/api/devices.service';
-import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, StatusDto } from '../models/api-types';
+import { PersonsClient } from '../services/api/persons-service/api/persons.service';
+import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, DashboardItemTypeDto, ExtendedPropertyDto, PersonDto, StatusDto } from '../models/api-types';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { StatusRuntimeService } from '../services/status-runtime.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
@@ -30,6 +31,7 @@ export class HomeComponent implements OnInit {
   constructor(public authService: AuthService, 
     private statusService: StatusRuntimeService, 
     private dashboardService : DashboardRuntimeService, 
+    private personsService: PersonsClient,
     private devicesService : DevicesClient,
     private logger: LoggingService) { }  
 
@@ -119,6 +121,28 @@ export class HomeComponent implements OnInit {
     this.setLampColorInternal(itemId, element.value);
   }
 
+  setLampWarmWhite(itemId: number | undefined) {
+    this.devicesService.devicesSetLampWarmWhitePOSTApiDevicesLampIdWarmwhite(itemId as number).subscribe({
+      next: () => {
+        this.logger.debug('setLampWarmWhite:', itemId);
+      },
+      error: (error) => {
+        this.logger.error('Error setting lamp warm white:', error);
+      }
+    });
+  }
+
+  setLampColdWhite(itemId: number | undefined) {
+    this.devicesService.devicesSetLampColdWhitePOSTApiDevicesLampIdColdwhite(itemId as number).subscribe({
+      next: () => {
+        this.logger.debug('setLampColdWhite:', itemId);
+      },
+      error: (error) => {
+        this.logger.error('Error setting lamp cold white:', error);
+      }
+    });
+  }
+
 
 
 
@@ -128,20 +152,10 @@ export class HomeComponent implements OnInit {
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
         this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
+        this.refreshPersonDashboardItems(this.dashboardItems);
       },
       error: (error) => {
         this.logger.error('Error fetching dashboard items:', error);
-      }
-    });
-  }
-
-  removeDashboardItem(item: DashboardItemViewModel): void {
-    this.dashboardService.apiDashboardItemIdItemTypeDelete(item.itemId, item.itemType as number as DashboardItemType).subscribe({
-      next: () => {
-        this.dashboardItems = this.dashboardItems.filter(i => !(i.itemId === item.itemId && i.itemType === item.itemType));
-      },
-      error: (error) => {
-        this.logger.error('Error removing dashboard item:', error);
       }
     });
   }
@@ -161,6 +175,7 @@ export class HomeComponent implements OnInit {
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
         this.dashboardItems = items.map(item => new DashboardItemViewModel(item));
+        this.refreshPersonDashboardItems(this.dashboardItems);
       },
       error: (error) => {
         this.logger.error('Error updating dashboard items:', error);
@@ -172,6 +187,39 @@ export class HomeComponent implements OnInit {
     return `${item.itemType}-${item.itemId}`;
   }
 
+  private refreshPersonDashboardItems(items: DashboardItemViewModel[]): void {
+    const personItems = items.filter(item => item.itemType === this.ITEM_TYPE_PERSON);
+    if (personItems.length === 0) {
+      return;
+    }
+
+    this.personsService.apiPersonsGet().subscribe({
+      next: (persons: PersonDto[]) => {
+        const personsById = new Map<number, PersonDto>();
+        for (const person of persons) {
+          if (person.id != null) {
+            personsById.set(person.id, person);
+          }
+        }
+
+        for (const item of personItems) {
+          const person = personsById.get(item.itemId);
+          if (!person) {
+            continue;
+          }
+
+          //item.title = person.name?.trim() || item.title;
+          //item.description = person.isAtHome ? 'At home' : 'Away';
+          item.setExtendedProperty('IsAtHome', person.isAtHome ? 'True' : 'False');
+          item.setExtendedProperty('CurrentGeoFence', person.currentGeoFence ?? '');
+          item.setExtendedProperty('GpsTrackerID', String(person.gpsTrackerID ?? 0));
+        }
+      },
+      error: (error) => {
+        this.logger.error('Error refreshing dashboard person items:', error);
+      }
+    });
+  }
 
   private loadStatus() {
     this.statusMessage = "Component has been loaded.";
@@ -304,6 +352,20 @@ export class DashboardItemViewModel {
 
   set extendedProperties(value: any[]) {
     this.item.extendedProperties = value;
+  }
+
+  setExtendedProperty(key: string, value: string): void {
+    if (!this.item.extendedProperties) {
+      this.item.extendedProperties = [];
+    }
+
+    const existing = this.item.extendedProperties.find(x => x.key === key);
+    if (existing) {
+      existing.value = value;
+      return;
+    }
+
+    this.item.extendedProperties.push({ key, value });
   }
 
   get currentGeoFence(): string | null | undefined {

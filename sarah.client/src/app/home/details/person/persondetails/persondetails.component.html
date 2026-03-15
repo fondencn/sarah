@@ -41,11 +41,15 @@
       <h3>Position von {{ personDetails?.name }}</h3>
       <button class="btn btn-primary" (click)="centerHomeOnMap()">🏡 Home</button>
     </div>
-    <div class="card-body">
-        <app-bing-map #map  style="width:400px;height:400px" ></app-bing-map>
+    <div class="card-body p-0">
+      <app-osm-map #map style="display:block;width:100%;height:400px;"></app-osm-map>
     </div>
-    <div class="card-footer text-muted">
-      Last updated: {{ lastUpdated }}
+    <div class="card-footer text-muted d-flex justify-content-between align-items-center">
+      <span>Last updated: {{ lastUpdated }}</span>
+      <span *ngIf="personlatitude || personlongitude" class="font-monospace small">
+        📍 {{ personlatitude | number:'1.5-6' }}°N &nbsp; {{ personlongitude | number:'1.5-6' }}°E
+        <span *ngIf="batteryStatus" class="ms-2 badge bg-secondary">🔋 {{ batteryStatus }}</span>
+      </span>
     </div>
   </div>
 </div>

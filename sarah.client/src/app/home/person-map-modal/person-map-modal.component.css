@@ -11,6 +11,14 @@
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
 }
 
-app-bing-map {
+app-osm-map {
   display: block;
+}
+
+.map-refresh-info {
+  padding: 0.5rem 1rem 0.75rem;
+  font-size: 0.85rem;
+  color: #5f6a7a;
+  background: #f8f9fb;
+  border-top: 1px solid #e9edf3;
 }

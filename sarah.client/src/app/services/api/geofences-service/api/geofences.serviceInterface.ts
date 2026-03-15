@@ -47,4 +47,10 @@ export interface GeofencesClientInterface {
      */
     apiGeofencesStatusGet(extraHttpRequestParams?: any): Observable<{}>;
 
+    /**
+     * 
+     * 
+     */
+    apiGeofencesWellknownlocationsGet(extraHttpRequestParams?: any): Observable<{}>;
+
 }

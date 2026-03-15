@@ -19,12 +19,12 @@ namespace Sarah.Geofences
             int j = polygon.Length - 1;
             for (int i = 0; i < polygon.Length; i++)
             {
-                if (polygon[i].Y < testPoint.X && polygon[j].Y >= testPoint.X ||
-                    polygon[j].Y < testPoint.X && polygon[i].Y >= testPoint.X)
+                if (polygon[i].Y < testPoint.Y && polygon[j].Y >= testPoint.Y ||
+                    polygon[j].Y < testPoint.Y && polygon[i].Y >= testPoint.Y)
                 {
-                    if (polygon[i].X + (testPoint.X - polygon[i].Y) /
+                    if (polygon[i].X + (testPoint.Y - polygon[i].Y) /
                        (polygon[j].Y - polygon[i].Y) *
-                       (polygon[j].X - polygon[i].X) < testPoint.Y)
+                       (polygon[j].X - polygon[i].X) < testPoint.X)
                     {
                         result = !result;
                     }

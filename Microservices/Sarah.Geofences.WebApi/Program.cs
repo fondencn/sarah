@@ -11,6 +11,7 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 
 
 // Add services to the container.
+builder.Services.AddScoped<Sarah.API.Interfaces.Services.IGeoFenceService, Sarah.Geofences.GeoFenceService>();
 builder.Services.AddControllers();
 
 // Configure Swagger/OpenAPI

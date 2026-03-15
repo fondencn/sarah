@@ -65,11 +65,19 @@
                           <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
                         </div>
 
-                        <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px; padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
-                            <input type="color" style="width: 65px; height: 30px;"
-                              [value]="item.lampColor"
-                              (change)="setLampColor(item.itemId, $event.target)" />
-                        </button>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                          <button class="btn btn-secondary btn-sm" style="padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
+                              <input type="color" style="width: 65px; height: 30px;"
+                                [value]="item.lampColor"
+                                (change)="setLampColor(item.itemId, $event.target)" />
+                          </button>
+                          <button class="btn btn-sm" style="background-color: #ffe0b2; color: #333;" title="Warm White" *ngIf="item.itemId !== undefined" (click)="setLampWarmWhite(item.itemId)">
+                            ☀️ Warm
+                          </button>
+                          <button class="btn btn-sm" style="background-color: #e3f2fd; color: #333;" title="Cold White" *ngIf="item.itemId !== undefined" (click)="setLampColdWhite(item.itemId)">
+                            🔵 Cold
+                          </button>
+                        </div>
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
                         <div class="form-check form-switch">
@@ -78,7 +86,7 @@
                             (change)="toggleWallplug(item.itemId, $event.target)">
                           <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
                         </div>
-                        <span>Leistung: {{item.powerConsumption}}</span>
+                        <span>Power Consumption: {{item.powerConsumption}} W</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
@@ -112,9 +120,9 @@
                 </div>
               </div>
               <div class="card-footer text-end">
-                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                <!-- <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
-                </button>
+                </button> -->
               </div>
             </div>
           </ng-container>
@@ -134,9 +142,9 @@
                 </div>
               </div>
               <div class="card-footer text-end">
-                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                <!-- <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
-                </button>
+                </button> -->
               </div>
             </div>
           </ng-container>
@@ -170,9 +178,9 @@
                 </div>
               </div>
               <div class="card-footer text-end">
-                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                <!-- button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
-                </button>
+                </button> -->
               </div>
             </div>
           </ng-container>
@@ -206,9 +214,9 @@
                 </div>
               </div>
               <div class="card-footer text-end" (click)="$event.stopPropagation()">
-                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                <!-- <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
-                </button>
+                </button> -->
               </div>
             </div>
           </ng-container>
@@ -220,9 +228,9 @@
                 <!-- Add more content here as needed -->
               </div>
               <div class="card-footer text-end">
-                <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
+                <!-- <button class="btn btn-outline-danger btn-sm" (click)="removeDashboardItem(item)" title="Remove from dashboard">
                   <img src="assets/icons/unfavorite.svg" alt="Remove" style="width: 14px; height: 14px;"> Remove
-                </button>
+                </button> -->
               </div>
             </div>
           </ng-container>

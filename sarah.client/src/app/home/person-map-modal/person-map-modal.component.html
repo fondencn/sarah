@@ -5,21 +5,27 @@
         <div class="d-flex align-items-center gap-2">
           <img src="assets/icons/person.svg" alt="Person" style="width:28px;height:28px;filter:brightness(0) invert(1);">
           <h5 class="modal-title mb-0" id="personMapModalLabel">
-            {{ personName }}
-            <small *ngIf="currentGeoFenceName" class="ms-2 badge bg-light text-dark fw-normal">
-              📍 {{ currentGeoFenceName }}
-            </small>
+            {{ personName }} &nbsp;
           </h5>
         </div>
         <div class="d-flex align-items-center gap-3">
+          <span *ngIf="currentGeoFenceName" class="badge bg-light text-dark">
+            📍 {{ currentGeoFenceName }}
+          </span>
           <span *ngIf="batteryStatus" class="badge bg-light text-dark">
             🔋 {{ batteryStatus }}
+          </span>
+          <span *ngIf="personLatitude || personLongitude" class="font-monospace small text-white-50">
+            📍 {{ personLatitude | number:'1.5-6' }}°N &nbsp; {{ personLongitude | number:'1.5-6' }}°E
           </span>
           <button type="button" class="btn-close btn-close-white" (click)="hide()" aria-label="Close"></button>
         </div>
       </div>
       <div class="modal-body p-0" *ngIf="isVisible">
-        <app-bing-map #map style="display:block;width:100%;height:500px;"></app-bing-map>
+        <app-osm-map #map style="display:block;width:100%;height:500px;"></app-osm-map>
+        <div class="map-refresh-info" *ngIf="lastRefresh">
+          Last refresh: {{ lastRefresh | date:'dd.MM.yyyy HH:mm:ss' }}
+        </div>
       </div>
     </div>
   </div>

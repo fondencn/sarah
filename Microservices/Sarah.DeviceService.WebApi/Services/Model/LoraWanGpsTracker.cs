@@ -191,7 +191,7 @@ namespace Sarah.DeviceService.Model
                     }
                     if(deserializedDeviceData?.Longitude != null && deserializedDeviceData.Latitude != null) 
                     { 
-                        var locatorPos = new LocatorPosition(deserializedDeviceData.Longitude, deserializedDeviceData.Latitude);
+                        var locatorPos = new LocatorPosition(deserializedDeviceData.Latitude, deserializedDeviceData.Longitude);
                         if(locatorPos.IsValid)
                         {
                             this.Position = locatorPos;
