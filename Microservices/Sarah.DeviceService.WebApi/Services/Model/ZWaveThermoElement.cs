@@ -72,10 +72,17 @@ namespace Sarah.DeviceService.Model
                         this.UpdateCancellationTokenSource = cts;
                         this.UpdateTask = Task.Run(async () =>
                         {
-                            while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+                            while (!cts.Token.IsCancellationRequested)
                             {
-                                /* Alle 30 Minuten */
-                                await Task.Delay(30 * 60000);
+                                try
+                                {
+                                    /* Alle 30 Minuten */
+                                    await Task.Delay(30 * 60000, cts.Token);
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    break;
+                                }
                                 await UpdateSensorData();
                             }
                         }, cts.Token);
