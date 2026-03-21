@@ -210,6 +210,9 @@ public class DashboardService : IDashboardService
                 or KnownDeviceTypes.FibaroWallPlug
                 or KnownDeviceTypes.PoppWallPlug
                 or KnownDeviceTypes.WifiWallPlug => "Steckdose",
+            KnownDeviceTypes.FibaroHeatController
+                or KnownDeviceTypes.AeotecThermostat
+                or KnownDeviceTypes.ShellyTrv => "Heizung",
             _ => sourceDevice.TypeName
         };
     }

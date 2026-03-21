@@ -30,11 +30,11 @@ namespace Sarah.DeviceService.WebApi.Services
             {12, typeof(WallController)},  //RedButton
             {13, typeof(MultiSensor)} ,
             {14, typeof(Lamp)} ,
-            {15, typeof(ThermoElement)} ,
+            {15, typeof(ZWaveThermoElement)} ,
             {16, typeof(DefectElement)} , //Heizung Wohnzimmer hat seine NodeId vergessen -> neu 40
             {17, typeof(DefectElement)} , //Heizung Schlafzimmer hat seine NodeId vergessen -> neu 39
             {18, typeof(DefectElement)} , //Heizung Lukas hat seine NodeId vergessen -> neu 37
-            {19, typeof(ThermoElement)} ,
+            {19, typeof(ZWaveThermoElement)} ,
             {20, typeof(ZWaveWallPlug)} ,
             {21, typeof(Lamp)} ,
             {22, typeof(DoorSensor)} ,
@@ -52,15 +52,15 @@ namespace Sarah.DeviceService.WebApi.Services
             {34, typeof(DoorSensor)} ,
             {35, typeof(DoorSensor)} ,
             {36, typeof(DefectElement)} , //Smoke Sensor Resetted
-            {37, typeof(ThermoElement)}  , // Heizung Lukas neu
+            {37, typeof(ZWaveThermoElement)}  , // Heizung Lukas neu
             {38, typeof(SmokeSensor)} ,
             {39, typeof(DefectElement)} , //Heizung Schlafzimmer hat seine NodeId vergessen --> neu 42
             {40, typeof(DefectElement)} , //Heizung Wohnzimmer hat seine NodeId vergessen --> neu 45
             {41, typeof(WallController)}  , // Fibaro Keyfob
-            {42, typeof(ThermoElement)}  , // Heizung Schlafzimmer neu 11/2023
+            {42, typeof(ZWaveThermoElement)}  , // Heizung Schlafzimmer neu 11/2023
             {43, typeof(DoorSensor)}  ,   // Fenster Schlafzimmer neu 01/2024
             {44, typeof(DoorSensor)}  ,   // Fenster Schlafzimmer hat seine NodeId vergessen 29 --> neu 44
-            {45, typeof(ThermoElement)}  , // Heizung Wohnzimmer neu
+            {45, typeof(ZWaveThermoElement)}  , // Heizung Wohnzimmer neu
             
             {245, typeof(LoraWanGpsTracker)}, // Seeed T1000 B SenseCap GPS Tracker 003
             {246, typeof(LoraWanGpsTracker)}, // Seeed T1000 B SenseCap GPS Tracker 002
@@ -69,7 +69,16 @@ namespace Sarah.DeviceService.WebApi.Services
             //{249, typeof(LoraWanGpsTracker)}, // Draghino LGT-92 Lorawan GPS Tracker --> verloren
             //{250, typeof(WifiWallPlug)}, // CF 07.01.22 Gerät defekt:  Delock 11826 Wifi Steckdose (ohne Power Report, kann nur an/aus)
             {251, typeof(WifiWallPlug)}, // Delock 11827 Wifi Steckdose (inkl. Power Report)
-            {252, typeof(WifiWallPlug)} // Delock 11827 Wifi Steckdose (inkl. Power Report)
+            {252, typeof(WifiWallPlug)}, // Delock 11827 Wifi Steckdose (inkl. Power Report)
+
+            // Shelly TRV Gen3 Gateway 1 (2 TRVs)
+            {253, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 0
+            {254, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 1
+
+            // Shelly TRV Gen3 Gateway 2 (3 TRVs)
+            {240, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 0
+            {241, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 1
+            {242, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 2
         };
 
         /// <summary>
@@ -86,6 +95,15 @@ namespace Sarah.DeviceService.WebApi.Services
             //yield return 250;// CF 07.01.22 Gerät defekt
             yield return 251;
             yield return 252;
+
+            // Shelly TRV Gen3 Gateway 1 (2 TRVs)
+            yield return 253;
+            yield return 254;
+
+            // Shelly TRV Gen3 Gateway 2 (3 TRVs)
+            yield return 240;
+            yield return 241;
+            yield return 242;
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +137,40 @@ namespace Sarah.DeviceService.WebApi.Services
             //{250, "delock-7859" }, // CF 07.01.22 Gerät defekt//Delock 11826 Wifi Steckdose (ohne Power Report, kann nur an/aus)
             {251, "delock-1504"},  // Delock 11827 Wifi Steckdose (inkl. Power Report)
             {252, "delock-0869"}   // Delock 11827 Wifi Steckdose (inkl. Power Report)
+        };
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///// Shelly TRV Gen3: Hostnames und Kanal-Zuordnung                                              /////
+        ///// Hostnames werden aktualisiert sobald die Geräte bekannt sind                                /////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Mapping von Node-ID zu Shelly TRV Gateway-Hostname (jeweils 2 bzw. 3 TRVs pro Gateway, daher nicht 1:1)
+        /// </summary>
+        private static readonly Dictionary<byte, string> _ShellyTrvHostnames = new Dictionary<byte, string>()
+        {
+            // Gateway 1 (2 TRVs)
+            {253, "shellyblugwg3-b08184e755bc"},
+            {254, "shellyblugwg3-b08184e755bc"},
+
+            // Gateway 2 (3 TRVs)
+            {240, "shelly-trv-gw-2"},
+            {241, "shelly-trv-gw-2"},
+            {242, "shelly-trv-gw-2"},
+        };
+
+        /// <summary>
+        /// Mapping von Node-ID zu Kanal-ID am Gateway (0-basiert)
+        /// </summary>
+        private static readonly Dictionary<byte, int> _ShellyTrvChannels = new Dictionary<byte, int>()
+        {
+            // Gateway 1
+            {253, 200},
+            {254, 201},
+
+            // Gateway 2
+            {240, 0},
+            {241, 1},
+            {242, 2},
         };
         /// <summary>
         /// Mapping von Node-ID zu The Things Network End Device Names
@@ -192,9 +244,26 @@ namespace Sarah.DeviceService.WebApi.Services
                         el = null;
                     }
                 }
+                else if (nodeType == typeof(ZWaveThermoElement))
+                {
+                    el = new ZWaveThermoElement(nodeId, _networkEventPublisher, null);
+                }
+                else if (nodeType == typeof(ShellyTrvElement))
+                {
+                    if (_ShellyTrvHostnames.ContainsKey(nodeId) && _ShellyTrvChannels.ContainsKey(nodeId))
+                    {
+                        string hostname = _ShellyTrvHostnames[nodeId];
+                        int channel = _ShellyTrvChannels[nodeId];
+                        el = new ShellyTrvElement(nodeId, hostname, channel, _networkEventPublisher, _logger);
+                    }
+                    else
+                    {
+                        el = null;
+                    }
+                }
                 else
                 {
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, _events);
+                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, _networkEventPublisher);
                 }
             }
             else

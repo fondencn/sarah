@@ -91,6 +91,15 @@
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
                       </ng-container>
+                      <ng-container *ngSwitchCase="'Heizung'">
+                        <app-thermostat-dial
+                          [itemId]="item.itemId"
+                          [temperature]="item.trvTemperature"
+                          [setpoint]="item.trvTemperatureSetpoint"
+                          [battery]="item.trvBattery"
+                          (temperatureSet)="setThermostatTemperatureValue($event.itemId, $event.temperature)"
+                        ></app-thermostat-dial>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
                           &nbsp;
@@ -108,6 +117,9 @@
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         <img class="big-icon" src="assets/icons/location.svg" [alt]="item.subType" [title]="item.subType">
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'Heizung'">
+                        <span style="font-size: 2.5rem;" [title]="item.subType">🌡️</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">

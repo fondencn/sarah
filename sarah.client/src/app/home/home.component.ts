@@ -116,6 +116,26 @@ export class HomeComponent implements OnInit {
     } 
   }
 
+  setThermostatTemperature(itemId: number | undefined, eventTarget: EventTarget | null) {
+    if (itemId === undefined) return;
+    const input = eventTarget as HTMLInputElement;
+    const temperature = parseFloat(input.value);
+    if (isNaN(temperature)) return;
+    this.setThermostatTemperatureValue(itemId, temperature);
+  }
+
+  setThermostatTemperatureValue(itemId: number | undefined, temperature: number) {
+    if (itemId === undefined || isNaN(temperature)) return;
+    this.devicesService.devicesSetThermostatTemperaturePOSTApiDevicesThermostatIdTemperatureTemperature(itemId, temperature).subscribe({
+      next: () => {
+        this.logger.debug('setThermostatTemperature: ' + itemId + ' → ' + temperature + ' °C');
+      },
+      error: (error) => {
+        this.logger.error('Error setting thermostat temperature:', error);
+      }
+    });
+  }
+
   setLampColor(itemId: number, eventTarget: EventTarget | null) {
     var element : HTMLInputElement = eventTarget as HTMLInputElement;
     this.setLampColorInternal(itemId, element.value);
@@ -377,5 +397,26 @@ export class DashboardItemViewModel {
     const raw = this.item.extendedProperties?.find(x => x.key === 'GpsTrackerID')?.value ?? '';
     const parsed = parseInt(raw, 10);
     return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  get trvTemperature(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'Temperature')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get trvTemperatureSetpoint(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'TemperatureSetpoint')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get trvBattery(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'Battery')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
   }
 }
