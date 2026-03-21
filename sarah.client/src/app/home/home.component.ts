@@ -121,6 +121,11 @@ export class HomeComponent implements OnInit {
     const input = eventTarget as HTMLInputElement;
     const temperature = parseFloat(input.value);
     if (isNaN(temperature)) return;
+    this.setThermostatTemperatureValue(itemId, temperature);
+  }
+
+  setThermostatTemperatureValue(itemId: number | undefined, temperature: number) {
+    if (itemId === undefined || isNaN(temperature)) return;
     this.devicesService.devicesSetThermostatTemperaturePOSTApiDevicesThermostatIdTemperatureTemperature(itemId, temperature).subscribe({
       next: () => {
         this.logger.debug('setThermostatTemperature: ' + itemId + ' → ' + temperature + ' °C');

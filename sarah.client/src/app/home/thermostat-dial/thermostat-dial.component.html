@@ -1,0 +1,57 @@
+<div class="thermostat-widget">
+  <div class="dial-wrap">
+    <svg class="dial-svg" viewBox="0 0 220 220" aria-hidden="true">
+      <defs>
+        <linearGradient id="thermoArcGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#1f4dff"></stop>
+          <stop offset="100%" stop-color="#ff2f2f"></stop>
+        </linearGradient>
+      </defs>
+
+      <circle
+        class="dial-track"
+        [attr.cx]="cx"
+        [attr.cy]="cy"
+        [attr.r]="radius"
+        [attr.stroke-dasharray]="trackDasharray"
+        stroke-dashoffset="0"
+      ></circle>
+
+      <circle
+        class="dial-progress"
+        [attr.cx]="cx"
+        [attr.cy]="cy"
+        [attr.r]="radius"
+        [attr.stroke-dasharray]="progressDasharray"
+        stroke-dashoffset="0"
+      ></circle>
+    </svg>
+
+    <div class="dial-center">
+      <div class="dial-label">Temperature</div>
+      <div class="dial-value">{{ editableSetpoint | number:'1.1-1' }}°C</div>
+      <div class="dial-meta">Ist: {{ displayTemperature | number:'1.1-1' }}°C</div>
+      <div class="dial-meta">Batterie: {{ battery !== null ? (battery | number:'1.0-0') + '%' : '–' }}</div>
+    </div>
+
+    <div class="dial-minmax dial-min">{{ minTemperature }}°C</div>
+    <div class="dial-minmax dial-max">{{ maxTemperature }}°C</div>
+  </div>
+
+  <input
+    class="dial-slider"
+    type="range"
+    [min]="minTemperature"
+    [max]="maxTemperature"
+    [step]="step"
+    [value]="editableSetpoint"
+    (input)="onSliderInput(($any($event.target)).value)"
+    aria-label="Thermostat target temperature"
+  />
+
+  <div class="dial-actions">
+    <button type="button" class="dial-btn" (click)="decrease()" aria-label="Temperatur senken">−</button>
+    <button type="button" class="dial-btn dial-btn-apply" (click)="applySetpoint()" aria-label="Temperatur setzen">🔥</button>
+    <button type="button" class="dial-btn" (click)="increase()" aria-label="Temperatur erhöhen">+</button>
+  </div>
+</div>
