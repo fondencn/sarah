@@ -144,13 +144,13 @@ namespace Sarah.DeviceService.WebApi.Services
         ///// Hostnames werden aktualisiert sobald die Geräte bekannt sind                                /////
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Mapping von Node-ID zu Shelly TRV Gateway-Hostname (Dummy – wird bei Inbetriebnahme befüllt)
+        /// Mapping von Node-ID zu Shelly TRV Gateway-Hostname (jeweils 2 bzw. 3 TRVs pro Gateway, daher nicht 1:1)
         /// </summary>
         private static readonly Dictionary<byte, string> _ShellyTrvHostnames = new Dictionary<byte, string>()
         {
             // Gateway 1 (2 TRVs)
-            {253, "shelly-trv-gw-1"},
-            {254, "shelly-trv-gw-1"},
+            {253, "shellyblugwg3-b08184e755bc"},
+            {254, "shellyblugwg3-b08184e755bc"},
 
             // Gateway 2 (3 TRVs)
             {240, "shelly-trv-gw-2"},
@@ -164,8 +164,8 @@ namespace Sarah.DeviceService.WebApi.Services
         private static readonly Dictionary<byte, int> _ShellyTrvChannels = new Dictionary<byte, int>()
         {
             // Gateway 1
-            {253, 0},
-            {254, 1},
+            {253, 200},
+            {254, 201},
 
             // Gateway 2
             {240, 0},

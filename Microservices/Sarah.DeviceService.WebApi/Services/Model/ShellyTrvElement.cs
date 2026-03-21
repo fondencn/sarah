@@ -72,7 +72,7 @@ namespace Sarah.DeviceService.Model
                 while (!cts.Token.IsCancellationRequested)
                 {
                     await UpdateSensorData();
-                    await Task.Delay(5 * 60 * 1000, cts.Token).ConfigureAwait(false); // alle 5 Minuten
+                    await Task.Delay(1 * 60 * 1000, cts.Token).ConfigureAwait(false); // alle 1 Minute
                 }
             }, cts.Token);
 
@@ -83,7 +83,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                string uri = $"http://{Hostname}/rpc/TRV.GetStatus?id={Channel}";
+                string uri = $"http://{Hostname}/rpc/BluTrv.GetStatus?id={Channel}";
                 using HttpResponseMessage response = await _httpClient.GetAsync(uri);
                 response.EnsureSuccessStatusCode();
                 string json = await response.Content.ReadAsStringAsync();
@@ -101,14 +101,13 @@ namespace Sarah.DeviceService.Model
                     this.TemperatureSetpoint = new SensorData((float)targetC.GetDouble(), "°C");
                 }
 
-                if (root.TryGetProperty("battery", out JsonElement battery) &&
-                    battery.TryGetProperty("percent", out JsonElement batteryPercent))
+                if (root.TryGetProperty("battery", out JsonElement battery))
                 {
-                    this.Battery = new SensorData((float)batteryPercent.GetDouble(), "%");
+                    this.Battery = new SensorData((float)battery.GetDouble(), "%");
                 }
 
-                // valve_pos > 0 means heating is active
-                if (root.TryGetProperty("valve_pos", out JsonElement valvePos))
+                // pos > 0 means heating is active
+                if (root.TryGetProperty("pos", out JsonElement valvePos))
                 {
                     byte pos = (byte)Math.Min(255, Math.Max(0, valvePos.GetInt32()));
                     this.Basic = new SensorData(pos > 0 ? (float)99 : (float)0, pos > 0 ? "🔥 an" : "❌ aus");
@@ -131,8 +130,17 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                string uri = $"http://{Hostname}/rpc/TRV.SetTarget";
-                string body = JsonSerializer.Serialize(new { id = Channel, target_C = temperature });
+                string uri = $"http://{Hostname}/rpc/BluTrv.Call";
+                string body = JsonSerializer.Serialize(new
+                {
+                    id = Channel,
+                    method = "TRV.SetTarget",
+                    @params = new
+                    {
+                        id = 0,
+                        target_C = temperature
+                    }
+                });
                 using StringContent content = new StringContent(body, Encoding.UTF8, "application/json");
 
                 using HttpResponseMessage response = await _httpClient.PostAsync(uri, content);
