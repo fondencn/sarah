@@ -22,12 +22,16 @@ namespace Sarah.Voice.Recognition
             _LEDService = ledService;
             _Configuration = configuration;
             _logger = logger;
+
+            var subscriptionKey = _Configuration["AzureSpeech:SubscriptionKey"] ?? throw new ArgumentException("AzureSpeech:SubscriptionKey is not configured");
+            var region = _Configuration["AzureSpeech:Region"] ?? throw new ArgumentException("AzureSpeech:Region is not configured");
+            var language = _Configuration["AzureSpeech:Language"] ?? "de-DE";
             // Creates an instance of a speech config with specified subscription key and service region.
             // Replace with your own subscription key and service region (e.g., "westus").
             // The default language is "en-us".
-            _config = SpeechConfig.FromSubscription(_Configuration["AzureSpeech:SubscriptionKey"], _Configuration["AzureSpeech:Region"]);
-            _config.SpeechRecognitionLanguage = "de-DE";
-            _config.SpeechSynthesisLanguage = "de-DE";
+            _config = SpeechConfig.FromSubscription(subscriptionKey, region);
+            _config.SpeechRecognitionLanguage = language;
+            _config.SpeechSynthesisLanguage = language;
             _config.EnableAudioLogging();
         }
 
