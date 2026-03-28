@@ -1,6 +1,5 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
-using Sarah.LEDService;
 using Sarah.SpeechServer;
 using Sarah.SpeechServer.Extensions;
 using Sarah.Voice;
@@ -24,7 +23,8 @@ builder.Configuration
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSingleton<ILEDService, ReSpeakerLEDService>();
+builder.Services.AddSingleton<ILEDService>(provider => LedServiceFactory.CreateLedService(provider));
+
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
     var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
@@ -47,11 +47,15 @@ builder.Services.AddHostedService<SpeechEventSubscriber>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapOpenApi();
+}
+
+app.UseServiceDefaults();
 app.MapControllers();
 app.UseSpeechService(app.Configuration);
 
 app.Run();
-
