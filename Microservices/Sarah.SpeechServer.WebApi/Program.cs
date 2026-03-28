@@ -47,9 +47,14 @@ builder.Services.AddHostedService<SpeechEventSubscriber>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapOpenApi();
+}
+
+app.UseServiceDefaults();
 app.MapControllers();
 app.UseSpeechService(app.Configuration);
 
