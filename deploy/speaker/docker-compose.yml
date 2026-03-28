@@ -14,3 +14,20 @@ services:
     ports:
       - "5008:8080"
     restart: unless-stopped
+    # ── Hardware access ──────────────────────────────────────────────
+    # GPIO (LED ring power control via ReSpeakerLEDService)
+    # SPI  (APA102 LED ring on SPI bus 0 CS0)
+    # Sound (aplay playback + Azure Speech SDK microphone input)
+    devices:
+      - /dev/gpiochip0:/dev/gpiochip0   # GPIO controller
+      - /dev/spidev0.0:/dev/spidev0.0   # SPI bus 0, chip select 0 (APA102)
+    volumes:
+      - /dev/snd:/dev/snd               # ALSA sound device tree (playback + capture)
+    group_add:
+      # GIDs must match the host's Raspberry Pi OS groups.
+      # Verify on the speaker host with: getent group audio gpio spi
+      - "29"    # audio (Raspberry Pi OS default)
+      - "997"   # gpio  (Raspberry Pi OS default — adjust if different)
+      - "999"   # spi   (Raspberry Pi OS default — adjust if different)
+    # Uncomment the line below as a last resort if hardware access still fails:
+    # privileged: true

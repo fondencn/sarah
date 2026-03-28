@@ -41,6 +41,9 @@ Work through this checklist before the first real deployment:
 - [ ] Create either one shared `deploy/speaker/.env` or one file per speaker such as `deploy/speaker/speaker1.env` and `deploy/speaker/speaker3.env`
 - [ ] Set a unique `SPEAKER_LOCATION` for each speaker env file
 - [ ] Confirm `RABBITMQ_PASSWORD` is identical on `pi` and every speaker env file
+- [ ] Enable SPI and GPIO on each speaker host with `sudo raspi-config` → Interface Options → SPI / GPIO, then reboot
+- [ ] Verify the audio device exists on each speaker: `aplay -l` should list a capture/playback device
+- [ ] Verify GPIO and SPI groups on each speaker host: `getent group audio gpio spi` — note the GIDs and check they match the defaults (29 / 997 / 999) in `deploy/speaker/docker-compose.yml`
 - [ ] Confirm `PI_HOST` resolves correctly from both the build machine and the speaker machines
 - [ ] Run `cd deploy && ./deploy-all.sh`
 - [ ] Open the frontend at `http://pi:8081` after deployment completes
