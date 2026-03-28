@@ -23,8 +23,8 @@ namespace Sarah.Voice.Recognition
             _Configuration = configuration;
             _logger = logger;
 
-            var subscriptionKey = _Configuration["AzureSpeech:SubscriptionKey"] ?? throw new ArgumentException("AzureSpeech:SubscriptionKey is not configured");
-            var region = _Configuration["AzureSpeech:Region"] ?? throw new ArgumentException("AzureSpeech:Region is not configured");
+            var subscriptionKey = _Configuration["AzureSpeech:SubscriptionKey"] ?? throw new InvalidOperationException("AzureSpeech:SubscriptionKey is not configured");
+            var region = _Configuration["AzureSpeech:Region"] ?? throw new InvalidOperationException("AzureSpeech:Region is not configured");
             var language = _Configuration["AzureSpeech:Language"] ?? "de-DE";
             // Creates an instance of a speech config with specified subscription key and service region.
             // Replace with your own subscription key and service region (e.g., "westus").
