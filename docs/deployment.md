@@ -120,7 +120,7 @@ After deployment, these services are accessible:
 
 | Service | Host | URL |
 |---------|------|-----|
-| Frontend | pi | `http://pi` |
+| Frontend | pi | `http://pi:8081` |
 | Keycloak | pi | `http://pi:8080` |
 | RabbitMQ Management | pi | `http://pi:15672` |
 | DeviceService | pi | `http://pi:5001` |

@@ -70,7 +70,7 @@ services:
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
-      - AllowedOrigins__2=http://${PI_HOST:-pi}:80
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
       - ZWave__SerialPortName=${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}
       - TheThingsNetwork__ApiKey=${TTN_API_KEY:-}
     ports:
@@ -228,7 +228,7 @@ services:
   frontend:
     image: ${REGISTRY:-sarah}/frontend:${TAG:-latest}
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       - deviceservice
     networks:

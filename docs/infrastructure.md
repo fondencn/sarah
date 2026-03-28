@@ -31,7 +31,7 @@ Runs the complete Sarah stack:
 - DashboardService — port 5007
 
 **Frontend:**
-- Angular app served via nginx — port 80
+- Angular app served via nginx — port 8081
 
 **Hardware access:**
 - Z-Wave USB stick at `/dev/ttyACM0` (passed through to DeviceService container)
@@ -67,7 +67,7 @@ Connected to the main host for:
 │  │  MonitoringService:5005         │    │                       │
 │  │  RulesService     :5006         │    │                       │
 │  │  DashboardService :5007         │    │                       │
-│  │  Frontend (nginx) :80           │    │                       │
+│  │  Frontend (nginx) :8081         │    │                       │
 │  └──────────────────────────────────┘   │                       │
 │           ▲          ▲          ▲        │                       │
 │           │          │          │        │                       │
