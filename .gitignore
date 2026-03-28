@@ -404,3 +404,4 @@ docker-compos.secrets.yml
 
 # Environment variables with secrets
 .env
+Microservices/Sarah.SpeechServer.WebApi/appsettings.secrets.json
