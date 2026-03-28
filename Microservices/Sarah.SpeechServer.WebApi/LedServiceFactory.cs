@@ -1,4 +1,3 @@
-using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.LEDService;
 
