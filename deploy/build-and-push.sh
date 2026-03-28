@@ -43,16 +43,60 @@ confirm() {
   [[ "$answer" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
 }
 
+current_platform() {
+  case "$(uname -m)" in
+    x86_64|amd64) echo "linux/amd64" ;;
+    aarch64|arm64) echo "linux/arm64" ;;
+    armv7l) echo "linux/arm/v7" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+docker_has_buildx() {
+  docker buildx version >/dev/null 2>&1
+}
+
+docker_build_supports_platform() {
+  docker build --help 2>/dev/null | grep -q -- '--platform'
+}
+
 build_image() {
   local name="$1" dockerfile="$2"
   local full_tag="${REGISTRY}/${name}:${TAG}"
   log "Building ${full_tag} (platform: ${PLATFORM})"
-  docker buildx build \
-    --platform "${PLATFORM}" \
-    --file "${REPO_ROOT}/${dockerfile}" \
-    --tag "${full_tag}" \
-    --load \
-    "${REPO_ROOT}"
+
+  if docker_has_buildx; then
+    docker buildx build \
+      --platform "${PLATFORM}" \
+      --file "${REPO_ROOT}/${dockerfile}" \
+      --tag "${full_tag}" \
+      --load \
+      "${REPO_ROOT}"
+  elif docker_build_supports_platform; then
+    log "docker buildx not found; using docker build instead"
+    docker build \
+      --platform "${PLATFORM}" \
+      --file "${REPO_ROOT}/${dockerfile}" \
+      --tag "${full_tag}" \
+      "${REPO_ROOT}"
+  else
+    local host_platform
+    host_platform="$(current_platform)"
+
+    if [[ "${PLATFORM}" != "${host_platform}" ]]; then
+      err "docker buildx is unavailable and docker build does not support --platform."
+      err "Requested ${PLATFORM}, but this machine builds ${host_platform}."
+      err "Install the buildx plugin or build on a ${PLATFORM} host."
+      exit 1
+    fi
+
+    log "docker buildx not found; using docker build for host platform ${host_platform}"
+    docker build \
+      --file "${REPO_ROOT}/${dockerfile}" \
+      --tag "${full_tag}" \
+      "${REPO_ROOT}"
+  fi
+
   ok "Built ${full_tag}"
 }
 

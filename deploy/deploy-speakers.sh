@@ -100,6 +100,7 @@ preflight_check_host() {
 
 deploy_speaker() {
   local host="$1"
+  local env_source="${SCRIPT_DIR}/speaker/${host}.env"
 
   log "Uploading compose files to ${host}:${DEPLOY_DIR}/"
   ssh "${host}" "mkdir -p ${DEPLOY_DIR}"
@@ -107,12 +108,15 @@ deploy_speaker() {
 
   # Upload .env only if it doesn't exist on target
   if ! ssh "${host}" "test -f ${DEPLOY_DIR}/.env"; then
-    if [[ -f "${SCRIPT_DIR}/speaker/.env" ]]; then
+    if [[ -f "$env_source" ]]; then
+      scp "$env_source" "${host}:${DEPLOY_DIR}/.env"
+      log "Uploaded ${host}.env to ${host}."
+    elif [[ -f "${SCRIPT_DIR}/speaker/.env" ]]; then
       scp "${SCRIPT_DIR}/speaker/.env" "${host}:${DEPLOY_DIR}/.env"
-      log "Uploaded .env file to ${host}. Review and edit if needed."
+      log "Uploaded shared speaker .env file to ${host}."
     else
-      err "No .env file found at ${SCRIPT_DIR}/speaker/.env"
-      err "Copy .env.example to .env and configure it before deploying."
+      err "No speaker environment file found for ${host}."
+      err "Create ${SCRIPT_DIR}/speaker/${host}.env or ${SCRIPT_DIR}/speaker/.env before deploying."
       exit 1
     fi
   else

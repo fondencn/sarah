@@ -7,7 +7,7 @@ This guide covers building, transferring, and deploying the Sarah Smart Home sys
 The deployment uses Docker containers orchestrated with Docker Compose. Images are built on the development machine and transferred to the targets via SSH (`docker save` / `docker load`).
 
 ```
-Build machine ── docker buildx ──► docker save ── ssh ──► docker load ── docker compose up
+Build machine ── docker build/buildx ──► docker save ── ssh ──► docker load ── docker compose up
 ```
 
 ## Directory Layout
@@ -27,6 +27,77 @@ deploy/
     └── .env.example           # Environment template
 ```
 
+## Deployment Checklist
+
+Work through this checklist before the first real deployment:
+
+- [ ] Install Docker on the build machine and verify both `docker buildx version` and `docker compose version`
+- [ ] Install Docker on `pi`, `speaker1`, and `speaker3`
+- [ ] Add your remote deployment user to the `docker` group on each target so `docker info` works without `sudo`
+- [ ] Ensure hostnames or IPs for `pi`, `speaker1`, and `speaker3` are reachable from the build machine
+- [ ] Set up SSH key-based login from the build machine to all target hosts
+- [ ] Verify passwordless SSH works with `ssh pi`, `ssh speaker1`, and `ssh speaker3`
+- [ ] Create `deploy/pi/.env` from `deploy/pi/.env.example` and replace every `CHANGE_ME` value
+- [ ] Create either one shared `deploy/speaker/.env` or one file per speaker such as `deploy/speaker/speaker1.env` and `deploy/speaker/speaker3.env`
+- [ ] Set a unique `SPEAKER_LOCATION` for each speaker env file
+- [ ] Confirm `RABBITMQ_PASSWORD` is identical on `pi` and every speaker env file
+- [ ] Confirm `PI_HOST` resolves correctly from both the build machine and the speaker machines
+- [ ] Run `cd deploy && ./deploy-all.sh`
+- [ ] Open the frontend at `http://pi:8081` after deployment completes
+
+## SSH Key Setup
+
+The deployment scripts call `ssh` and `scp` directly. The cleanest setup is to use SSH host aliases in `~/.ssh/config` and authenticate with a key pair.
+
+### 1. Generate a deployment key pair on the build machine
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/sarah-deploy -C "sarah deployment"
+```
+
+### 2. Copy the public key to each target host
+
+```bash
+ssh-copy-id -i ~/.ssh/sarah-deploy.pub <user>@pi
+ssh-copy-id -i ~/.ssh/sarah-deploy.pub <user>@speaker1
+ssh-copy-id -i ~/.ssh/sarah-deploy.pub <user>@speaker3
+```
+
+If `ssh-copy-id` is unavailable, append `~/.ssh/sarah-deploy.pub` to `~/.ssh/authorized_keys` on each target manually.
+
+### 3. Create SSH aliases on the build machine
+
+Add this to `~/.ssh/config`:
+
+```sshconfig
+Host pi
+    HostName 192.168.1.10
+    User your-user
+    IdentityFile ~/.ssh/sarah-deploy
+
+Host speaker1
+    HostName 192.168.1.21
+    User your-user
+    IdentityFile ~/.ssh/sarah-deploy
+
+Host speaker3
+    HostName 192.168.1.23
+    User your-user
+    IdentityFile ~/.ssh/sarah-deploy
+```
+
+Adjust the IP addresses and user names to match your machines.
+
+### 4. Verify key-based login
+
+```bash
+ssh pi 'hostname'
+ssh speaker1 'hostname'
+ssh speaker3 'hostname'
+```
+
+All three commands should succeed without prompting for a password.
+
 ## Quick Start
 
 ### 1. Configure Environment
@@ -36,10 +107,16 @@ deploy/
 cp deploy/pi/.env.example deploy/pi/.env
 # Edit deploy/pi/.env — set all CHANGE_ME passwords
 
-# Speakers
+# Speakers: shared config for all speaker hosts
 cp deploy/speaker/.env.example deploy/speaker/.env
 # Edit deploy/speaker/.env — set RabbitMQ password (must match pi)
+
+# Optional: per-speaker overrides with unique SPEAKER_LOCATION values
+cp deploy/speaker/.env.example deploy/speaker/speaker1.env
+cp deploy/speaker/.env.example deploy/speaker/speaker3.env
 ```
+
+If `deploy/speaker/speaker1.env` or `deploy/speaker/speaker3.env` exists, `deploy-speakers.sh` uses that file for the matching host. Otherwise it falls back to `deploy/speaker/.env`.
 
 ### 2. Full Deployment (one command)
 
@@ -95,7 +172,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `SPEAKERS` | `speaker1 speaker3` | Space-separated list of speaker hostnames |
 | `REGISTRY` | `sarah` | Image name prefix |
 | `TAG` | `latest` | Image tag |
-| `PLATFORM` | `linux/amd64` | Docker buildx platform |
+| `PLATFORM` | `linux/amd64` | Target Docker platform for image builds |
 
 ### Runtime (pi/.env)
 
@@ -113,6 +190,9 @@ Every script asks for explicit user confirmation before deploying to any target 
 |----------|-------------|
 | `PI_HOST` | Hostname of the main Raspberry Pi |
 | `RABBITMQ_PASSWORD` | RabbitMQ password (must match pi) |
+| `AZURE_SPEECH_KEY` | Azure Speech subscription key |
+| `AZURE_SPEECH_REGION` | Azure Speech region |
+| `SPEAKER_LOCATION` | Room name for this speaker |
 
 ## Service Ports
 
