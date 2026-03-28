@@ -1,0 +1,16 @@
+services:
+  speechserver:
+    image: ${REGISTRY:-sarah}/speechserver:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@${PI_HOST:-pi}:5672
+      - services__deviceservice__http-api__0=http://${PI_HOST:-pi}:5001
+      - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - AzureSpeech__Region=${AZURE_SPEECH_REGION:-westeurope}
+      - Speech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - Speech__Region=${AZURE_SPEECH_REGION:-westeurope}
+      - Location=${SPEAKER_LOCATION:-Wohnzimmer}
+    ports:
+      - "5008:8080"
+    restart: unless-stopped

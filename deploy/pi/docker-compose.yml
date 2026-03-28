@@ -1,0 +1,245 @@
+services:
+  # ─── Infrastructure ────────────────────────────────────────────────
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+      - KC_HTTP_PORT=8080
+      - KC_PROXY_HEADERS=xforwarded
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./sarah-realm-realm.json:/opt/keycloak/data/import/sarah-realm-realm.json:ro
+    command: start-dev --features=preview --spi-connections-http-client-default-disable-trust-manager=true --import-realm
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - sarah-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    networks:
+      - sarah-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Microservices ─────────────────────────────────────────────────
+
+  deviceservice:
+    image: ${REGISTRY:-sarah}/deviceservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=devicesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:80
+      - ZWave__SerialPortName=${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}
+      - TheThingsNetwork__ApiKey=${TTN_API_KEY:-}
+    ports:
+      - "5001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+    devices:
+      - "${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}:${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}"
+
+  personsservice:
+    image: ${REGISTRY:-sarah}/personsservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=personsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - services__deviceservice__http-api__0=http://deviceservice:8080
+      - services__geofencesservice__http-api__0=http://geofencesservice:8080
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+    ports:
+      - "5002:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  geofencesservice:
+    image: ${REGISTRY:-sarah}/geofencesservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+    ports:
+      - "5003:8080"
+    depends_on:
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  roomservice:
+    image: ${REGISTRY:-sarah}/roomservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=roomsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+    ports:
+      - "5004:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  monitoringservice:
+    image: ${REGISTRY:-sarah}/monitoringservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - services__deviceservice__http-api__0=http://deviceservice:8080
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+    ports:
+      - "5005:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  rulesservice:
+    image: ${REGISTRY:-sarah}/rulesservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=rulesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - services__deviceservice__http-api__0=http://deviceservice:8080
+      - services__personsservice__http-api__0=http://personsservice:8080
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - EmailNotifier__SmtpSender=${SMTP_SENDER:-}
+      - EmailNotifier__SmtpServer=${SMTP_SERVER:-}
+      - EmailNotifier__SmtpPort=${SMTP_PORT:-25}
+      - EmailNotifier__SmtpUsername=${SMTP_USERNAME:-}
+      - EmailNotifier__SmtpPassword=${SMTP_PASSWORD:-}
+    ports:
+      - "5006:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  dashboardservice:
+    image: ${REGISTRY:-sarah}/dashboardservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgresConnection=Host=postgres;Database=dashboarddb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - services__deviceservice__http-api__0=http://deviceservice:8080
+      - services__personsservice__http-api__0=http://personsservice:8080
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+    ports:
+      - "5007:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  # ─── Frontend ──────────────────────────────────────────────────────
+
+  frontend:
+    image: ${REGISTRY:-sarah}/frontend:${TAG:-latest}
+    ports:
+      - "80:80"
+    depends_on:
+      - deviceservice
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+networks:
+  sarah-network:
+    driver: bridge
+
+volumes:
+  keycloak-data:
+  rabbitmq-data:
+  postgres-data:
