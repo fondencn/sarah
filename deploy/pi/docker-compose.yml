@@ -101,6 +101,7 @@ services:
       - services__geofencesservice__http-api__0=http://geofencesservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5002:8080"
     depends_on:
@@ -122,6 +123,7 @@ services:
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5003:8080"
     depends_on:
@@ -141,6 +143,7 @@ services:
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5004:8080"
     depends_on:
@@ -162,6 +165,7 @@ services:
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5005:8080"
     depends_on:
@@ -186,6 +190,7 @@ services:
       - services__personsservice__http-api__0=http://personsservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
       - EmailNotifier__SmtpSender=${SMTP_SENDER:-}
       - EmailNotifier__SmtpServer=${SMTP_SERVER:-}
       - EmailNotifier__SmtpPort=${SMTP_PORT:-25}
@@ -214,6 +219,7 @@ services:
       - services__personsservice__http-api__0=http://personsservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5007:8080"
     depends_on:
