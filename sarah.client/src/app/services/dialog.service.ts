@@ -24,7 +24,7 @@ export class DialogService {
         this.currentDialog = bootstrapModal
         this.logger.debug("Showing Dialog: " + modalId);
         bootstrapModal.show();
-        bootstrapModal._element.addEventListener('hidden.bs.modal', () => {
+        modalElement.addEventListener('hidden.bs.modal', () => {
           this.closeDialog(false);
         } );
       }
