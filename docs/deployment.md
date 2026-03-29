@@ -129,7 +129,7 @@ cd deploy
 ```
 
 This will:
-1. Build all Docker images for `linux/amd64`
+1. Build Docker images for the detected target architectures (`linux/arm64` for `pi`, `linux/arm/v7` for speakers by default)
 2. Transfer images to `pi`, `speaker1`, and `speaker3` via SSH
 3. Run pre-flight checks (Docker version, disk space, connectivity)
 4. Ask for confirmation before each deployment step
@@ -175,7 +175,8 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `SPEAKERS` | `speaker1 speaker3` | Space-separated list of speaker hostnames |
 | `REGISTRY` | `sarah` | Image name prefix |
 | `TAG` | `latest` | Image tag |
-| `PLATFORM` | `linux/amd64` | Target Docker platform for image builds |
+| `PI_PLATFORM` | `linux/arm64` | Docker platform used for images deployed to `pi` |
+| `SPEAKER_PLATFORM` | `linux/arm/v7` | Docker platform used for images deployed to speaker hosts |
 | `SSH_USER` | `pi` | SSH username used by deployment scripts |
 
 ### Runtime (pi/.env)

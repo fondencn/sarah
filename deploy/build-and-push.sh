@@ -9,7 +9,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 REGISTRY="${REGISTRY:-sarah}"
 TAG="${TAG:-latest}"
-PLATFORM="${PLATFORM:-linux/amd64}"
+PI_PLATFORM="${PI_PLATFORM:-linux/arm64}"
+SPEAKER_PLATFORM="${SPEAKER_PLATFORM:-linux/arm/v7}"
 
 PI_HOST="${PI_HOST:-pi}"
 SPEAKERS="${SPEAKERS:-speaker1 speaker3}"
@@ -67,13 +68,13 @@ docker_build_supports_platform() {
 }
 
 build_image() {
-  local name="$1" dockerfile="$2"
+  local name="$1" dockerfile="$2" platform="$3"
   local full_tag="${REGISTRY}/${name}:${TAG}"
-  log "Building ${full_tag} (platform: ${PLATFORM})"
+  log "Building ${full_tag} (platform: ${platform})"
 
   if docker_has_buildx; then
     docker buildx build \
-      --platform "${PLATFORM}" \
+      --platform "${platform}" \
       --file "${REPO_ROOT}/${dockerfile}" \
       --tag "${full_tag}" \
       --load \
@@ -81,7 +82,7 @@ build_image() {
   elif docker_build_supports_platform; then
     log "docker buildx not found; using docker build instead"
     docker build \
-      --platform "${PLATFORM}" \
+      --platform "${platform}" \
       --file "${REPO_ROOT}/${dockerfile}" \
       --tag "${full_tag}" \
       "${REPO_ROOT}"
@@ -89,10 +90,10 @@ build_image() {
     local host_platform
     host_platform="$(current_platform)"
 
-    if [[ "${PLATFORM}" != "${host_platform}" ]]; then
+    if [[ "${platform}" != "${host_platform}" ]]; then
       err "docker buildx is unavailable and docker build does not support --platform."
-      err "Requested ${PLATFORM}, but this machine builds ${host_platform}."
-      err "Install the buildx plugin or build on a ${PLATFORM} host."
+      err "Requested ${platform}, but this machine builds ${host_platform}."
+      err "Install the buildx plugin or build on a ${platform} host."
       exit 1
     fi
 
@@ -125,7 +126,8 @@ echo "════════════════════════�
 echo ""
 echo "  Registry:  ${REGISTRY}"
 echo "  Tag:       ${TAG}"
-echo "  Platform:  ${PLATFORM}"
+echo "  Pi platform:       ${PI_PLATFORM}"
+echo "  Speaker platform:  ${SPEAKER_PLATFORM}"
 echo "  Pi host:   ${PI_HOST}"
 echo "  Speakers:  ${SPEAKERS}"
 echo "  SSH user:  ${SSH_USER}"
@@ -136,18 +138,18 @@ confirm "Build all images and transfer to target hosts?"
 # Build pi images
 for entry in "${PI_IMAGES[@]}"; do
   read -r name dockerfile <<< "$entry"
-  build_image "$name" "$dockerfile"
+  build_image "$name" "$dockerfile" "$PI_PLATFORM"
 done
 
 # Build speechserver
 for entry in "${SPEAKER_IMAGES[@]}"; do
   read -r name dockerfile <<< "$entry"
-  build_image "$name" "$dockerfile"
+  build_image "$name" "$dockerfile" "$SPEAKER_PLATFORM"
 done
 
 # Build frontend
 read -r name dockerfile <<< "$FRONTEND_IMAGE"
-build_image "$name" "$dockerfile"
+build_image "$name" "$dockerfile" "$PI_PLATFORM"
 
 echo ""
 log "All images built successfully."
