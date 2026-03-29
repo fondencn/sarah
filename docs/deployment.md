@@ -24,6 +24,7 @@ Operational status at the time of writing:
 - `speaker1` is healthy on `http://speaker1:5008`
 - `speaker3` is healthy on `http://speaker3:5008`
 - Speaker containers require `deploy/speaker/asound.conf` to be mounted so ALSA can resolve numeric device indices inside Docker
+- Speaker containers require both `/dev/gpiomem` and `/dev/spidev0.0` for ReSpeaker LED ring GPIO/SPI access from inside Docker
 
 Current speaker-specific behavior:
 
@@ -67,7 +68,7 @@ Work through this checklist before the first real deployment:
 - [ ] Enable SPI and GPIO on each speaker host with `sudo raspi-config` → Interface Options → SPI / GPIO, then reboot
 - [ ] Verify the audio device exists on each speaker: `aplay -l` should list a capture/playback device
 - [ ] If a speaker microphone hat is missing or broken, set `SPEECH_RECOGNITION_ENABLED=false` in that speaker's env file before deploying
-- [ ] Verify GPIO and SPI groups on each speaker host: `getent group audio gpio spi` — note the GIDs and check they match the defaults (29 / 997 / 999) in `deploy/speaker/docker-compose.yml`
+- [ ] Verify GPIO and SPI groups on each speaker host: `getent group audio gpio spi` — set `AUDIO_GID`, `GPIO_GID`, and `SPI_GID` in each speaker env file when host values differ from defaults
 - [ ] Confirm `PI_HOST` resolves correctly from both the build machine and the speaker machines
 - [ ] Run `cd deploy && ./deploy-all.sh`
 - [ ] Open the frontend at `http://pi:8081` after deployment completes
@@ -201,6 +202,7 @@ Every deployment script verifies the target before deploying:
 | Disk space | Warns if less than 2 GB free (pi) or 1 GB free (speakers) |
 | Images present | All required Docker images have been loaded |
 | Network (speakers) | Speaker can reach RabbitMQ on the main host |
+| Audio controls (speakers) | If `SPEAKER_PLAYBACK_VOLUME` is configured, prints `amixer scontrols` and warns when configured `SPEAKER_PLAYBACK_CONTROL` is not available |
 
 Every script asks for explicit user confirmation before deploying to any target machine.
 
@@ -240,7 +242,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `AZURE_SPEECH_REGION` | Azure Speech region |
 | `SPEAKER_LOCATION` | Room name for this speaker |
 | `SPEECH_RECOGNITION_ENABLED` | Optional per-speaker override. Set to `false` to disable microphone recognition while keeping playback enabled |
-| `SPEAKER_PLAYBACK_CONTROL` | Optional ALSA control name to set after deployment (default: `Headphone`) |
+| `SPEAKER_PLAYBACK_CONTROL` | Optional ALSA control name to set after deployment. If unset, deploy script auto-detects one (`Headphone` → `Speaker` → `PCM` → `Master`) |
 | `SPEAKER_PLAYBACK_VOLUME` | Optional playback volume applied inside container after startup (example: `35%`) |
 
 ## Service Ports

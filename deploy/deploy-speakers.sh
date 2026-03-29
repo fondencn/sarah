@@ -51,6 +51,105 @@ get_env_value() {
   grep -E "^${key}=" "$file" | tail -n1 | cut -d'=' -f2-
 }
 
+preflight_check_audio_controls() {
+  local host="$1"
+  local target="$2"
+  local env_source
+  local playback_volume=""
+  local requested_control=""
+  local controls
+
+  if env_source="$(resolve_speaker_env "$host" 2>/dev/null)"; then
+    playback_volume="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_VOLUME" || true)"
+    requested_control="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_CONTROL" || true)"
+  fi
+
+  if [[ -z "$playback_volume" ]]; then
+    log "  No SPEAKER_PLAYBACK_VOLUME configured for ${host}; skipping mixer-control preflight."
+    return 0
+  fi
+
+  log "  Reading ALSA mixer controls on ${host}..."
+  controls="$(ssh "${target}" 'amixer scontrols 2>/dev/null' || true)"
+  if [[ -z "$controls" ]]; then
+    err "  WARNING: Could not read ALSA mixer controls on ${host}."
+    err "  Volume application may fail; verify audio stack with: amixer scontrols"
+    return 0
+  fi
+
+  while IFS= read -r control_line; do
+    [[ -n "$control_line" ]] && log "    ${control_line}"
+  done <<< "$controls"
+
+  if [[ -n "$requested_control" ]]; then
+    if echo "$controls" | grep -Fq "'$requested_control'"; then
+      ok "  Configured playback control '${requested_control}' is available on ${host}."
+    else
+      err "  WARNING: Configured SPEAKER_PLAYBACK_CONTROL='${requested_control}' was not found on ${host}."
+      err "  deploy-speakers.sh will auto-detect a valid control during deployment."
+    fi
+  fi
+}
+
+apply_playback_volume() {
+  local target="$1"
+  local volume="$2"
+  local requested_control="${3:-}"
+
+  if ! ssh "${target}" "bash -s" -- "${DEPLOY_DIR}" "${volume}" "${requested_control}" <<'EOF'; then
+set -euo pipefail
+
+deploy_dir="$1"
+volume="$2"
+requested_control="$3"
+
+cd "$deploy_dir"
+cid="$(docker compose ps -q speechserver)"
+if [[ -z "$cid" ]]; then
+  echo "SpeechServer container not running; cannot set playback volume."
+  exit 1
+fi
+
+controls="$(docker exec "$cid" sh -lc 'amixer scontrols 2>/dev/null' || true)"
+if [[ -z "$controls" ]]; then
+  echo "No ALSA simple controls reported by amixer."
+  exit 2
+fi
+
+candidates=()
+if [[ -n "$requested_control" ]]; then
+  candidates+=("$requested_control")
+fi
+candidates+=("Headphone" "Speaker" "PCM" "Master")
+
+selected_control=""
+for candidate in "${candidates[@]}"; do
+  if echo "$controls" | grep -Fq "'$candidate'"; then
+    selected_control="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$selected_control" ]]; then
+  selected_control="$(echo "$controls" | sed -n "s/.*'\([^']*\)'.*/\1/p" | head -n1)"
+fi
+
+if [[ -z "$selected_control" ]]; then
+  echo "Could not determine a valid ALSA playback control from amixer output."
+  exit 3
+fi
+
+echo "Using playback control: $selected_control"
+docker exec "$cid" sh -lc "amixer sset \"$selected_control\" \"$volume\" && amixer sget \"$selected_control\" | sed -n '1,6p'"
+EOF
+    err "Playback volume setup failed on ${target}."
+    err "Set SPEAKER_PLAYBACK_CONTROL explicitly in the speaker env if auto-detection picked the wrong control."
+    return 1
+  fi
+
+  return 0
+}
+
 # ── Pre-flight check for a single speaker ───────────────────────────
 
 preflight_check_host() {
@@ -124,6 +223,9 @@ preflight_check_host() {
     ok "  Main host ${PI_HOST} reachable from ${host}"
   fi
 
+  # 8. Audio mixer controls for playback volume setup
+  preflight_check_audio_controls "$host" "$target"
+
   ok "All pre-flight checks passed for ${host}."
   return 0
 }
@@ -165,9 +267,12 @@ deploy_speaker() {
   playback_volume="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_VOLUME" || true)"
   playback_control="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_CONTROL" || true)"
   if [[ -n "$playback_volume" ]]; then
-    playback_control="${playback_control:-Headphone}"
-    log "Applying playback volume on ${target}: ${playback_control}=${playback_volume}"
-    ssh "${target}" "cd ${DEPLOY_DIR} && cid=\$(docker compose ps -q speechserver) && if [[ -n \"\$cid\" ]]; then docker exec \"\$cid\" sh -lc 'amixer sset \"${playback_control}\" \"${playback_volume}\" && amixer sget \"${playback_control}\" | sed -n \"1,6p\"'; fi"
+    if [[ -n "$playback_control" ]]; then
+      log "Applying playback volume on ${target}: ${playback_control}=${playback_volume}"
+    else
+      log "Applying playback volume on ${target}: auto-detect control (${playback_volume})"
+    fi
+    apply_playback_volume "$target" "$playback_volume" "$playback_control" || true
   fi
 
   ok "Deployment to ${target} complete."

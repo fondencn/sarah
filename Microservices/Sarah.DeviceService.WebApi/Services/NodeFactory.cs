@@ -199,7 +199,7 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         lampMode = _ColorModeMappings[nodeId];
                     }
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, lampMode, _events);
+                    el = new Lamp(nodeId, lampMode, _networkEventPublisher, null);
                 }
                 else if (nodeType == typeof(WifiWallPlug))
                 {
