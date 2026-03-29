@@ -6,6 +6,7 @@ services:
     environment:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_HOSTNAME=${PI_HOST:-pi}
       - KC_HOSTNAME_STRICT=false
       - KC_HTTP_ENABLED=true
       - KC_HTTP_PORT=8080
@@ -67,7 +68,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=devicesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
@@ -94,7 +95,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=personsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__geofencesservice__http-api__0=http://geofencesservice:8080
@@ -117,7 +118,7 @@ services:
     image: ${REGISTRY:-sarah}/geofencesservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
@@ -137,7 +138,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=roomsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
     ports:
@@ -156,7 +157,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
@@ -179,7 +180,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=rulesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__personsservice__http-api__0=http://personsservice:8080
@@ -208,7 +209,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=dashboarddb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - OIDCAuthority=http://keycloak:8080/realms/sarah-realm
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__personsservice__http-api__0=http://personsservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
