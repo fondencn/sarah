@@ -145,20 +145,7 @@ deploy() {
   remote "cd ${DEPLOY_DIR} && docker compose up -d postgres rabbitmq keycloak"
 
   log "Waiting for PostgreSQL and RabbitMQ health checks..."
-  remote "cd ${DEPLOY_DIR} && \
-    for i in \\$(seq 1 60); do \
-      pg_id=\\$(docker compose ps -q postgres); \
-      mq_id=\\$(docker compose ps -q rabbitmq); \
-      pg=\\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \\"\\$pg_id\\" 2>/dev/null || echo unknown); \
-      mq=\\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \\"\\$mq_id\\" 2>/dev/null || echo unknown); \
-      if [ \"\\$pg\" = \"healthy\" ] && [ \"\\$mq\" = \"healthy\" ]; then \
-        exit 0; \
-      fi; \
-      sleep 2; \
-    done; \
-    echo 'Timed out waiting for infrastructure health checks' >&2; \
-    docker compose ps >&2; \
-    exit 1"
+  remote "bash -lc 'cd \"${DEPLOY_DIR}\" && for i in \$(seq 1 60); do pg_id=\$(docker compose ps -q postgres); mq_id=\$(docker compose ps -q rabbitmq); pg=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$pg_id\" 2>/dev/null || echo unknown); mq=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$mq_id\" 2>/dev/null || echo unknown); if [ \"\$pg\" = \"healthy\" ] && [ \"\$mq\" = \"healthy\" ]; then exit 0; fi; sleep 2; done; echo \"Timed out waiting for infrastructure health checks\" >&2; docker compose ps >&2; exit 1'"
 
   # Start app services after infrastructure is confirmed healthy.
   remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice frontend"

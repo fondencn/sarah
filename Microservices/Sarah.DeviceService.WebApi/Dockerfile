@@ -19,5 +19,8 @@ RUN dotnet publish "Sarah.DeviceService.WebApi.csproj" -c Release -o /app/publis
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+	&& rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Sarah.DeviceService.WebApi.dll"]
