@@ -11,6 +11,7 @@ public static class WebAppExtensions
 
         var speechService = app.Services.GetRequiredService<ISpeechService>();
         var location = config["Location"] ?? "default-location";
-        speechService.Initialize(location, true, true);
+        var recognitionEnabled = !string.Equals(config["Speech:RecognitionEnabled"], "false", StringComparison.OrdinalIgnoreCase);
+        speechService.Initialize(location, recognitionEnabled, true);
     }
 }
