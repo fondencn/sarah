@@ -9,6 +9,7 @@ PI_HOST="${PI_HOST:-pi}"
 SPEAKERS="${SPEAKERS:-speaker1 speaker3}"
 DEPLOY_DIR="${REMOTE_DEPLOY_DIR:-/opt/sarah}"
 SSH_USER="${SSH_USER:-pi}"
+FORCE_ENV_UPLOAD="${FORCE_ENV_UPLOAD:-false}"
 
 host_target() {
   local host="$1"
@@ -21,10 +22,27 @@ log()  { echo -e "\033[1;34m>>>\033[0m $*"; }
 err()  { echo -e "\033[1;31m!!!\033[0m $*" >&2; }
 ok()   { echo -e "\033[1;32m✓\033[0m $*"; }
 
+is_true() {
+  [[ "${1,,}" == "true" || "${1}" == "1" || "${1,,}" == "yes" || "${1,,}" == "y" ]]
+}
+
 confirm() {
   local msg="${1:-Continue?}"
   read -rp "$msg [y/N] " answer
   [[ "$answer" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
+}
+
+resolve_speaker_env() {
+  local host="$1"
+  local env_source="${SCRIPT_DIR}/speaker/${host}.env"
+
+  if [[ -f "$env_source" ]]; then
+    echo "$env_source"
+  elif [[ -f "${SCRIPT_DIR}/speaker/.env" ]]; then
+    echo "${SCRIPT_DIR}/speaker/.env"
+  else
+    return 1
+  fi
 }
 
 # ── Pre-flight check for a single speaker ───────────────────────────
@@ -110,31 +128,31 @@ deploy_speaker() {
   local host="$1"
   local target
   target="$(host_target "$host")"
-  local env_source="${SCRIPT_DIR}/speaker/${host}.env"
+  local env_source
+
+  if ! env_source="$(resolve_speaker_env "$host")"; then
+    err "No speaker environment file found for ${host}."
+    err "Create ${SCRIPT_DIR}/speaker/${host}.env or ${SCRIPT_DIR}/speaker/.env before deploying."
+    exit 1
+  fi
 
   log "Uploading compose files to ${target}:${DEPLOY_DIR}/"
   ssh "${target}" "mkdir -p ${DEPLOY_DIR}"
   scp "${SCRIPT_DIR}/speaker/docker-compose.yml" "${target}:${DEPLOY_DIR}/docker-compose.yml"
+  scp "${SCRIPT_DIR}/speaker/asound.conf" "${target}:${DEPLOY_DIR}/asound.conf"
 
-  # Upload .env only if it doesn't exist on target
-  if ! ssh "${target}" "test -f ${DEPLOY_DIR}/.env"; then
-    if [[ -f "$env_source" ]]; then
-      scp "$env_source" "${target}:${DEPLOY_DIR}/.env"
-      log "Uploaded ${host}.env to ${target}."
-    elif [[ -f "${SCRIPT_DIR}/speaker/.env" ]]; then
-      scp "${SCRIPT_DIR}/speaker/.env" "${target}:${DEPLOY_DIR}/.env"
-      log "Uploaded shared speaker .env file to ${target}."
-    else
-      err "No speaker environment file found for ${host}."
-      err "Create ${SCRIPT_DIR}/speaker/${host}.env or ${SCRIPT_DIR}/speaker/.env before deploying."
-      exit 1
-    fi
+  if is_true "$FORCE_ENV_UPLOAD"; then
+    scp "$env_source" "${target}:${DEPLOY_DIR}/.env"
+    log "Refreshed remote .env on ${target}."
+  elif ! ssh "${target}" "test -f ${DEPLOY_DIR}/.env"; then
+    scp "$env_source" "${target}:${DEPLOY_DIR}/.env"
+    log "Uploaded $(basename "$env_source") to ${target}."
   else
     ok ".env already exists on ${target} — not overwriting."
   fi
 
   log "Starting SpeechServer on ${target}..."
-  ssh "${target}" "cd ${DEPLOY_DIR} && docker compose up -d"
+  ssh "${target}" "cd ${DEPLOY_DIR} && docker compose up -d --force-recreate --remove-orphans"
 
   ok "Deployment to ${target} complete."
 }
@@ -149,6 +167,7 @@ echo ""
 echo "  Main host:  ${PI_HOST}"
 echo "  Speakers:   ${SPEAKERS}"
 echo "  SSH user:   ${SSH_USER}"
+echo "  Refresh env on target: ${FORCE_ENV_UPLOAD}"
 echo ""
 
 # Run pre-flight on all speakers

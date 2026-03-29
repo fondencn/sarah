@@ -10,6 +10,28 @@ The deployment uses Docker containers orchestrated with Docker Compose. Images a
 Build machine ── docker build/buildx ──► docker save ── ssh ──► docker load ── docker compose up
 ```
 
+## Current Deployed State
+
+The deployment has been validated on the current Raspberry Pi target set with this layout:
+
+- `pi`: Raspberry Pi OS / Debian Bookworm, `arm64`, runs the main stack
+- `speaker1`: Raspberry Pi OS Bullseye, `armv7`, runs `SpeechServer` with microphone recognition enabled
+- `speaker3`: Raspberry Pi OS Bullseye, `armv7`, runs `SpeechServer` with text-to-speech enabled and voice recognition disabled because the ReSpeaker hat is currently broken
+
+Operational status at the time of writing:
+
+- Main stack on `pi` is deployed and reachable
+- `speaker1` is healthy on `http://speaker1:5008`
+- `speaker3` is healthy on `http://speaker3:5008`
+- Speaker containers require `deploy/speaker/asound.conf` to be mounted so ALSA can resolve numeric device indices inside Docker
+
+Current speaker-specific behavior:
+
+- `speaker1`: `SPEECH_RECOGNITION_ENABLED=true`
+- `speaker3`: `SPEECH_RECOGNITION_ENABLED=false`
+
+This is a temporary operational workaround until the microphone hardware on `speaker3` is replaced or repaired.
+
 ## Directory Layout
 
 ```
@@ -23,6 +45,7 @@ deploy/
 │   ├── init-databases.sh      # PostgreSQL multi-database init script
 │   └── .env.example           # Environment template
 └── speaker/
+    ├── asound.conf            # ALSA config for containerized speaker access
     ├── docker-compose.yml     # Speaker satellite compose definition
     └── .env.example           # Environment template
 ```
@@ -43,6 +66,7 @@ Work through this checklist before the first real deployment:
 - [ ] Confirm `RABBITMQ_PASSWORD` is identical on `pi` and every speaker env file
 - [ ] Enable SPI and GPIO on each speaker host with `sudo raspi-config` → Interface Options → SPI / GPIO, then reboot
 - [ ] Verify the audio device exists on each speaker: `aplay -l` should list a capture/playback device
+- [ ] If a speaker microphone hat is missing or broken, set `SPEECH_RECOGNITION_ENABLED=false` in that speaker's env file before deploying
 - [ ] Verify GPIO and SPI groups on each speaker host: `getent group audio gpio spi` — note the GIDs and check they match the defaults (29 / 997 / 999) in `deploy/speaker/docker-compose.yml`
 - [ ] Confirm `PI_HOST` resolves correctly from both the build machine and the speaker machines
 - [ ] Run `cd deploy && ./deploy-all.sh`
@@ -121,6 +145,14 @@ cp deploy/speaker/.env.example deploy/speaker/speaker3.env
 
 If `deploy/speaker/speaker1.env` or `deploy/speaker/speaker3.env` exists, `deploy-speakers.sh` uses that file for the matching host. Otherwise it falls back to `deploy/speaker/.env`.
 
+For the currently deployed setup, `speaker3.env` also contains:
+
+```bash
+SPEECH_RECOGNITION_ENABLED=false
+```
+
+This keeps `speaker3` operational for playback while skipping Azure microphone initialization.
+
 ### 2. Full Deployment (one command)
 
 ```bash
@@ -135,6 +167,13 @@ This will:
 4. Ask for confirmation before each deployment step
 5. Deploy the main stack to `pi`
 6. Deploy SpeechServer to `speaker1` and `speaker3`
+
+If you need to refresh an existing remote speaker `.env`, run:
+
+```bash
+cd deploy
+FORCE_ENV_UPLOAD=true ./deploy-speakers.sh
+```
 
 ### 3. Or Deploy Step-by-Step
 
@@ -178,6 +217,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `PI_PLATFORM` | `linux/arm64` | Docker platform used for images deployed to `pi` |
 | `SPEAKER_PLATFORM` | `linux/arm/v7` | Docker platform used for images deployed to speaker hosts |
 | `SSH_USER` | `pi` | SSH username used by deployment scripts |
+| `FORCE_ENV_UPLOAD` | `false` | When `true`, `deploy-speakers.sh` overwrites the remote speaker `.env` during deployment |
 
 ### Runtime (pi/.env)
 
@@ -198,6 +238,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `AZURE_SPEECH_KEY` | Azure Speech subscription key |
 | `AZURE_SPEECH_REGION` | Azure Speech region |
 | `SPEAKER_LOCATION` | Room name for this speaker |
+| `SPEECH_RECOGNITION_ENABLED` | Optional per-speaker override. Set to `false` to disable microphone recognition while keeping playback enabled |
 
 ## Service Ports
 
@@ -229,9 +270,23 @@ cd deploy
 
 The scripts will rebuild all images, transfer them, and restart containers. Data volumes (Keycloak, RabbitMQ, PostgreSQL) are preserved across deployments.
 
-Existing `.env` files on the targets are **never overwritten** — only uploaded on first deploy.
+Existing speaker `.env` files on the targets are only uploaded on first deploy by default. Use `FORCE_ENV_UPLOAD=true ./deploy-speakers.sh` when you intentionally want to refresh them.
+
+## Current Limitations
+
+- `deploy-speakers.sh` always syncs `docker-compose.yml` and `asound.conf`, but it only refreshes the remote speaker `.env` when `FORCE_ENV_UPLOAD=true`
+- If an earlier failed deployment left behind stale containers, run `docker compose up -d --force-recreate --remove-orphans` on the target to cleanly reconcile the state
 
 ## Troubleshooting
+
+### Apply updated speaker config manually
+
+Use this when `asound.conf` or a per-speaker env file changed after the first deploy:
+
+```bash
+cd deploy
+FORCE_ENV_UPLOAD=true ./deploy-speakers.sh
+```
 
 ### Check service logs
 ```bash
