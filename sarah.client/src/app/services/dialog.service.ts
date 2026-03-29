@@ -1,4 +1,5 @@
 import { Injectable, EventEmitter } from '@angular/core';
+import { Modal } from 'bootstrap';
 import { LoggingService } from './logging.service';
 
 @Injectable({
@@ -19,7 +20,7 @@ export class DialogService {
     if (modalElement) {
       if (!this.isDialogOpen) {
         this.isDialogOpen = true;
-        const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
+        const bootstrapModal = new Modal(modalElement);
         this.currentDialog = bootstrapModal
         this.logger.debug("Showing Dialog: " + modalId);
         bootstrapModal.show();
@@ -74,7 +75,7 @@ export class DialogService {
         document.body.appendChild(modalElement);
       }
 
-      const bootstrapModal = new (window as any).bootstrap.Modal(modalElement);
+      const bootstrapModal = new Modal(modalElement);
       this.currentDialog = bootstrapModal;
       this.isDialogOpen = true;
 
