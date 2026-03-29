@@ -141,10 +141,27 @@ deploy() {
   fi
 
   log "Starting services on ${PI_HOST}..."
-  # 'up -d' preserves named volumes — only containers are recreated with new images.
-  # Data in postgres-data, keycloak-data, rabbitmq-data is never deleted.
-  # To wipe all data, run manually: ssh pi 'cd /opt/sarah && docker compose down -v'
-  remote "cd ${DEPLOY_DIR} && docker compose up -d"
+  # Start infrastructure first to avoid startup races (DB/RabbitMQ can be briefly unavailable during init).
+  remote "cd ${DEPLOY_DIR} && docker compose up -d postgres rabbitmq keycloak"
+
+  log "Waiting for PostgreSQL and RabbitMQ health checks..."
+  remote "cd ${DEPLOY_DIR} && \
+    for i in \\$(seq 1 60); do \
+      pg_id=\\$(docker compose ps -q postgres); \
+      mq_id=\\$(docker compose ps -q rabbitmq); \
+      pg=\\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \\"\\$pg_id\\" 2>/dev/null || echo unknown); \
+      mq=\\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \\"\\$mq_id\\" 2>/dev/null || echo unknown); \
+      if [ \"\\$pg\" = \"healthy\" ] && [ \"\\$mq\" = \"healthy\" ]; then \
+        exit 0; \
+      fi; \
+      sleep 2; \
+    done; \
+    echo 'Timed out waiting for infrastructure health checks' >&2; \
+    docker compose ps >&2; \
+    exit 1"
+
+  # Start app services after infrastructure is confirmed healthy.
+  remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice frontend"
 
   echo ""
   ok "Deployment to ${PI_HOST} complete. All data volumes preserved."
