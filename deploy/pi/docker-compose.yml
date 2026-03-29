@@ -97,8 +97,10 @@ services:
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=personsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - DeviceServiceUrl=http://deviceservice:8080
       - FritzBox__Username=${FRITZBOX_USERNAME:-}
       - FritzBox__Password=${FRITZBOX_PASSWORD:-}
+      - services__deviceservice__http__0=http://deviceservice:8080
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__geofencesservice__http-api__0=http://geofencesservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
