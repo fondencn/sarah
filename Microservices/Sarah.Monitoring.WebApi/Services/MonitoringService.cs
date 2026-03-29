@@ -33,7 +33,7 @@ public class MonitoringService (IServiceProvider _serviceProvider, IDeviceServic
         var doors = new Monitors.DoorMonitor(_db, _devices, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>());
         Monitors = new IMonitor[]
         {
-            new Monitors.AirQualityMonitor(_db, _devices, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>()),
+            new Monitors.AirQualityMonitor(_db, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>()),
             new Monitors.PersonMonitor(_db, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.PersonMonitor>()),
             new Monitors.BatteryMonitor(_db, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()), 
             doors,
