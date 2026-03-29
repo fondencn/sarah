@@ -13,6 +13,12 @@ PLATFORM="${PLATFORM:-linux/amd64}"
 
 PI_HOST="${PI_HOST:-pi}"
 SPEAKERS="${SPEAKERS:-speaker1 speaker3}"
+SSH_USER="${SSH_USER:-pi}"
+
+host_target() {
+  local host="$1"
+  echo "${SSH_USER}@${host}"
+}
 
 # All microservice images (context = repo root)
 PI_IMAGES=(
@@ -102,10 +108,12 @@ build_image() {
 
 transfer_image() {
   local name="$1" host="$2"
+  local target
+  target="$(host_target "$host")"
   local full_tag="${REGISTRY}/${name}:${TAG}"
-  log "Transferring ${full_tag} → ${host}"
-  docker save "${full_tag}" | ssh "${host}" 'docker load'
-  ok "Transferred ${full_tag} → ${host}"
+  log "Transferring ${full_tag} → ${target}"
+  docker save "${full_tag}" | ssh "${target}" 'docker load'
+  ok "Transferred ${full_tag} → ${target}"
 }
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -120,6 +128,7 @@ echo "  Tag:       ${TAG}"
 echo "  Platform:  ${PLATFORM}"
 echo "  Pi host:   ${PI_HOST}"
 echo "  Speakers:  ${SPEAKERS}"
+echo "  SSH user:  ${SSH_USER}"
 echo ""
 
 confirm "Build all images and transfer to target hosts?"

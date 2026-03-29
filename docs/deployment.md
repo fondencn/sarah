@@ -176,6 +176,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `REGISTRY` | `sarah` | Image name prefix |
 | `TAG` | `latest` | Image tag |
 | `PLATFORM` | `linux/amd64` | Target Docker platform for image builds |
+| `SSH_USER` | `pi` | SSH username used by deployment scripts |
 
 ### Runtime (pi/.env)
 

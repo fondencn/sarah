@@ -7,6 +7,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PI_HOST="${PI_HOST:-pi}"
 DEPLOY_DIR="${REMOTE_DEPLOY_DIR:-/opt/sarah}"
+SSH_USER="${SSH_USER:-pi}"
+PI_TARGET="${SSH_USER}@${PI_HOST}"
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -21,7 +23,7 @@ confirm() {
 }
 
 remote() {
-  ssh "${PI_HOST}" "$@"
+  ssh "${PI_TARGET}" "$@"
 }
 
 # ── Pre-flight checks ───────────────────────────────────────────────
@@ -31,12 +33,12 @@ preflight_check() {
 
   # 1. SSH connectivity
   log "  Checking SSH connectivity..."
-  if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "${PI_HOST}" 'echo ok' &>/dev/null; then
-    err "Cannot connect to ${PI_HOST} via SSH."
+  if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "${PI_TARGET}" 'echo ok' &>/dev/null; then
+    err "Cannot connect to ${PI_TARGET} via SSH."
     err "Ensure SSH is configured (key-based auth recommended) and the host is reachable."
     exit 1
   fi
-  ok "  SSH connection to ${PI_HOST}"
+  ok "  SSH connection to ${PI_TARGET}"
 
   # 2. Docker installed
   log "  Checking Docker installation..."
@@ -97,15 +99,15 @@ preflight_check() {
 # ── Deploy ───────────────────────────────────────────────────────────
 
 deploy() {
-  log "Uploading compose files to ${PI_HOST}:${DEPLOY_DIR}/"
+  log "Uploading compose files to ${PI_TARGET}:${DEPLOY_DIR}/"
   remote "mkdir -p ${DEPLOY_DIR}"
-  scp "${SCRIPT_DIR}/pi/docker-compose.yml" "${PI_HOST}:${DEPLOY_DIR}/docker-compose.yml"
-  scp "${SCRIPT_DIR}/pi/init-databases.sh" "${PI_HOST}:${DEPLOY_DIR}/init-databases.sh"
+  scp "${SCRIPT_DIR}/pi/docker-compose.yml" "${PI_TARGET}:${DEPLOY_DIR}/docker-compose.yml"
+  scp "${SCRIPT_DIR}/pi/init-databases.sh" "${PI_TARGET}:${DEPLOY_DIR}/init-databases.sh"
 
   # Upload Keycloak realm import file (always update — Keycloak skips import if realm already exists)
   local realm_file="${SCRIPT_DIR}/../Sarah.AppHost/sarah-realm-realm.json"
   if [[ -f "$realm_file" ]]; then
-    scp "$realm_file" "${PI_HOST}:${DEPLOY_DIR}/sarah-realm-realm.json"
+    scp "$realm_file" "${PI_TARGET}:${DEPLOY_DIR}/sarah-realm-realm.json"
     ok "Uploaded Keycloak realm import file."
   else
     err "Keycloak realm file not found at ${realm_file}"
@@ -116,7 +118,7 @@ deploy() {
   # Upload .env only if it doesn't exist on target (don't overwrite secrets)
   if ! remote "test -f ${DEPLOY_DIR}/.env"; then
     if [[ -f "${SCRIPT_DIR}/pi/.env" ]]; then
-      scp "${SCRIPT_DIR}/pi/.env" "${PI_HOST}:${DEPLOY_DIR}/.env"
+      scp "${SCRIPT_DIR}/pi/.env" "${PI_TARGET}:${DEPLOY_DIR}/.env"
       log "Uploaded .env file. Review and edit passwords on the target."
     else
       err "No .env file found at ${SCRIPT_DIR}/pi/.env"
@@ -146,7 +148,7 @@ deploy() {
 
   echo ""
   ok "Deployment to ${PI_HOST} complete. All data volumes preserved."
-  log "View logs: ssh ${PI_HOST} 'cd ${DEPLOY_DIR} && docker compose logs -f'"
+  log "View logs: ssh ${PI_TARGET} 'cd ${DEPLOY_DIR} && docker compose logs -f'"
 }
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -155,6 +157,8 @@ echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "  Sarah Smart Home — Deploy to main host (${PI_HOST})"
 echo "═══════════════════════════════════════════════════════════════"
+echo ""
+echo "  SSH target: ${PI_TARGET}"
 echo ""
 
 preflight_check

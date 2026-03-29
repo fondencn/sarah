@@ -11,6 +11,7 @@ export SPEAKERS="${SPEAKERS:-speaker1 speaker3}"
 export REGISTRY="${REGISTRY:-sarah}"
 export TAG="${TAG:-latest}"
 export PLATFORM="${PLATFORM:-linux/amd64}"
+export SSH_USER="${SSH_USER:-pi}"
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ echo "  Registry:  ${REGISTRY}"
 echo "  Tag:       ${TAG}"
 echo "  Pi host:   ${PI_HOST}"
 echo "  Speakers:  ${SPEAKERS}"
+echo "  SSH user:  ${SSH_USER}"
 echo ""
 echo "Steps:"
 echo "  1. Build all Docker images"

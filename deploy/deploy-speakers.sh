@@ -8,6 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PI_HOST="${PI_HOST:-pi}"
 SPEAKERS="${SPEAKERS:-speaker1 speaker3}"
 DEPLOY_DIR="${REMOTE_DEPLOY_DIR:-/opt/sarah}"
+SSH_USER="${SSH_USER:-pi}"
+
+host_target() {
+  local host="$1"
+  echo "${SSH_USER}@${host}"
+}
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -25,20 +31,22 @@ confirm() {
 
 preflight_check_host() {
   local host="$1"
+  local target
+  target="$(host_target "$host")"
   log "Running pre-flight checks on ${host}..."
 
   # 1. SSH connectivity
   log "  Checking SSH connectivity..."
-  if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "${host}" 'echo ok' &>/dev/null; then
-    err "Cannot connect to ${host} via SSH."
+  if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "${target}" 'echo ok' &>/dev/null; then
+    err "Cannot connect to ${target} via SSH."
     err "Ensure SSH is configured (key-based auth recommended) and the host is reachable."
     return 1
   fi
-  ok "  SSH connection to ${host}"
+  ok "  SSH connection to ${target}"
 
   # 2. Docker installed
   log "  Checking Docker installation..."
-  if ! ssh "${host}" 'command -v docker' &>/dev/null; then
+  if ! ssh "${target}" 'command -v docker' &>/dev/null; then
     err "Docker is not installed on ${host}."
     err "Install Docker: curl -fsSL https://get.docker.com | sh"
     return 1
@@ -47,7 +55,7 @@ preflight_check_host() {
 
   # 3. Docker daemon running
   log "  Checking Docker daemon..."
-  if ! ssh "${host}" 'docker info' &>/dev/null; then
+  if ! ssh "${target}" 'docker info' &>/dev/null; then
     err "Docker daemon is not running or current user lacks permissions on ${host}."
     err "Ensure the docker service is running and the user is in the 'docker' group."
     return 1
@@ -56,7 +64,7 @@ preflight_check_host() {
 
   # 4. Docker Compose available
   log "  Checking Docker Compose..."
-  if ! ssh "${host}" 'docker compose version' &>/dev/null; then
+  if ! ssh "${target}" 'docker compose version' &>/dev/null; then
     err "Docker Compose (v2 plugin) is not available on ${host}."
     err "Install it: sudo apt-get install docker-compose-plugin"
     return 1
@@ -66,7 +74,7 @@ preflight_check_host() {
   # 5. Disk space
   log "  Checking disk space..."
   local free_kb
-  free_kb=$(ssh "${host}" 'df --output=avail / | tail -1' 2>/dev/null | tr -d ' ')
+  free_kb=$(ssh "${target}" 'df --output=avail / | tail -1' 2>/dev/null | tr -d ' ')
   if [[ -n "$free_kb" ]] && (( free_kb < 1048576 )); then
     err "  WARNING: Less than 1 GB free disk space on ${host} (${free_kb} KB available)."
     confirm "  Continue anyway?"
@@ -76,7 +84,7 @@ preflight_check_host() {
 
   # 6. SpeechServer image present
   log "  Checking Docker images..."
-  if ! ssh "${host}" 'docker image inspect sarah/speechserver:latest' &>/dev/null; then
+  if ! ssh "${target}" 'docker image inspect sarah/speechserver:latest' &>/dev/null; then
     err "  Image sarah/speechserver:latest not found on ${host}. Run build-and-push.sh first."
     return 1
   fi
@@ -84,7 +92,7 @@ preflight_check_host() {
 
   # 7. Main host reachable from speaker
   log "  Checking connectivity to main host (${PI_HOST})..."
-  if ! ssh "${host}" "timeout 3 bash -c '</dev/tcp/${PI_HOST}/5672'" &>/dev/null; then
+  if ! ssh "${target}" "timeout 3 bash -c '</dev/tcp/${PI_HOST}/5672'" &>/dev/null; then
     err "  WARNING: Cannot reach ${PI_HOST}:5672 (RabbitMQ) from ${host}."
     err "  Ensure the main host is deployed and RabbitMQ is running."
     confirm "  Continue anyway?"
@@ -100,33 +108,35 @@ preflight_check_host() {
 
 deploy_speaker() {
   local host="$1"
+  local target
+  target="$(host_target "$host")"
   local env_source="${SCRIPT_DIR}/speaker/${host}.env"
 
-  log "Uploading compose files to ${host}:${DEPLOY_DIR}/"
-  ssh "${host}" "mkdir -p ${DEPLOY_DIR}"
-  scp "${SCRIPT_DIR}/speaker/docker-compose.yml" "${host}:${DEPLOY_DIR}/docker-compose.yml"
+  log "Uploading compose files to ${target}:${DEPLOY_DIR}/"
+  ssh "${target}" "mkdir -p ${DEPLOY_DIR}"
+  scp "${SCRIPT_DIR}/speaker/docker-compose.yml" "${target}:${DEPLOY_DIR}/docker-compose.yml"
 
   # Upload .env only if it doesn't exist on target
-  if ! ssh "${host}" "test -f ${DEPLOY_DIR}/.env"; then
+  if ! ssh "${target}" "test -f ${DEPLOY_DIR}/.env"; then
     if [[ -f "$env_source" ]]; then
-      scp "$env_source" "${host}:${DEPLOY_DIR}/.env"
-      log "Uploaded ${host}.env to ${host}."
+      scp "$env_source" "${target}:${DEPLOY_DIR}/.env"
+      log "Uploaded ${host}.env to ${target}."
     elif [[ -f "${SCRIPT_DIR}/speaker/.env" ]]; then
-      scp "${SCRIPT_DIR}/speaker/.env" "${host}:${DEPLOY_DIR}/.env"
-      log "Uploaded shared speaker .env file to ${host}."
+      scp "${SCRIPT_DIR}/speaker/.env" "${target}:${DEPLOY_DIR}/.env"
+      log "Uploaded shared speaker .env file to ${target}."
     else
       err "No speaker environment file found for ${host}."
       err "Create ${SCRIPT_DIR}/speaker/${host}.env or ${SCRIPT_DIR}/speaker/.env before deploying."
       exit 1
     fi
   else
-    ok ".env already exists on ${host} — not overwriting."
+    ok ".env already exists on ${target} — not overwriting."
   fi
 
-  log "Starting SpeechServer on ${host}..."
-  ssh "${host}" "cd ${DEPLOY_DIR} && docker compose up -d"
+  log "Starting SpeechServer on ${target}..."
+  ssh "${target}" "cd ${DEPLOY_DIR} && docker compose up -d"
 
-  ok "Deployment to ${host} complete."
+  ok "Deployment to ${target} complete."
 }
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -138,6 +148,7 @@ echo "════════════════════════�
 echo ""
 echo "  Main host:  ${PI_HOST}"
 echo "  Speakers:   ${SPEAKERS}"
+echo "  SSH user:   ${SSH_USER}"
 echo ""
 
 # Run pre-flight on all speakers
