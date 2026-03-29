@@ -227,6 +227,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `RABBITMQ_PASSWORD` | RabbitMQ password |
 | `POSTGRES_PASSWORD` | PostgreSQL password |
 | `ZWAVE_SERIAL_PORT` | Z-Wave USB device path |
+| `OPENWEATHER_API_KEY` | OpenWeatherMap API key used by MonitoringService |
 | `PI_HOST` | Hostname for CORS origins |
 
 ### Runtime (speaker/.env)
@@ -239,6 +240,8 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `AZURE_SPEECH_REGION` | Azure Speech region |
 | `SPEAKER_LOCATION` | Room name for this speaker |
 | `SPEECH_RECOGNITION_ENABLED` | Optional per-speaker override. Set to `false` to disable microphone recognition while keeping playback enabled |
+| `SPEAKER_PLAYBACK_CONTROL` | Optional ALSA control name to set after deployment (default: `Headphone`) |
+| `SPEAKER_PLAYBACK_VOLUME` | Optional playback volume applied inside container after startup (example: `35%`) |
 
 ## Service Ports
 

@@ -45,6 +45,12 @@ resolve_speaker_env() {
   fi
 }
 
+get_env_value() {
+  local file="$1"
+  local key="$2"
+  grep -E "^${key}=" "$file" | tail -n1 | cut -d'=' -f2-
+}
+
 # ── Pre-flight check for a single speaker ───────────────────────────
 
 preflight_check_host() {
@@ -129,6 +135,8 @@ deploy_speaker() {
   local target
   target="$(host_target "$host")"
   local env_source
+  local playback_volume
+  local playback_control
 
   if ! env_source="$(resolve_speaker_env "$host")"; then
     err "No speaker environment file found for ${host}."
@@ -153,6 +161,14 @@ deploy_speaker() {
 
   log "Starting SpeechServer on ${target}..."
   ssh "${target}" "cd ${DEPLOY_DIR} && docker compose up -d --force-recreate --remove-orphans"
+
+  playback_volume="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_VOLUME" || true)"
+  playback_control="$(get_env_value "$env_source" "SPEAKER_PLAYBACK_CONTROL" || true)"
+  if [[ -n "$playback_volume" ]]; then
+    playback_control="${playback_control:-Headphone}"
+    log "Applying playback volume on ${target}: ${playback_control}=${playback_volume}"
+    ssh "${target}" "cd ${DEPLOY_DIR} && cid=\$(docker compose ps -q speechserver) && if [[ -n \"\$cid\" ]]; then docker exec \"\$cid\" sh -lc 'amixer sset \"${playback_control}\" \"${playback_volume}\" && amixer sget \"${playback_control}\" | sed -n \"1,6p\"'; fi"
+  fi
 
   ok "Deployment to ${target} complete."
 }
