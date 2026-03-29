@@ -2,6 +2,7 @@
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
+using Sarah.DeviceService.Model.Extensions;
 using System.Threading.Tasks;
 using ZWave;
 using Sarah.DeviceService.WebApi.Extensions;
@@ -21,7 +22,7 @@ namespace Sarah.DeviceService.Model
 
         public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            Node node = deviceService.GetNode(this.NodeID) as Node;
+            Node? node = deviceService.GetZWaveNode(this.NodeID);
 
             if (node != null)
             {

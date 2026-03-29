@@ -3,6 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.Model.Extensions;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Threading;
@@ -46,7 +47,7 @@ namespace Sarah.DeviceService.Model
             {
                 _logger?.LogDebug("Initializing new ZWave Thermo for node " + this.NodeID + " ...");
                 this._deviceService = deviceService;
-                Node n = deviceService.GetNode(this.NodeID) as Node;
+                Node? n = deviceService.GetZWaveNode(this.NodeID);
 
                 if (n != null)
                 {
@@ -105,7 +106,11 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
+                if (n == null)
+                {
+                    return;
+                }
 
                 ThermostatSetpoint temperature = n.GetCommandClass<ThermostatSetpoint>();
                 Battery battery = n.GetCommandClass<Battery>();
@@ -133,7 +138,11 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node node = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? node = this._deviceService.GetZWaveNode(this.NodeID);
+                if (node == null)
+                {
+                    throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
+                }
                 var setpointCmd = node.GetCommandClass<ThermostatSetpoint>();
                 await setpointCmd.Set(ThermostatSetpointType.Heating, temperature);
                 await Task.Delay(5000);
@@ -153,7 +162,11 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node node = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? node = this._deviceService.GetZWaveNode(this.NodeID);
+                if (node == null)
+                {
+                    throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
+                }
                 var basicCmd = node.GetCommandClass<Basic>();
                 await basicCmd.Set(level);
                 this.SetBasicValue(level); //Fibaro meldet Basic nicht per FLIRS zurück

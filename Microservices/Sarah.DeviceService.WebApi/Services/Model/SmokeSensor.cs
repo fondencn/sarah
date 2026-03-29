@@ -5,6 +5,7 @@ using System.Text;
 using ZWave.CommandClasses;
 using ZWave;
 using Sarah.API.Interfaces.Services;
+using Sarah.DeviceService.Model.Extensions;
 using Sarah.DeviceService.WebApi.Extensions;
 
 namespace Sarah.DeviceService.Model
@@ -62,7 +63,7 @@ namespace Sarah.DeviceService.Model
         /// <returns></returns>
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
-            Node node = deviceService.GetNode(this.NodeID) as Node;
+            Node? node = deviceService.GetZWaveNode(this.NodeID);
 
             /* Register for Device events */
             try

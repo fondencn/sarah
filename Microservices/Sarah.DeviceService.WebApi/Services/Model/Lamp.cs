@@ -2,6 +2,7 @@
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
+using Sarah.DeviceService.Model.Extensions;
 using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
@@ -89,7 +90,7 @@ namespace Sarah.DeviceService.Model
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
-            Node? n = deviceService.GetNode(this.NodeID) as Node;
+            Node? n = deviceService.GetZWaveNode(this.NodeID);
             if (n != null)
             {
                 Basic basic = n.GetCommandClass<Basic>();
@@ -129,10 +130,14 @@ namespace Sarah.DeviceService.Model
             {
                 //if (this.Brightness != value)
                 //{
-                Node n = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
+                if (n == null)
+                {
+                    throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
+                }
                 //Basic basic = n.GetCommandClass<Basic>();
                 //await basic.Set(value);
-                SwitchMultiLevel swl = n!.GetCommandClass<SwitchMultiLevel>();
+                SwitchMultiLevel swl = n.GetCommandClass<SwitchMultiLevel>();
                 await swl.Set(value);
                 this.Brightness = value;
                 this.LastChange = DateTime.Now;
@@ -148,7 +153,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
                 if (n != null && this.ColorMode == LampColorModes.RGBWW)
                 {
                     Color c = n.GetCommandClass<Color>();
@@ -185,7 +190,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node n = this._deviceService.GetNode(this.NodeID) as Node;
+                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
                 if (n != null && this.ColorMode == LampColorModes.RGBWW)
                 {
                     Color c = n.GetCommandClass<Color>();
@@ -228,7 +233,7 @@ namespace Sarah.DeviceService.Model
             {
                 try
                 {
-                    Node n = this._deviceService.GetNode(this.NodeID) as Node;
+                    Node? n = this._deviceService.GetZWaveNode(this.NodeID);
                     if (n != null && !String.Equals(this.Color, color, StringComparison.OrdinalIgnoreCase))
                     {
                         {

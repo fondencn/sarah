@@ -5,6 +5,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.Model.Extensions;
 using ZWave;
 using ZWave.Channel.Protocol;
 using ZWave.CommandClasses;
@@ -22,7 +23,7 @@ namespace Sarah.DeviceService.Model
             List<DeviceParameter> parameters = new List<DeviceParameter>();
             try
             {
-                Node? n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetZWaveNode(nodeId);
                 if (n == null)
                     throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();
@@ -58,7 +59,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node? n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetZWaveNode(nodeId);
                 if (n == null)
                     throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();
@@ -81,7 +82,7 @@ namespace Sarah.DeviceService.Model
             DeviceParameter parameter = null!;
             try
             {
-                Node? n = deviceService.GetNode(nodeId) as Node;
+                Node? n = deviceService.GetZWaveNode(nodeId);
                 if (n == null)
                     throw new InvalidOperationException("Node not found or not a valid Node type");
                 Configuration configCmd = n.GetCommandClass<Configuration>();

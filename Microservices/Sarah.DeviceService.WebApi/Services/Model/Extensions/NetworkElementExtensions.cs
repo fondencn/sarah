@@ -61,7 +61,7 @@ namespace Sarah.DeviceService.Model.Extensions
         /// <returns>Task</returns>
         public static async Task RemoveFailedNode(this NetworkElement el, IDeviceService deviceService)
         {
-            Node? n = deviceService.GetNode(el.NodeID) as Node;
+            Node? n = deviceService.GetZWaveNode(el.NodeID);
             if (n != null)
             {
                 await n.RemoveFailedNode();
@@ -76,7 +76,7 @@ namespace Sarah.DeviceService.Model.Extensions
         /// <returns>Task</returns>
         public static async Task<string> UpdateNeighbors(this NetworkElement el, IDeviceService deviceService)
         {
-            Node? n = (Node?)deviceService.GetNode(el.NodeID);
+            Node? n = deviceService.GetZWaveNode(el.NodeID);
             if (n != null)
             {
                 NeighborUpdateStatus res = await n.RequestNeighborUpdate();
@@ -95,7 +95,7 @@ namespace Sarah.DeviceService.Model.Extensions
         /// <returns>Task</returns>
         public static async Task<string> HealNodeNetwork(this NetworkElement el, IDeviceService deviceService)
         {
-            Node n = deviceService.GetNode(el.NodeID) as Node;
+            Node? n = deviceService.GetZWaveNode(el.NodeID);
             if (n != null)
             {
                 HealNetworkStatus res = await n.HealNodeNetwork();
@@ -114,7 +114,7 @@ namespace Sarah.DeviceService.Model.Extensions
         /// <returns>Knotenids der Nachabrknoten </returns>
         public static async Task<byte[]> GetNeighbors(this NetworkElement el, IDeviceService deviceService)
         {
-            Node? n = deviceService.GetNode(el.NodeID) as Node;
+            Node? n = deviceService.GetZWaveNode(el.NodeID);
             if (n != null)
             {
                 Node[] neighbors = await n.GetNeighbours();
