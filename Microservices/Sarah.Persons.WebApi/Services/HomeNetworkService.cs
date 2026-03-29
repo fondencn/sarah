@@ -47,49 +47,105 @@ namespace Sarah.Persons.WebApi.Services
             if (_initializing)
             {
                 return;
-            } 
-            else 
+            }
+            else
             {
                 _initializing = true;
             }
-            
-            if (_initialized)
+
+            try
             {
+                string username = configuration["FritzBox:Username"] ?? "";
+                string password = configuration["FritzBox:Password"] ?? "";
+                string explicitHost = configuration["FritzBox:Host"] ?? "192.168.178.1";
+
+                if (_initialized)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                {
+                    _logger.LogWarning("FritzBox credentials are missing. Host loading may fail.");
+                }
+
+                _logger.LogInformation("Initializing HomeNetworkService. Explicit Fritz host: {FritzHost}", explicitHost);
+
+                var devices = await FritzDevice.LocateDevicesAsync();
+                _logger.LogInformation("Fritz discovery found {DiscoveredDeviceCount} device(s).", devices.Count);
+
+                foreach (var device in devices)
+                {
+                    try
+                    {
+                        device.Credentials = new System.Net.NetworkCredential(username, password);
+                        HostsClient client = device.GetServiceClient<HostsClient>();
+                        _FritzboxHosts.Add(client);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to initialize discovered Fritz device client.");
+                    }
+                }
+
+                if (_FritzboxHosts.Count == 0)
+                {
+                    await TryAddExplicitHostClient(explicitHost, username, password);
+                }
+
+                _logger.LogInformation("HomeNetworkService initialized with {HostClientCount} Fritz host client(s).", _FritzboxHosts.Count);
+
+                CancellationTokenSource cts = new CancellationTokenSource();
+                this.UpdateCancellationTokenSource = cts;
+                this.UpdateTask = Task.Run(async () =>
+                {
+                    while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        await UpdateConnectedHosts();
+                        /* Alle 60 Sekunden */
+                        await Task.Delay(UPDATE_WAIT_TIME, this.UpdateCancellationTokenSource.Token);
+                    }
+                }, cts.Token);
+
+                _initialized = true;
+            }
+            finally
+            {
+                _initializing = false;
+            }
+        }
+
+        private async Task TryAddExplicitHostClient(string explicitHost, string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(explicitHost))
+            {
+                _logger.LogWarning("No explicit Fritz host configured and no devices discovered.");
                 return;
             }
 
-            var devices = await FritzDevice.LocateDevicesAsync();
-            foreach (var device in devices)
+            var candidateBaseUrls = new[]
             {
-                /* Credentials form config */
-                string username = configuration["FritzBox:Username"] ?? "";
-                string password = configuration["FritzBox:Password"] ?? "";
-                device.Credentials = new System.Net.NetworkCredential(username, password);
+                $"https://{explicitHost}:49443",
+                $"http://{explicitHost}:49000"
+            };
 
-                //var client = await device.GetServiceClient<WANCommonInterfaceConfigClient>(settings);
-                //OnlineMonitorInfo monitor = await client.GetOnlineMonitorAsync(0);
-
-
-                HostsClient client = device.GetServiceClient<HostsClient>();
-                _FritzboxHosts.Add(client);
+            foreach (var baseUrl in candidateBaseUrls)
+            {
+                try
+                {
+                    var client = new HostsClient(baseUrl, 10000, username, password);
+                    ushort hostCount = await client.GetHostNumberOfEntriesAsync();
+                    _FritzboxHosts.Add(client);
+                    _logger.LogInformation("Connected to Fritz host using explicit endpoint {BaseUrl}. Host entries: {HostCount}", baseUrl, hostCount);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed connecting to explicit Fritz endpoint {BaseUrl}", baseUrl);
+                }
             }
 
-
-            CancellationTokenSource cts = new CancellationTokenSource();
-            this.UpdateCancellationTokenSource = cts;
-            this.UpdateTask = Task.Run(async () =>
-            {
-                while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    await UpdateConnectedHosts();
-                    /* Alle 60 Sekunden */
-                    await Task.Delay(UPDATE_WAIT_TIME, this.UpdateCancellationTokenSource.Token);
-                }
-            }, cts.Token);
-
-
-            _initialized = true;
-            _initializing = false;
+            _logger.LogError("Could not initialize any Fritz host client. Discovery and explicit endpoint attempts failed.");
         }
 
 
@@ -109,6 +165,7 @@ namespace Sarah.Persons.WebApi.Services
             try
             {
                 List<HomeNetworkHost> devices = await GetConnectedDevices();
+                _logger.LogDebug("Loaded {DeviceCount} home network host entries.", devices.Count);
                 lock (_knownHostsLock)
                 {
                     if (_knownHosts == null)
@@ -144,7 +201,16 @@ namespace Sarah.Persons.WebApi.Services
             List<HostsClient> threadSafeList = [.. _FritzboxHosts];
             foreach (var fritzBox in threadSafeList)
             {
-                ushort numHosts = await fritzBox.GetHostNumberOfEntriesAsync();
+                ushort numHosts;
+                try
+                {
+                    numHosts = await fritzBox.GetHostNumberOfEntriesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch host count from Fritz host client.");
+                    continue;
+                }
 
                 for (ushort i = 0; i < numHosts; i++)
                 {
@@ -153,10 +219,9 @@ namespace Sarah.Persons.WebApi.Services
                         HostEntry entry = await fritzBox.GetGenericHostEntryAsync(i);
                         result.Add(new HomeNetworkHost(entry.HostName, entry.MACAddress, entry.Active, entry.IPAddress?.ToString() ?? ""));
                     }
-                    catch 
+                    catch (Exception ex)
                     {
-                        // in FritzApi 1.2.4 ist hier ein Bug: Der Zugriff bei mehr als 1 Fritzbox für zu Array INdex out of Range
-                        //Logger.Instance.LogException(ex);
+                        _logger.LogDebug(ex, "Failed to read Fritz host entry at index {Index}.", i);
                     }
                 }
             }

@@ -100,12 +100,15 @@ services:
       - DeviceServiceUrl=http://deviceservice:8080
       - FritzBox__Username=${FRITZBOX_USERNAME:-}
       - FritzBox__Password=${FRITZBOX_PASSWORD:-}
+      - FritzBox__Host=${FRITZBOX_HOST:-192.168.178.1}
       - services__deviceservice__http__0=http://deviceservice:8080
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__geofencesservice__http-api__0=http://geofencesservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
+    extra_hosts:
+      - "fritz.box:${FRITZBOX_HOST_IP:-192.168.178.1}"
     ports:
       - "5002:8080"
     depends_on:
