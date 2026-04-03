@@ -104,6 +104,7 @@ services:
       - services__deviceservice__http__0=http://deviceservice:8080
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__geofencesservice__http-api__0=http://geofencesservice:8080
+      - GeoFenceServiceUrl=http://geofencesservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
@@ -172,6 +173,7 @@ services:
       - OpenWeatherMap__ApiKey=${OPENWEATHER_API_KEY:-}
       - WeatherWarnLocation=Ludwigsburg
       - services__deviceservice__http-api__0=http://deviceservice:8080
+      - DeviceServiceUrl=http://deviceservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
@@ -197,6 +199,8 @@ services:
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__personsservice__http-api__0=http://personsservice:8080
+      - DeviceServiceUrl=http://deviceservice:8080
+      - PersonServiceUrl=http://personsservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
