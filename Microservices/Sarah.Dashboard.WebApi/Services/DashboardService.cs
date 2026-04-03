@@ -213,6 +213,8 @@ public class DashboardService : IDashboardService
             KnownDeviceTypes.FibaroHeatController
                 or KnownDeviceTypes.AeotecThermostat
                 or KnownDeviceTypes.ShellyTrv => "Heizung",
+            KnownDeviceTypes.AeotecDoorSensor 
+                or KnownDeviceTypes.FibaroDoorWindowSensor2=> "DoorSensor",
             _ => sourceDevice.TypeName
         };
     }

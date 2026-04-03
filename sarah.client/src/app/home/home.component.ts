@@ -427,4 +427,20 @@ export class DashboardItemViewModel {
     const n = Number(val);
     return Number.isFinite(n) ? n : null;
   }
+
+  get doorIsOpen(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'IsOpen')?.value === 'True';
+  }
+
+  get doorLastOpenDurationMinutes(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'LastOpenDurationMinutes')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get doorLastStateChanged(): string | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'LastStateChanged')?.value;
+    return val && val.trim().length > 0 ? val : null;
+  }
 }
