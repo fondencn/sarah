@@ -100,6 +100,16 @@
                           (temperatureSet)="setThermostatTemperatureValue($event.itemId, $event.temperature)"
                         ></app-thermostat-dial>
                       </ng-container>
+                      <ng-container *ngSwitchCase="'DoorSensor'">
+                        <div class="mt-1">
+                          <span class="badge" [ngClass]="item.doorIsOpen ? 'bg-danger' : 'bg-success'">
+                            {{ item.doorIsOpen ? 'Open' : 'Closed' }}
+                          </span>
+                          <span *ngIf="item.doorIsOpen && item.doorLastOpenDurationMinutes !== null" class="ms-2 small text-white-50">
+                            for {{ item.doorLastOpenDurationMinutes | number:'1.0-1' }} min
+                          </span>
+                        </div>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
                           &nbsp;
@@ -120,6 +130,9 @@
                       </ng-container>
                       <ng-container *ngSwitchCase="'Heizung'">
                         <span style="font-size: 2.5rem;" [title]="item.subType">🌡️</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'DoorSensor'">
+                        <span style="font-size: 2.5rem;" [title]="item.subType">🚪</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">

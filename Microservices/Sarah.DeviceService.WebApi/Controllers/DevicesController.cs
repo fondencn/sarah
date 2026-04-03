@@ -426,6 +426,14 @@ public class DevicesController : ControllerBase
             if (networkItem is IBatterySensor batterySensor && batterySensor.Battery != null)
                 props.Add(new ExtendedPropertyDto { Key = "Battery", Value = batterySensor.Battery.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
         }
+        else if (networkItem is IDoorSensor doorSensor)
+        {
+            props.Add(new ExtendedPropertyDto { Key = "IsOpen", Value = (doorSensor.State == DoorSensorState.Offen).ToString() });
+            if (doorSensor.LastOpenDuration.HasValue)
+                props.Add(new ExtendedPropertyDto { Key = "LastOpenDurationMinutes", Value = doorSensor.LastOpenDuration.Value.TotalMinutes.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) });
+            if (doorSensor.LastStateChanged.HasValue)
+                props.Add(new ExtendedPropertyDto { Key = "LastStateChanged", Value = doorSensor.LastStateChanged.Value.ToString("o") });
+        }
         return props;
     }
 
