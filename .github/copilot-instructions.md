@@ -32,6 +32,33 @@ cd sarah.client && node update-openapi-clients.js --service dashboard
 
 Sarah is a .NET Aspire-orchestrated smart home system. **Sarah.AppHost** is the entry point that starts all infrastructure and services.
 
+## Project Structure (Current)
+
+```text
+Sarah.sln
+Sarah.AppHost/                    # Aspire orchestration root
+Microservices/
+    Sarah.DeviceService.WebApi/     # Device control + network event processing
+    Sarah.Persons.WebApi/           # Person/presence management
+    Sarah.Geofences.WebApi/         # Geofence APIs
+    Sarah.RoomService.WebApi/       # Room CRUD + assignments
+    Sarah.Monitoring.WebApi/        # Weather/system monitoring
+    Sarah.Rules.WebApi/             # Automation engine
+    Sarah.Dashboard.WebApi/         # Dashboard persistence/aggregation
+    Sarah.SpeechServer.WebApi/      # Speech input/output + voice actions
+Libs/
+    Sarah.API/                      # Shared DTOs and interfaces
+    Sarah.Authentication/           # Keycloak auth extensions
+    Sarah.Messaging.RabbitMQ/       # RabbitMQ client + message contracts
+    Sarah.ServiceClients/           # Typed HTTP clients for inter-service calls
+    Sarah.ServiceDefaults/          # Aspire defaults (discovery, OTEL, CORS)
+    Sarah.LEDService/               # LED hardware support
+    Sarah.Voice/                    # Voice abstractions/providers
+sarah.client/                     # Angular frontend
+tests/
+    Sarah.AppHost.Tests/
+```
+
 **Infrastructure** (containers managed by Aspire):
 - **Keycloak** `:8080` – OIDC/OAuth2 identity provider; realm imported from `Sarah.AppHost/sarah-realm-realm.json`
 - **RabbitMQ** – async messaging via topic exchanges
@@ -39,16 +66,29 @@ Sarah is a .NET Aspire-orchestrated smart home system. **Sarah.AppHost** is the 
 
 **Microservices** (all under `Microservices/`):
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Sarah.DeviceService.WebApi | 5001 | Z-Wave & LoRaWAN device control (lamps, sensors, thermostats) |
-| Sarah.Persons.WebApi | 5002 | Person/presence tracking, home network integration |
-| Sarah.Geofences.WebApi | 5003 | Location-based geofence automation |
-| Sarah.RoomService.WebApi | 5004 | Room management, device-to-room assignment |
-| Sarah.Monitoring.WebApi | 5005 | Weather monitoring, system metrics |
-| Sarah.Rules.WebApi | 5006 | Condition-based automation rules, email notifications |
-| Sarah.Dashboard.WebApi | 5007 | Dashboard widget persistence |
-| Sarah.SpeechServer.WebApi | 5008 | Voice recognition & TTS |
+| Service | Port | Purpose | RabbitMQ in code | Direct HTTP client usage in code |
+|---------|------|---------|------------------|----------------------------------|
+| Sarah.DeviceService.WebApi | 5001 | Z-Wave & LoRaWAN device control (lamps, sensors, thermostats) | Yes | No typed outbound inter-service client |
+| Sarah.Persons.WebApi | 5002 | Person/presence tracking, home network integration | No (even though AppHost references RabbitMQ) | Yes: DeviceService, Geofences |
+| Sarah.Geofences.WebApi | 5003 | Location-based geofence automation | No (even though AppHost references RabbitMQ) | No |
+| Sarah.RoomService.WebApi | 5004 | Room management, device-to-room assignment | No | No |
+| Sarah.Monitoring.WebApi | 5005 | Weather monitoring, system metrics | Yes | Yes: DeviceService |
+| Sarah.Rules.WebApi | 5006 | Condition-based automation rules, email notifications | Yes | Yes: DeviceService, Persons |
+| Sarah.Dashboard.WebApi | 5007 | Dashboard widget persistence | No | Yes: DeviceService, Persons |
+| Sarah.SpeechServer.WebApi | 5008 | Voice recognition & TTS | Yes | Yes: DeviceService |
+
+### Inter-service Communication Map
+
+- **RabbitMQ-backed services (active in code):** DeviceService, Monitoring, Rules, SpeechServer
+- **Direct HTTP clients via `Sarah.ServiceClients` (active in code):**
+    - Persons -> DeviceService, Geofences
+    - Monitoring -> DeviceService
+    - Rules -> DeviceService, Persons
+    - Dashboard -> DeviceService, Persons
+    - SpeechServer -> DeviceService
+- **No active RabbitMQ client in code:** Persons, Geofences, RoomService, Dashboard
+
+Note: `Sarah.AppHost/Program.cs` wires RabbitMQ into DeviceService, Geofences, Persons, Monitoring, Rules, and SpeechServer using `.WithReference(rabbitmq)`, but only the services listed above as RabbitMQ-backed currently register/use `RabbitMQClient` in their code.
 
 **Shared Libraries** (all under `Libs/`):
 - **Sarah.ServiceDefaults** – applied to every service via `builder.AddServiceDefaults()` / `app.UseServiceDefaults()`; registers OpenTelemetry, service discovery, and CORS
@@ -71,9 +111,19 @@ Sarah is a .NET Aspire-orchestrated smart home system. **Sarah.AppHost** is the 
 5. Be registered in `Sarah.AppHost/Program.cs` with `.WithReference(keycloak)` and any other dependencies
 
 ### Aspire service discovery
-`WithReference(resource)` in AppHost injects `services__<name>__http__0` (and `https__0`) as environment variables into referencing projects. **Do not hardcode hostnames** like `keycloak:8080` or `rabbitmq` — read from config and let Aspire override it. Fallback chain used in this codebase:
+Service discovery is implemented through Aspire resource references in `Sarah.AppHost/Program.cs`.
+
+- `WithReference(resource)` injects environment variables for referenced services into consumers.
+- For HTTP endpoints, services typically consume:
+    - `services__<name>__http__0`
+    - `services__<name>__http-api__0` (when endpoint name is `http-api`)
+- For infrastructure (Keycloak, RabbitMQ), references also inject connection settings into dependent services.
+
+**Do not hardcode hostnames** like `keycloak:8080` or `rabbitmq` — read from config and let Aspire override it.
+
+Fallback chain used in this codebase for service base URLs:
 ```
-services__<name>__http__0  →  explicit appsettings value  →  docker hostname fallback
+services__<name>__http__0  ->  services__<name>__http-api__0  ->  explicit appsettings value  ->  docker hostname fallback
 ```
 
 ### CORS

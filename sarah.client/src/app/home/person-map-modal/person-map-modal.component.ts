@@ -1,4 +1,5 @@
 import { Component, Input, OnDestroy, ViewChild } from '@angular/core';
+import { Modal } from 'bootstrap';
 import { GeofencesClient } from '../../services/api/geofences-service/api/geofences.service';
 import { DevicesClient } from '../../services/api/device-service/api/api';
 import { PersonsClient } from '../../services/api/persons-service/api/persons.service';
@@ -63,7 +64,7 @@ export class PersonMapModalComponent implements OnDestroy {
     setTimeout(() => {
       const modalEl = document.getElementById('personMapModal');
       if (modalEl) {
-        this.bootstrapModal = new (window as any).bootstrap.Modal(modalEl);
+        this.bootstrapModal = new Modal(modalEl);
         this.bootstrapModal.show();
         modalEl.addEventListener('shown.bs.modal', () => {
           this.mapElement?.invalidateSize();

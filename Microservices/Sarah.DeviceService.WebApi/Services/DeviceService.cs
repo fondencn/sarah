@@ -392,7 +392,11 @@ namespace Sarah.DeviceService
             }
         }
 
-        public INode? GetNode(byte nodeid) => new NodeWrapper(GetNodeInternal(nodeid));
+        public INode? GetNode(byte nodeid)
+        {
+            var node = GetNodeInternal(nodeid);
+            return node == null ? null : new NodeWrapper(node);
+        }
 
         public Task<TrackerDto?> GetGpsTrackerByNodeId(byte nodeId)
         {

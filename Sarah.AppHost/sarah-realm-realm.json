@@ -44,10 +44,18 @@
 	"http://127.0.0.1:4200/*",
 	"http://127.0.0.1:4200",
 	"http://pi:4200",
-	"http://pi:4200/*"
+  "http://pi:4200/*",
+  "http://localhost:8081",
+  "http://localhost:8081/*",
+  "http://127.0.0.1:8081",
+  "http://127.0.0.1:8081/*",
+  "http://pi:8081",
+  "http://pi:8081/*"
       ],
       "webOrigins": [
         "http://localhost:4200",
+        "http://pi:8081",
+        "http://localhost:8081",
         "+"
       ],
       "bearerOnly": false,

@@ -28,12 +28,16 @@ namespace Sarah.Monitoring.Monitors
         private readonly IDeviceService _devices;
         private readonly RabbitMQClient _rabbitMQ;
         private readonly ILogger<AirQualityMonitor> _logger;
+        private readonly IConfiguration _config;
+        private static IConfiguration? _staticConfig;
 
-        public AirQualityMonitor(ApplicationDbContext db, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
+        public AirQualityMonitor(ApplicationDbContext db, IDeviceService devices, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger)
         {
             _db = db;
             _devices = devices;
             _rabbitMQ = rabbitMQ;
+            _config = config;
+            _staticConfig = config;
             _logger = logger;
         }
 
@@ -49,7 +53,7 @@ namespace Sarah.Monitoring.Monitors
         internal static bool IsInSilentTime => false;
 
 #else
-        internal static bool IsInSilentTime => DateTime.Now.IsInSilentTime(_config) || DateTime.Now.Hour < 9 || DateTime.Now.Hour >= 20;
+        internal static bool IsInSilentTime => (_staticConfig != null && DateTime.Now.IsInSilentTime(_staticConfig)) || DateTime.Now.Hour < 9 || DateTime.Now.Hour >= 20;
 
 #endif
 

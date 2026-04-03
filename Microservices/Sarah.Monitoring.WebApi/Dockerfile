@@ -1,24 +1,22 @@
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY ["Microservices/Sarah.Monitoring.WebApi/Sarah.Monitoring.WebApi.csproj", "Microservices/Sarah.Monitoring.WebApi/"]
-COPY ["Services/Sarah.Monitoring/Sarah.Monitoring.csproj", "Services/Sarah.Monitoring/"]
-COPY ["Services/Sarah.API/Sarah.API.csproj", "Services/Sarah.API/"]
-COPY ["Services/Sarah.Logging/Sarah.Logging.csproj", "Services/Sarah.Logging/"]
+COPY ["Libs/Sarah.API/Sarah.API.csproj", "Libs/Sarah.API/"]
+COPY ["Libs/Sarah.Authentication/Sarah.Authentication.csproj", "Libs/Sarah.Authentication/"]
+COPY ["Libs/Sarah.Messaging.RabbitMQ/Sarah.Messaging.RabbitMQ.csproj", "Libs/Sarah.Messaging.RabbitMQ/"]
+COPY ["Libs/Sarah.ServiceClients/Sarah.ServiceClients.csproj", "Libs/Sarah.ServiceClients/"]
+COPY ["Libs/Sarah.ServiceDefaults/Sarah.ServiceDefaults.csproj", "Libs/Sarah.ServiceDefaults/"]
 RUN dotnet restore "Microservices/Sarah.Monitoring.WebApi/Sarah.Monitoring.WebApi.csproj"
 COPY . .
 WORKDIR "/src/Microservices/Sarah.Monitoring.WebApi"
-RUN dotnet build "Sarah.Monitoring.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "Sarah.Monitoring.WebApi.csproj" -c Release -o /app/build
 
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Sarah.Monitoring.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Sarah.Monitoring.WebApi.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app

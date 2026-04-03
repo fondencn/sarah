@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Sarah.DeviceService.Model;
 using Sarah.DeviceService.WebApi.Extensions;
@@ -197,7 +199,7 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         lampMode = _ColorModeMappings[nodeId];
                     }
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, lampMode, _events);
+                    el = new Lamp(nodeId, lampMode, _networkEventPublisher, null);
                 }
                 else if (nodeType == typeof(WifiWallPlug))
                 {
@@ -263,7 +265,7 @@ namespace Sarah.DeviceService.WebApi.Services
                 }
                 else
                 {
-                    el = (NetworkElement?)Activator.CreateInstance(nodeType, nodeId, _networkEventPublisher);
+                    el = CreateWithPublisher(nodeType, nodeId);
                 }
             }
             else
@@ -388,6 +390,60 @@ namespace Sarah.DeviceService.WebApi.Services
             //{
             //    await Task.Delay(500);
             //}
+        }
+
+        private NetworkElement? CreateWithPublisher(Type nodeType, byte nodeId)
+        {
+            foreach (var constructor in nodeType.GetConstructors().OrderBy(ctor => ctor.GetParameters().Length))
+            {
+                var parameters = constructor.GetParameters();
+                if (parameters.Length < 2)
+                {
+                    continue;
+                }
+
+                if (parameters[0].ParameterType != typeof(byte) || parameters[1].ParameterType != typeof(NetworkElementPublisher))
+                {
+                    continue;
+                }
+
+                var arguments = new object?[parameters.Length];
+                arguments[0] = nodeId;
+                arguments[1] = _networkEventPublisher;
+
+                var supported = true;
+                for (var index = 2; index < parameters.Length; index++)
+                {
+                    var parameter = parameters[index];
+                    if (typeof(ILogger).IsAssignableFrom(parameter.ParameterType) ||
+                        parameter.ParameterType == typeof(IDeviceService) ||
+                        !parameter.ParameterType.IsValueType ||
+                        Nullable.GetUnderlyingType(parameter.ParameterType) != null)
+                    {
+                        arguments[index] = null;
+                        continue;
+                    }
+
+                    if (parameter.HasDefaultValue)
+                    {
+                        arguments[index] = parameter.DefaultValue;
+                        continue;
+                    }
+
+                    supported = false;
+                    break;
+                }
+
+                if (!supported)
+                {
+                    continue;
+                }
+
+                return (NetworkElement?)constructor.Invoke(arguments);
+            }
+
+            _logger.LogWarning("No supported constructor found for node type {NodeType} and node {NodeId}", nodeType.Name, nodeId);
+            return null;
         }
     }
 }

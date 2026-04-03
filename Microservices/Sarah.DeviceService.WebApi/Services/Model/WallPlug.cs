@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using Sarah.DeviceService.Model.Extensions;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
 using System.Text;
@@ -188,7 +189,13 @@ public class ZWaveWallPlug : WallPlug
 
             try
             {
-                Node node = (Node)_deviceService.GetNode(this.NodeID)!;
+                Node? node = _deviceService.GetZWaveNode(this.NodeID);
+                if (node == null)
+                {
+                    _logger?.LogWarning("SetState: Node {NodeId} not available", this.NodeID);
+                    return;
+                }
+
                 var switchBin = node.GetCommandClass<SwitchBinary>();
                 await switchBin.Set(newState);
                 _logger?.LogDebug("switchBinReport.Value SET To: " + newState);
@@ -217,7 +224,13 @@ public class ZWaveWallPlug : WallPlug
         {
             try
             {
-                Node node = (Node)_deviceService.GetNode(this.NodeID)!;
+                Node? node = _deviceService.GetZWaveNode(this.NodeID);
+                if (node == null)
+                {
+                    _logger?.LogWarning("UpdateSensorData: Node {NodeId} not available", this.NodeID);
+                    return;
+                }
+
                 var meter = node.GetCommandClass<Meter>();
                 var meterReport = await meter.Get(ElectricMeterScale.kWh);
                 if (meterReport != null)
@@ -317,7 +330,7 @@ public class ZWaveWallPlug : WallPlug
         public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             this._deviceService = deviceService;
-            Node node = (Node)deviceService.GetNode(this.NodeID)!;
+            Node? node = deviceService.GetZWaveNode(this.NodeID);
             _logger?.LogDebug("Initialize Node " + this.NodeID + " as " + this.Name);
 
             if (node != null)

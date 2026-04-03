@@ -1,12 +1,14 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
-EXPOSE 5007
+EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY ["Microservices/Sarah.Dashboard.WebApi/Sarah.Dashboard.WebApi.csproj", "Microservices/Sarah.Dashboard.WebApi/"]
 COPY ["Libs/Sarah.API/Sarah.API.csproj", "Libs/Sarah.API/"]
 COPY ["Libs/Sarah.Authentication/Sarah.Authentication.csproj", "Libs/Sarah.Authentication/"]
+COPY ["Libs/Sarah.ServiceClients/Sarah.ServiceClients.csproj", "Libs/Sarah.ServiceClients/"]
+COPY ["Libs/Sarah.ServiceDefaults/Sarah.ServiceDefaults.csproj", "Libs/Sarah.ServiceDefaults/"]
 RUN dotnet restore "Microservices/Sarah.Dashboard.WebApi/Sarah.Dashboard.WebApi.csproj"
 COPY . .
 WORKDIR "/src/Microservices/Sarah.Dashboard.WebApi"

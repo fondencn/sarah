@@ -1,0 +1,38 @@
+services:
+  speechserver:
+    image: ${REGISTRY:-sarah}/speechserver:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@${PI_HOST:-pi}:5672
+      - services__deviceservice__http-api__0=http://${PI_HOST:-pi}:5001
+      - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - AzureSpeech__Region=${AZURE_SPEECH_REGION:-westeurope}
+      - Speech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - Speech__Region=${AZURE_SPEECH_REGION:-westeurope}
+      - Location=${SPEAKER_LOCATION:-Wohnzimmer}
+      - Speech__RecognitionEnabled=${SPEECH_RECOGNITION_ENABLED:-true}
+    ports:
+      - "5008:8080"
+    restart: unless-stopped
+    # ── Hardware access ──────────────────────────────────────────────
+    # GPIO (LED ring power control via ReSpeakerLEDService)
+    # SPI  (APA102 LED ring on SPI bus 0 CS0)
+    # Sound (aplay playback + Azure Speech SDK microphone input)
+    devices:
+      - /dev/gpiomem:/dev/gpiomem     # Raspberry Pi memory-mapped GPIO (required by System.Device.Gpio)
+      - /dev/gpiochip0:/dev/gpiochip0   # GPIO controller
+      - /dev/spidev0.0:/dev/spidev0.0   # SPI bus 0, chip select 0 (APA102)
+      - /dev/snd:/dev/snd               # ALSA sound devices (playback + capture)
+    group_add:
+      # GIDs must match the host's Raspberry Pi OS groups.
+      # Verify on the speaker host with: getent group audio gpio spi
+      - "${AUDIO_GID:-29}"   # audio
+      - "${GPIO_GID:-997}"   # gpio
+      - "${SPI_GID:-999}"    # spi
+    volumes:
+      # Override ALSA config with numeric card indices (card names need /proc/asound
+      # which is unavailable in containers; numeric hw:N,0 refs work without it).
+      - ./asound.conf:/etc/asound.conf:ro
+    # Uncomment the line below as a last resort if hardware access still fails:
+    # privileged: true

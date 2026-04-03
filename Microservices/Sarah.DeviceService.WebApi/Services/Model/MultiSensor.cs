@@ -3,6 +3,7 @@ using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
+using Sarah.DeviceService.Model.Extensions;
 using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
@@ -217,7 +218,7 @@ namespace Sarah.DeviceService.Model
         public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
         {
             this._deviceService = deviceService;
-            Node node = deviceService.GetNode(this.NodeID) as Node;
+            Node? node = deviceService.GetZWaveNode(this.NodeID);
 
             /* Register for Device events */
             try

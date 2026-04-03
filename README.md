@@ -75,7 +75,10 @@ See **[docs/aspire-setup.md](docs/aspire-setup.md)** for the full setup guide in
 
 - **[Service Reference](docs/services.md)** – Details on every microservice: responsibilities, endpoints, databases, and dependencies
 - **[Aspire Setup Guide](docs/aspire-setup.md)** – Full guide for running Sarah with .NET Aspire
+- **[Deployment Guide](docs/deployment.md)** – Raspberry Pi deployment workflow, current deployed state, and speaker-specific operational notes
 - **[AppHost README](Sarah.AppHost/README.md)** – AppHost configuration reference
+
+For the currently deployed Raspberry Pi setup, including the temporary `speaker3` voice-recognition workaround, start with the `Current Deployed State` section in [docs/deployment.md](docs/deployment.md).
 
 ## Contributing
 

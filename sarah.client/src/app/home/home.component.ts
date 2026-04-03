@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { PersonsClient } from '../services/api/persons-service/api/persons.service';
@@ -24,7 +24,7 @@ import { LoggingService } from '../services/logging.service';
     ])
   ]
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
 
   @ViewChild('personMapModal') personMapModal!: PersonMapModalComponent;
 
@@ -48,6 +48,7 @@ export class HomeComponent implements OnInit {
   ITEM_TYPE_PERSON : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_3;
   
   UPDATE_MILLISECONDS : number = 3000;
+  private updateTimer: any = null;
 
   ngOnInit(): void {
     this.onComponentLoad();
@@ -62,10 +63,17 @@ export class HomeComponent implements OnInit {
   }
 
 
+  ngOnDestroy(): void {
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
+    }
+  }
+
   startDashboardUpdateTimer(): void {
     // Only start the timer if user is logged in
     if (this.isLoggedIn()) {
-      setInterval(() => {
+      this.updateTimer = setInterval(() => {
         this.updateDashboardItems();
       }, this.UPDATE_MILLISECONDS); // Update every 3 seconds
     }
