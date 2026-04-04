@@ -1,4 +1,86 @@
 services:
+  # ─── Observability (OTel stack) ────────────────────────────────────
+  # Start with:  docker compose --profile observability up -d
+  # All Sarah microservices export OTLP to otel-collector when this
+  # profile is active.  Grafana is available at http://pi:3000.
+
+  otel-collector:
+    profiles: [observability]
+    image: otel/opentelemetry-collector-contrib:0.103.0
+    command: ["--config=/etc/otel/config.yml"]
+    volumes:
+      - ./otel/otel-collector-config.yml:/etc/otel/config.yml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC  (microservices → collector)
+      - "4318:4318"   # OTLP HTTP  (microservices → collector)
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  prometheus:
+    profiles: [observability]
+    image: prom/prometheus:v2.52.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    volumes:
+      - ./otel/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  loki:
+    profiles: [observability]
+    image: grafana/loki:3.1.0
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./otel/loki-config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  tempo:
+    profiles: [observability]
+    image: grafana/tempo:2.5.0
+    command: -config.file=/etc/tempo/config.yml
+    volumes:
+      - ./otel/tempo-config.yml:/etc/tempo/config.yml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  grafana:
+    profiles: [observability]
+    image: grafana/grafana:11.0.0
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-CHANGE_ME_grafana}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./otel/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
   # ─── Infrastructure ────────────────────────────────────────────────
 
   keycloak:
@@ -67,6 +149,8 @@ services:
     image: ${REGISTRY:-sarah}/deviceservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=deviceservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=devicesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
@@ -94,6 +178,8 @@ services:
     image: ${REGISTRY:-sarah}/personsservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=personsservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=personsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
@@ -127,6 +213,8 @@ services:
     image: ${REGISTRY:-sarah}/geofencesservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=geofencesservice
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - AllowedOrigins__0=http://${PI_HOST:-pi}
@@ -147,6 +235,8 @@ services:
     image: ${REGISTRY:-sarah}/roomservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=roomservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=roomsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - AllowedOrigins__0=http://${PI_HOST:-pi}
@@ -167,6 +257,8 @@ services:
     image: ${REGISTRY:-sarah}/monitoringservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=monitoringservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
@@ -194,6 +286,8 @@ services:
     image: ${REGISTRY:-sarah}/rulesservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=rulesservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=rulesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
@@ -226,6 +320,8 @@ services:
     image: ${REGISTRY:-sarah}/dashboardservice:${TAG:-latest}
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=dashboardservice
       - ConnectionStrings__PostgresConnection=Host=postgres;Database=dashboarddb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - services__deviceservice__http__0=http://deviceservice:8080
@@ -266,3 +362,7 @@ volumes:
   keycloak-data:
   rabbitmq-data:
   postgres-data:
+  prometheus-data:
+  loki-data:
+  tempo-data:
+  grafana-data:

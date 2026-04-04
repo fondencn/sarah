@@ -1,0 +1,55 @@
+# OpenTelemetry Collector – minimal fan-out config
+# Receives OTLP from all Sarah microservices and fans out to:
+#   Prometheus  (metrics)
+#   Tempo       (traces)
+#   Loki        (logs via OTLP/HTTP)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+  # Drop high-cardinality "http.url" attribute to keep Prometheus label sets small
+  attributes/sanitize:
+    actions:
+      - key: http.url
+        action: delete
+
+exporters:
+  # Expose scraped metrics on :8889 for Prometheus to pull
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: sarah
+
+  # Forward traces to Tempo (OTLP gRPC)
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Forward logs to Loki (OTLP/HTTP – supported by Loki 3.x)
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, attributes/sanitize]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/loki]
