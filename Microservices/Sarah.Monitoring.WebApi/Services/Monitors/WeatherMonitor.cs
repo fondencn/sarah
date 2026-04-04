@@ -287,15 +287,11 @@ namespace Sarah.Monitoring.Monitors
                     str += "instruction: " + entry.instruction + Environment.NewLine;
                     str += "LastWarn: " + entry.LastWarn + Environment.NewLine;
                     _logger.LogInformation("{WarningMessage}", str);
-                    if(entry.@event != null) 
-                    {
-                        await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage(entry.@event));
-                    }
                     CurrentLocalWeatherWarnings.Add(entry);
                 }
 
                 /* check pending warnings */
-                _ = RaisePendingWarnings();
+                await RaisePendingWarnings();
             }
             catch (Exception ex)
             {
