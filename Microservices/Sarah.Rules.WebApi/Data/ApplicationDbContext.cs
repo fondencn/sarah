@@ -10,6 +10,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RuleEntity> Rules { get; set; } = null!;
     public DbSet<AlarmScheduleEntity> AlarmSchedules { get; set; } = null!;
     public DbSet<TemperatureScheduleEntity> TemperatureSchedules { get; set; } = null!;
+    public DbSet<RuleExecutionLogEntity> RuleExecutionLogs { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<TemperatureScheduleEntity>(entity =>
         {
             entity.ToTable("TemperatureSchedules");
+            entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<RuleExecutionLogEntity>(entity =>
+        {
+            entity.ToTable("RuleExecutionLogs");
             entity.HasKey(e => e.Id);
         });
     }
