@@ -1,6 +1,7 @@
 using Sarah.API.Interfaces;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using System.Threading.Channels;
 
 namespace Sarah.SpeechServer;
 
@@ -9,6 +10,8 @@ public class SpeechEventSubscriber : BackgroundService
     private readonly ISpeechService _speechService;
     private readonly RabbitMQClient _rabbitMQClient;
     private readonly ILogger<SpeechEventSubscriber> _logger;
+    private readonly Channel<SayMessage> _sayQueue = Channel.CreateUnbounded<SayMessage>(
+        new UnboundedChannelOptions { SingleReader = true });
 
     public SpeechEventSubscriber(
         ISpeechService speechService, 
@@ -37,8 +40,8 @@ public class SpeechEventSubscriber : BackgroundService
 
             _logger.LogInformation("SpeechEventSubscriber subscribed to speech.say messages");
 
-            // Keep the service running
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+            // Process queued messages sequentially so sounds never play in parallel
+            await ProcessQueueAsync(stoppingToken);
         }
         catch (OperationCanceledException)
         {
@@ -51,26 +54,34 @@ public class SpeechEventSubscriber : BackgroundService
         }
     }
 
-    private async Task HandleSayMessage(SayMessage message)
+    private async Task ProcessQueueAsync(CancellationToken stoppingToken)
     {
-        try
+        await foreach (SayMessage message in _sayQueue.Reader.ReadAllAsync(stoppingToken))
         {
-            _logger.LogInformation("Received say message: {Message} for speaker: {Speaker}", 
-                message.Message, 
-                string.IsNullOrEmpty(message.TargetSpeaker) ? "all" : message.TargetSpeaker);
-
-            _speechService.SayWithVolume(message.Message, (Sarah.API.BusinessObjects.SpeechVolume)message.Volume);
+            try
+            {
+                _speechService.SayWithVolume(message.Message, (Sarah.API.BusinessObjects.SpeechVolume)message.Volume);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing queued say message");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error handling say message");
-        }
+    }
 
-        await Task.CompletedTask;
+    private Task HandleSayMessage(SayMessage message)
+    {
+        _logger.LogInformation("Received say message: {Message} for speaker: {Speaker}", 
+            message.Message, 
+            string.IsNullOrEmpty(message.TargetSpeaker) ? "all" : message.TargetSpeaker);
+
+        _sayQueue.Writer.TryWrite(message);
+        return Task.CompletedTask;
     }
 
     public override void Dispose()
     {
+        _sayQueue.Writer.TryComplete();
         _rabbitMQClient?.Dispose();
         base.Dispose();
     }
