@@ -1,0 +1,87 @@
+<div class="rule-monitor mt-4">
+  <h3>🔧 Regelübersicht</h3>
+
+  <div class="d-flex justify-content-end mb-2">
+    <button class="btn btn-sm btn-outline-secondary" (click)="loadRules(); loadExecutionLog()">
+      🔄 Aktualisieren
+    </button>
+  </div>
+
+  <!-- Rules Table -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <strong>Regeln</strong>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="loadingRules" class="text-center p-3">
+        <span class="spinner-border spinner-border-sm" role="status"></span> Lade Regeln...
+      </div>
+      <div *ngIf="!loadingRules && rules.length === 0" class="text-center p-3 text-muted">
+        Keine Regeln vorhanden.
+      </div>
+      <table *ngIf="!loadingRules && rules.length > 0" class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Bedingung</th>
+            <th>Aktion</th>
+            <th>Zuletzt ausgelöst</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rule of rules">
+            <td>{{ rule.name }}</td>
+            <td>
+              <span class="badge" [ngClass]="rule.hasCondition ? 'bg-success' : 'bg-secondary'">
+                {{ rule.hasCondition ? '✓' : '–' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="rule.hasAction ? 'bg-success' : 'bg-secondary'">
+                {{ rule.hasAction ? '✓' : '–' }}
+              </span>
+            </td>
+            <td>{{ rule.lastOccurence ? (rule.lastOccurence | date:'dd.MM.yyyy HH:mm') : '–' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Execution Log Table -->
+  <div class="card">
+    <div class="card-header">
+      <strong>Ausführungsprotokoll</strong>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="loadingLog" class="text-center p-3">
+        <span class="spinner-border spinner-border-sm" role="status"></span> Lade Protokoll...
+      </div>
+      <div *ngIf="!loadingLog && executionLog.length === 0" class="text-center p-3 text-muted">
+        Noch keine Ausführungen protokolliert.
+      </div>
+      <table *ngIf="!loadingLog && executionLog.length > 0" class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Zeitpunkt</th>
+            <th>Regel</th>
+            <th>Ergebnis</th>
+            <th>Fehler</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of executionLog">
+            <td>{{ entry.triggeredAt | date:'dd.MM.yyyy HH:mm:ss' }}</td>
+            <td>{{ entry.ruleName }}</td>
+            <td>
+              <span class="badge" [ngClass]="entry.success ? 'bg-success' : 'bg-danger'">
+                {{ entry.success ? '✓ Erfolg' : '✗ Fehler' }}
+              </span>
+            </td>
+            <td class="text-danger small">{{ entry.errorMessage }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
