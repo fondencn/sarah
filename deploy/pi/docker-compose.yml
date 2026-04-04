@@ -17,18 +17,20 @@ services:
       - sarah-network
     restart: unless-stopped
 
-  prometheus:
+  victoriametrics:
     profiles: [observability]
-    image: prom/prometheus:v2.52.0
+    # VictoriaMetrics single-node: ~40-60 MB RAM vs ~100-150 MB for Prometheus,
+    # 10x better disk compression, identical PromQL API — well-suited for Pi.
+    image: victoriametrics/victoria-metrics:v1.101.0
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=7d"
+      - "--promscrape.config=/etc/vm/scrape.yml"
+      - "--retentionPeriod=7d"
+      - "--storageDataPath=/victoria-metrics-data"
     volumes:
-      - ./otel/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
+      - ./otel/victoria-metrics-scrape.yml:/etc/vm/scrape.yml:ro
+      - victoriametrics-data:/victoria-metrics-data
     ports:
-      - "9090:9090"
+      - "8428:8428"
     depends_on:
       - otel-collector
     networks:
@@ -74,7 +76,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - prometheus
+      - victoriametrics
       - loki
       - tempo
     networks:
@@ -362,7 +364,7 @@ volumes:
   keycloak-data:
   rabbitmq-data:
   postgres-data:
-  prometheus-data:
+  victoriametrics-data:
   loki-data:
   tempo-data:
   grafana-data:
