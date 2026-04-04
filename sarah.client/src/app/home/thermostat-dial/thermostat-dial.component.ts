@@ -1,11 +1,13 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-thermostat-dial',
   templateUrl: './thermostat-dial.component.html',
   styleUrls: ['./thermostat-dial.component.css']
 })
-export class ThermostatDialComponent implements OnChanges {
+export class ThermostatDialComponent implements OnChanges, OnInit, OnDestroy {
   @Input() itemId: number | undefined;
   @Input() temperature: number | null = null;
   @Input() setpoint: number | null = null;
@@ -19,17 +21,33 @@ export class ThermostatDialComponent implements OnChanges {
 
   editableSetpoint = 20;
 
+  private readonly setpointSubject = new Subject<{ itemId: number; temperature: number }>();
+  private readonly destroy$ = new Subject<void>();
+
+  readonly debounceMs = 500;
+
   readonly cx = 110;
   readonly cy = 110;
   readonly radius = 82;
   readonly arcStartDeg = 135;
   readonly arcSweepDeg = 270;
 
+  ngOnInit(): void {
+    this.setpointSubject
+      .pipe(debounceTime(this.debounceMs), takeUntil(this.destroy$))
+      .subscribe(event => this.temperatureSet.emit(event));
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['setpoint']) {
       const incoming = this.setpoint ?? this.editableSetpoint;
       this.editableSetpoint = this.clampAndRound(incoming);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get displayTemperature(): number {
@@ -84,7 +102,7 @@ export class ThermostatDialComponent implements OnChanges {
   }
 
   applySetpoint(): void {
-    this.emitTemperatureSet();
+    this.flushSetpoint();
   }
 
   private emitTemperatureSet(): void {
@@ -92,10 +110,15 @@ export class ThermostatDialComponent implements OnChanges {
       return;
     }
 
-    this.temperatureSet.emit({
-      itemId: this.itemId,
-      temperature: this.editableSetpoint
-    });
+    this.setpointSubject.next({ itemId: this.itemId, temperature: this.editableSetpoint });
+  }
+
+  private flushSetpoint(): void {
+    if (this.itemId === undefined) {
+      return;
+    }
+
+    this.temperatureSet.emit({ itemId: this.itemId, temperature: this.editableSetpoint });
   }
 
   private clampAndRound(value: number): number {
