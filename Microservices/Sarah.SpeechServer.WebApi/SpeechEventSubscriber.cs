@@ -7,11 +7,17 @@ namespace Sarah.SpeechServer;
 
 public class SpeechEventSubscriber : BackgroundService
 {
+    private const int QueueCapacity = 50;
+
     private readonly ISpeechService _speechService;
     private readonly RabbitMQClient _rabbitMQClient;
     private readonly ILogger<SpeechEventSubscriber> _logger;
-    private readonly Channel<SayMessage> _sayQueue = Channel.CreateUnbounded<SayMessage>(
-        new UnboundedChannelOptions { SingleReader = true });
+    private readonly Channel<SayMessage> _sayQueue = Channel.CreateBounded<SayMessage>(
+        new BoundedChannelOptions(QueueCapacity)
+        {
+            FullMode = BoundedChannelFullMode.DropWrite,
+            SingleReader = true
+        });
 
     public SpeechEventSubscriber(
         ISpeechService speechService, 
@@ -60,7 +66,7 @@ public class SpeechEventSubscriber : BackgroundService
         {
             try
             {
-                _speechService.SayWithVolume(message.Message, (Sarah.API.BusinessObjects.SpeechVolume)message.Volume);
+                _speechService.SayWithVolume(message.Message, MapVolume(message.Volume));
             }
             catch (Exception ex)
             {
@@ -69,13 +75,27 @@ public class SpeechEventSubscriber : BackgroundService
         }
     }
 
+    private static Sarah.API.BusinessObjects.SpeechVolume MapVolume(Sarah.Messaging.RabbitMQ.Messages.SpeechVolume volume) =>
+        volume switch
+        {
+            Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.Silent   => Sarah.API.BusinessObjects.SpeechVolume.Quieter,
+            Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.Quiet    => Sarah.API.BusinessObjects.SpeechVolume.Quieter,
+            Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.Normal   => Sarah.API.BusinessObjects.SpeechVolume.Normal,
+            Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.Loud     => Sarah.API.BusinessObjects.SpeechVolume.Louder,
+            Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud => Sarah.API.BusinessObjects.SpeechVolume.VeryLoud,
+            _                                                         => Sarah.API.BusinessObjects.SpeechVolume.Normal
+        };
+
     private Task HandleSayMessage(SayMessage message)
     {
         _logger.LogInformation("Received say message: {Message} for speaker: {Speaker}", 
             message.Message, 
             string.IsNullOrEmpty(message.TargetSpeaker) ? "all" : message.TargetSpeaker);
 
-        _sayQueue.Writer.TryWrite(message);
+        if (!_sayQueue.Writer.TryWrite(message))
+        {
+            _logger.LogWarning("Speech queue is full (capacity {Capacity}); dropping message: {Message}", QueueCapacity, message.Message);
+        }
         return Task.CompletedTask;
     }
 
