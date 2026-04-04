@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { RuleMonitorService, RuleOverviewDto, RuleExecutionLogDto } from '../../services/rule-monitor.service';
+import { RulesClient } from '../../services/api/rules-service/api/rules.service';
+import { RuleOverviewDtoModel } from '../../services/api/rules-service/model/ruleOverviewDto';
+import { RuleExecutionLogDtoModel } from '../../services/api/rules-service/model/ruleExecutionLogDto';
 import { LoggingService } from '../../services/logging.service';
 
 @Component({
@@ -8,13 +10,13 @@ import { LoggingService } from '../../services/logging.service';
   styleUrl: './rule-monitor.component.css'
 })
 export class RuleMonitorComponent implements OnInit {
-  rules: RuleOverviewDto[] = [];
-  executionLog: RuleExecutionLogDto[] = [];
+  rules: RuleOverviewDtoModel[] = [];
+  executionLog: RuleExecutionLogDtoModel[] = [];
   loadingRules = false;
   loadingLog = false;
 
   constructor(
-    private ruleMonitorService: RuleMonitorService,
+    private rulesClient: RulesClient,
     private logger: LoggingService
   ) {}
 
@@ -25,7 +27,7 @@ export class RuleMonitorComponent implements OnInit {
 
   loadRules(): void {
     this.loadingRules = true;
-    this.ruleMonitorService.getRules().subscribe({
+    this.rulesClient.apiRulesGet().subscribe({
       next: (rules) => {
         this.rules = rules;
         this.loadingRules = false;
@@ -39,7 +41,7 @@ export class RuleMonitorComponent implements OnInit {
 
   loadExecutionLog(): void {
     this.loadingLog = true;
-    this.ruleMonitorService.getRuleExecutionLog().subscribe({
+    this.rulesClient.apiRulesLogGet(100).subscribe({
       next: (log) => {
         this.executionLog = log;
         this.loadingLog = false;

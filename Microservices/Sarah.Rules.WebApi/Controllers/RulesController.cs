@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Rules.Services;
@@ -54,28 +55,23 @@ public class RulesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all rules with their overview information
+    /// Gets all rules with their overview information (runtime rules from registered rule stores)
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<RuleOverviewDto>>> GetRules()
+    public ActionResult<IEnumerable<RuleOverviewDto>> GetRules()
     {
         try
         {
-            var rules = await _db.Rules
-                .OrderBy(r => r.Priority)
-                .ThenBy(r => r.Name)
+            var rules = _ruleService.Rules
+                .OrderBy(r => r.Name)
                 .Select(r => new RuleOverviewDto
                 {
-                    Id = r.Id,
                     Name = r.Name,
-                    IsActive = r.IsActive,
-                    Priority = r.Priority,
-                    Condition = r.Condition,
-                    Action = r.Action,
-                    CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt
+                    LastOccurence = r.LastOccurence,
+                    HasCondition = r.Condition != null,
+                    HasAction = r.Action != null
                 })
-                .ToListAsync();
+                .ToList();
 
             return Ok(rules);
         }
