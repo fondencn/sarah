@@ -44,7 +44,16 @@ deploy/
 ├── pi/
 │   ├── docker-compose.yml     # Main host compose definition
 │   ├── init-databases.sh      # PostgreSQL multi-database init script
-│   └── .env.example           # Environment template
+│   ├── .env.example           # Environment template
+│   └── otel/                  # Observability stack configs (optional profile)
+│       ├── otel-collector-config.yml
+│       ├── prometheus.yml
+│       ├── loki-config.yml
+│       ├── tempo-config.yml
+│       └── grafana/
+│           └── provisioning/
+│               └── datasources/
+│                   └── datasources.yml
 └── speaker/
     ├── asound.conf            # ALSA config for containerized speaker access
     ├── docker-compose.yml     # Speaker satellite compose definition
@@ -231,6 +240,8 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `ZWAVE_SERIAL_PORT` | Z-Wave USB device path |
 | `OPENWEATHER_API_KEY` | OpenWeatherMap API key used by MonitoringService |
 | `PI_HOST` | Hostname for CORS origins |
+| `GRAFANA_ADMIN_USER` | Grafana admin username (default: `admin`) |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password (required when observability profile is active) |
 
 ### Runtime (speaker/.env)
 
@@ -263,6 +274,84 @@ After deployment, these services are accessible:
 | DashboardService | pi | `http://pi:5007` |
 | SpeechServer | speaker1 | `http://speaker1:5008` |
 | SpeechServer | speaker3 | `http://speaker3:5008` |
+| Grafana *(observability profile)* | pi | `http://pi:3000` |
+| VictoriaMetrics *(observability profile)* | pi | `http://pi:8428` |
+
+## Observability Stack (OpenTelemetry)
+
+The `pi` compose file contains a lightweight, opt-in observability stack built on the standard OTel + Grafana OSS toolchain. It is gated behind the `observability` Docker Compose profile so it does not consume Pi RAM unless you deliberately turn it on.
+
+**Why this stack?** For a setup that must cover all three signals (logs, metrics, traces) with a unified UI, the 5-container arrangement is the lightest credible option on ARM64. All-in-one solutions like SigNoz or Uptrace require ClickHouse, which is far heavier on a Pi. Replacing **Prometheus with VictoriaMetrics** is the one meaningful optimisation available: it saves ~90 MB RAM and provides 10× better disk compression while remaining 100% PromQL/API-compatible with Grafana.
+
+### Stack components
+
+| Container | Image | Purpose | Port |
+|-----------|-------|---------|------|
+| `otel-collector` | `otel/opentelemetry-collector-contrib:0.103.0` | OTLP receiver; fans out to VictoriaMetrics / Tempo / Loki | 4317 (gRPC), 4318 (HTTP) |
+| `victoriametrics` | `victoriametrics/victoria-metrics:v1.101.0` | Metrics store (7-day retention) – ~40–60 MB RAM | 8428 |
+| `loki` | `grafana/loki:3.1.0` | Log store (7-day retention) | 3100 |
+| `tempo` | `grafana/tempo:2.5.0` | Distributed trace store (48-hour retention) | 3200 |
+| `grafana` | `grafana/grafana:11.0.0` | Unified visualisation UI | 3000 |
+
+All images carry ARM64 manifests and are validated for `linux/arm64` (Pi 4 / Pi 5).
+
+Approximate extra RAM when the profile is active: **250–400 MB**. This is comfortable on a Pi 4 with 4 GB RAM alongside the main stack.
+
+### How signals flow
+
+```
+Sarah microservices
+  └─ OTLP gRPC → otel-collector:4317
+                    ├─ metrics → victoriametrics:8428  (scraped on :8889)
+                    ├─ traces  → tempo:4317
+                    └─ logs    → loki:3100/otlp
+                                     ↓
+                              grafana:3000  (VictoriaMetrics + Tempo + Loki datasources auto-provisioned)
+```
+
+Every microservice has `OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317` and a `OTEL_SERVICE_NAME` set. When the collector is not running the services export silently fail and the main stack continues unaffected.
+
+### Enabling the observability stack
+
+```bash
+# First deploy (or after adding GRAFANA_ADMIN_PASSWORD to pi/.env):
+ssh pi 'cd /opt/sarah && docker compose --profile observability up -d'
+```
+
+Or to start everything together from scratch:
+
+```bash
+ssh pi 'cd /opt/sarah && docker compose --profile observability up -d --remove-orphans'
+```
+
+Grafana will be available at **`http://pi:3000`** with the admin credentials set in `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` from `pi/.env`.
+
+The three datasources (VictoriaMetrics, Loki, Tempo) are provisioned automatically on first start. No manual datasource setup is needed.
+
+### Stopping the observability stack
+
+```bash
+ssh pi 'cd /opt/sarah && docker compose --profile observability stop otel-collector victoriametrics loki tempo grafana'
+```
+
+Data volumes (`victoriametrics-data`, `loki-data`, `tempo-data`, `grafana-data`) are preserved. Drop them explicitly with `docker volume rm` if you want a clean slate.
+
+### Trace ↔ Log correlation
+
+The Grafana datasources are pre-wired for cross-signal navigation:
+- **Trace → Logs**: clicking a span in Tempo jumps to the matching Loki log stream for that service and time window.
+- **Log → Trace**: log lines that contain a `"TraceId"` JSON field (emitted by .NET structured logging with OTEL) show a link to the matching Tempo trace.
+- **Service map**: Tempo's service-map feature uses VictoriaMetrics as the metrics backend to render a live dependency graph of all Sarah microservices.
+
+### Retention
+
+| Signal | Retention |
+|--------|-----------|
+| Metrics (VictoriaMetrics) | 7 days |
+| Logs (Loki) | 7 days |
+| Traces (Tempo) | 48 hours |
+
+Adjust by editing the config files under `deploy/pi/otel/` and restarting the affected container.
 
 ## Updating
 

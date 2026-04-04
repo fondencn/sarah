@@ -1,0 +1,36 @@
+apiVersion: 1
+
+datasources:
+  - name: VictoriaMetrics
+    type: prometheus      # VictoriaMetrics exposes a Prometheus-compatible API
+    uid: victoriametrics
+    url: http://victoriametrics:8428
+    isDefault: true
+    editable: true
+
+  - name: Loki
+    type: loki
+    uid: loki
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      # Link log lines that contain a traceID back to Tempo
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"TraceId"\s*:\s*"([a-f0-9]{32})"'
+          name: TraceID
+          url: "$${__value.raw}"
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    url: http://tempo:3200
+    editable: true
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        customQuery: false
+      serviceMap:
+        datasourceUid: victoriametrics
+      nodeGraph:
+        enabled: true
