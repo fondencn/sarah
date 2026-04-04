@@ -1,9 +1,9 @@
 apiVersion: 1
 
 datasources:
-  - name: Prometheus
-    type: prometheus
-    uid: prometheus
+  - name: VictoriaMetrics
+    type: prometheus      # VictoriaMetrics exposes a Prometheus-compatible API
+    uid: victoriametrics
     url: http://victoriametrics:8428
     isDefault: true
     editable: true
@@ -31,6 +31,6 @@ datasources:
         datasourceUid: loki
         customQuery: false
       serviceMap:
-        datasourceUid: prometheus
+        datasourceUid: victoriametrics
       nodeGraph:
         enabled: true
