@@ -8,6 +8,10 @@ using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using Sarah.Rules.WebApi.Data;
+using Sarah.Rules.WebApi.Data.Entities;
 
 namespace Sarah.Rules
 {
@@ -17,6 +21,7 @@ namespace Sarah.Rules
     public sealed class RuleService : BackgroundService, IRuleService, INetworkEventSubscriber, IDisposable
     {
         private readonly RabbitMQClient _rabbitMQ;
+        private readonly IServiceScopeFactory _scopeFactory;
 
 
 
@@ -42,10 +47,11 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory) 
         { 
             this._rabbitMQ = rabbitMQ;
             this._logger = logger;
+            this._scopeFactory = scopeFactory;
             this.Timers = new TimerEngine(rabbitMQ, logger);
         }
 
@@ -277,6 +283,7 @@ namespace Sarah.Rules
                                 AddLog("Regel " + rule.Name + " aktiviert");
                                 rule.Action.Execute(e);
                                 rule.LastOccurence = DateTime.Now;
+                                WriteExecutionLog(rule.Name, true, null, e.GetType().Name);
                             }
                         }
                     }
@@ -284,9 +291,48 @@ namespace Sarah.Rules
                     {
                         _logger.LogDebug("RuleEngine: Error while evaluating rule {RuleName}: {ErrorMessage}", rule.Name, ex.Message);
                         _logger.LogDebug("StackTrace: {StackTrace}", ex.StackTrace);
+                        WriteExecutionLog(rule.Name ?? string.Empty, false, ex.Message, e.GetType().Name);
                     }
                 }
             }
+        }
+
+        private void WriteExecutionLog(string ruleName, bool success, string? errorMessage, string? triggerEventType)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                    db.RuleExecutionLogs.Add(new RuleExecutionLogEntity
+                    {
+                        RuleName = ruleName,
+                        ExecutedAt = DateTime.UtcNow,
+                        Success = success,
+                        ErrorMessage = errorMessage,
+                        TriggerEventType = triggerEventType
+                    });
+                    await db.SaveChangesAsync();
+
+                    // Trim to max 1000 entries (keep newest)
+                    var count = await db.RuleExecutionLogs.CountAsync();
+                    if (count > 1000)
+                    {
+                        var toDelete = await db.RuleExecutionLogs
+                            .OrderBy(l => l.ExecutedAt)
+                            .Take(count - 1000)
+                            .ToListAsync();
+                        db.RuleExecutionLogs.RemoveRange(toDelete);
+                        await db.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to write rule execution log for rule {RuleName}", ruleName);
+                }
+            });
         }
 
         private void AddLog(string msg)

@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Rules.Services;
 using Sarah.Rules.Data.Entities;
+using Sarah.Rules.WebApi.Data;
 
 namespace Sarah.Rules.WebApi.Controllers;
 
@@ -16,14 +18,17 @@ public class RulesController : ControllerBase
     private readonly AlarmScheduleService _alarmService;
     private readonly TemperatureScheduleService _temperatureService;
     private readonly ILogger<RulesController> _logger;
+    private readonly ApplicationDbContext _db;
 
     public RulesController(IRuleService ruleService, AlarmScheduleService alarmService, 
-        TemperatureScheduleService temperatureService, ILogger<RulesController> logger)
+        TemperatureScheduleService temperatureService, ILogger<RulesController> logger,
+        ApplicationDbContext db)
     {
         _ruleService = ruleService;
         _alarmService = alarmService;
         _temperatureService = temperatureService;
         _logger = logger;
+        _db = db;
     }
 
     [HttpGet("status")]
@@ -44,6 +49,88 @@ public class RulesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting rules status");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Gets all registered rules with last execution info
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<RuleOverviewDto>>> GetRules()
+    {
+        try
+        {
+            var ruleService = _ruleService as Sarah.Rules.RuleService;
+            var rules = ruleService?.Rules ?? Enumerable.Empty<Sarah.API.BusinessObjects.Rule>();
+
+            // Load the most recent log entry per rule name in one query
+            var lastLogs = await _db.RuleExecutionLogs
+                .GroupBy(l => l.RuleName)
+                .Select(g => g.OrderByDescending(l => l.ExecutedAt).First())
+                .ToListAsync();
+
+            var lastLogByName = lastLogs.ToDictionary(l => l.RuleName, l => l);
+
+            var result = rules.Select(rule =>
+            {
+                lastLogByName.TryGetValue(rule.Name ?? string.Empty, out var lastLog);
+                return new RuleOverviewDto
+                {
+                    Name = rule.Name ?? string.Empty,
+                    Condition = rule.Condition?.GetType().Name,
+                    Action = rule.Action?.GetType().Name,
+                    IsActive = true,
+                    Priority = 0,
+                    LastExecution = lastLog?.ExecutedAt,
+                    LastSuccess = lastLog?.Success
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting rules overview");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Gets the rule execution log, descending by time
+    /// </summary>
+    [HttpGet("log")]
+    public async Task<ActionResult<IEnumerable<RuleExecutionLogDto>>> GetLog(
+        [FromQuery] int limit = 100,
+        [FromQuery] bool errorsOnly = false)
+    {
+        try
+        {
+            limit = Math.Clamp(limit, 1, 1000);
+
+            var query = _db.RuleExecutionLogs.AsQueryable();
+            if (errorsOnly)
+                query = query.Where(l => !l.Success);
+
+            var logs = await query
+                .OrderByDescending(l => l.ExecutedAt)
+                .Take(limit)
+                .Select(l => new RuleExecutionLogDto
+                {
+                    Id = l.Id,
+                    RuleName = l.RuleName,
+                    ExecutedAt = l.ExecutedAt,
+                    Success = l.Success,
+                    ErrorMessage = l.ErrorMessage,
+                    TriggerEventType = l.TriggerEventType
+                })
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting rule execution log");
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
