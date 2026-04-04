@@ -47,7 +47,7 @@ deploy/
 │   ├── .env.example           # Environment template
 │   └── otel/                  # Observability stack configs (optional profile)
 │       ├── otel-collector-config.yml
-│       ├── prometheus.yml
+│       ├── victoria-metrics-scrape.yml
 │       ├── loki-config.yml
 │       ├── tempo-config.yml
 │       └── grafana/

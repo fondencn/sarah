@@ -68,6 +68,7 @@ echo ""
 echo "  Frontend:    http://${PI_HOST}:8081"
 echo "  Keycloak:    http://${PI_HOST}:8080"
 echo "  RabbitMQ:    http://${PI_HOST}:15672"
+echo "  Grafana:     http://${PI_HOST}:3000"
 echo ""
 echo "  SpeechServer endpoints:"
 for speaker in $SPEAKERS; do
