@@ -94,6 +94,9 @@ public class RulesController : ControllerBase
     {
         try
         {
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { message = "limit muss zwischen 1 und 1000 liegen" });
+
             var logs = await _db.RuleExecutionLogs
                 .OrderByDescending(l => l.TriggeredAt)
                 .Take(limit)
