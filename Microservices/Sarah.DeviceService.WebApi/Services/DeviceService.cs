@@ -23,6 +23,7 @@ namespace Sarah.DeviceService
         private readonly ILogger<DeviceService> _logger;
         private readonly NetworkElementPublisher _publisher;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IHostApplicationLifetime _applicationLifetime;
         private Task? UpdateTask { get; set; }
         private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
 
@@ -30,13 +31,14 @@ namespace Sarah.DeviceService
         /// <summary>
         /// ctor creates and starts the ZWAve service component
         /// </summary>  
-        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger, IServiceScopeFactory serviceScopeFactory)
+        public DeviceService(INodeFactory nodeFactory, IConfiguration config, NetworkElementPublisher publisher, ILogger<DeviceService> logger, IServiceScopeFactory serviceScopeFactory, IHostApplicationLifetime applicationLifetime)
         {
             this._configuration = config;
             this._nodeFactory = nodeFactory;
             this._publisher = publisher;
             this._logger = logger;
             this._serviceScopeFactory = serviceScopeFactory;
+            this._applicationLifetime = applicationLifetime;
         }
 
 
@@ -521,7 +523,10 @@ namespace Sarah.DeviceService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error starting DeviceService background service.");
+                _logger.LogCritical(ex, "Error starting DeviceService background service. The application will terminate to trigger a container restart.");
+                Environment.ExitCode = 1;
+                _applicationLifetime.StopApplication();
+                return;
             }
 
             // Keep the service running
