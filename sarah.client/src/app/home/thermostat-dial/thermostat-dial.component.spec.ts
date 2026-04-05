@@ -87,4 +87,32 @@ describe('ThermostatDialComponent', () => {
     expect(emitted.length).toBe(1);
     expect(emitted[0].temperature).toBe(21);
   }));
+
+  describe('dialColor', () => {
+    it('returns blue at minimum temperature', () => {
+      component.editableSetpoint = component.minTemperature;
+      expect(component.dialColor).toBe('rgb(31, 77, 255)');
+    });
+
+    it('returns red at maximum temperature', () => {
+      component.editableSetpoint = component.maxTemperature;
+      expect(component.dialColor).toBe('rgb(255, 47, 47)');
+    });
+
+    it('returns an intermediate color at midpoint temperature', () => {
+      component.editableSetpoint = (component.minTemperature + component.maxTemperature) / 2;
+      // At t=0.5: r=143, g=62, b=151
+      expect(component.dialColor).toBe('rgb(143, 62, 151)');
+    });
+
+    it('clamps to blue below minimum', () => {
+      component.editableSetpoint = component.minTemperature - 10;
+      expect(component.dialColor).toBe('rgb(31, 77, 255)');
+    });
+
+    it('clamps to red above maximum', () => {
+      component.editableSetpoint = component.maxTemperature + 10;
+      expect(component.dialColor).toBe('rgb(255, 47, 47)');
+    });
+  });
 });

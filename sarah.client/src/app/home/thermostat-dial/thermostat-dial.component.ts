@@ -58,6 +58,15 @@ export class ThermostatDialComponent implements OnChanges, OnInit, OnDestroy {
     return (this.editableSetpoint - this.minTemperature) / (this.maxTemperature - this.minTemperature);
   }
 
+  /** Interpolates from blue (#1f4dff) at min to red (#ff2f2f) at max temperature. */
+  get dialColor(): string {
+    const t = Math.min(1, Math.max(0, this.normalizedValue));
+    const r = Math.round(31  + (255 - 31)  * t);
+    const g = Math.round(77  + (47  - 77)  * t);
+    const b = Math.round(255 + (47  - 255) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
   get circumference(): number {
     return 2 * Math.PI * this.radius;
   }

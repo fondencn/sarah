@@ -28,7 +28,7 @@
 }
 
 .dial-progress {
-  stroke: url(#thermoArcGradient);
+  /* color is bound dynamically via [attr.stroke]="dialColor" in the template */
 }
 
 .dial-center {

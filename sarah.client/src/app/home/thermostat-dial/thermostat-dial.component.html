@@ -1,12 +1,6 @@
 <div class="thermostat-widget">
   <div class="dial-wrap">
     <svg class="dial-svg" viewBox="0 0 220 220" aria-hidden="true">
-      <defs>
-        <linearGradient id="thermoArcGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#1f4dff"></stop>
-          <stop offset="100%" stop-color="#ff2f2f"></stop>
-        </linearGradient>
-      </defs>
 
       <circle
         class="dial-track"
@@ -22,6 +16,7 @@
         [attr.cx]="cx"
         [attr.cy]="cy"
         [attr.r]="radius"
+        [attr.stroke]="dialColor"
         [attr.stroke-dasharray]="progressDasharray"
         stroke-dashoffset="0"
       ></circle>
