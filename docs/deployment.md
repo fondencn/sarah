@@ -29,9 +29,7 @@ Operational status at the time of writing:
 Current speaker-specific behavior:
 
 - `speaker1`: `SPEECH_RECOGNITION_ENABLED=true`
-- `speaker3`: `SPEECH_RECOGNITION_ENABLED=false`
-
-This is a temporary operational workaround until the microphone hardware on `speaker3` is replaced or repaired.
+- `speaker3`: `SPEECH_RECOGNITION_ENABLED=true`
 
 ## Directory Layout
 
