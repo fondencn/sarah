@@ -761,7 +761,7 @@ public class DevicesController : ControllerBase
             var summary = new RoomSummaryDto
             {
                 RoomId = roomId,
-                AverageTemperature = temperatures.Count > 0 ? Math.Round(temperatures.Average(), 1) : null,
+                AverageTemperature = CalculateAverageRoomTemperature(temperatures),
                 AnyDoorOpen = anyDoorOpen,
                 AnyPresence = anyPresence
             };
@@ -773,5 +773,14 @@ public class DevicesController : ControllerBase
             _logger.LogError(ex, "Error retrieving room summary for room {RoomId}", roomId);
             return StatusCode(500, "Internal server error");
         }
+    }
+
+    /// <summary>
+    /// Calculates the average room temperature, excluding sensors reporting 0 (offline/uninitialized).
+    /// </summary>
+    internal static double? CalculateAverageRoomTemperature(IEnumerable<float> readings)
+    {
+        var valid = readings.Where(t => t > 0).ToList();
+        return valid.Count > 0 ? Math.Round(valid.Average(), 1) : null;
     }
 }

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { RoomsClient } from '../services/api/room-service/api/rooms.service';
 import { RoomDtoModel as RoomDto } from '../services/api/room-service/model/models';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.component';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
@@ -58,16 +58,25 @@ export class RoomsComponent implements OnInit,OnDestroy {
 
 
   public retrieveRooms(): void {
-    this.isLoading = true; // Set the loading state to true
-    this.roomsService.apiRoomsGet().subscribe({
-      next: (response: RoomDto[]) => {
-        this.rooms = response; // Save the devices list in the member variable
+    this.isLoading = true;
+    forkJoin({
+      rooms: this.roomsService.apiRoomsGet(),
+      dashboardItems: this.dashboardService.apiDashboardGet()
+    }).subscribe({
+      next: ({ rooms, dashboardItems }) => {
+        this.rooms = rooms;
+        this.pinnedRoomIds = new Set(
+          dashboardItems
+            .filter(item => item.itemType === DashboardItemTypeDto.NUMBER_2)
+            .map(item => item.itemId as number)
+        );
       },
       error: (error) => {
         this.logger.error('Error fetching rooms:', error);
+        this.isLoading = false;
       },
       complete: () => {
-        this.isLoading = false; // Set the loading state to false
+        this.isLoading = false;
       }
     });
   }
@@ -156,27 +165,32 @@ export class RoomsComponent implements OnInit,OnDestroy {
   pinnedRoomIds: Set<number> = new Set<number>();
 
   public pinToDashboard(room: RoomDto) {
-    const dto: CreateDashboardItemDto = {
-      itemId: room.id as number,
-      itemType: this.ITEM_TYPE_ROOM,
-      title: room.name,
-      description: room.description,
-      subtype: 'Room'
-    };
-    this.dashboardService.apiDashboardPost(dto).subscribe({
-      next: () => {
-        this.pinnedRoomIds.add(room.id as number);
-      },
-      error: (error) => {
-        // 400 BadRequest = duplicate (DashboardController returns BadRequest for already-existing items)
-        // Also handle legacy 409/500 in case backend evolves
-        if (error.status === 400 || error.status === 409 || error.status === 500) {
+    if (this.pinnedRoomIds.has(room.id as number)) {
+      this.dashboardService.apiDashboardItemIdItemTypeDelete(room.id as number, this.ITEM_TYPE_ROOM).subscribe({
+        next: () => {
+          this.pinnedRoomIds.delete(room.id as number);
+        },
+        error: (error) => {
+          this.logger.error('Error unpinning room from dashboard:', error);
+        }
+      });
+    } else {
+      const dto: CreateDashboardItemDto = {
+        itemId: room.id as number,
+        itemType: this.ITEM_TYPE_ROOM,
+        title: room.name,
+        description: room.description,
+        subtype: 'Room'
+      };
+      this.dashboardService.apiDashboardPost(dto).subscribe({
+        next: () => {
           this.pinnedRoomIds.add(room.id as number);
-        } else {
+        },
+        error: (error) => {
           this.logger.error('Error pinning room to dashboard:', error);
         }
-      }
-    });
+      });
+    }
   }
 }
 

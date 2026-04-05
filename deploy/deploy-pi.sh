@@ -26,6 +26,35 @@ remote() {
   ssh "${PI_TARGET}" "$@"
 }
 
+# Append any variables present in the local .env that are absent from the
+# remote .env.  This is a one-way, additive patch — existing remote values
+# are never touched.  Used to propagate newly added vars (e.g. Grafana creds)
+# to an already-initialised deployment without a full env refresh.
+patch_missing_env_vars() {
+  local local_env="${SCRIPT_DIR}/pi/.env"
+  [[ -f "$local_env" ]] || return 0
+
+  log "Patching remote .env with any missing variables..."
+  local patched=0
+
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    local key="${line%%=*}"
+    [[ -z "$key" ]] && continue
+    if ! remote "grep -qF '${key}=' '${DEPLOY_DIR}/.env'" 2>/dev/null; then
+      remote "cat >> '${DEPLOY_DIR}/.env'" <<< "$line"
+      log "  Patched missing var: ${key}"
+      patched=1
+    fi
+  done < "$local_env"
+
+  if (( patched )); then
+    ok "Remote .env patched with new variables."
+  else
+    ok "Remote .env is up-to-date — no new variables needed."
+  fi
+}
+
 # ── Pre-flight checks ───────────────────────────────────────────────
 
 preflight_check() {
@@ -104,6 +133,10 @@ deploy() {
   scp "${SCRIPT_DIR}/pi/docker-compose.yml" "${PI_TARGET}:${DEPLOY_DIR}/docker-compose.yml"
   scp "${SCRIPT_DIR}/pi/init-databases.sh" "${PI_TARGET}:${DEPLOY_DIR}/init-databases.sh"
 
+  log "Uploading observability configs to ${PI_TARGET}:${DEPLOY_DIR}/otel/"
+  scp -r "${SCRIPT_DIR}/pi/otel" "${PI_TARGET}:${DEPLOY_DIR}/"
+  ok "Uploaded OTel configs."
+
   # Upload Keycloak realm import file (always update — Keycloak skips import if realm already exists)
   local realm_file="${SCRIPT_DIR}/../Sarah.AppHost/sarah-realm-realm.json"
   if [[ -f "$realm_file" ]]; then
@@ -129,6 +162,8 @@ deploy() {
     ok ".env already exists on target — not overwriting."
   fi
 
+  patch_missing_env_vars
+
   # Make init script executable
   remote "chmod +x ${DEPLOY_DIR}/init-databases.sh"
 
@@ -149,6 +184,10 @@ deploy() {
 
   # Start app services after infrastructure is confirmed healthy.
   remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice frontend"
+
+  log "Starting observability stack on ${PI_HOST}..."
+  remote "cd ${DEPLOY_DIR} && docker compose --profile observability up -d otel-collector victoriametrics loki tempo grafana"
+  ok "Observability stack started. Grafana: http://${PI_HOST}:3000"
 
   echo ""
   ok "Deployment to ${PI_HOST} complete. All data volumes preserved."
@@ -175,6 +214,7 @@ echo "  • PostgreSQL (databases: devices, persons, monitoring, rules, rooms, d
 echo "  • DeviceService, PersonsService, GeofencesService, RoomService"
 echo "  • MonitoringService, RulesService, DashboardService"
 echo "  • Angular frontend (nginx)"
+echo "  • OTel stack: otel-collector, VictoriaMetrics, Loki, Tempo, Grafana"
 echo ""
 
 confirm "Deploy to ${PI_HOST}?"
