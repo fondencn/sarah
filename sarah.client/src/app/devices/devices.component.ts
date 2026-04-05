@@ -5,7 +5,7 @@ import { CreateDashboardItemDto, DashboardItemType, NetworkElementDto } from '..
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
 import { LoggingService } from '../services/logging.service';
 
@@ -71,16 +71,25 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * Retrieves the devices list
    */
   public retrieveDevices() {
-    this.isLoading = true; // Set the loading state to true
-    this.devicesService.devicesGetAllGETApiDevices().subscribe({
-      next: (response: DeviceDto[]) => {
-        this.devices = response; // Save the devices list in the member variable
+    this.isLoading = true;
+    forkJoin({
+      devices: this.devicesService.devicesGetAllGETApiDevices(),
+      dashboardItems: this.dashboardService.apiDashboardGet()
+    }).subscribe({
+      next: ({ devices, dashboardItems }) => {
+        const pinnedDeviceIds = new Set(
+          dashboardItems
+            .filter(item => item.itemType === DashboardItemType.NUMBER_0)
+            .map(item => item.itemId as number)
+        );
+        this.devices = devices.map((d: DeviceDto) => ({ ...d, isFavourite: pinnedDeviceIds.has(d.id as number) }));
       },
       error: (error) => {
         this.logger.error('Error fetching devices:', error);
+        this.isLoading = false;
       },
       complete: () => {
-        this.isLoading = false; // Set the loading state to false
+        this.isLoading = false;
       }
     });
   }
