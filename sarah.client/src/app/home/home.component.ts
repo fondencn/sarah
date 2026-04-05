@@ -443,4 +443,32 @@ export class DashboardItemViewModel {
     const val = this.item.extendedProperties?.find(x => x.key === 'LastStateChanged')?.value;
     return val && val.trim().length > 0 ? val : null;
   }
+
+  get airTemperature(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'Temperature')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get airHumidity(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'RelativeHumidity')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get airCO2(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'CO2')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get airVOC(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'VOC')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
 }

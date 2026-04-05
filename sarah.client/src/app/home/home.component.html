@@ -110,6 +110,14 @@
                           </span>
                         </div>
                       </ng-container>
+                      <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
+                        <ul class="list-unstyled mt-1 mb-0 small">
+                          <li *ngIf="item.airTemperature !== null && item.airTemperature !== undefined">🌡️ {{ item.airTemperature | number:'1.1-1' }} °C</li>
+                          <li *ngIf="item.airHumidity !== null && item.airHumidity !== undefined">💧 {{ item.airHumidity | number:'1.1-1' }} %</li>
+                          <li *ngIf="item.airCO2 !== null && item.airCO2 !== undefined">🫁 CO₂ {{ item.airCO2 | number:'1.0-0' }} ppm</li>
+                          <li *ngIf="item.airVOC !== null && item.airVOC !== undefined">🧪 VOC {{ item.airVOC | number:'1.0-0' }} ppb</li>
+                        </ul>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
                           &nbsp;
@@ -133,6 +141,9 @@
                       </ng-container>
                       <ng-container *ngSwitchCase="'DoorSensor'">
                         <span style="font-size: 2.5rem;" [title]="item.subType">🚪</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
+                        <span style="font-size: 2.5rem;" [title]="item.subType">🌬️</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
