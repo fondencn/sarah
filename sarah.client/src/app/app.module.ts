@@ -39,6 +39,7 @@ import { PersonMapModalComponent } from './home/person-map-modal/person-map-moda
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 import { ToastContainerComponent } from './shared/toast/toast-container.component';
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
+import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -61,7 +62,8 @@ import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.
         PersonMapModalComponent,
         PinToDashboardButtonComponent,
         ToastContainerComponent,
-        ThermostatDialComponent
+        ThermostatDialComponent,
+        RuleMonitorComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

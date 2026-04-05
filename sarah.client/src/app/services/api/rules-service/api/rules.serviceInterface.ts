@@ -12,6 +12,8 @@ import { HttpHeaders }                                       from '@angular/comm
 import { Observable }                                        from 'rxjs';
 
 import { AlarmScheduleEntityModel } from '../model/models';
+import { RuleExecutionLogDtoModel } from '../model/models';
+import { RuleOverviewDtoModel } from '../model/models';
 import { TemperatureScheduleEntityModel } from '../model/models';
 
 
@@ -70,6 +72,19 @@ export interface RulesClientInterface {
      * @param alarmScheduleEntityModel 
      */
     apiRulesAlarmsPost(alarmScheduleEntityModel?: AlarmScheduleEntityModel, extraHttpRequestParams?: any): Observable<AlarmScheduleEntityModel>;
+
+    /**
+     * Gets all rules with their overview information (runtime rules from registered rule stores)
+     * 
+     */
+    apiRulesGet(extraHttpRequestParams?: any): Observable<Array<RuleOverviewDtoModel>>;
+
+    /**
+     * Gets the most recent rule execution log entries
+     * 
+     * @param limit 
+     */
+    apiRulesLogGet(limit?: number, extraHttpRequestParams?: any): Observable<Array<RuleExecutionLogDtoModel>>;
 
     /**
      * 
