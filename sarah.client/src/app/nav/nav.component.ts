@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LanguageService, SupportedLang } from '../services/language.service';
 
 @Component({
   selector: 'app-nav',
@@ -8,7 +9,13 @@ import { Component } from '@angular/core';
 export class NavComponent {
   navbarOpen = false;
 
+  constructor(public languageService: LanguageService) {}
+
   toggleNavbar() {
     this.navbarOpen = !this.navbarOpen;
+  }
+
+  setLang(lang: SupportedLang): void {
+    this.languageService.setLanguage(lang);
   }
 }

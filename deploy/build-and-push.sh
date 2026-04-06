@@ -30,6 +30,7 @@ PI_IMAGES=(
   "monitoringservice Microservices/Sarah.Monitoring.WebApi/Dockerfile"
   "rulesservice    Microservices/Sarah.Rules.WebApi/Dockerfile"
   "dashboardservice Microservices/Sarah.Dashboard.WebApi/Dockerfile"
+  "adminservice    Microservices/Sarah.Admin.WebApi/Dockerfile"
 )
 
 SPEAKER_IMAGES=(

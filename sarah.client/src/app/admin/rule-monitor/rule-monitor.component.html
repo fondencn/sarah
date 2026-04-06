@@ -1,31 +1,31 @@
 <div class="rule-monitor mt-4">
-  <h3>🔧 Regelübersicht</h3>
+  <h3>🔧 {{ 'ruleMonitor.title' | translate }}</h3>
 
   <div class="d-flex justify-content-end mb-2">
     <button class="btn btn-sm btn-outline-secondary" (click)="loadRules(); loadExecutionLog()">
-      🔄 Aktualisieren
+      {{ 'ruleMonitor.refresh' | translate }}
     </button>
   </div>
 
   <!-- Rules Table -->
   <div class="card mb-4">
     <div class="card-header">
-      <strong>Regeln</strong>
+      <strong>{{ 'ruleMonitor.rulesCardHeader' | translate }}</strong>
     </div>
     <div class="card-body p-0">
       <div *ngIf="loadingRules" class="text-center p-3">
-        <span class="spinner-border spinner-border-sm" role="status"></span> Lade Regeln...
+        <span class="spinner-border spinner-border-sm" role="status"></span> {{ 'ruleMonitor.loadingRules' | translate }}
       </div>
       <div *ngIf="!loadingRules && rules.length === 0" class="text-center p-3 text-muted">
-        Keine Regeln vorhanden.
+        {{ 'ruleMonitor.noRules' | translate }}
       </div>
       <table *ngIf="!loadingRules && rules.length > 0" class="table table-sm table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>Name</th>
-            <th>Bedingung</th>
-            <th>Aktion</th>
-            <th>Zuletzt ausgelöst</th>
+            <th>{{ 'ruleMonitor.colName' | translate }}</th>
+            <th>{{ 'ruleMonitor.colCondition' | translate }}</th>
+            <th>{{ 'ruleMonitor.colAction' | translate }}</th>
+            <th>{{ 'ruleMonitor.colLastTriggered' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,22 +51,22 @@
   <!-- Execution Log Table -->
   <div class="card">
     <div class="card-header">
-      <strong>Ausführungsprotokoll</strong>
+      <strong>{{ 'ruleMonitor.executionLogHeader' | translate }}</strong>
     </div>
     <div class="card-body p-0">
       <div *ngIf="loadingLog" class="text-center p-3">
-        <span class="spinner-border spinner-border-sm" role="status"></span> Lade Protokoll...
+        <span class="spinner-border spinner-border-sm" role="status"></span> {{ 'ruleMonitor.loadingLog' | translate }}
       </div>
       <div *ngIf="!loadingLog && executionLog.length === 0" class="text-center p-3 text-muted">
-        Noch keine Ausführungen protokolliert.
+        {{ 'ruleMonitor.noLog' | translate }}
       </div>
       <table *ngIf="!loadingLog && executionLog.length > 0" class="table table-sm table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>Zeitpunkt</th>
-            <th>Regel</th>
-            <th>Ergebnis</th>
-            <th>Fehler</th>
+            <th>{{ 'ruleMonitor.colTimestamp' | translate }}</th>
+            <th>{{ 'ruleMonitor.colRule' | translate }}</th>
+            <th>{{ 'ruleMonitor.colResult' | translate }}</th>
+            <th>{{ 'ruleMonitor.colError' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -75,7 +75,7 @@
             <td>{{ entry.ruleName }}</td>
             <td>
               <span class="badge" [ngClass]="entry.success ? 'bg-success' : 'bg-danger'">
-                {{ entry.success ? '✓ Erfolg' : '✗ Fehler' }}
+                {{ (entry.success ? 'ruleMonitor.success' : 'ruleMonitor.failure') | translate }}
               </span>
             </td>
             <td class="text-danger small">{{ entry.errorMessage }}</td>

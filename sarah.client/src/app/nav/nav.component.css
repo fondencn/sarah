@@ -63,6 +63,45 @@
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 120, 212, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 1rem;
+  position: relative;
+  z-index: 1000;
+}
+
+.lang-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border: 1.5px solid rgba(0, 120, 212, 0.4);
+  color: #323130;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.lang-btn:hover {
+  background: rgba(0, 120, 212, 0.1);
+  color: #0078D4;
+  border-color: #0078D4;
+}
+
+.lang-btn.lang-active {
+  background: #0078D4 !important;
+  color: #ffffff !important;
+  border-color: #0078D4 !important;
+}
+
+.lang-btn:not(.lang-active) {
+  opacity: 0.45;
+  color: #605e5c;
+  border-color: rgba(0, 120, 212, 0.25);
+}
+
 @media (min-width: 992px) {
   .sidebar {
     top: 0;
