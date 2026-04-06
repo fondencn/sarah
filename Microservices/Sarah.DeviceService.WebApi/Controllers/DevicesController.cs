@@ -45,7 +45,8 @@ public class DevicesController : ControllerBase
                 IsReadonly = d.IsReadonly,
                 IsFavourite = d.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(d.NodeID),
-                Thermostat = BuildThermoStateDto(d.NodeID)
+                Thermostat = BuildThermoStateDto(d.NodeID),
+                AirQuality = BuildAirQualityStateDto(d.NodeID)
             }).ToList();
             return Ok(dtos);
         }
@@ -391,6 +392,7 @@ public class DevicesController : ControllerBase
                 IsFavourite = device.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
                 Thermostat = BuildThermoStateDto(device.NodeID),
+                AirQuality = BuildAirQualityStateDto(device.NodeID),
                 ExtendedProperties = BuildExtendedProperties(device.NodeID)
             };
 
@@ -477,6 +479,20 @@ public class DevicesController : ControllerBase
         return null;
     }
 
+    private AirQualityStateDto? BuildAirQualityStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is IMultiSensor sensor)
+        {
+            return new AirQualityStateDto
+            {
+                CO2 = sensor.CO2?.Value,
+                VolatileOrganicCompounds = sensor.VolatileOrganicCompounds?.Value,
+                RelativeHumidity = sensor.RelativeHumidity?.Value
+            };
+        }
+        return null;
+    }
+
     [HttpGet("room/{roomId}/avgtemperature")]
     public async Task<IActionResult> GetRoomAverageTemperature(long roomId, CancellationToken cancellationToken)
     {
@@ -527,7 +543,8 @@ public class DevicesController : ControllerBase
                 IsReadonly = device.IsReadonly,
                 IsFavourite = device.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
-                Thermostat = BuildThermoStateDto(device.NodeID)
+                Thermostat = BuildThermoStateDto(device.NodeID),
+                AirQuality = BuildAirQualityStateDto(device.NodeID)
             };
 
             return Ok(dto);

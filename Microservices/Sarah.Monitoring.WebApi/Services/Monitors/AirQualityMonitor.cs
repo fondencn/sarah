@@ -13,6 +13,7 @@ using Sarah.API.Extensions;
 using Microsoft.Extensions.Configuration;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.ServiceClients;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -23,21 +24,21 @@ namespace Sarah.Monitoring.Monitors
     {
         private readonly IReadOnlyList<DeviceDto> _deviceSnapshot;
         private readonly IReadOnlyList<RoomDto> _roomSnapshot;
-        private readonly IDeviceService _devices;
         private readonly RabbitMQClient _rabbitMQ;
         private readonly ILogger<AirQualityMonitor> _logger;
         private readonly IConfiguration _config;
         private static IConfiguration? _staticConfig;
+        private readonly DeviceServiceClient _deviceServiceClient;
 
-        public AirQualityMonitor(IReadOnlyList<DeviceDto> deviceSnapshot, IReadOnlyList<RoomDto> roomSnapshot, IDeviceService devices, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger)
+        public AirQualityMonitor(IReadOnlyList<DeviceDto> deviceSnapshot, IReadOnlyList<RoomDto> roomSnapshot, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger, DeviceServiceClient deviceServiceClient)
         {
             _deviceSnapshot = deviceSnapshot;
             _roomSnapshot = roomSnapshot;
-            _devices = devices;
             _rabbitMQ = rabbitMQ;
             _config = config;
             _staticConfig = config;
             _logger = logger;
+            _deviceServiceClient = deviceServiceClient;
         }
 
         private bool IsRunning { get; set; }
@@ -90,43 +91,41 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceDto? device = _deviceSnapshot.FirstOrDefault(item => item.NodeId == e.SourceNodeId);
+                if (!IsRelevantProperty(e.Property))
+                    return;
 
-                if (device != null)
+                DeviceDto? liveDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync(e.SourceNodeId);
+                AirQualityStateDto? airQuality = liveDevice?.AirQuality;
+
+                if (liveDevice != null && airQuality != null)
                 {
-                    IMultiSensor? sensor = _devices.GetNetworkItem((byte)device.NodeId) as IMultiSensor;
+                    RoomDto? room = liveDevice.RoomId.HasValue
+                        ? _roomSnapshot.FirstOrDefault(r => r.Id == liveDevice.RoomId.Value)
+                        : null;
 
-                    if (sensor != null
-                        && IsRelevantProperty(e.Property))
+                    if (airQuality.IsAirQualityLevelWarning())
                     {
-                        RoomDto? room = device.RoomId.HasValue
-                            ? _roomSnapshot.FirstOrDefault(r => r.Id == device.RoomId.Value)
-                            : null;
-
-                        if (sensor.IsAirQualityLevelWarning())
+                        if (!this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
                         {
-                            if (!this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
-                            {
-                                this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(device, room, _devices, _rabbitMQ, _logger));
-                            }
+                            this.CurrentAirQualityTasks.Add(e.SourceNodeId, new SurveillanceTask(liveDevice, room, _deviceServiceClient, _rabbitMQ, _logger));
                         }
-                        else
-                        {
-                            if (this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
-                            {
-                                this.CurrentAirQualityTasks[e.SourceNodeId].Cancel();
-                                this.CurrentAirQualityTasks.Remove(e.SourceNodeId);
-
-                                /* SilentHours beachten */
-                                if (!IsInSilentTime)
-                                {
-                                    await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID,
-                                        (AirQualityLevel)AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? ""));
-                                }
-                            }
-                        }
-                        this.LastUpdate = DateTime.Now;
                     }
+                    else
+                    {
+                        if (this.CurrentAirQualityTasks.ContainsKey(e.SourceNodeId))
+                        {
+                            this.CurrentAirQualityTasks[e.SourceNodeId].Cancel();
+                            this.CurrentAirQualityTasks.Remove(e.SourceNodeId);
+
+                            /* SilentHours beachten */
+                            if (!IsInSilentTime)
+                            {
+                                await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(e.SourceNodeId,
+                                    (AirQualityLevel)AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? ""));
+                            }
+                        }
+                    }
+                    this.LastUpdate = DateTime.Now;
                 }
             }
             catch (Exception ex)
@@ -177,7 +176,7 @@ namespace Sarah.Monitoring.Monitors
         {
             private static readonly TimeSpan _WarnInterval = TimeSpan.FromMinutes(30);
 
-            private readonly IDeviceService _devices;
+            private readonly DeviceServiceClient _deviceServiceClient;
             private readonly RabbitMQClient _rabbitMQ;
             private readonly ILogger<AirQualityMonitor> _logger;
 
@@ -186,9 +185,9 @@ namespace Sarah.Monitoring.Monitors
             private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
             private Task? Task { get; set; }
 
-            public SurveillanceTask(DeviceDto device, RoomDto? room, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
+            public SurveillanceTask(DeviceDto device, RoomDto? room, DeviceServiceClient deviceServiceClient, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
             {
-                this._devices = devices;
+                this._deviceServiceClient = deviceServiceClient;
                 this._rabbitMQ = rabbitMQ;
                 this._logger = logger;
                 this.Device = device;
@@ -221,49 +220,51 @@ namespace Sarah.Monitoring.Monitors
 
                     while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
-                        List<string> msg = new List<string>();
-                        IMultiSensor? sensor = _devices.GetNetworkItem((byte)this.Device.NodeId) as IMultiSensor;
-                        if (sensor == null)
+                        DeviceDto? liveDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync((byte)this.Device.NodeId);
+                        AirQualityStateDto? airQuality = liveDevice?.AirQuality;
+
+                        if (airQuality == null)
                         {
-                            _logger.LogWarning("Überwachung der Luftqualität für {DeviceName} konnte nicht gestartet werden, da der Sensor nicht mehr erreichbar ist.", this.Device.Name);
+                            _logger.LogWarning("Überwachung der Luftqualität für {DeviceName} konnte nicht fortgesetzt werden, da der Sensor nicht mehr erreichbar ist.", this.Device.Name);
                             return;
                         }
-                        Tuple<AirQualitityLevel, string> co2 = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, "");
-                        Tuple<AirQualitityLevel, string> voc = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, ""); 
-                        Tuple<AirQualitityLevel, string> humidity = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, ""); 
 
+                        List<string> msg = new List<string>();
+                        Tuple<AirQualitityLevel, string> co2 = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, "");
+                        Tuple<AirQualitityLevel, string> voc = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, "");
+                        Tuple<AirQualitityLevel, string> humidity = new Tuple<AirQualitityLevel, string>(AirQualitityLevel.OK, "");
 
                         /* Check Humidity */
-                        humidity = AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value);
-                        if (humidity.Item1 > AirQualitityLevel.OK)
+                        if (airQuality.RelativeHumidity.HasValue)
                         {
-                            msg.Add(humidity.Item2);
+                            humidity = AirQualityDefinitions.GetHumidityLevel(airQuality.RelativeHumidity.Value);
+                            if (humidity.Item1 > AirQualitityLevel.OK)
+                                msg.Add(humidity.Item2);
                         }
 
                         /* Check CO² */
-                        co2 = AirQualityDefinitions.GetCo2Level(sensor.CO2.Value);
-                        if (co2.Item1 > AirQualitityLevel.OK)
+                        if (airQuality.CO2.HasValue)
                         {
-                            msg.Add(co2.Item2);
+                            co2 = AirQualityDefinitions.GetCo2Level(airQuality.CO2.Value);
+                            if (co2.Item1 > AirQualitityLevel.OK)
+                                msg.Add(co2.Item2);
                         }
 
                         /* Check VOC */
-                        voc = AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value);
-                        if (voc.Item1 > AirQualitityLevel.OK)
+                        if (airQuality.VolatileOrganicCompounds.HasValue)
                         {
-                            msg.Add(voc.Item2);
+                            voc = AirQualityDefinitions.GetVocLevel(airQuality.VolatileOrganicCompounds.Value);
+                            if (voc.Item1 > AirQualitityLevel.OK)
+                                msg.Add(voc.Item2);
                         }
 
                         /* SilentHours beachten */
                         if (!AirQualityMonitor.IsInSilentTime)
                         {
-                            //NotificationEngine.Instance.Voice.Say("Meine Sensoren melden schlechte Luftqualität im " + this.Room.Name + ": " 
-                            //    + String.Join(". " + Environment.NewLine, msg)
-                            //    , NotificationEngine.Speaker1);
-
                             AirQualitityLevel badestLevel = new AirQualitityLevel[] { voc.Item1, co2.Item1, humidity.Item1 }
                                 .OrderByDescending(item => item).First();
-                            await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID, (AirQualityLevel)badestLevel, String.Join(". " + Environment.NewLine, msg), 
+                            await _rabbitMQ.PublishAsync(new AirQualityChangedMessage((byte)this.Device.NodeId, (AirQualityLevel)badestLevel,
+                                String.Join(". " + Environment.NewLine, msg),
                                 (this.Room?.Name ?? "")));
                         }
 
@@ -280,29 +281,23 @@ namespace Sarah.Monitoring.Monitors
     }
     internal static class MultiSensorExtensions
     {
-        public static bool IsAirQualityLevelWarning(this IMultiSensor sensor)
+        public static bool IsAirQualityLevelWarning(this AirQualityStateDto? airQuality)
         {
-            if (sensor == null)
-            {
+            if (airQuality == null)
                 return false;
-            }
-            else
-            {
-                bool isWarning = false;
 
-                /* Check Humidity */
-                isWarning |= AirQualityDefinitions.GetHumidityLevel(sensor.RelativeHumidity.Value).Item1 > AirQualitityLevel.OK;
-                
+            bool isWarning = false;
 
-                /* Check CO² */
-                isWarning |= AirQualityDefinitions.GetCo2Level(sensor.CO2.Value).Item1 > AirQualitityLevel.OK;
+            if (airQuality.RelativeHumidity.HasValue)
+                isWarning |= AirQualityDefinitions.GetHumidityLevel(airQuality.RelativeHumidity.Value).Item1 > AirQualitityLevel.OK;
 
-                /* Check VOC */
-                isWarning |= AirQualityDefinitions.GetVocLevel(sensor.VolatileOrganicCompounds.Value).Item1 > AirQualitityLevel.OK;
-                
+            if (airQuality.CO2.HasValue)
+                isWarning |= AirQualityDefinitions.GetCo2Level(airQuality.CO2.Value).Item1 > AirQualitityLevel.OK;
 
-                return isWarning;
-            }
+            if (airQuality.VolatileOrganicCompounds.HasValue)
+                isWarning |= AirQualityDefinitions.GetVocLevel(airQuality.VolatileOrganicCompounds.Value).Item1 > AirQualitityLevel.OK;
+
+            return isWarning;
         }
     }
 }

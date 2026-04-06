@@ -19,12 +19,20 @@ namespace Sarah.API.BusinessObjects.DTOs
         public PositionDto? Position { get; set; }
         public DoorSensorStateDto? DoorSensor { get; set; }
         public ThermoStateDto? Thermostat { get; set; }
+        public AirQualityStateDto? AirQuality { get; set; }
         public List<ExtendedPropertyDto>? ExtendedProperties { get; set; }
     }
 
     public class ThermoStateDto
     {
         public float? TemperatureSetpoint { get; set; }
+    }
+
+    public class AirQualityStateDto
+    {
+        public float? CO2 { get; set; }
+        public float? VolatileOrganicCompounds { get; set; }
+        public float? RelativeHumidity { get; set; }
     }
 
     public class DoorSensorStateDto

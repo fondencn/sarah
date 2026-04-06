@@ -32,7 +32,7 @@ public class MonitoringService (IDeviceService _devices, IPersonService _personS
         var doors = new Monitors.DoorMonitor(roomSnapshot, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>(), _deviceServiceClient);
         Monitors = new IMonitor[]
         {
-            new Monitors.AirQualityMonitor(deviceSnapshot, roomSnapshot, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>()),
+            new Monitors.AirQualityMonitor(deviceSnapshot, roomSnapshot, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>(), _deviceServiceClient),
             new Monitors.PersonMonitor(_personService, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.PersonMonitor>()),
             new Monitors.BatteryMonitor(deviceSnapshot, roomSnapshot, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()),
             doors,
