@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.DTOs;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Monitoring.WebApi.Data;
-using Sarah.Monitoring.WebApi.Data.Entities;
 using Sarah.API.Extensions;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(ApplicationDbContext _db, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
+    internal class BatteryMonitor(IReadOnlyList<DeviceDto> _deviceSnapshot, IReadOnlyList<RoomDto> _roomSnapshot, IDeviceService _devices, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
@@ -156,15 +155,15 @@ namespace Sarah.Monitoring.Monitors
                 var batteryDrivenDevices = _devices.BatterySensors.ToList();
                 if (batteryDrivenDevices?.Any() == true)
                 {
-                    var deviceInfos = _db.Devices.ToList();
-                    var roomInfos = _db.Rooms.ToList();
                     foreach (IBatterySensor sensor in batteryDrivenDevices)
                     {
                         if (!object.ReferenceEquals(sensor, null) && !object.ReferenceEquals(sensor.Battery, null))
                         {
                             float batteryPercentage = (sensor?.Battery?.Value).GetValueOrDefault();
-                            DeviceInfoEntity? device = deviceInfos.FirstOrDefault(item => item.NodeID == sensor!.NodeID);
-                            RoomEntity? room = device != null ?  roomInfos.FirstOrDefault(item => item.Id == device.Id_Room) : null;
+                            DeviceDto? device = _deviceSnapshot.FirstOrDefault(item => item.NodeId == sensor!.NodeID);
+                            RoomDto? room = device?.RoomId.HasValue == true
+                                ? _roomSnapshot.FirstOrDefault(r => r.Id == device.RoomId!.Value)
+                                : null;
                             this.CurrentBatteryInfos.Add(new BatteryInfo(sensor!.NodeID, device?.Name + (room != null ? " im " + room.Name : String.Empty), batteryPercentage));
                         }
                     }

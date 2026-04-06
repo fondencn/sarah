@@ -6,14 +6,11 @@ using System.Threading.Tasks;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
+using Sarah.API.BusinessObjects.DTOs;
 using Microsoft.Extensions.Logging;
 using Sarah.API.Interfaces.Service;
-using Sarah.Monitoring.WebApi.Data;
-using Sarah.Monitoring.WebApi.Data.Entities;
-using Sarah.Monitoring.WebApi.Extensions;
 using Sarah.API.Extensions;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 
@@ -24,16 +21,18 @@ namespace Sarah.Monitoring.Monitors
     /// </summary>
     internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IReadOnlyList<DeviceDto> _deviceSnapshot;
+        private readonly IReadOnlyList<RoomDto> _roomSnapshot;
         private readonly IDeviceService _devices;
         private readonly RabbitMQClient _rabbitMQ;
         private readonly ILogger<AirQualityMonitor> _logger;
         private readonly IConfiguration _config;
         private static IConfiguration? _staticConfig;
 
-        public AirQualityMonitor(ApplicationDbContext db, IDeviceService devices, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger)
+        public AirQualityMonitor(IReadOnlyList<DeviceDto> deviceSnapshot, IReadOnlyList<RoomDto> roomSnapshot, IDeviceService devices, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger)
         {
-            _db = db;
+            _deviceSnapshot = deviceSnapshot;
+            _roomSnapshot = roomSnapshot;
             _devices = devices;
             _rabbitMQ = rabbitMQ;
             _config = config;
@@ -91,25 +90,18 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                DeviceInfoEntity? device = await _db.Devices.FirstOrDefaultAsync(item => item.NodeID == e.SourceNodeId);
+                DeviceDto? device = _deviceSnapshot.FirstOrDefault(item => item.NodeId == e.SourceNodeId);
 
                 if (device != null)
                 {
-                    IMultiSensor? sensor = device.GetNetworkItem(_devices) as IMultiSensor;
+                    IMultiSensor? sensor = _devices.GetNetworkItem((byte)device.NodeId) as IMultiSensor;
 
                     if (sensor != null
                         && IsRelevantProperty(e.Property))
                     {
-                        RoomEntity? room;
-                        if (device.Id_Room.HasValue)
-                        {
-                            room = await _db.Rooms.FindAsync(device.Id_Room);
-                        }
-                        else
-                        {
-                            room = null;
-                        }
-
+                        RoomDto? room = device.RoomId.HasValue
+                            ? _roomSnapshot.FirstOrDefault(r => r.Id == device.RoomId.Value)
+                            : null;
 
                         if (sensor.IsAirQualityLevelWarning())
                         {
@@ -125,15 +117,11 @@ namespace Sarah.Monitoring.Monitors
                                 this.CurrentAirQualityTasks[e.SourceNodeId].Cancel();
                                 this.CurrentAirQualityTasks.Remove(e.SourceNodeId);
 
-
                                 /* SilentHours beachten */
                                 if (!IsInSilentTime)
                                 {
-                                    //NotificationEngine.Instance.Voice.Say("Die Luftqualität im " + room.Name + " ist wiederhergestellt."
-                                    //    , NotificationEngine.Speaker1);
-                                    await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID, 
+                                    await _rabbitMQ.PublishAsync(new AirQualityChangedMessage(sensor.NodeID,
                                         (AirQualityLevel)AirQualitityLevel.OK, "Die Luftqualität im " + room?.Name + " ist wiederhergestellt.", room?.Name ?? ""));
-
                                 }
                             }
                         }
@@ -193,12 +181,12 @@ namespace Sarah.Monitoring.Monitors
             private readonly RabbitMQClient _rabbitMQ;
             private readonly ILogger<AirQualityMonitor> _logger;
 
-            public DeviceInfoEntity Device { get; private set; }
-            public RoomEntity? Room { get; private set; }
+            public DeviceDto Device { get; private set; }
+            public RoomDto? Room { get; private set; }
             private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
             private Task? Task { get; set; }
 
-            public SurveillanceTask(DeviceInfoEntity device, RoomEntity? room, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
+            public SurveillanceTask(DeviceDto device, RoomDto? room, IDeviceService devices, RabbitMQClient rabbitMQ, ILogger<AirQualityMonitor> logger)
             {
                 this._devices = devices;
                 this._rabbitMQ = rabbitMQ;
@@ -234,7 +222,7 @@ namespace Sarah.Monitoring.Monitors
                     while (!UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
                         List<string> msg = new List<string>();
-                        IMultiSensor? sensor = (IMultiSensor?)this.Device.GetNetworkItem(_devices);
+                        IMultiSensor? sensor = _devices.GetNetworkItem((byte)this.Device.NodeId) as IMultiSensor;
                         if (sensor == null)
                         {
                             _logger.LogWarning("Überwachung der Luftqualität für {DeviceName} konnte nicht gestartet werden, da der Sensor nicht mehr erreichbar ist.", this.Device.Name);

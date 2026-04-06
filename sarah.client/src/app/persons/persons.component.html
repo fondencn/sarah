@@ -1,33 +1,33 @@
 <div class="container mt-4">
 
-    <h2 class="mb-4">👥 Persons</h2>
+    <h2 class="mb-4">👥 {{ 'persons.title' | translate }}</h2>
     <button (click)="retrievePersons()" class="btn btn-primary m-4">
         <img src="assets/icons/refresh.svg" alt="Refresh" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
-        Refresh
+        {{ 'common.refresh' | translate }}
     </button>
     <button (click)="addPerson()" class="btn btn-secondary m-4">
         <img src="assets/icons/add.svg" alt="Add" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
-        Add
+        {{ 'common.add' | translate }}
     </button>
 
     <!-- Busy Indicator -->
     <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
         <div class="spinner-border text-primary" role="status">
         </div>
-        <span class="sr-only">Loading...</span>
+        <span class="sr-only">{{ 'common.loading' | translate }}</span>
     </div>
 
     <table *ngIf="!isLoading && persons.length > 0; else noRooms"
         class="table table-striped table-bordered table-hover">
         <thead class="thead-dark">
             <tr>
-                <th>Id</th>
-                <th>name</th>
-                <th>GpsTracker</th>
-                <th>Geofence</th>
-                <th>Position</th>
-                <th>Phone name</th>
-                <th>Actions</th>
+                <th>{{ 'persons.colId' | translate }}</th>
+                <th>{{ 'persons.colName' | translate }}</th>
+                <th>{{ 'persons.colGpsTracker' | translate }}</th>
+                <th>{{ 'persons.colGeofence' | translate }}</th>
+                <th>{{ 'persons.colPosition' | translate }}</th>
+                <th>{{ 'persons.colPhoneName' | translate }}</th>
+                <th>{{ 'persons.colActions' | translate }}</th>
             </tr>
         </thead>
         <tbody>
@@ -55,7 +55,7 @@
     </table>
 
     <ng-template #noRooms>
-        <p class="text-muted">No persons loaded.</p>
+        <p class="text-muted">{{ 'persons.noPersons' | translate }}</p>
     </ng-template>
 </div>
 

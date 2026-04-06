@@ -11,11 +11,11 @@
             <input type="hidden" formControlName="id" id="id">
           </div>
           <div class="form-group">
-            <label for="name">Name: </label>
+            <label for="name">{{ 'common.name' | translate }}</label>
             <input type="text" id="name" class="form-control" formControlName="name">
           </div>
           <div class="form-group">
-            <label for="mobilePhoneHostname">Mobile Phone</label>
+            <label for="mobilePhoneHostname">{{ 'persons.modal.labelMobilePhone' | translate }}</label>
             <select id="mobilePhoneHostname" class="form-control" formControlName="mobilePhoneHostname">
               <option *ngFor="let phone of allMobilePhones" [value]="phone">
                 {{ phone}}
@@ -23,9 +23,9 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="gpsTrackerID">Tracker</label>
+            <label for="gpsTrackerID">{{ 'persons.modal.labelTracker' | translate }}</label>
             <select id="gpsTrackerID" class="form-control" formControlName="gpsTrackerID">
-              <option [ngValue]="0">-- None --</option>
+              <option [ngValue]="0">{{ 'persons.modal.noneOption' | translate }}</option>
               <option *ngFor="let tracker of allTrackers" [ngValue]="tracker.id">
                 {{ tracker.name}}
               </option>
@@ -35,7 +35,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" id="cancelButton" class="btn btn-secondary" (click)="onCancel()"
-          data-dismiss="modal">Cancel</button>
+          data-dismiss="modal">{{ 'common.cancel' | translate }}</button>
         <button type="button" id="okButton" class="btn btn-primary" (click)="onOk()"
           [disabled]="personForm.invalid">{{okButtonText}}</button>
       </div>

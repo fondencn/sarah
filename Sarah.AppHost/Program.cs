@@ -80,9 +80,11 @@ var roomService = builder.AddProject<Projects.Sarah_RoomService_WebApi>("roomser
 
 var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("monitoringservice")
     .WithHttpEndpoint(port: 5005, name: "http-api")
-    .WithReference(postgresMonitoring, "PostgresConnection")
     .WithReference(keycloak)
     .WithReference(rabbitmq)
+    .WithReference(deviceService)
+    .WithReference(personsService)
+    .WithReference(roomService)
     .WaitFor(rabbitmq);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")

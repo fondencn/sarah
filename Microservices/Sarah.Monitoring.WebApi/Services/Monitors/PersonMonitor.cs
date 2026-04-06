@@ -2,15 +2,13 @@
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Service;
 using Sarah.API.Interfaces.Services;
-using Sarah.Monitoring.WebApi.Data;
-using Sarah.Monitoring.WebApi.Data.Entities;
 using Microsoft.Extensions.Logging;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 
 namespace Sarah.Monitoring.Monitors
 {
-    public class PersonMonitor(ApplicationDbContext _db, RabbitMQClient _rabbitMQ, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
+    public class PersonMonitor(IPersonService _personService, RabbitMQClient _rabbitMQ, ILogger<PersonMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private readonly object DBLock = new object();
 
@@ -62,7 +60,8 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
-                foreach (PersonInfoEntity person in _db.Persons)
+                var persons = await _personService.GetAllPersonsAsync();
+                foreach (var person in persons)
                 {
                     if (person != null)
                     {

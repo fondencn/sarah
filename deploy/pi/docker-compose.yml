@@ -261,7 +261,6 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=monitoringservice
-      - ConnectionStrings__PostgresConnection=Host=postgres;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - OpenWeatherMap__ApiKey=${OPENWEATHER_API_KEY:-}
@@ -274,8 +273,6 @@ services:
     ports:
       - "5005:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
       keycloak:
         condition: service_started
       rabbitmq:

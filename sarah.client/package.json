@@ -33,6 +33,8 @@
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/rrule": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
+    "@ngx-translate/core": "^15.0.0",
+    "@ngx-translate/http-loader": "^8.0.0",
     "@types/leaflet": "^1.9.21",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

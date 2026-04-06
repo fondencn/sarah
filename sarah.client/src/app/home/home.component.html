@@ -4,14 +4,14 @@
       <div class="card shadow-lg h-100 ">
         <div class="card-body">
           <ng-container *ngIf="isLoggedIn() else loginTemplate">
-            <h5 class="card-title">Welcome, {{ currentUserDisplayName }}</h5>
-            <p class="card-text">You are logged in.</p>
-            <button class="btn btn-primary mt-4" (click)="logout()">Logout</button>
+            <h5 class="card-title">{{ 'home.welcome' | translate:{ name: currentUserDisplayName } }}</h5>
+            <p class="card-text">{{ 'home.loggedIn' | translate }}</p>
+            <button class="btn btn-primary mt-4" (click)="logout()">{{ 'home.logout' | translate }}</button>
           </ng-container>
           <ng-template #loginTemplate>
-            <h5 class="card-title">Authentication needed</h5>
-            <p class="card-text">Please log in.</p>
-            <button class="btn btn-primary mt-4" (click)="login()">User Login</button>
+            <h5 class="card-title">{{ 'home.authNeeded' | translate }}</h5>
+            <p class="card-text">{{ 'home.pleaseLogin' | translate }}</p>
+            <button class="btn btn-primary mt-4" (click)="login()">{{ 'home.userLogin' | translate }}</button>
           </ng-template>
         </div>
       </div>
@@ -21,13 +21,13 @@
       <div class="col-md-4 m-3 p-2">
         <div class="card shadow-lg  h-100">
           <div class="card-body">
-            <h5 class="card-title">System Status</h5>
+            <h5 class="card-title">{{ 'home.systemStatus' | translate }}</h5>
             <p class="card-text">
               {{ statusMessage }}<br />
-              Hostname: {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
-              Authenticated: {{ statusDto?.isAuthenticated}}<br />
-	      Username: {{ statusDto?.username}} <br />
-              Controller: {{ statusDto?.controllerStatus }}
+              {{ 'home.hostname' | translate }} {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
+              {{ 'home.authenticated' | translate }} {{ statusDto?.isAuthenticated}}<br />
+	      {{ 'home.username' | translate }} {{ statusDto?.username}} <br />
+              {{ 'home.controller' | translate }} {{ statusDto?.controllerStatus }}
             </p>
           </div>
         </div>
@@ -62,7 +62,7 @@
                           <input class="form-check-input" type="checkbox" role="switch" 
                             [checked]="item.isOn"
                             (change)="toggleLamp(item.itemId, $event.target)">
-                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ? 'common.on' : 'common.off') | translate }}</label>
                         </div>
 
                         <div class="d-flex flex-wrap gap-1 mt-1">
@@ -72,10 +72,10 @@
                                 (change)="setLampColor(item.itemId, $event.target)" />
                           </button>
                           <button class="btn btn-sm" style="background-color: #ffe0b2; color: #333;" title="Warm White" *ngIf="item.itemId !== undefined" (click)="setLampWarmWhite(item.itemId)">
-                            ☀️ Warm
+                            ☀️ {{ 'home.warmWhite' | translate }}
                           </button>
                           <button class="btn btn-sm" style="background-color: #e3f2fd; color: #333;" title="Cold White" *ngIf="item.itemId !== undefined" (click)="setLampColdWhite(item.itemId)">
-                            🔵 Cold
+                            🔵 {{ 'home.coldWhite' | translate }}
                           </button>
                         </div>
                       </ng-container>
@@ -84,9 +84,9 @@
                           <input class="form-check-input" type="checkbox" role="switch" 
                             [checked]="item.isOn"
                             (change)="toggleWallplug(item.itemId, $event.target)">
-                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ item.isOn === true ? "On" : "Off" }}</label>
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ? 'common.on' : 'common.off') | translate }}</label>
                         </div>
-                        <span>Power Consumption: {{item.powerConsumption}} W</span>
+                        <span>{{ 'home.powerConsumption' | translate }} {{item.powerConsumption}} W</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
                         
@@ -103,10 +103,10 @@
                       <ng-container *ngSwitchCase="'DoorSensor'">
                         <div class="mt-1">
                           <span class="badge" [ngClass]="item.doorIsOpen ? 'bg-danger' : 'bg-success'">
-                            {{ item.doorIsOpen ? 'Open' : 'Closed' }}
+                            {{ (item.doorIsOpen ? 'common.open' : 'common.closed') | translate }}
                           </span>
                           <span *ngIf="item.doorIsOpen && item.doorLastOpenDurationMinutes !== null" class="ms-2 small text-white-50">
-                            for {{ item.doorLastOpenDurationMinutes | number:'1.0-1' }} min
+                            {{ 'home.openFor' | translate }} {{ item.doorLastOpenDurationMinutes | number:'1.0-1' }} {{ 'home.minutesAbbr' | translate }}
                           </span>
                         </div>
                       </ng-container>
@@ -201,10 +201,10 @@
                         🌡️ –
                       </li>
                       <li>
-                        🚪 {{ item.anyDoorOpen ? 'Door open' : 'All doors closed' }}
+                        🚪 {{ (item.anyDoorOpen ? 'home.doorOpen' : 'home.allDoorsClosed') | translate }}
                       </li>
                       <li>
-                        🧍 {{ item.anyPresence ? 'Presence detected' : 'No presence' }}
+                        🧍 {{ (item.anyPresence ? 'home.presenceDetected' : 'home.noPresence') | translate }}
                       </li>
                     </ul>
                   </div>
@@ -240,7 +240,7 @@
 
                     <div class="mt-2">
                       <small class="text-white-50">
-                        <img src="assets/icons/location.svg" alt="Map" style="width:12px;height:12px;filter:brightness(0) invert(1);opacity:0.7;"> Click to show on map
+                        <img src="assets/icons/location.svg" alt="Map" style="width:12px;height:12px;filter:brightness(0) invert(1);opacity:0.7;"> {{ 'home.clickToShowOnMap' | translate }}
                       </small>
                     </div>
                   </div>
