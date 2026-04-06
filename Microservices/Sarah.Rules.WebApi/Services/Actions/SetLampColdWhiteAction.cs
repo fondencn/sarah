@@ -1,25 +1,22 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces.Services;
-using System.Linq;
+using Sarah.ServiceClients;
 
 namespace Sarah.Rules.Actions
 {
     public class SetLampColdWhiteAction : RuleAction
     {
-        private readonly IDeviceService _devices;
-
+        private readonly DeviceServiceClient _deviceServiceClient;
         private byte TargetNodeId { get; set; }
 
-        public SetLampColdWhiteAction(byte targetNodeId, IDeviceService devices)
+        public SetLampColdWhiteAction(byte targetNodeId, DeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.TargetNodeId = targetNodeId;
         }
 
-
         public override async void Execute(NetworkEvent sourceEvent)
         {
-            await this._devices.Lamps.First(item => item.NodeID == TargetNodeId).SetColdWhite();
+            await _deviceServiceClient.SetLampColdWhiteByNodeAsync(this.TargetNodeId);
         }
     }
 }

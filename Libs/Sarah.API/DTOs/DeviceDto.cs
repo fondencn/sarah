@@ -20,6 +20,9 @@ namespace Sarah.API.BusinessObjects.DTOs
         public DoorSensorStateDto? DoorSensor { get; set; }
         public ThermoStateDto? Thermostat { get; set; }
         public AirQualityStateDto? AirQuality { get; set; }
+        public BatteryStateDto? Battery { get; set; }
+        public LampStateDto? Lamp { get; set; }
+        public WallPlugStateDto? WallPlug { get; set; }
         public List<ExtendedPropertyDto>? ExtendedProperties { get; set; }
     }
 
@@ -39,6 +42,26 @@ namespace Sarah.API.BusinessObjects.DTOs
     {
         public DoorSensorState State { get; set; }
         public DateTime? LastStateChanged { get; set; }
+    }
+
+    public class BatteryStateDto
+    {
+        public float? Level { get; set; }
+    }
+
+    public class LampStateDto
+    {
+        public byte Brightness { get; set; }
+        public string? Color { get; set; }
+        public DateTime? LastChange { get; set; }
+    }
+
+    public class WallPlugStateDto
+    {
+        public bool IsOn { get; set; }
+        public DateTime LastChangeToPowerLow { get; set; }
+        public DateTime LastIncreasePower { get; set; }
+        public DateTime LastDecreasePower { get; set; }
     }
 
     public class PositionDto

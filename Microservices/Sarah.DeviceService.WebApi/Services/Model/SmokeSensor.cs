@@ -51,7 +51,7 @@ namespace Sarah.DeviceService.Model
         }
         public SensorData Alarm { 
             get => _alarm; 
-            private set { if (_alarm != value) { _alarm = value; _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); LastUpdate = DateTime.Now; } } 
+            private set { if (_alarm != value) { _alarm = value; _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); _ = _publisher.ReportSmokeAlarm(this, (value?.Value ?? 0) > 0); LastUpdate = DateTime.Now; } } 
         }
 
 

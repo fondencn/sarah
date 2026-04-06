@@ -46,7 +46,10 @@ public class DevicesController : ControllerBase
                 IsFavourite = d.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(d.NodeID),
                 Thermostat = BuildThermoStateDto(d.NodeID),
-                AirQuality = BuildAirQualityStateDto(d.NodeID)
+                AirQuality = BuildAirQualityStateDto(d.NodeID),
+                Battery = BuildBatteryStateDto(d.NodeID),
+                Lamp = BuildLampStateDto(d.NodeID),
+                WallPlug = BuildWallPlugStateDto(d.NodeID)
             }).ToList();
             return Ok(dtos);
         }
@@ -393,6 +396,9 @@ public class DevicesController : ControllerBase
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
                 Thermostat = BuildThermoStateDto(device.NodeID),
                 AirQuality = BuildAirQualityStateDto(device.NodeID),
+                Battery = BuildBatteryStateDto(device.NodeID),
+                Lamp = BuildLampStateDto(device.NodeID),
+                WallPlug = BuildWallPlugStateDto(device.NodeID),
                 ExtendedProperties = BuildExtendedProperties(device.NodeID)
             };
 
@@ -493,6 +499,47 @@ public class DevicesController : ControllerBase
         return null;
     }
 
+    private BatteryStateDto? BuildBatteryStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is IBatterySensor sensor)
+        {
+            return new BatteryStateDto
+            {
+                Level = sensor.Battery?.Value
+            };
+        }
+        return null;
+    }
+
+    private LampStateDto? BuildLampStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is ILamp lamp)
+        {
+            return new LampStateDto
+            {
+                Brightness = lamp.Brightness,
+                Color = lamp.Color,
+                LastChange = lamp.LastChange
+            };
+        }
+        return null;
+    }
+
+    private WallPlugStateDto? BuildWallPlugStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is IWallPlug wp)
+        {
+            return new WallPlugStateDto
+            {
+                IsOn = wp.IsOn,
+                LastChangeToPowerLow = wp.LastChangeToPowerLow,
+                LastIncreasePower = wp.LastIncreasePower,
+                LastDecreasePower = wp.LastDecreasePower
+            };
+        }
+        return null;
+    }
+
     [HttpGet("room/{roomId}/avgtemperature")]
     public async Task<IActionResult> GetRoomAverageTemperature(long roomId, CancellationToken cancellationToken)
     {
@@ -544,7 +591,10 @@ public class DevicesController : ControllerBase
                 IsFavourite = device.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
                 Thermostat = BuildThermoStateDto(device.NodeID),
-                AirQuality = BuildAirQualityStateDto(device.NodeID)
+                AirQuality = BuildAirQualityStateDto(device.NodeID),
+                Battery = BuildBatteryStateDto(device.NodeID),
+                Lamp = BuildLampStateDto(device.NodeID),
+                WallPlug = BuildWallPlugStateDto(device.NodeID)
             };
 
             return Ok(dto);
@@ -594,6 +644,68 @@ public class DevicesController : ControllerBase
             _logger.LogError(ex, "Error retrieving network item {NodeId}", nodeId);
             return StatusCode(500, "Internal server error");
         }
+    }
+
+    [HttpPost("bynode/{nodeId}/lamp/toggle")]
+    public IActionResult ToggleLampByNode(byte nodeId)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not ILamp lamp)
+            return NotFound($"No lamp found for node id {nodeId}");
+        _ = lamp.ToggleState();
+        return Ok();
+    }
+
+    [HttpPost("bynode/{nodeId}/lamp/warmwhite")]
+    public async Task<IActionResult> SetLampWarmWhiteByNode(byte nodeId)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not ILamp lamp)
+            return NotFound($"No lamp found for node id {nodeId}");
+        await lamp.SetWarmWhite();
+        return Ok();
+    }
+
+    [HttpPost("bynode/{nodeId}/lamp/coldwhite")]
+    public async Task<IActionResult> SetLampColdWhiteByNode(byte nodeId)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not ILamp lamp)
+            return NotFound($"No lamp found for node id {nodeId}");
+        await lamp.SetColdWhite();
+        return Ok();
+    }
+
+    [HttpPost("bynode/{nodeId}/lamp/color/{color}/brightness/{brightness}")]
+    public async Task<IActionResult> SetLampColorAndBrightnessByNode(byte nodeId, string color, byte brightness)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not ILamp lamp)
+            return NotFound($"No lamp found for node id {nodeId}");
+        await lamp.SetBrightness(brightness);
+        if (!string.IsNullOrEmpty(color))
+            await lamp.SetColor(color);
+        return Ok();
+    }
+
+    [HttpPost("bynode/{nodeId}/wallplug/state/{isOn}")]
+    public async Task<IActionResult> SetWallPlugStateByNode(byte nodeId, bool isOn)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not IWallPlug wp)
+            return NotFound($"No wallplug found for node id {nodeId}");
+        await wp.SetState(isOn);
+        return Ok();
+    }
+
+    [HttpPost("bynode/{nodeId}/wallplug/toggle")]
+    public IActionResult ToggleWallPlugByNode(byte nodeId)
+    {
+        var networkItem = _deviceService.GetNetworkItem(nodeId);
+        if (networkItem is not IWallPlug wp)
+            return NotFound($"No wallplug found for node id {nodeId}");
+        wp.ToggleState();
+        return Ok();
     }
 
     [HttpPost("lamp/{id}/brightness/{brightness}")]

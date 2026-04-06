@@ -54,7 +54,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Helligkeit
         /// </summary>
-        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; _publisher.ReportEvent(this, nameof(Luminance), value?.ToString()); } } }
+        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; _publisher.ReportEvent(this, nameof(Luminance), value?.ToString()); _ = _publisher.ReportMultiSensorStateChanged(this, _presence?.Value, value?.Value); } } }
         /// <summary>
         /// Bewegungsalarm / Tamper
         /// </summary>
@@ -75,6 +75,7 @@ namespace Sarah.DeviceService.Model
                 {
                     _presence = value;
                     _publisher.ReportEvent(this, nameof(Presence), value?.ToString());
+                    _ = _publisher.ReportMultiSensorStateChanged(this, value?.Value, _luminance?.Value);
 
                     if (_presence.Value > 0)
                     {

@@ -56,7 +56,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Status des Schalters (an oder aus)
         /// </summary>
-        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); } } }
+        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); _ = _publisher.ReportWallPlugStateChanged(this, value, this.LastChangeToPowerLow, this.LastIncreasePower, this.LastDecreasePower); } } }
 
         /// <summary>
         /// Meter in Kilowattstunden
@@ -94,6 +94,7 @@ namespace Sarah.DeviceService.Model
                     {
                         this.LastDecreasePower = DateTime.Now;
                     }
+                    _ = _publisher.ReportWallPlugStateChanged(this, this.IsOn, this.LastChangeToPowerLow, this.LastIncreasePower, this.LastDecreasePower);
                 }
                 _meter_W = value;
                 _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());

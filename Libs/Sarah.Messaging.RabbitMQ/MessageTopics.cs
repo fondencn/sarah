@@ -64,6 +64,21 @@ public static class MessageTopics
     /// </summary>
     public const string NetworkEventsTrackerButton = "network.events.trackerbutton";
 
+    /// <summary>
+    /// Topic for wall plug state changes (on/off, power threshold crossings).
+    /// </summary>
+    public const string NetworkEventsWallPlugState = "network.events.wallplugstate";
+
+    /// <summary>
+    /// Topic for multi-sensor presence/luminance state changes.
+    /// </summary>
+    public const string NetworkEventsMultiSensorState = "network.events.multisensorstate";
+
+    /// <summary>
+    /// Topic for smoke sensor alarm state changes.
+    /// </summary>
+    public const string NetworkEventsSmokeSensorAlert = "network.events.smokesensoralert";
+
     // Weather-related topics
     
     /// <summary>

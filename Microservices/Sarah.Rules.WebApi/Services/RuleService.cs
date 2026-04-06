@@ -88,6 +88,21 @@ namespace Sarah.Rules
                     onMessage: HandleTrackerButtonPressed,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<WallPlugStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsWallPlugState,
+                    onMessage: HandleWallPlugStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<MultiSensorStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsMultiSensorState,
+                    onMessage: HandleMultiSensorStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<SmokeSensorAlertMessage>(
+                    topic: MessageTopics.NetworkEventsSmokeSensorAlert,
+                    onMessage: HandleSmokeSensorAlert,
+                    cancellationToken: stoppingToken);
+
                 await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
                     topic: MessageTopics.SchedulesAlarmChanged,
                     onMessage: HandleAlarmScheduleChanged,
@@ -237,6 +252,48 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling tracker button pressed event");
+            }
+        }
+
+        private async Task HandleWallPlugStateChanged(WallPlugStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
+                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastIncreasePower, message.LastDecreasePower);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling wall plug state changed event");
+            }
+        }
+
+        private async Task HandleMultiSensorStateChanged(MultiSensorStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received multi-sensor state changed event: node {NodeId}", message.SourceNodeId);
+                var evt = new MultiSensorStateChangedEvent(message.SourceNodeId, message.Presence, message.Luminance);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling multi-sensor state changed event");
+            }
+        }
+
+        private async Task HandleSmokeSensorAlert(SmokeSensorAlertMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received smoke sensor alert event: node {NodeId}, alarmActive={AlarmActive}", message.SourceNodeId, message.AlarmActive);
+                var evt = new SmokeSensorAlertEvent(message.SourceNodeId, message.AlarmActive);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling smoke sensor alert event");
             }
         }
 

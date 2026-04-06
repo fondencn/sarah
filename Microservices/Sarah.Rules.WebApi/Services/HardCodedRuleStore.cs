@@ -5,6 +5,7 @@ using Sarah.Rules.Actions;
 using Sarah.Rules.Conditions;
 using Microsoft.Extensions.Logging;
 using Sarah.Messaging.RabbitMQ;
+using Sarah.ServiceClients;
 
 namespace Sarah.Rules
 {
@@ -14,10 +15,9 @@ namespace Sarah.Rules
     public class HardCodedRuleStore : IRuleStore
     {
         private readonly RabbitMQClient _rabbitMQ;
-        private readonly IDeviceService _devices;
         private readonly IPersonService _persons;
         private readonly IEmailNotifier _emails;
-        private readonly IDeviceService _deviceServiceClient;
+        private readonly DeviceServiceClient _deviceServiceClient;
         private List<Rule> _rules = new List<Rule>();
         private readonly IWeatherProvider _weather;
 
@@ -39,11 +39,10 @@ namespace Sarah.Rules
         /// <summary>
         /// ctor
         /// </summary>
-        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IDeviceService devices, IPersonService persons, IEmailNotifier email, IDeviceService deviceServiceClient, ILogger<HardCodedRuleStore> logger)
+        public HardCodedRuleStore(IWeatherProvider weather, RabbitMQClient rabbitMQ, IPersonService persons, IEmailNotifier email, DeviceServiceClient deviceServiceClient, ILogger<HardCodedRuleStore> logger)
         {
             this._logger = logger;
             this._rabbitMQ = rabbitMQ;
-            this._devices = devices;
             this._weather = weather;
             this._persons = persons;
             this._emails = email;
@@ -110,13 +109,13 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new ButtonPressedCondition(41, 1),
-                Action = new ToggleLampAction(30, _devices),
+                Action = new ToggleLampAction(30, _deviceServiceClient),
                 Name = "Keyfob41 Schalter 1 schaltet LED 30 an/aus"
             });
             this._rules.Add(new Rule()
             {
                 Condition = new ButtonPressedCondition(41, 2),
-                Action = new ToggleLampAction(21, _devices),
+                Action = new ToggleLampAction(21, _deviceServiceClient),
                 Name = "Keyfob41 Schalter 2 schaltet Lampe 21 an/aus"
             });
 
@@ -162,10 +161,10 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new CombinedCondition(13, ConditionOperator.AND,
-                    new PresenceCondition(13, true, _devices),
-                    new LuminanceSmallerThanCondition(13, 40, _devices)
+                    new PresenceCondition(13, true),
+                    new LuminanceSmallerThanCondition(13, 40)
                 ),
-                Action = new SetLampColorAndBrightnessAction(14, 255, "#FFBC1F", _devices, _logger),
+                Action = new SetLampColorAndBrightnessAction(14, 255, "#FFBC1F", _deviceServiceClient, _logger),
                 Name = "Lampe 14 an wenn jemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
@@ -174,36 +173,35 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(13, ConditionOperator.AND,
                     new PredicateCondition(13, id => DateTime.Now.Hour >= 7 && DateTime.Now.Hour < 10),
-                    new PresenceCondition(13, true, _devices)),
+                    new PresenceCondition(13, true)),
                 Action = new SayOnceAction(CreateGreetingStringExpr("Christian"), "speaker1", _rabbitMQ, TimeSpan.FromHours(23)),
                 Name = "Morgens Guten morgen sagen wenn jemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
             this._rules.Add(new Rule()
             {
-                Condition = new PresenceCondition(13, false, _devices),
-                Action = new SetLampColorAndBrightnessAction(14, 0, "#000000", _devices, _logger),
+                Condition = new PresenceCondition(13, false),
+                Action = new SetLampColorAndBrightnessAction(14, 0, "#000000", _deviceServiceClient, _logger),
                 Name = "Lampe 14 aus wenn niemand im Arbeitszimmer (MultiSensor 13) ist."
             });
 
             this._rules.Add(new Rule()
             {
-                Condition = new WallPlugPowerOffCondition(251, _devices),
+                Condition = new WallPlugPowerOffCondition(251),
                 Action =  new SayAction("Der Wäschetrockner ist fertig.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Leistung an Node 251 (Trockner) abfällt"
             });
             this._rules.Add(new Rule()
             {
-                Condition = new WallPlugPowerOffCondition(252, _devices),
+                Condition = new WallPlugPowerOffCondition(252),
                 Action = new SayAction("Die Waschmaschine ist fertig.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Leistung an Node 252 (Waschmaschine) abfällt"
             });
             this._rules.Add(new Rule()
             {
-                Condition = new WallPlugPowerOffCondition(20, _devices),
+                Condition = new WallPlugPowerOffCondition(20),
                 Action = new CombinedAction(
-                    //new SendMailAction("c.fonden@die-rooter.de", "☕ Kaffee ist fertig", "Die Steckdose der Kaffeemaschine meldet, dass die Leistung abgefallen ist."),
-                    new WallPlugOffAction(20, _devices),
+                    new WallPlugOffAction(20, _deviceServiceClient),
                     new SayAction("Der Kaffee ist fertig.", _rabbitMQ)
                     ),
                 Name = "Kaffeemaschine: Sprachausgabe und Node 20 ausschalten, wenn Leistung an Node 20 abfällt"
@@ -215,7 +213,7 @@ namespace Sarah.Rules
                         new PredicateCondition(0, id => DateTime.Now.Hour >= 7 && DateTime.Now.Hour < 11),
                         new PersonPresenceChangedCondition("Christian", true)),
                 Action = new CombinedAction(
-                    new WallPlugOnAction(20, _devices),
+                    new WallPlugOnAction(20, _deviceServiceClient),
                     new SayAction("Hallo Christian, ich schalte die Kaffeemaschine ein.", _rabbitMQ)
                     ),
                 Name = "Kaffeemaschine (Steckdose 20) einschalten wenn Christian nach Hause kommt (zwischen 7 und 11 Uhr)"
@@ -225,7 +223,7 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(0, ConditionOperator.AND,
                     new AirQualityCondition(31),  // Stinksensor arbeitszimmer
-                    new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
+                    new PresenceCondition(13, true) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new SayAirQualityAction(31, "", _rabbitMQ),
                 Name = "Luftqualität Stinksensor Sprachausgabe Arbeitszimmer (nur dort)"
@@ -233,7 +231,7 @@ namespace Sarah.Rules
 
             this._rules.Add(new Rule()
             {
-                Condition = new AlertCondition(38, _devices),
+                Condition = new AlertCondition(38),
                 Action = new CombinedAction
                 (
                     new SendMailAction("c.fonden@die-rooter.de", "🧯 Feueralarm", "Rauchmelder 38 meldet Feueralarm!!!", _emails, _logger),
@@ -348,7 +346,7 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 6, Minute = 45, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                Action =  new SetLampColorAndBrightnessAction(24, 0, "#FFFFFF", _devices, _logger),
+                Action =  new SetLampColorAndBrightnessAction(24, 0, "#FFFFFF", _deviceServiceClient, _logger),
                 Name = "Lampe Wohnzimmer um 6:45 Uhr aus machen"
             });
 
@@ -356,7 +354,7 @@ namespace Sarah.Rules
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 12, Minute = 0, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "#FF0000", _devices, _logger),
+                    new SetLampColorAndBrightnessAction(14, 255, "#FF0000", _deviceServiceClient, _logger),
                     new SayAction("Es ist Zeit für die Mittagspause.", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung an Mittagspause"
@@ -368,10 +366,10 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(0, ConditionOperator.AND,
                     new TimerCondition(new TimerRecurrence() { Hour = 14, Minute = 0, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                    new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
+                    new PresenceCondition(13, true) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 0, "#FFFFFF", _devices, _logger),
+                    new SetLampColorAndBrightnessAction(14, 0, "#FFFFFF", _deviceServiceClient, _logger),
                     new SayAction("Es ist Zeit zum weiter arbeiten", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung an Ende der Mittagspause"
@@ -381,10 +379,10 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(0, ConditionOperator.AND,
                     new TimerCondition(new TimerRecurrence() { Hour = 8, Minute = 0, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                    new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
+                    new PresenceCondition(13, true) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "#0000FF", _devices, _logger),
+                    new SetLampColorAndBrightnessAction(14, 255, "#0000FF", _deviceServiceClient, _logger),
                     new SayAction("Es ist Zeit fürs Daily", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung Daily 8:00"
@@ -394,10 +392,10 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(0, ConditionOperator.AND,
                     new TimerCondition(new TimerRecurrence() { Hour = 8, Minute = 20, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                    new PresenceCondition(13, true, _devices) // jemand anwesend im Arbeitszimmer
+                    new PresenceCondition(13, true) // jemand anwesend im Arbeitszimmer
                     ),
                 Action = new CombinedAction(
-                    new SetLampColorAndBrightnessAction(14, 255, "00FF00", _devices, _logger),
+                    new SetLampColorAndBrightnessAction(14, 255, "00FF00", _deviceServiceClient, _logger),
                     new SayAction("Das Daily sollte nun zu Ende sein!", "speaker1", _rabbitMQ)
                     ),
                 Name = "Erinnerung Daily 8:20"
@@ -406,7 +404,7 @@ namespace Sarah.Rules
             this._rules.Add(new Rule()
             {
                 Condition = new TimerCondition(new TimerRecurrence() { Hour = 8, Minute = 21, Weekdays = Weekdays.Montag | Weekdays.Dienstag | Weekdays.Mittwoch | Weekdays.Donnerstag | Weekdays.Freitag }),
-                Action = new SetLampColorAndBrightnessAction(14, 0, "FFFFFF", _devices, _logger),
+                Action = new SetLampColorAndBrightnessAction(14, 0, "FFFFFF", _deviceServiceClient, _logger),
                 Name = "Erinnerung Daily 8:21->Lampe aus"
             });
         }

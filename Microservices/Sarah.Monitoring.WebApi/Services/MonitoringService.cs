@@ -34,7 +34,7 @@ public class MonitoringService (IDeviceService _devices, IPersonService _personS
         {
             new Monitors.AirQualityMonitor(deviceSnapshot, roomSnapshot, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>(), _deviceServiceClient),
             new Monitors.PersonMonitor(_personService, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.PersonMonitor>()),
-            new Monitors.BatteryMonitor(deviceSnapshot, roomSnapshot, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()),
+            new Monitors.BatteryMonitor(deviceSnapshot, roomSnapshot, _deviceServiceClient, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()),
             doors,
             ferien,
             weather,

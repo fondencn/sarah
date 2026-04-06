@@ -167,6 +167,52 @@ namespace Sarah.API.BusinessObjects
         }
     }
 
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose ihren Zustand oder Leistungsschwelle ändert
+    /// </summary>
+    public class WallPlugStateChangedEvent : NetworkEvent
+    {
+        public bool IsOn { get; }
+        public DateTime LastChangeToPowerLow { get; }
+        public DateTime LastIncreasePower { get; }
+        public DateTime LastDecreasePower { get; }
+        public WallPlugStateChangedEvent(byte source, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
+            : base(source, "WallPlugState")
+        {
+            IsOn = isOn;
+            LastChangeToPowerLow = lastChangeToPowerLow;
+            LastIncreasePower = lastIncreasePower;
+            LastDecreasePower = lastDecreasePower;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein MultiSensor Präsenz oder Helligkeit ändert
+    /// </summary>
+    public class MultiSensorStateChangedEvent : NetworkEvent
+    {
+        public float? Presence { get; }
+        public float? Luminance { get; }
+        public MultiSensorStateChangedEvent(byte source, float? presence, float? luminance)
+            : base(source, "MultiSensorState")
+        {
+            Presence = presence;
+            Luminance = luminance;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein Rauchmelder Alarm auslöst oder zurückgesetzt wird
+    /// </summary>
+    public class SmokeSensorAlertEvent : NetworkEvent
+    {
+        public bool AlarmActive { get; }
+        public SmokeSensorAlertEvent(byte source, bool alarmActive) : base(source, "SmokeSensorAlert")
+        {
+            AlarmActive = alarmActive;
+        }
+    }
+
     public class SayEvent
     {
         public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string? caller = null) 
