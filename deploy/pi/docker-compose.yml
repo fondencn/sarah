@@ -267,6 +267,11 @@ services:
       - WeatherWarnLocation=Ludwigsburg
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - DeviceServiceUrl=http://deviceservice:8080
+      - services__personsservice__http-api__0=http://personsservice:8080
+      - PersonServiceUrl=http://personsservice:8080
+      - services__roomservice__http-api__0=http://roomservice:8080
+      - RoomServiceUrl=http://roomservice:8080
+      - Keycloak__ServiceClientSecret=${MONITORING_CLIENT_SECRET}
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081

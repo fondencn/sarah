@@ -13,7 +13,10 @@ builder.AddServiceDefaults();
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 
-// Register HTTP client for Device Service
+// Register client credentials handler for background service → service calls (no HTTP context to forward from)
+builder.Services.AddTransient<ClientCredentialsHandler>();
+
+// Register HTTP client for Device Service (via interface, for event-driven calls)
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
     var url = builder.Configuration["services__deviceservice__http__0"]
@@ -23,7 +26,19 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
     client.BaseAddress = new Uri(url);
     client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
+
+// Register HTTP client for Device Service (concrete type, for snapshot fetching at startup)
+builder.Services.AddHttpClient<DeviceServiceClient>(client =>
+{
+    var url = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(url);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register HTTP client for Person Service
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
@@ -35,7 +50,7 @@ builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
     client.BaseAddress = new Uri(url);
     client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register HTTP client for Room Service
 builder.Services.AddHttpClient<RoomServiceClient>(client =>
@@ -47,7 +62,7 @@ builder.Services.AddHttpClient<RoomServiceClient>(client =>
     client.BaseAddress = new Uri(url);
     client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
