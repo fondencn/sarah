@@ -23,10 +23,6 @@ namespace Sarah.Rules
         private readonly IServiceScopeFactory _scopeFactory;
         public IEnumerable<Rule> Rules => this.RuleStores.SelectMany(store => store.Rules);
 
-        /// <summary>
-        /// Internes Logging für die Ruleengine
-        /// </summary>
-        public StringBuilder Log { get; } = new StringBuilder();
 
         /// <summary>
         /// Verwaltung für Zeitgesteuerte Ereignisse
@@ -269,21 +265,31 @@ namespace Sarah.Rules
                     try
                     {
                         bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
-                        if (!hasOccuredLately && rule.Condition != null && rule.Condition.Evaluate(e))
+                        if (hasOccuredLately)
+                        {
+                            _logger.LogDebug("Rule {RuleName} skipped – fired too recently (last: {LastOccurence})", rule.Name, rule.LastOccurence);
+                            continue;
+                        }
+
+                        bool conditionMet = rule.Condition != null && rule.Condition.Evaluate(e);
+                        if (conditionMet)
                         {
                             if (rule.Name != null && rule.Action != null)
                             {
-                                AddLog("Regel " + rule.Name + " aktiviert");
+                                _logger.LogInformation("Regel {RuleName} aktiviert", rule.Name);
                                 rule.Action.Execute(e);
                                 rule.LastOccurence = DateTime.Now;
                                 _ = WriteExecutionLogAsync(rule.Name, success: true);
                             }
                         }
+                        else
+                        {
+                            _logger.LogDebug("Rule {RuleName} condition not met for event {EventType} from node {NodeId}", rule.Name, e.GetType().Name, e.SourceNodeId);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogDebug("RuleEngine: Error while evaluating rule {RuleName}: {ErrorMessage}", rule.Name, ex.Message);
-                        _logger.LogDebug("StackTrace: {StackTrace}", ex.StackTrace);
+                        _logger.LogWarning(ex, "RuleEngine: Error while evaluating rule {RuleName}", rule.Name);
                         _ = WriteExecutionLogAsync(rule.Name ?? "Unknown", success: false, errorMessage: ex.Message);
                     }
                 }
@@ -309,19 +315,6 @@ namespace Sarah.Rules
             {
                 _logger.LogWarning(ex, "Failed to write rule execution log for rule {RuleName}", ruleName);
             }
-        }
-
-        private void AddLog(string msg)
-        {
-            if (Log.Length > 10000)
-            {
-                Log.Clear();
-            }
-            Log.Insert(0, DateTime.Now + "\t" + msg + Environment.NewLine); //Neuestes oben
-            _logger.LogInformation("{Message}", msg);
-
-            // Man muss Dinge auch aussprechen dürfen!
-            //Notifications.NotificationEngine.Instance.Voice?.Say(msg);
         }
 
 

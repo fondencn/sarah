@@ -92,4 +92,13 @@ public class GeoFenceServiceClient : IGeoFenceService
 public class GeoFenceDto : IGeoFence
 {
     public string Name { get; set; } = string.Empty;
+
+    public static bool operator ==(GeoFenceDto? left, GeoFenceDto? right)
+        => string.Equals(left?.Name, right?.Name, StringComparison.Ordinal);
+
+    public static bool operator !=(GeoFenceDto? left, GeoFenceDto? right)
+        => !string.Equals(left?.Name, right?.Name, StringComparison.Ordinal);
+
+    public override bool Equals(object? obj) => obj is GeoFenceDto other && string.Equals(Name, other.Name, StringComparison.Ordinal);
+    public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(Name);
 }

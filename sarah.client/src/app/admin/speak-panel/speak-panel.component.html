@@ -1,0 +1,49 @@
+<div class="card mt-4">
+  <div class="card-header">
+    <strong>🔊 {{ 'speakPanel.title' | translate }}</strong>
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">{{ 'speakPanel.description' | translate }}</p>
+
+    <div class="row g-2 align-items-end">
+      <div class="col-md-7">
+        <label class="form-label">{{ 'speakPanel.labelText' | translate }}</label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="text"
+          [placeholder]="'speakPanel.placeholderText' | translate"
+          (keyup.enter)="send()"
+          [disabled]="sending"
+        />
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">{{ 'speakPanel.labelVolume' | translate }}</label>
+        <select class="form-select" [(ngModel)]="volume" [disabled]="sending">
+          <option *ngFor="let v of volumes" [ngValue]="v.value">
+            {{ v.labelKey | translate }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-grid">
+        <button
+          class="btn btn-primary"
+          (click)="send()"
+          [disabled]="sending || !text.trim()"
+        >
+          <span *ngIf="sending" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          {{ 'speakPanel.buttonSend' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="success" class="alert alert-success mt-3 mb-0 py-2">
+      {{ 'speakPanel.successMessage' | translate }}
+    </div>
+    <div *ngIf="error" class="alert alert-danger mt-3 mb-0 py-2">
+      {{ 'speakPanel.errorMessage' | translate }}
+    </div>
+  </div>
+</div>

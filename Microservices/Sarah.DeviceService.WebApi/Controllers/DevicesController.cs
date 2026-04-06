@@ -434,6 +434,17 @@ public class DevicesController : ControllerBase
             if (doorSensor.LastStateChanged.HasValue)
                 props.Add(new ExtendedPropertyDto { Key = "LastStateChanged", Value = doorSensor.LastStateChanged.Value.ToString("o") });
         }
+        else if (networkItem is IMultiSensor multiSensorItem)
+        {
+            if (networkItem is ITemperatureSensor tempSensorItem && tempSensorItem.Temperature != null)
+                props.Add(new ExtendedPropertyDto { Key = "Temperature", Value = tempSensorItem.Temperature.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            if (multiSensorItem.RelativeHumidity != null)
+                props.Add(new ExtendedPropertyDto { Key = "RelativeHumidity", Value = multiSensorItem.RelativeHumidity.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) });
+            if (multiSensorItem.CO2 != null)
+                props.Add(new ExtendedPropertyDto { Key = "CO2", Value = multiSensorItem.CO2.Value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture) });
+            if (multiSensorItem.VolatileOrganicCompounds != null)
+                props.Add(new ExtendedPropertyDto { Key = "VOC", Value = multiSensorItem.VolatileOrganicCompounds.Value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture) });
+        }
         return props;
     }
 

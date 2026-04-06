@@ -11,18 +11,18 @@
             <input type="hidden" formControlName="id" id="id">
           </div>
           <div class="form-group">
-            <label for="name">Name: </label>
+            <label for="name">{{ 'devices.modal.labelName' | translate }}</label>
             <input type="text" id="name" class="form-control" formControlName="name">
           </div>
           <div class="form-group"></div>
-          <label for="nodeId">Associated device: </label>
+          <label for="nodeId">{{ 'devices.modal.labelAssociatedDevice' | translate }}</label>
           <select id="nodeId" class="form-control" formControlName="nodeId">
             <option *ngFor="let networkElement of allNetworkElements" [value]="networkElement.id">
               {{ networkElement.id }} - {{ networkElement.type }}
             </option>
           </select>
           <div class="form-group">
-            <label for="deviceType">Geräteklasse: </label>
+            <label for="deviceType">{{ 'devices.modal.labelDeviceClass' | translate }}</label>
             <select id="deviceType" class="form-control" formControlName="deviceType">
               <option *ngFor="let deviceType of allDeviceTypes" [value]="deviceType.enumKey">
                 {{ deviceType.enumValue }}
@@ -30,7 +30,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="roomId">Zugeordneter Raum</label>
+            <label for="roomId">{{ 'devices.modal.labelAssignedRoom' | translate }}</label>
             <select id="roomId" class="form-control" formControlName="roomId">
               <option *ngFor="let room of allRooms" [value]="room.id">
                 {{ room.name }}
@@ -40,14 +40,14 @@
           <div class="form-group">
             <div class="form-check">
               <input type="checkbox" id="isReadonly" class="form-check-input" formControlName="isReadonly">
-              <label class="form-check-label" for="isReadonly">Schreibgeschützt</label>
+              <label class="form-check-label" for="isReadonly">{{ 'devices.modal.labelReadonly' | translate }}</label>
             </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" id="cancelButton" class="btn btn-secondary" (click)="onCancel()"
-          data-dismiss="modal">Cancel</button>
+          data-dismiss="modal">{{ 'common.cancel' | translate }}</button>
         <button type="button" id="okButton" class="btn btn-primary" (click)="onOk()"
           [disabled]="deviceForm.invalid">{{okButtonText}}</button>
       </div>

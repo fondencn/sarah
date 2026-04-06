@@ -261,21 +261,23 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=monitoringservice
-      - ConnectionStrings__PostgresConnection=Host=postgres;Database=monitoringdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - OpenWeatherMap__ApiKey=${OPENWEATHER_API_KEY:-}
       - WeatherWarnLocation=Ludwigsburg
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - DeviceServiceUrl=http://deviceservice:8080
+      - services__personsservice__http-api__0=http://personsservice:8080
+      - PersonServiceUrl=http://personsservice:8080
+      - services__roomservice__http-api__0=http://roomservice:8080
+      - RoomServiceUrl=http://roomservice:8080
+      - Keycloak__ServiceClientSecret=${MONITORING_CLIENT_SECRET}
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
     ports:
       - "5005:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
       keycloak:
         condition: service_started
       rabbitmq:
@@ -340,6 +342,28 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  adminservice:
+    image: ${REGISTRY:-sarah}/adminservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=adminservice
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
+    ports:
+      - "5009:8080"
+    depends_on:
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - sarah-network
     restart: unless-stopped

@@ -10,6 +10,15 @@ namespace Sarah.Geofences
         public required string Name { get; set; }
         public required LocatorPosition[] Points { get; set; }
 
+        public static bool operator ==(GeoFence? left, GeoFence? right)
+            => string.Equals(left?.Name, right?.Name, StringComparison.Ordinal);
+
+        public static bool operator !=(GeoFence? left, GeoFence? right)
+            => !string.Equals(left?.Name, right?.Name, StringComparison.Ordinal);
+
+        public override bool Equals(object? obj) => obj is GeoFence other && string.Equals(Name, other.Name, StringComparison.Ordinal);
+        public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(Name);
+
         public bool IsWithin(LocatorPosition pos) => IsPointInPolygon(this.Points.Select(item => (PointF) item).ToArray(), (PointF)pos);
         public bool IsWithin(LocationServiceEntry pos) => IsPointInPolygon(this.Points.Select(item => (PointF)item).ToArray(), (PointF)pos);
 

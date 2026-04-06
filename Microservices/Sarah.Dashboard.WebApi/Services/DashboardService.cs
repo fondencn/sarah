@@ -215,6 +215,7 @@ public class DashboardService : IDashboardService
                 or KnownDeviceTypes.ShellyTrv => "Heizung",
             KnownDeviceTypes.AeotecDoorSensor 
                 or KnownDeviceTypes.FibaroDoorWindowSensor2=> "DoorSensor",
+            KnownDeviceTypes.EutronicAirQualitySensor => "EutronicAirQualitySensor",
             _ => sourceDevice.TypeName
         };
     }

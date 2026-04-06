@@ -30,6 +30,7 @@ export const environment = {
     roomService: 'http://localhost:5004',        // Rooms and device organization
     monitoringService: 'http://localhost:5005',  // System monitoring and health checks
     rulesService: 'http://localhost:5006',       // Automation rules engine
-    speechServer: 'http://localhost:5008'        // Voice recognition and text-to-speech
+    speechServer: 'http://localhost:5008',        // Voice recognition and text-to-speech
+    adminService: 'http://localhost:5009'         // Admin operations
   }
 };

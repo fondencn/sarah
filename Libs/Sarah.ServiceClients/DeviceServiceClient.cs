@@ -260,6 +260,17 @@ namespace Sarah.ServiceClients
             return responseContent;
         }
 
+        public async Task<IReadOnlyList<DeviceDto>> GetAllDevicesAsync()
+        {
+            Uri uri = new Uri(GetBaseUri(), "/api/Devices");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<DeviceDto>>(json) ?? new List<DeviceDto>();
+        }
+
         public async Task<RoomSummaryDto?> GetRoomSummaryAsync(long roomId)
         {
             Uri uri = new Uri(GetBaseUri(), $"/api/devices/room/{roomId}/summary");

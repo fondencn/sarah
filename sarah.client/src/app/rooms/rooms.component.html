@@ -1,27 +1,27 @@
 <div class="container mt-4">
-    <h2 class="mb-4">🏠 Rooms</h2>
+    <h2 class="mb-4">🏠 {{ 'rooms.title' | translate }}</h2>
     <button (click)="retrieveRooms()" class="btn btn-primary m-4">
         <img src="assets/icons/refresh.svg" alt="Refresh" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
-        Refresh
+        {{ 'common.refresh' | translate }}
     </button>
     <button (click)="addRoom()" class="btn btn-secondary m-4">
         <img src="assets/icons/add.svg" alt="Add" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
-        Add
+        {{ 'common.add' | translate }}
     </button>
 
     <!-- Busy Indicator -->
     <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
         <div class="spinner-border text-primary" role="status">
         </div>
-        <span class="sr-only">Loading...</span>
+        <span class="sr-only">{{ 'common.loading' | translate }}</span>
     </div>
 
     <table *ngIf="!isLoading && rooms.length > 0; else noRooms" class="table table-striped table-bordered table-hover">
         <thead class="thead-dark">
             <tr>
-                <th>Room Id</th>
-                <th>Room Name</th>
-                <th>Actions</th>
+                <th>{{ 'rooms.colRoomId' | translate }}</th>
+                <th>{{ 'rooms.colRoomName' | translate }}</th>
+                <th>{{ 'rooms.colActions' | translate }}</th>
             </tr>
         </thead>
         <tbody>
@@ -45,7 +45,7 @@
     </table>
 
     <ng-template #noRooms>
-        <p class="text-muted">No rooms loaded.</p>
+        <p class="text-muted">{{ 'rooms.noRooms' | translate }}</p>
     </ng-template>
 </div>
 

@@ -100,6 +100,37 @@
         "offline_access",
         "microprofile-jwt"
       ]
+    },
+    {
+      "clientId": "sarah-services",
+      "name": "Sarah Services Client",
+      "description": "Confidential client for inter-service machine-to-machine calls",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ZLAzG7z-5XiXvWN5yj8xy7H5bA0CoOWmBXWIzA7lobc",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "fullScopeAllowed": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "openid",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
     }
   ],
   "users": [

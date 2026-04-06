@@ -1,14 +1,10 @@
 using Sarah.Authentication;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
-using Sarah.Monitoring.WebApi.Data;
-using Sarah.Monitoring.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.Monitoring;
 using Sarah.ServiceClients;
 using Sarah.ServiceDefaults;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,37 +13,56 @@ builder.AddServiceDefaults();
 // Configure JWT Bearer Token Authentication with Keycloak
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 
-// Configure Entity Framework Core with PostgreSQL
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options
-        .UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"))
-        .ConfigureWarnings(warnings => warnings.Log(
-            (RelationalEventId.CommandExecuting, LogLevel.Debug),
-            (RelationalEventId.CommandExecuted, LogLevel.Debug))));
+// Register client credentials handler for background service → service calls (no HTTP context to forward from)
+builder.Services.AddTransient<ClientCredentialsHandler>();
 
-// Register repositories
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-// Register HTTP client for Rules Service communication
-// builder.Services.AddHttpClient<IRuleService, RulesServiceClient>(client =>
-// {
-//     var rulesServiceUrl = builder.Configuration["RulesServiceUrl"] ?? "http://localhost:7257";
-//     client.BaseAddress = new Uri(rulesServiceUrl);
-//     client.Timeout = TimeSpan.FromSeconds(30);
-// });
-
-// Register HTTP client for Device Service communication
+// Register HTTP client for Device Service (via interface, for event-driven calls)
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
-    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+    var url = builder.Configuration["services__deviceservice__http__0"]
         ?? builder.Configuration["services__deviceservice__http-api__0"]
         ?? builder.Configuration["DeviceServiceUrl"]
         ?? "https+http://deviceservice";
-    client.BaseAddress = new Uri(deviceServiceUrl);
+    client.BaseAddress = new Uri(url);
     client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
+// Register HTTP client for Device Service (concrete type, for snapshot fetching at startup)
+builder.Services.AddHttpClient<DeviceServiceClient>(client =>
+{
+    var url = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(url);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
+
+// Register HTTP client for Person Service
+builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
+{
+    var url = builder.Configuration["services__personsservice__http__0"]
+        ?? builder.Configuration["services__personsservice__http-api__0"]
+        ?? builder.Configuration["PersonServiceUrl"]
+        ?? "https+http://personsservice";
+    client.BaseAddress = new Uri(url);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
+
+// Register HTTP client for Room Service
+builder.Services.AddHttpClient<RoomServiceClient>(client =>
+{
+    var url = builder.Configuration["services__roomservice__http__0"]
+        ?? builder.Configuration["services__roomservice__http-api__0"]
+        ?? builder.Configuration["RoomServiceUrl"]
+        ?? "https+http://roomservice";
+    client.BaseAddress = new Uri(url);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
@@ -58,7 +73,7 @@ builder.Services.AddSingleton(sp =>
 
 // Register MonitoringService as a hosted background service
 builder.Services.AddHostedService<Sarah.Monitoring.MonitoringService>();
-builder.Services.AddSingleton<MonitoringService>(sp => 
+builder.Services.AddSingleton<MonitoringService>(sp =>
     sp.GetServices<IHostedService>().OfType<Sarah.Monitoring.MonitoringService>().First());
 
 // Add services to the container.
@@ -68,14 +83,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "Sarah Monitoring Service API", 
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Sarah Monitoring Service API",
         Version = "v1",
         Description = "API for monitoring weather, vacation schedules, and other environmental data"
     });
-    
-    // Add JWT Authentication to Swagger
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
@@ -84,7 +98,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -103,21 +117,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Apply database migrations automatically on startup
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
-    {
-        dbContext.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-    }
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -135,3 +134,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
