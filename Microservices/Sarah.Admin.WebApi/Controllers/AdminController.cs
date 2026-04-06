@@ -24,7 +24,8 @@ public class AdminController(RabbitMQClient rabbitMQClient, ILogger<AdminControl
 
         await rabbitMQClient.PublishAsync(message);
 
-        logger.LogInformation("Broadcasted say message: '{Text}' (volume: {Volume})", request.Text, volume);
+        var sanitizedText = request.Text.Replace("\r", string.Empty).Replace("\n", string.Empty);
+        logger.LogInformation("Broadcasted say message: '{Text}' (volume: {Volume})", sanitizedText, volume);
         return Ok();
     }
 }
