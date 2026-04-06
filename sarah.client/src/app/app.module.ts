@@ -46,6 +46,8 @@ import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/
 import { ToastContainerComponent } from './shared/toast/toast-container.component';
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
 import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
+import { SpeakPanelComponent } from './admin/speak-panel/speak-panel.component';
+import { AdminClient } from './services/api/admin-service/api/admin.service';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -69,7 +71,8 @@ import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.componen
         PinToDashboardButtonComponent,
         ToastContainerComponent,
         ThermostatDialComponent,
-        RuleMonitorComponent
+        RuleMonitorComponent,
+        SpeakPanelComponent
     ],
     bootstrap: [AppComponent], 
     imports: [
@@ -114,6 +117,7 @@ import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.componen
         { provide: RulesClient, useFactory: (http: HttpClient) => new RulesClient(http, environment.api.rulesService, undefined!), deps: [HttpClient] },
         { provide: GeofencesClient, useFactory: (http: HttpClient) => new GeofencesClient(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
         { provide: DashboardRuntimeService, useFactory: (http: HttpClient) => new DashboardRuntimeService(http), deps: [HttpClient] },
-        { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] }
+        { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] },
+        { provide: AdminClient, useFactory: (http: HttpClient) => new AdminClient(http, environment.api.adminService, undefined!), deps: [HttpClient] }
     ] })
 export class AppModule { }

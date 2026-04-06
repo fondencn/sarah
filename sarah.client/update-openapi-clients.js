@@ -139,6 +139,13 @@ const microservices = [
         title: 'Rules Service',
         outputDir: './src/app/services/api/rules-service',
         description: 'Automation rules engine'
+    },
+    {
+        name: 'admin-service',
+        port: 5009,
+        title: 'Admin Service',
+        outputDir: './src/app/services/api/admin-service',
+        description: 'Admin operations including broadcasting speech messages to all speakers'
     } //speech-server commented out because no direct access from frontend needed
     // {
     //     name: 'speech-server',

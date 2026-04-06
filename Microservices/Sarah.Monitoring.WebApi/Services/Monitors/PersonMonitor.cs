@@ -93,7 +93,7 @@ namespace Sarah.Monitoring.Monitors
                             GeoFencesByPersonId.Add(person.Id, lastFence);
                         }
 
-                        if (lastFence != currentFence)
+                        if (lastFence?.Name != currentFence?.Name)
                         {
                             /* GeoFence Der Person hat sich geändert -> Event auslösen! */
                             GeoFencesByPersonId[person.Id] = currentFence;

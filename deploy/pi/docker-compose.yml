@@ -346,6 +346,28 @@ services:
       - sarah-network
     restart: unless-stopped
 
+  adminservice:
+    image: ${REGISTRY:-sarah}/adminservice:${TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=adminservice
+      - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
+      - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      - AllowedOrigins__0=http://${PI_HOST:-pi}
+      - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
+      - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
+    ports:
+      - "5009:8080"
+    depends_on:
+      keycloak:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
   # ─── Frontend ──────────────────────────────────────────────────────
 
   frontend:

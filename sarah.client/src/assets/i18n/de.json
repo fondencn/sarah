@@ -122,6 +122,20 @@
   "admin": {
     "title": "Admin"
   },
+  "speakPanel": {
+    "title": "Sprachausgabe an alle Lautsprecher",
+    "description": "Text eingeben und an alle verbundenen Lautsprecher senden.",
+    "labelText": "Text",
+    "placeholderText": "Text eingeben...",
+    "labelVolume": "Lautstärke",
+    "volumeQuieter": "Leiser",
+    "volumeNormal": "Normal",
+    "volumeLouder": "Lauter",
+    "volumeVeryLoud": "Sehr laut",
+    "buttonSend": "Senden",
+    "successMessage": "Nachricht gesendet.",
+    "errorMessage": "Fehler beim Senden der Nachricht."
+  },
   "ruleMonitor": {
     "title": "Regelübersicht",
     "refresh": "🔄 Aktualisieren",

@@ -101,6 +101,12 @@ var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice
     .WithEnvironment("EmailNotifier__SmtpPassword", builder.Configuration["EmailNotifier:SmtpPassword"] ?? "")
     .WaitFor(rabbitmq);
 
+var adminService = builder.AddProject<Projects.Sarah_Admin_WebApi>("adminservice")
+    .WithHttpEndpoint(port: 5009, name: "http-api")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
+
 var speechServer = builder.AddProject<Projects.Sarah_SpeechServer_WebApi>("speechserver")
     .WithHttpEndpoint(port: 5008, name: "http-api")
     .WithReference(keycloak)
