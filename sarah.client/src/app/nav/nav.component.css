@@ -68,6 +68,8 @@
   align-items: center;
   gap: 0.25rem;
   margin-right: 1rem;
+  position: relative;
+  z-index: 1000;
 }
 
 .lang-btn {
@@ -79,6 +81,7 @@
   background: transparent;
   border-radius: 4px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .lang-btn:hover {
@@ -88,9 +91,15 @@
 }
 
 .lang-btn.lang-active {
-  background: rgba(0, 120, 212, 0.15);
-  color: #0078D4;
-  border-color: #0078D4;
+  background: #0078D4 !important;
+  color: #ffffff !important;
+  border-color: #0078D4 !important;
+}
+
+.lang-btn:not(.lang-active) {
+  opacity: 0.45;
+  color: #605e5c;
+  border-color: rgba(0, 120, 212, 0.25);
 }
 
 @media (min-width: 992px) {
