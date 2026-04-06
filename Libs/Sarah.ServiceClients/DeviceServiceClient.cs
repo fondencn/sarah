@@ -260,6 +260,46 @@ namespace Sarah.ServiceClients
             return responseContent;
         }
 
+        public async Task<DeviceDto?> GetDeviceByNodeIdAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DeviceDto>(json);
+        }
+
+        public async Task SetThermostatTemperatureAsync(long deviceId, float temperature)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/thermostat/{deviceId}/temperature/{temperature.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            HttpResponseMessage response = await _httpClient.PostAsync(uri, null);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<float?> GetRoomAverageTemperatureAsync(long roomId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/room/{roomId}/avgtemperature");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<float>(json);
+        }
+
         public async Task<IReadOnlyList<DeviceDto>> GetAllDevicesAsync()
         {
             Uri uri = new Uri(GetBaseUri(), "/api/Devices");

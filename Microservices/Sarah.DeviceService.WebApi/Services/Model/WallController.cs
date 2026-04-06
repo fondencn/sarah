@@ -120,7 +120,7 @@ namespace Sarah.DeviceService.Model
 
         private Task OnClicked()
         {
-            _publisher.ReportEvent(this, nameof(ClickedEvent), this.LastSceneId.ToString());
+            _ = _publisher.ReportClickedEvent(this, this.LastSceneId);
             return Task.CompletedTask;
         }
 

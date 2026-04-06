@@ -17,7 +17,20 @@ namespace Sarah.API.BusinessObjects.DTOs
         public bool IsFavourite { get; set; }
         
         public PositionDto? Position { get; set; }
+        public DoorSensorStateDto? DoorSensor { get; set; }
+        public ThermoStateDto? Thermostat { get; set; }
         public List<ExtendedPropertyDto>? ExtendedProperties { get; set; }
+    }
+
+    public class ThermoStateDto
+    {
+        public float? TemperatureSetpoint { get; set; }
+    }
+
+    public class DoorSensorStateDto
+    {
+        public DoorSensorState State { get; set; }
+        public DateTime? LastStateChanged { get; set; }
     }
 
     public class PositionDto

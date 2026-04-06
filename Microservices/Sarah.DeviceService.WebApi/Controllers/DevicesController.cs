@@ -43,7 +43,9 @@ public class DevicesController : ControllerBase
                 DeviceType = d.SpecificType,
                 TypeName = d.SpecificType.ToString(),
                 IsReadonly = d.IsReadonly,
-                IsFavourite = d.IsFavourite
+                IsFavourite = d.IsFavourite,
+                DoorSensor = BuildDoorSensorStateDto(d.NodeID),
+                Thermostat = BuildThermoStateDto(d.NodeID)
             }).ToList();
             return Ok(dtos);
         }
@@ -387,6 +389,8 @@ public class DevicesController : ControllerBase
                 TypeName = device.SpecificType.ToString(),
                 IsReadonly = device.IsReadonly,
                 IsFavourite = device.IsFavourite,
+                DoorSensor = BuildDoorSensorStateDto(device.NodeID),
+                Thermostat = BuildThermoStateDto(device.NodeID),
                 ExtendedProperties = BuildExtendedProperties(device.NodeID)
             };
 
@@ -446,6 +450,93 @@ public class DevicesController : ControllerBase
                 props.Add(new ExtendedPropertyDto { Key = "VOC", Value = multiSensorItem.VolatileOrganicCompounds.Value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture) });
         }
         return props;
+    }
+
+    private DoorSensorStateDto? BuildDoorSensorStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is IDoorSensor doorSensor)
+        {
+            return new DoorSensorStateDto
+            {
+                State = doorSensor.State,
+                LastStateChanged = doorSensor.LastStateChanged
+            };
+        }
+        return null;
+    }
+
+    private ThermoStateDto? BuildThermoStateDto(byte nodeId)
+    {
+        if (_deviceService.GetNetworkItem(nodeId) is IThermoElement thermo)
+        {
+            return new ThermoStateDto
+            {
+                TemperatureSetpoint = thermo.TemperatureSetpoint?.Value
+            };
+        }
+        return null;
+    }
+
+    [HttpGet("room/{roomId}/avgtemperature")]
+    public async Task<IActionResult> GetRoomAverageTemperature(long roomId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await _dbContext.Devices
+                .Where(d => d.Id_Room == roomId)
+                .ToListAsync(cancellationToken);
+
+            var temps = devices
+                .Select(d => _deviceService.GetNetworkItem(d.NodeID))
+                .OfType<ITemperatureSensor>()
+                .Where(s => s.Temperature != null)
+                .Select(s => s.Temperature.Value)
+                .ToList();
+
+            if (!temps.Any())
+                return NoContent();
+
+            return Ok(temps.Average());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving average temperature for room {RoomId}", roomId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("bynode/{nodeId}")]
+    public async Task<IActionResult> GetDeviceByNodeId(byte nodeId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var device = await _dbContext.Devices.FirstOrDefaultAsync(d => d.NodeID == nodeId, cancellationToken);
+            if (device == null)
+            {
+                return NotFound();
+            }
+
+            var dto = new DeviceDto
+            {
+                Id = device.Id,
+                RoomId = device.Id_Room,
+                Name = device.Name,
+                NodeId = device.NodeID,
+                DeviceType = device.SpecificType,
+                TypeName = device.SpecificType.ToString(),
+                IsReadonly = device.IsReadonly,
+                IsFavourite = device.IsFavourite,
+                DoorSensor = BuildDoorSensorStateDto(device.NodeID),
+                Thermostat = BuildThermoStateDto(device.NodeID)
+            };
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving device for node {NodeId}", nodeId);
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpGet("node/{nodeId}")]

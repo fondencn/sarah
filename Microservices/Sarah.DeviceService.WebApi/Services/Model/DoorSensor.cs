@@ -131,7 +131,7 @@ namespace Sarah.DeviceService.Model
                 {
                     this.LastStateChanged = DateTime.Now;
                     this._state = value;
-                    _publisher.ReportEvent(this, nameof(State), value);
+                    _ = _publisher.ReportDoorStateChanged(this, value == DoorSensorState.Offen);
 
                     if(value == DoorSensorState.Offen)
                     {

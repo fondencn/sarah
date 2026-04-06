@@ -78,6 +78,16 @@ namespace Sarah.Rules
                     onMessage: HandleAirQualityChanged,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsDoorState,
+                    onMessage: HandleDoorSensorStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<TrackerButtonPressedMessage>(
+                    topic: MessageTopics.NetworkEventsTrackerButton,
+                    onMessage: HandleTrackerButtonPressed,
+                    cancellationToken: stoppingToken);
+
                 await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
                     topic: MessageTopics.SchedulesAlarmChanged,
                     onMessage: HandleAlarmScheduleChanged,
@@ -195,6 +205,38 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling air quality changed event");
+            }
+        }
+
+        private async Task HandleDoorSensorStateChanged(DoorSensorStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door state changed event: node {NodeId}, isOpen={IsOpen}",
+                    message.SourceNodeId, message.IsOpen);
+
+                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
+                EvaluateRules(doorEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door sensor state changed event");
+            }
+        }
+
+        private async Task HandleTrackerButtonPressed(TrackerButtonPressedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received tracker button event: node {NodeId}, isPressed={IsPressed}",
+                    message.SourceNodeId, message.IsPressed);
+
+                var trackerEvent = new TrackerButtonPressedEvent(message.SourceNodeId, message.IsPressed);
+                EvaluateRules(trackerEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling tracker button pressed event");
             }
         }
 

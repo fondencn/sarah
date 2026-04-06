@@ -29,7 +29,7 @@ public class MonitoringService (IDeviceService _devices, IPersonService _personS
         var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>(), _httpClientFactory);
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
         var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>(), _rabbitMQ);
-        var doors = new Monitors.DoorMonitor(deviceSnapshot, roomSnapshot, _devices, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>());
+        var doors = new Monitors.DoorMonitor(roomSnapshot, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>(), _deviceServiceClient);
         Monitors = new IMonitor[]
         {
             new Monitors.AirQualityMonitor(deviceSnapshot, roomSnapshot, _devices, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>()),

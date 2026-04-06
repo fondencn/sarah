@@ -143,6 +143,30 @@ namespace Sarah.API.BusinessObjects
         public string RoomName { get; }
     }
 
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein Türsensor seinen Öffnungsstatus ändert
+    /// </summary>
+    public class DoorSensorStateChangedEvent : NetworkEvent
+    {
+        public bool IsOpen { get; }
+        public DoorSensorStateChangedEvent(byte source, bool isOpen) : base(source, "DoorState")
+        {
+            this.IsOpen = isOpen;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn der Knopf eines GPS-Trackers gedrückt oder losgelassen wird
+    /// </summary>
+    public class TrackerButtonPressedEvent : NetworkEvent
+    {
+        public bool IsPressed { get; }
+        public TrackerButtonPressedEvent(byte source, bool isPressed) : base(source, "TrackerButton")
+        {
+            this.IsPressed = isPressed;
+        }
+    }
+
     public class SayEvent
     {
         public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string? caller = null) 

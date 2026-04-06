@@ -87,19 +87,19 @@ namespace Sarah.Rules
         {
             this._rules.Add(new Rule()
             {
-                Condition = new TrackerButtonPressedCondition(247, _devices),
+                Condition = new TrackerButtonPressedCondition(247),
                 Action = new SayAction("Warnung: Lukas hat den SOS Knopf seines Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 247 gedrückt wurde"
             });
             this._rules.Add(new Rule()
             {
-                Condition = new TrackerButtonPressedCondition(246, _devices),
+                Condition = new TrackerButtonPressedCondition(246),
                 Action = new SayAction("Warnung: Christian hat den SOS Knopf seines Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 246 gedrückt wurde"
             });
             this._rules.Add(new Rule()
             {
-                Condition = new TrackerButtonPressedCondition(245, _devices),
+                Condition = new TrackerButtonPressedCondition(245),
                 Action = new SayAction("Warnung: Hannah hat den SOSKnopf ihres Trackers gedrückt.", _rabbitMQ),
                 Name = "Sprachausgabe, wenn Button von SenseCap Tracker 245 gedrückt wurde"
             });
@@ -109,13 +109,13 @@ namespace Sarah.Rules
         {
             this._rules.Add(new Rule()
             {
-                Condition = new ButtonPressedCondition(41, 1, _devices),
+                Condition = new ButtonPressedCondition(41, 1),
                 Action = new ToggleLampAction(30, _devices),
                 Name = "Keyfob41 Schalter 1 schaltet LED 30 an/aus"
             });
             this._rules.Add(new Rule()
             {
-                Condition = new ButtonPressedCondition(41, 2, _devices),
+                Condition = new ButtonPressedCondition(41, 2),
                 Action = new ToggleLampAction(21, _devices),
                 Name = "Keyfob41 Schalter 2 schaltet Lampe 21 an/aus"
             });
@@ -124,7 +124,7 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(2, ConditionOperator.AND,
                     new NoOnePresentCondition(_persons),
-                    new DoorSensorCondition(2, _devices) { Value = DoorSensorState.Offen }),
+                    new DoorSensorCondition(2) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
                         new SendMailAction("c.fonden@die-rooter.de", "Tür Arbeitszimmer offen", "Die Türe im Arbeitszimmer wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
                         new SayAction("Die Türe im Arbeitszimmer ist offen, obwohl keine bekannte Person daheim ist.", _rabbitMQ)
@@ -135,7 +135,7 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(34, ConditionOperator.AND,
                     new NoOnePresentCondition(_persons),
-                    new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Offen }),
+                    new DoorSensorCondition(34) { Value = DoorSensorState.Offen }),
                 Action = new CombinedAction(
                         new SendMailAction("c.fonden@die-rooter.de;h.fonden@die-rooter.de", "Tür Haustüre offen", "Die Haustüre wurde geöffnet, obwohl keine bekannte Person daheim ist", _emails, _logger),
                         new SayAction("Die die Haustüre ist offen, obwohl keine bekannte Person daheim ist. Alarm wird ausgelöst und Kamer wird aktiviert. Bilder werden an die Cloud übertragen.", _rabbitMQ, Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud), 
@@ -150,7 +150,7 @@ namespace Sarah.Rules
             {
                 Condition = new CombinedCondition(34, ConditionOperator.AND,
                     new SomeOnePresentCondition(_persons),
-                    new DoorSensorCondition(34, _devices) { Value = DoorSensorState.Geschlossen }),
+                    new DoorSensorCondition(34) { Value = DoorSensorState.Geschlossen }),
                 Action =  new CombinedAction(
                     new StopSceneAction("RedAlert", _deviceServiceClient),
                     new StopAudioAction("", _rabbitMQ)
