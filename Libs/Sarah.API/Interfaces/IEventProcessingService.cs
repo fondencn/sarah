@@ -17,7 +17,6 @@ namespace Sarah.API.Interfaces
         Task PublishSay(SayEvent e, CancellationToken cancellationToken = default);
         Task PublishPersonAvailabilityAsync(PersonAvailabilityEvent personAvailabilityEvent, CancellationToken cancellationToken = default);
         Task PublishGeoFenceEventAsync(PersonGeoFenceEvent personGeoFenceEvent, CancellationToken cancellationToken = default);
-        Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent outDoorTemperatureChangedEvent, CancellationToken cancellationToken = default);
         Task PublishWeatherWarningEventAsync(WeatherWarningEvent weatherWarningEvent, CancellationToken cancellationToken = default);
         Task PublishTimerEventAsync(TimerEvent timerEvent, CancellationToken cancellationToken = default);
         Task PublishStartPlayAudioEventAsync(StartAudioEvent startAudioEvent, CancellationToken cancellationToken = default);

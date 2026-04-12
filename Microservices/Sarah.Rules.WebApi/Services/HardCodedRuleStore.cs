@@ -66,6 +66,8 @@ namespace Sarah.Rules
 
             AddDeviceRules();
 
+            AddWeatherRules();
+
             AddChrisStundenplanRules();
 
             AddGeoFenceRules();
@@ -239,6 +241,38 @@ namespace Sarah.Rules
                     new SayAction("Achtung, Rauchmelder 38 meldet Feueralarm!", _rabbitMQ)
                 ),
                 Name = "E-Mail bei Feueralarm Node 38"
+            });
+        }
+
+        private void AddWeatherRules()
+        {
+            this._rules.Add(new Rule()
+            {
+                Condition = new PredicateCondition(0, evt => evt is WeatherWarningEvent warningEvent
+                    && !string.IsNullOrWhiteSpace(warningEvent.NewValue)),
+                Action = new ActionRuleAction((NetworkEvent evt) =>
+                {
+                    var warningEvent = (WeatherWarningEvent)evt;
+                    string message = $"Achtung, Wetterwarnung: {warningEvent.NewValue}";
+                    _rabbitMQ.PublishAsync(new Sarah.Messaging.RabbitMQ.Messages.SayMessage(message)).Wait();
+                }, _logger),
+                Name = "Sprachausgabe für Wetterwarnungen"
+            });
+
+            this._rules.Add(new Rule()
+            {
+                Condition = new PredicateCondition(0, evt =>
+                    evt is WeatherForecastUpdatedEvent forecastEvent
+                    && !string.IsNullOrWhiteSpace(forecastEvent.ForecastStringForToday)
+                    && DateTime.Now.Hour >= 18
+                    && DateTime.Now.Hour < 19),
+                Action = new ActionRuleAction((NetworkEvent evt) =>
+                {
+                    var forecastEvent = (WeatherForecastUpdatedEvent)evt;
+                    string message = $"Wettervorhersage: {forecastEvent.ForecastStringForToday}";
+                    _rabbitMQ.PublishAsync(new Sarah.Messaging.RabbitMQ.Messages.SayMessage(message)).Wait();
+                }, _logger),
+                Name = "Sprachausgabe für Wettervorhersage zwischen 18 und 19 Uhr"
             });
         }
 

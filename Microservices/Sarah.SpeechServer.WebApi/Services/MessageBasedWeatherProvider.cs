@@ -112,21 +112,6 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
         
         await _rabbitMQ.ConnectAsync(cancellationToken);
         
-        // Subscribe to outdoor temperature changes
-        await _rabbitMQ.SubscribeAsync<OutDoorTemperatureChangedEventMessage>(
-            topic: MessageTopics.WeatherOutdoorTemperature,
-            onMessage: async msg =>
-            {
-                lock (_stateLock)
-                {
-                    _currentOutdoorTemperature = msg.NewValue;
-                }
-                _logger.LogDebug("Updated outdoor temperature to {Temperature}°C", msg.NewValue);
-                await Task.CompletedTask;
-            },
-            exchange: MessageTopics.WeatherOutdoorTemperature,
-            cancellationToken: _cancellationTokenSource.Token);
-
         // Subscribe to weather forecast updates
         await _rabbitMQ.SubscribeAsync<WeatherForecastUpdatedMessage>(
             topic: MessageTopics.WeatherForecastUpdated,
@@ -134,7 +119,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
             {
                 lock (_stateLock)
                 {
-                    // Note: Current temperature is updated separately via OutDoorTemperatureChangedEventMessage
+                    _currentOutdoorTemperature = msg.CurrentTemperature;
                     _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
                     _sunrise = msg.Sunrise;
                     _currentWeatherString = msg.CurrentWeatherString;

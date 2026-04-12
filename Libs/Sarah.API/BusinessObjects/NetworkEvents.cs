@@ -249,19 +249,6 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn sich die Außentemperatur ändert
-    /// </summary>
-    public class OutDoorTemperatureChangedEvent : NetworkEvent
-    {
-        public OutDoorTemperatureChangedEvent(double newVal) : base(0, "OutDoorTemperatureChanged")
-        {
-            this.NewValue = newVal;
-        }
-
-        public double NewValue { get; }
-    }
-
-    /// <summary>
     /// Event wird ausgelöst, wenn eine Wetterwarnung vorliegt
     /// </summary>
     public class WeatherWarningEvent : NetworkEvent
@@ -272,5 +259,18 @@ namespace Sarah.API.BusinessObjects
         }
 
         public string NewValue { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Wettervorhersage aktualisiert wurde
+    /// </summary>
+    public class WeatherForecastUpdatedEvent : NetworkEvent
+    {
+        public WeatherForecastUpdatedEvent(string forecastStringForToday) : base(0, "WeatherForecastUpdated")
+        {
+            this.ForecastStringForToday = forecastStringForToday;
+        }
+
+        public string ForecastStringForToday { get; }
     }
 }

@@ -82,12 +82,6 @@ public static class MessageTopics
     // Weather-related topics
     
     /// <summary>
-    /// Topic for outdoor temperature change events.
-    /// Published when external temperature sensors report new values.
-    /// </summary>
-    public const string WeatherOutdoorTemperature = "weather.outdoortemperature";
-    
-    /// <summary>
     /// Topic for weather warning notifications.
     /// Published when new weather warnings are issued or periodic re-announcements occur.
     /// </summary>

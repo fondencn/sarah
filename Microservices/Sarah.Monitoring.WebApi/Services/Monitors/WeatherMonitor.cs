@@ -115,7 +115,16 @@ namespace Sarah.Monitoring.Monitors
             await UpdateCurrentWeather();
             await UpdateForecast();
             this.LastUpdate = DateTime.Now;
-            await PublishWeatherForecastUpdate();
+            await _rabbitMQ.PublishAsync(new WeatherForecastUpdatedMessage
+            {
+                CurrentTemperature = CurrentOutdoorTemperature,
+                AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
+                Sunrise = GetSunrise(),
+                CurrentWeatherString = GetCurrentWeatherString(),
+                ForecastStringForToday = GetWeatherForecastStringForToday(),
+                WeatherWarningString = GetWeatherWarningString(),
+                Location = this.WarnLocation
+            });
 
             while (!this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true)
             {
@@ -125,7 +134,16 @@ namespace Sarah.Monitoring.Monitors
                 await UpdateCurrentWeather();
                 await UpdateForecast();
                 this.LastUpdate = DateTime.Now;
-                await PublishWeatherForecastUpdate();
+                await _rabbitMQ.PublishAsync(new WeatherForecastUpdatedMessage
+                {
+                    CurrentTemperature = CurrentOutdoorTemperature,
+                    AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
+                    Sunrise = GetSunrise(),
+                    CurrentWeatherString = GetCurrentWeatherString(),
+                    ForecastStringForToday = GetWeatherForecastStringForToday(),
+                    WeatherWarningString = GetWeatherWarningString(),
+                    Location = this.WarnLocation
+                });
             }
         }
         /// <summary>
@@ -168,7 +186,6 @@ namespace Sarah.Monitoring.Monitors
                         this.WeatherForecast = forecast;
                         _logger.LogInformation("Wettervorhersage für {CityName} aktualisiert ({ForecastCount} Elemente): {Message}", forecast?.city?.name, forecast?.cnt, forecast?.message);
                     }
-                    //NetworkEventAggregator.Instance.Report(new OutDoorTemperatureChangedEvent(currentWeather.main.temp));
                 }
             }
             catch (Exception ex)
@@ -196,10 +213,6 @@ namespace Sarah.Monitoring.Monitors
                     {
                         this.CurrentWeather = currentWeather;
                         _logger.LogInformation("Aktuelles Wetter für {CityName} aktualisiert: {DisplayText}", currentWeather.name, currentWeather.DisplayText);
-                        if (currentWeather.main != null)
-                        {
-                            await _rabbitMQ.PublishAsync(new OutDoorTemperatureChangedEventMessage(currentWeather.main.temp));
-                        }
                     }
                 }
             }
@@ -346,36 +359,6 @@ namespace Sarah.Monitoring.Monitors
                 _logger.LogInformation("{WarnMessage}", warnMessage);
             }
         }
-
-
-        /// <summary>
-        /// Publishes a weather forecast update message for external microservices
-        /// </summary>
-        private async Task PublishWeatherForecastUpdate()
-        {
-            try
-            {
-                var message = new WeatherForecastUpdatedMessage
-                {
-                    CurrentTemperature = CurrentOutdoorTemperature,
-                    AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
-                    Sunrise = GetSunrise(),
-                    CurrentWeatherString = GetCurrentWeatherString(),
-                    ForecastStringForToday = GetWeatherForecastStringForToday(),
-                    WeatherWarningString = GetWeatherWarningString(),
-                    Location = this.WarnLocation
-                };
-                
-                await _rabbitMQ.PublishAsync(message);
-                _logger.LogDebug("Published weather forecast update for {Location}", this.WarnLocation);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to publish weather forecast update");
-            }
-        }
-
-
 
         /// <summary>
         /// Ermittelt einen Text zur Wettervorhersage am angegeben Tag
@@ -642,7 +625,7 @@ namespace Sarah.Monitoring.Monitors
             /// Baut einen Anzeigestring für diese Wetterwarnung zusammen
             /// </summary>
             /// <returns></returns>
-            public string GetOutputString(bool getWarningDetails = false)
+            public string GetOutputString(bool getWarningDetails = true)
             {
                 string? str;
                 str = getWarningDetails ? this.description : this.headline;

@@ -84,9 +84,6 @@ builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedWeatherProvider>(
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 
-// Register WeatherWarningHandler as a hosted service
-builder.Services.AddHostedService<Sarah.Rules.Services.WeatherWarningHandler>();
-
 // Register schedule services
 builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
 builder.Services.AddScoped<Sarah.Rules.Services.TemperatureScheduleService>();

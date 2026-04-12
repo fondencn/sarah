@@ -2,17 +2,6 @@ using Sarah.Messaging.RabbitMQ;
 
 namespace Sarah.Messaging.RabbitMQ.Messages;
 
-public class OutDoorTemperatureChangedEventMessage : AbstractMessage
-{
-    public OutDoorTemperatureChangedEventMessage(double NewValue) 
-    {
-        Topic = MessageTopics.WeatherOutdoorTemperature;
-        this.NewValue = NewValue;
-    }
-
-    public double NewValue { get; set; }
-}
-
 public class WeatherWarningEventMessage : AbstractMessage
 {
     public WeatherWarningEventMessage(string NewValue) 

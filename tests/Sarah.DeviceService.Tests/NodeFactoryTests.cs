@@ -68,8 +68,6 @@ public class NodeFactoryTests
 
         public Task PublishGeoFenceEventAsync(PersonGeoFenceEvent personGeoFenceEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-        public Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent outDoorTemperatureChangedEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
         public Task PublishWeatherWarningEventAsync(WeatherWarningEvent weatherWarningEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         public Task PublishTimerEventAsync(TimerEvent timerEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;

@@ -118,6 +118,16 @@ namespace Sarah.Rules
                     onMessage: HandleHolidayStatusChanged,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<WeatherWarningEventMessage>(
+                    topic: MessageTopics.WeatherWarning,
+                    onMessage: HandleWeatherWarning,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WeatherForecastUpdatedMessage>(
+                    topic: MessageTopics.WeatherForecastUpdated,
+                    onMessage: HandleWeatherForecastUpdated,
+                    cancellationToken: stoppingToken);
+
                 _logger.LogInformation("RuleService subscribed to all event topics");
 
                 // Keep the service running
@@ -347,6 +357,34 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling holiday status changed event");
+            }
+        }
+
+        private async Task HandleWeatherWarning(WeatherWarningEventMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received weather warning event");
+                var evt = new WeatherWarningEvent(message.NewValue ?? string.Empty);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling weather warning event");
+            }
+        }
+
+        private async Task HandleWeatherForecastUpdated(WeatherForecastUpdatedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received weather forecast updated event for {Location}", message.Location);
+                var evt = new WeatherForecastUpdatedEvent(message.ForecastStringForToday ?? string.Empty);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling weather forecast updated event");
             }
         }
 

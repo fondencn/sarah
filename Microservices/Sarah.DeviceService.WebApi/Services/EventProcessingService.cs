@@ -230,20 +230,6 @@ public class EventProcessingService : IEventProcessingService
         }
     }
 
-    public async Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent outDoorTemperatureChangedEvent, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var message = new OutDoorTemperatureChangedEventMessage(outDoorTemperatureChangedEvent.NewValue);
-            await _rabbitMQClient.PublishAsync(message, exchange: "weather.events", cancellationToken: cancellationToken);
-            _logger.LogDebug("Published outdoor temperature event - Temperature: {Temperature}", outDoorTemperatureChangedEvent.NewValue);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to publish outdoor temperature event");
-        }
-    }
-
     public async Task PublishWeatherWarningEventAsync(WeatherWarningEvent weatherWarningEvent, CancellationToken cancellationToken = default)
     {
         try
