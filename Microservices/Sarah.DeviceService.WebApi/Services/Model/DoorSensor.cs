@@ -168,7 +168,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid">ZWave Node ID</param>
-        public DoorSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<DoorSensor>? logger = null) : base(nodeid, logger)
+        public DoorSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<DoorSensor> logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }
@@ -176,7 +176,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             Node? node = deviceService.GetZWaveNode(this.NodeID);
 

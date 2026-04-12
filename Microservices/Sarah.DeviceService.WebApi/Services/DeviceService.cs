@@ -217,7 +217,7 @@ namespace Sarah.DeviceService
                     if (nodeElement == null)
                     {
                         _logger.LogInformation("Adding Zwave Node " + n.NodeID + " as  UNKNOWN ELEMENT (add to NodeFactory now!)...");
-                        networkElements.Add(new UnknownElement(n.NodeID, _publisher, null));
+                        networkElements.Add(new UnknownElement(n.NodeID, _publisher, _logger));
                     }
                     else
                     {
@@ -235,7 +235,7 @@ namespace Sarah.DeviceService
                 if (nodeElement == null)
                 {
                     _logger.LogInformation("Adding non-Zwave Node " + nodeId + " as UNKNOWN Element...");
-                    networkElements.Add(new UnknownElement(nodeId, _publisher, null));
+                    networkElements.Add(new UnknownElement(nodeId, _publisher, _logger));
                 }
                 else
                 {

@@ -28,7 +28,7 @@ namespace Sarah.DeviceService.Model
         private DateTime _lastStateChange;
         protected readonly NetworkElementPublisher _publisher;
 
-        protected WallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger? logger = null) : base(nodeid, logger)
+        protected WallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }

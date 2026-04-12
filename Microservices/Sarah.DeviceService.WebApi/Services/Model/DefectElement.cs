@@ -15,12 +15,12 @@ namespace Sarah.DeviceService.Model
         public override string ClassDescription => this._genericType;
 
 
-        public DefectElement(byte nodeid, NetworkElementPublisher publisher, ILogger<DefectElement>? logger = null) : base(nodeid, logger)
+        public DefectElement(byte nodeid, NetworkElementPublisher publisher, ILogger<DefectElement> logger) : base(nodeid, logger)
         {
 
         }
 
-        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override async Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             Node? node = deviceService.GetZWaveNode(this.NodeID);
 

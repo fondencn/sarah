@@ -7,7 +7,7 @@ namespace Sarah.DeviceService.Presence
     public class PresenceEngine : IPersonInfoProvider
     {
         #region singleton pattern
-        private static PresenceEngine _Instance;
+        private static PresenceEngine? _Instance;
         public static PresenceEngine Instance
         {
             get
@@ -25,7 +25,7 @@ namespace Sarah.DeviceService.Presence
         }
         #endregion
 
-        public IPersonInfoProvider PersonInfos { get; set; }
+        public IPersonInfoProvider? PersonInfos { get; set; }
 
         public bool IsPresent(string person) => PersonInfos?.IsPresent(person) == true;
 

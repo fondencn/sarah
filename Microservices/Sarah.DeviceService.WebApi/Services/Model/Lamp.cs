@@ -25,7 +25,6 @@ namespace Sarah.DeviceService.Model
         private string _color = null!;
         private string _meter = null!;
         private IDeviceService _deviceService = null!;
-        private Animation? _currentAnimation;
 
         public override string ClassDescription => "Lampe";
 
@@ -78,7 +77,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public Lamp(byte nodeid, LampColorModes mode, NetworkElementPublisher publisher, ILogger<Lamp>? logger = null) : base(nodeid, logger)
+        public Lamp(byte nodeid, LampColorModes mode, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, logger)
         {
             _publisher = publisher;
             this.ColorMode = mode;
@@ -87,7 +86,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung mit dem Zwave Gerät / Network Node
         /// </summary>
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             this._deviceService = deviceService;
             Node? n = deviceService.GetZWaveNode(this.NodeID);
@@ -313,7 +312,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public Animation CurrentAnimation { get; set; }
+        public Animation? CurrentAnimation { get; set; }
     }
 
     public enum LampColorModes

@@ -18,10 +18,10 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public abstract class ThermoElement : NetworkElement, IBatterySensor, ITemperatureSensor, IThermoElement
     {
-        private SensorData _TemperatureSetpoint;
-        private SensorData _Temperature;
-        private SensorData _battery;
-        private SensorData _basic;
+        private SensorData _TemperatureSetpoint = SensorData.Empty;
+        private SensorData _Temperature = SensorData.Empty;
+        private SensorData _battery = SensorData.Empty;
+        private SensorData _basic = SensorData.Empty;
         protected readonly NetworkElementPublisher _publisher;
 
         public override string ClassDescription => "Heizung";
@@ -36,7 +36,7 @@ namespace Sarah.DeviceService.Model
                 if (_TemperatureSetpoint != value)
                 {
                     _TemperatureSetpoint = value;
-                    _publisher.ReportEvent(this, nameof(TemperatureSetpoint), _TemperatureSetpoint?.Value.ToString());
+                    _ = _publisher.ReportEvent(this, nameof(TemperatureSetpoint), _TemperatureSetpoint?.Value.ToString());
                 }
             }
         }
@@ -49,7 +49,7 @@ namespace Sarah.DeviceService.Model
                 if (_Temperature != value)
                 {
                     _Temperature = value;
-                    _publisher.ReportEvent(this, nameof(Temperature), _Temperature?.Value.ToString());
+                    _ = _publisher.ReportEvent(this, nameof(Temperature), _Temperature?.Value.ToString());
                 }
             }
         }
@@ -62,7 +62,7 @@ namespace Sarah.DeviceService.Model
                 if (_basic != value)
                 {
                     _basic = value;
-                    _publisher.ReportEvent(this, nameof(Basic), _basic?.Value.ToString());
+                    _ = _publisher.ReportEvent(this, nameof(Basic), _basic?.Value.ToString());
                 }
             }
         }
@@ -75,7 +75,7 @@ namespace Sarah.DeviceService.Model
                 if (_battery != value)
                 {
                     _battery = value;
-                    _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString());
+                    _ = _publisher.ReportEvent(this, nameof(Battery), _battery?.Value.ToString());
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// ctor
         /// </summary>
-        protected ThermoElement(byte nodeid, NetworkElementPublisher publisher, ILogger? logger = null) : base(nodeid, logger)
+        protected ThermoElement(byte nodeid, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }

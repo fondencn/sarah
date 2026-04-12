@@ -13,12 +13,12 @@ namespace Sarah.DeviceService.Model
     {
         private readonly NetworkElementPublisher _publisher;
         
-        public ControllerElement(byte nodeid, NetworkElementPublisher publisher, ILogger<ControllerElement>? logger = null) : base(nodeid, logger)
+        public ControllerElement(byte nodeid, NetworkElementPublisher publisher, ILogger<ControllerElement> logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }
 
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             _ = _publisher.ReportEvent(this, "Status", "Controller gestartet");
             return Task.CompletedTask;
