@@ -240,6 +240,7 @@ namespace Sarah.Monitoring.Monitors
 
         private class SurveillanceTask
         {
+            private const float DEFAULT_OFF_TEMPERATURE = 12.0f;
             private readonly RabbitMQClient _rabbitMQ;
             private readonly IReadOnlyDictionary<byte, HeatingInfo> _heatingInfo;
             private readonly DoorMonitor _doorMonitor;
@@ -456,13 +457,13 @@ namespace Sarah.Monitoring.Monitors
                                             if (heatingDevice?.Thermostat?.TemperatureSetpoint is float setpoint)
                                             {
                                                 /* 12° bedeutet "aus" - nur ausschalten wenn nicht sowieso schon aus! */
-                                                if (setpoint != 12.0f)
+                                                if (setpoint != DEFAULT_OFF_TEMPERATURE)
                                                 {
                                                     this.OriginalHeatingTemperatures.Add(new KeyValuePair<byte, float>(heatingId, setpoint));
 
                                                     /* Heizung ohne await damit die Sprachausgabe sofort kommt
                                                      * Könnte zum Problem bei mehreren Heizungen werden (ZWave-RaceCondition!) */
-                                                    _ = _deviceServiceClient.SetThermostatTemperatureAsync(heatingDevice.Id, 12.0f);
+                                                    _ = _deviceServiceClient.SetThermostatTemperatureAsync(heatingDevice.Id, DEFAULT_OFF_TEMPERATURE);
                                                 }
                                             }
                                             else
