@@ -42,11 +42,11 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         private Dictionary<byte, byte[]> DoorToHeatingsMapping { get; } = new Dictionary<byte, byte[]>()
         {
-            { 2,  new byte[]{ 40    } },  // Terassentür Arbeitszimmer macht Heizung im Wohnzimmer aus
+            { 2,  new byte[]{ 253    } },  // Terassentür Arbeitszimmer macht Heizung im Wohnzimmer aus
             { 23, new byte[]{ 37    } },  // Fenster Lukaszimmer macht Heizung im Lukaszimmer aus
-            { 22, new byte[]{ 40    } },  // Fenster Wohnzimmer macht Heizung im Wohnzimmer aus
+            { 22, new byte[]{ 253    } },  // Fenster Wohnzimmer macht Heizung im Wohnzimmer aus
             { 44, new byte[]{ 42,19 } },  // Fenster Schlafzimmer macht Heizung im Schlafzimmer und im Bad aus
-            { 33, new byte[]{ 45    } },  // Balkontür Wohnzimmer macht Heizung im Wohnzimmer aus
+            { 33, new byte[]{ 253    } },  // Balkontür Wohnzimmer macht Heizung im Wohnzimmer aus
             { 35, new byte[]{ 15    } },  // Terassentür Mamazimmer macht Heizung im Mamazimmer aus
         };
 

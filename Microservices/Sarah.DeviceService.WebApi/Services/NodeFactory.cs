@@ -99,7 +99,7 @@ namespace Sarah.DeviceService.WebApi.Services
             yield return 252;
 
             // Shelly TRV Gen3 Gateway 1 (2 TRVs)
-            yield return 253;
+            yield return 253; //Wohnzimmer
             yield return 254;
 
             // Shelly TRV Gen3 Gateway 2 (3 TRVs)
