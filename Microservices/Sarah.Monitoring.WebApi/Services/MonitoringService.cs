@@ -3,7 +3,6 @@ using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects;
 using Sarah.ServiceClients;
 using Sarah.Messaging.RabbitMQ;
-using Sarah.Messaging.RabbitMQ.Messages;
 using Sarah.Monitoring.Monitors;
 
 namespace Sarah.Monitoring;
@@ -41,24 +40,7 @@ public class MonitoringService (IPersonService _personService, DeviceServiceClie
 
         await Task.WhenAll(Monitors.Select(m => m.Start()).ToArray());
 
-        _logger.LogInformation("MonitoringService started, subscribing to NetworkEvents");
-
-        await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>("network.events.#", async (message) =>
-        {
-            var networkEvent = new NetworkEvent<object>(message.SourceNodeId, message.Property, null);
-            var networkEventSubscribers = Monitors.OfType<INetworkEventSubscriber>();
-            foreach (var subscriber in networkEventSubscribers)
-            {
-                try
-                {
-                    await subscriber.Notify(networkEvent);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error notifying {SubscriberType} of network event", subscriber.GetType().Name);
-                }
-            }
-        });
+        _logger.LogInformation("MonitoringService started");
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }

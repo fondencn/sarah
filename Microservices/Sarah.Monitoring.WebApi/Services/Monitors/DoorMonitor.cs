@@ -14,7 +14,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IReadOnlyList<RoomDto> _roomSnapshot, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger, DeviceServiceClient _deviceServiceClient) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor (IReadOnlyList<RoomDto> _roomSnapshot, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger, DeviceServiceClient _deviceServiceClient) : ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -85,14 +85,21 @@ namespace Sarah.Monitoring.Monitors
         /// Startet alle Überwachungsfunktionen für Türsensoren
         /// </summary>
         /// <returns></returns>
-        public Task Start()
+        public async Task Start()
         {
-            if (!this.IsRunning)
+            if (this.IsRunning)
             {
-                _logger.LogDebug("DoorMonitor gestartet.");
-                this.IsRunning = true;
+                return;
             }
-            return Task.CompletedTask;
+
+            // 2) Door monitoring subscribes to the specific door-state topic introduced for typed events.
+            await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
+                topic: MessageTopics.NetworkEventsDoorState,
+                onMessage: message => Update(message.SourceNodeId),
+                exchange: MessageTopics.NetworkEvents);
+
+            _logger.LogDebug("DoorMonitor gestartet.");
+            this.IsRunning = true;
         }
 
         /// <summary>
@@ -172,16 +179,6 @@ namespace Sarah.Monitoring.Monitors
             {
                 _logger.LogError(ex, "Fehler beim Aktualisieren der Türzustände");
             }
-        }
-
-        /// <summary>
-        /// Notify (aus <c>INetworkEventSubscriber</c> )
-        /// </summary>
-        /// <param name="e">Nachrichtenereignis</param>
-        /// <returns>Task</returns>
-        public Task Notify(NetworkEvent e)
-        {
-            return Update(e.SourceNodeId);
         }
 
         /// <summary>

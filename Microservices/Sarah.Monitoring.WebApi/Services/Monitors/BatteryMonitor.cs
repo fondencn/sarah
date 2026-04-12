@@ -153,6 +153,7 @@ namespace Sarah.Monitoring.Monitors
             try
             {
                 this.CurrentBatteryInfos.Clear();
+                // 3) Battery monitoring currently stays polling-based and reads live DTO data via DeviceServiceClient.
                 var batteryDrivenDevices = (await _deviceServiceClient.GetAllDevicesAsync())
                     .Where(d => d.Battery?.Level is not null)
                     .ToList();

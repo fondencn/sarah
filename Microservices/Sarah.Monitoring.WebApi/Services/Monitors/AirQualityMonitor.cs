@@ -20,7 +20,7 @@ namespace Sarah.Monitoring.Monitors
     /// <summary>
     /// Überwachungsdienst für die Luftqualität in Räumen
     /// </summary>
-    internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
+    internal class AirQualityMonitor : ICanSelfTest, IMonitor
     {
         private readonly IReadOnlyList<RoomDto> _roomSnapshot;
         private readonly RabbitMQClient _rabbitMQ;
@@ -71,12 +71,25 @@ namespace Sarah.Monitoring.Monitors
         /// Startet die Überwachung in einem eigenen Task
         /// </summary>
         /// <returns></returns>
-        public Task Start()
+        public async Task Start()
         {
+            if (this.IsRunning)
+            {
+                return;
+            }
+
+            // 1) Air quality still listens to generic network.events messages because CO2/VOC/humidity are published as generic property events.
+            await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>(
+                topic: MessageTopics.NetworkEvents,
+                onMessage: async message =>
+                {
+                    var networkEvent = new NetworkEvent<object>(message.SourceNodeId, message.Property, null);
+                    await HandleNetworkEvent(networkEvent);
+                },
+                exchange: MessageTopics.NetworkEvents);
+
             this.IsRunning = true;
             _logger.LogDebug("AirQualityMonitor gestartet und als Provider registriert.");
-
-            return Task.CompletedTask;
         }
 
 
@@ -85,7 +98,7 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task Notify(NetworkEvent e)
+        private async Task HandleNetworkEvent(NetworkEvent e)
         {
             try
             {
