@@ -1,23 +1,22 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces.Services;
-using System.Linq;
+using Sarah.ServiceClients;
 
 namespace Sarah.Rules.Actions
 {
     public class WallPlugToggleStateAction : RuleAction
     {
-        private readonly IDeviceService _devices;
-        private int TargetNodeId { get; set; }
+        private readonly DeviceServiceClient _deviceServiceClient;
+        private byte TargetNodeId { get; set; }
 
-        public WallPlugToggleStateAction(int targetNodeId, IDeviceService devices)
+        public WallPlugToggleStateAction(byte targetNodeId, DeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.TargetNodeId = targetNodeId;
         }
 
-        public override void Execute(NetworkEvent sourceEvent)
+        public override async void Execute(NetworkEvent sourceEvent)
         {
-            _devices.WallPlugs.First(item => item.NodeID == TargetNodeId).ToggleState();
+            await _deviceServiceClient.ToggleWallPlugByNodeAsync(this.TargetNodeId);
         }
     }
 }

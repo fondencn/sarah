@@ -18,7 +18,7 @@ namespace Sarah.DeviceService.Model
     public class WallController : NetworkElement, IBatterySensor, IWallController
     {
 
-        private SensorData _battery;
+        private SensorData _battery = SensorData.Empty;
         private readonly NetworkElementPublisher _publisher;
 
         /// <summary>
@@ -39,10 +39,10 @@ namespace Sarah.DeviceService.Model
         /// Zustandsdaten für die Anzeige
         /// </summary>
         public override string StateInfo => "Letzte Aktivität: " + (LastUsage.HasValue ? LastUsage.Value.ToString() : "Unbekannt") + ", SceneId: " + LastSceneId + ", Batterie: " + Battery;
-        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
+        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _ = _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
 
 
-        public WallController(byte nodeid, NetworkElementPublisher publisher, ILogger<WallController>? logger = null) : base(nodeid, logger)
+        public WallController(byte nodeid, NetworkElementPublisher publisher, ILogger<WallController> logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }
@@ -51,7 +51,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Initialisiert die Verbindung zum ZWave Gerät
         /// </summary>
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             Node? node = deviceService.GetZWaveNode(this.NodeID);
             _logger?.LogDebug("Initialize Node " + this.NodeID + " as " +  this.Name );
@@ -120,11 +120,11 @@ namespace Sarah.DeviceService.Model
 
         private Task OnClicked()
         {
-            _publisher.ReportEvent(this, nameof(ClickedEvent), this.LastSceneId.ToString());
+            _ = _publisher.ReportClickedEvent(this, this.LastSceneId);
             return Task.CompletedTask;
         }
 
-        private async void OnCentralSceneChanged(object sender, ReportEventArgs<CentralSceneReport> e)
+        private async void OnCentralSceneChanged(object? sender, ReportEventArgs<CentralSceneReport> e)
         {
             _logger?.LogDebug($"CentralScene report of Node {e.Report.Node:D3} changed to [{e.Report}]");
 

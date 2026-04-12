@@ -42,7 +42,7 @@ namespace Sarah.DeviceService.Model
         /// <param name="channel">Kanal-ID des TRV am Gateway (0-basiert)</param>
         /// <param name="publisher">Event publisher</param>
         /// <param name="logger">Optional logger</param>
-        public ShellyTrvElement(byte nodeid, string hostname, int channel, NetworkElementPublisher publisher, ILogger? logger = null)
+        public ShellyTrvElement(byte nodeid, string hostname, int channel, NetworkElementPublisher publisher, ILogger logger)
             : base(nodeid, publisher, logger)
         {
             Hostname = hostname;

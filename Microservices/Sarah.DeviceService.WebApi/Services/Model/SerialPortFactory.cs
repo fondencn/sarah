@@ -79,6 +79,9 @@ namespace Sarah.DeviceService.Model
         public InteLukSerialPort(string serialPortName)
         {
             this._serialPortName = serialPortName;
+
+            System.IO.Ports.SerialPort serialPort = new System.IO.Ports.SerialPort(_serialPortName, 115200, System.IO.Ports.Parity.None, 8);
+            this.SerialPort = serialPort;
         }
 
         ///// <summary>
@@ -133,9 +136,9 @@ namespace Sarah.DeviceService.Model
         //}
 
         #region ISerialPort
-        public Stream InputStream => SerialPort.IsOpen ? SerialPort.BaseStream : null;
+        public Stream? InputStream => SerialPort?.IsOpen == true ? SerialPort.BaseStream : null;
 
-        public Stream OutputStream => SerialPort.IsOpen ? SerialPort.BaseStream : null;
+        public Stream? OutputStream => SerialPort?.IsOpen == true ? SerialPort.BaseStream : null;
 
         public void Close()
         {
@@ -145,9 +148,6 @@ namespace Sarah.DeviceService.Model
 
         public void Open()
         {
-
-            System.IO.Ports.SerialPort serialPort = new System.IO.Ports.SerialPort(_serialPortName, 115200, System.IO.Ports.Parity.None, 8);
-            this.SerialPort = serialPort;
 
             this.SerialPort.Open();
             this._isRunning = true;
@@ -160,11 +160,7 @@ namespace Sarah.DeviceService.Model
         #region IDisposable
         public void Dispose()
         {
-            if (this.SerialPort != null)
-            {
-                this.SerialPort.Dispose();
-                this.SerialPort = null;
-            }
+            this.SerialPort.Dispose();
             this._isRunning = false;
         }
         #endregion

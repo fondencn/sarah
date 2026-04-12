@@ -14,44 +14,44 @@ namespace Sarah.DeviceService.Model
     {
         private readonly NetworkElementPublisher _publisher;
         private DateTime LastUpdate { get; set; } = DateTime.MinValue;
-        private SensorData _temperature;
-        private SensorData _battery;
-        private SensorData _alarm;
-        private SensorData _smokeDetected;
-        private SensorData _overHeatDetected;
+        private SensorData? _temperature;
+        private SensorData? _battery;
+        private SensorData? _alarm;
+        private SensorData? _smokeDetected;
+        private SensorData? _overHeatDetected;
 
 
-        public SmokeSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<SmokeSensor>? logger = null) : base(nodeid, logger)
+        public SmokeSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<SmokeSensor> logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }
 
         public SensorData Temperature
         {
-            get => _temperature;
-            private set { if (_temperature != value) { _temperature = value; _publisher.ReportEvent(this, nameof(Temperature), value?.ToString()); LastUpdate = DateTime.Now; } }
+            get => _temperature ?? SensorData.Empty;
+            private set { if (_temperature != value) { _temperature = value; _ = _publisher.ReportEvent(this, nameof(Temperature), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData Battery
         {
-            get => _battery;
-            private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); LastUpdate = DateTime.Now; } }
+            get => _battery ?? SensorData.Empty;
+            private set { if (_battery != value) { _battery = value; _ = _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData IsSmokeDetected
         {
-            get => _smokeDetected;
-            private set { if (_smokeDetected != value) { _smokeDetected = value; _publisher.ReportEvent(this, nameof(IsSmokeDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
+            get => _smokeDetected ?? SensorData.Empty;
+            private set { if (_smokeDetected != value) { _smokeDetected = value; _ = _publisher.ReportEvent(this, nameof(IsSmokeDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
         public SensorData IsOverheatingDetected
         {
-            get => _overHeatDetected;
-            private set { if (_overHeatDetected != value) { _overHeatDetected = value; _publisher.ReportEvent(this, nameof(IsOverheatingDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
+            get => _overHeatDetected ?? SensorData.Empty;
+            private set { if (_overHeatDetected != value) { _overHeatDetected = value; _ = _publisher.ReportEvent(this, nameof(IsOverheatingDetected), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
         public SensorData Alarm { 
-            get => _alarm; 
-            private set { if (_alarm != value) { _alarm = value; _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); LastUpdate = DateTime.Now; } } 
+            get => _alarm ?? SensorData.Empty; 
+            private set { if (_alarm != value) { _alarm = value; _ = _publisher.ReportEvent(this, nameof(Alarm), value?.ToString()); _ = _publisher.ReportSmokeAlarm(this, (value?.Value ?? 0) > 0); LastUpdate = DateTime.Now; } } 
         }
 
 
@@ -61,7 +61,7 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             Node? node = deviceService.GetZWaveNode(this.NodeID);
 

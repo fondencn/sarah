@@ -1,0 +1,603 @@
+{
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "title": "Overview \u2014 Log Volume per Service",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Dashboard.WebApi\"}[$__range]))",
+          "legendFormat": "Dashboard",
+          "refId": "A"
+        }
+      ],
+      "title": "Dashboard",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.DeviceService.WebApi\"}[$__range]))",
+          "legendFormat": "DeviceService",
+          "refId": "A"
+        }
+      ],
+      "title": "DeviceService",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Geofences.WebApi\"}[$__range]))",
+          "legendFormat": "Geofences",
+          "refId": "A"
+        }
+      ],
+      "title": "Geofences",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Monitoring.WebApi\"}[$__range]))",
+          "legendFormat": "Monitoring",
+          "refId": "A"
+        }
+      ],
+      "title": "Monitoring",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Persons.WebApi\"}[$__range]))",
+          "legendFormat": "Persons",
+          "refId": "A"
+        }
+      ],
+      "title": "Persons",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.RoomService.WebApi\"}[$__range]))",
+          "legendFormat": "RoomService",
+          "refId": "A"
+        }
+      ],
+      "title": "RoomService",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Rules.WebApi\"}[$__range]))",
+          "legendFormat": "Rules",
+          "refId": "A"
+        }
+      ],
+      "title": "Rules",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.SpeechServer.WebApi\"}[$__range]))",
+          "legendFormat": "SpeechServer",
+          "refId": "A"
+        }
+      ],
+      "title": "SpeechServer",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 10,
+      "title": "Log Rate \u2014 All Services",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 50
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$service\"}[$__interval]))",
+          "legendFormat": "{{service_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Rate per Service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 50
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$service\", level=\"error\"}[$__interval]))",
+          "legendFormat": "error \u2013 {{service_name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$service\", level=\"warning\"}[$__interval]))",
+          "legendFormat": "warn \u2013 {{service_name}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Error + Warning Rate per Service",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 13,
+      "title": "Log Stream \u2014 $log_service",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 14,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{service_name=\"$log_service\"} | logfmt | level=~\"$level\"",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs \u2014 $log_service",
+      "type": "logs"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "sarah"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "description": "Filters the overview charts and rate graphs",
+        "includeAll": true,
+        "label": "Overview filter",
+        "multi": true,
+        "name": "service",
+        "query": {
+          "label": "service_name",
+          "queryType": "labelValues",
+          "stream": ""
+        },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "description": "Selects which service to tail in the log stream below",
+        "includeAll": false,
+        "label": "Log stream service",
+        "multi": false,
+        "name": "log_service",
+        "query": {
+          "label": "service_name",
+          "queryType": "labelValues",
+          "stream": ""
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "includeAll": true,
+        "label": "Level",
+        "multi": true,
+        "name": "level",
+        "options": [
+          {
+            "text": "trace",
+            "value": "trace"
+          },
+          {
+            "text": "debug",
+            "value": "debug"
+          },
+          {
+            "text": "info",
+            "value": "information"
+          },
+          {
+            "text": "warn",
+            "value": "warning"
+          },
+          {
+            "text": "error",
+            "value": "error"
+          },
+          {
+            "text": "critical",
+            "value": "critical"
+          }
+        ],
+        "type": "custom"
+      }
+    ]
+  },
+  "timezone": "browser",
+  "title": "Sarah \u2013 Log Explorer",
+  "uid": "sarah-logs"
+}

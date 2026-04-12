@@ -1,22 +1,16 @@
-﻿using System.Linq;
-using Sarah.API.BusinessObjects;
+﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 
 namespace Sarah.Rules.Conditions
 {
-
-
     /// <summary>
     /// Bedingung, die den Zustand eines Türsensors auswertet.
     /// </summary>
     public class DoorSensorCondition : RuleCondition
     {
-        private readonly IDeviceService _devices;
-
-        public DoorSensorCondition(byte targetNodeId, IDeviceService devices) : base(targetNodeId)
+        public DoorSensorCondition(byte targetNodeId) : base(targetNodeId)
         {
-            this._devices = devices;
         }
 
         /// <summary>
@@ -27,14 +21,14 @@ namespace Sarah.Rules.Conditions
         /// <summary>
         /// Wertet den aktuellen Türsensor Zustand aus und gibt true zurück, wenn dieser dem Wert von Value entspricht.
         /// </summary>
-        /// <returns></returns>
         public override bool Evaluate(NetworkEvent evt)
         {
-            IDoorSensor sensor = _devices.DoorSensors.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
-
-            return Value == sensor?.State;
+            if (evt is DoorSensorStateChangedEvent doorEvt)
+            {
+                bool isOpen = doorEvt.IsOpen;
+                return Value == (isOpen ? DoorSensorState.Offen : DoorSensorState.Geschlossen);
+            }
+            return false;
         }
-
     }
-
 }

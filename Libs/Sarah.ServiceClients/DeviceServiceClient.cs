@@ -260,6 +260,88 @@ namespace Sarah.ServiceClients
             return responseContent;
         }
 
+        public async Task<DeviceDto?> GetDeviceByNodeIdAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DeviceDto>(json);
+        }
+
+        public async Task SetThermostatTemperatureAsync(long deviceId, float temperature)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/thermostat/{deviceId}/temperature/{temperature.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            HttpResponseMessage response = await _httpClient.PostAsync(uri, null);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<float?> GetRoomAverageTemperatureAsync(long roomId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/room/{roomId}/avgtemperature");
+            _logger?.LogDebug("HTTP GET To " + uri);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<float>(json);
+        }
+
+        public async Task ToggleLampByNodeAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/lamp/toggle");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
+        public async Task SetLampWarmWhiteByNodeAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/lamp/warmwhite");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
+        public async Task SetLampColdWhiteByNodeAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/lamp/coldwhite");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
+        public async Task SetLampColorAndBrightnessByNodeAsync(byte nodeId, string color, byte brightness)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/lamp/color/{Uri.EscapeDataString(color)}/brightness/{brightness}");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
+        public async Task SetWallPlugStateByNodeAsync(byte nodeId, bool isOn)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/wallplug/state/{isOn.ToString().ToLowerInvariant()}");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
+        public async Task ToggleWallPlugByNodeAsync(byte nodeId)
+        {
+            Uri uri = new Uri(GetBaseUri(), $"/api/devices/bynode/{nodeId}/wallplug/toggle");
+            _logger?.LogDebug("HTTP POST To " + uri);
+            (await _httpClient.PostAsync(uri, null)).EnsureSuccessStatusCode();
+        }
+
         public async Task<IReadOnlyList<DeviceDto>> GetAllDevicesAsync()
         {
             Uri uri = new Uri(GetBaseUri(), "/api/Devices");
@@ -287,18 +369,18 @@ namespace Sarah.ServiceClients
             return JsonConvert.DeserializeObject<RoomSummaryDto>(json);
         }
 
-        // IDeviceService implementation - stub properties since this is an HTTP client
-        public IEnumerable<ILamp> Lamps => Enumerable.Empty<ILamp>();
-        public IEnumerable<IWallPlug> WallPlugs => Enumerable.Empty<IWallPlug>();
-        public IEnumerable<IMultiSensor> Sensors => Enumerable.Empty<IMultiSensor>();
-        public IEnumerable<IDoorSensor> DoorSensors => Enumerable.Empty<IDoorSensor>();
-        public IEnumerable<ISmokeSensor> SmokeSensors => Enumerable.Empty<ISmokeSensor>();
-        public IEnumerable<IBatterySensor> BatterySensors => Enumerable.Empty<IBatterySensor>();
-        public IEnumerable<IThermoElement> Heatings => Enumerable.Empty<IThermoElement>();
-        public IEnumerable<IControllerElement> Controllers => Enumerable.Empty<IControllerElement>();
-        public IEnumerable<IWallController> WallControllers => Enumerable.Empty<IWallController>();
-        public IEnumerable<IUnknownElement> UnknownElements => Enumerable.Empty<IUnknownElement>();
-        public IEnumerable<IGPSTracker> GPSTrackers => Enumerable.Empty<IGPSTracker>();
+        // IDeviceService properties not supported over HTTP — all callers must use typed HTTP methods instead
+        public IEnumerable<ILamp> Lamps => throw new NotImplementedException("Lamps is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IWallPlug> WallPlugs => throw new NotImplementedException("WallPlugs is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IMultiSensor> Sensors => throw new NotImplementedException("Sensors is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IDoorSensor> DoorSensors => throw new NotImplementedException("DoorSensors is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<ISmokeSensor> SmokeSensors => throw new NotImplementedException("SmokeSensors is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IBatterySensor> BatterySensors => throw new NotImplementedException("BatterySensors is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IThermoElement> Heatings => throw new NotImplementedException("Heatings is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IControllerElement> Controllers => throw new NotImplementedException("Controllers is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IWallController> WallControllers => throw new NotImplementedException("WallControllers is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IUnknownElement> UnknownElements => throw new NotImplementedException("UnknownElements is not available over HTTP; use typed HTTP methods instead.");
+        public IEnumerable<IGPSTracker> GPSTrackers => throw new NotImplementedException("GPSTrackers is not available over HTTP; use typed HTTP methods instead.");
         
         public string SerialPortName => "N/A - HTTP Client";
         public string StatusMessage => "DeviceServiceClient - HTTP-based client";

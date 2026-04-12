@@ -78,6 +78,31 @@ namespace Sarah.Rules
                     onMessage: HandleAirQualityChanged,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsDoorState,
+                    onMessage: HandleDoorSensorStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<TrackerButtonPressedMessage>(
+                    topic: MessageTopics.NetworkEventsTrackerButton,
+                    onMessage: HandleTrackerButtonPressed,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WallPlugStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsWallPlugState,
+                    onMessage: HandleWallPlugStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<MultiSensorStateChangedMessage>(
+                    topic: MessageTopics.NetworkEventsMultiSensorState,
+                    onMessage: HandleMultiSensorStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<SmokeSensorAlertMessage>(
+                    topic: MessageTopics.NetworkEventsSmokeSensorAlert,
+                    onMessage: HandleSmokeSensorAlert,
+                    cancellationToken: stoppingToken);
+
                 await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
                     topic: MessageTopics.SchedulesAlarmChanged,
                     onMessage: HandleAlarmScheduleChanged,
@@ -91,6 +116,16 @@ namespace Sarah.Rules
                 await _rabbitMQ.SubscribeAsync<HolidayStatusChangedMessage>(
                     topic: MessageTopics.HolidaysStatusChanged,
                     onMessage: HandleHolidayStatusChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WeatherWarningEventMessage>(
+                    topic: MessageTopics.WeatherWarning,
+                    onMessage: HandleWeatherWarning,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WeatherForecastUpdatedMessage>(
+                    topic: MessageTopics.WeatherForecastUpdated,
+                    onMessage: HandleWeatherForecastUpdated,
                     cancellationToken: stoppingToken);
 
                 _logger.LogInformation("RuleService subscribed to all event topics");
@@ -198,6 +233,80 @@ namespace Sarah.Rules
             }
         }
 
+        private async Task HandleDoorSensorStateChanged(DoorSensorStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door state changed event: node {NodeId}, isOpen={IsOpen}",
+                    message.SourceNodeId, message.IsOpen);
+
+                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
+                EvaluateRules(doorEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door sensor state changed event");
+            }
+        }
+
+        private async Task HandleTrackerButtonPressed(TrackerButtonPressedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received tracker button event: node {NodeId}, isPressed={IsPressed}",
+                    message.SourceNodeId, message.IsPressed);
+
+                var trackerEvent = new TrackerButtonPressedEvent(message.SourceNodeId, message.IsPressed);
+                EvaluateRules(trackerEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling tracker button pressed event");
+            }
+        }
+
+        private async Task HandleWallPlugStateChanged(WallPlugStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
+                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastIncreasePower, message.LastDecreasePower);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling wall plug state changed event");
+            }
+        }
+
+        private async Task HandleMultiSensorStateChanged(MultiSensorStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received multi-sensor state changed event: node {NodeId}", message.SourceNodeId);
+                var evt = new MultiSensorStateChangedEvent(message.SourceNodeId, message.Presence, message.Luminance);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling multi-sensor state changed event");
+            }
+        }
+
+        private async Task HandleSmokeSensorAlert(SmokeSensorAlertMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received smoke sensor alert event: node {NodeId}, alarmActive={AlarmActive}", message.SourceNodeId, message.AlarmActive);
+                var evt = new SmokeSensorAlertEvent(message.SourceNodeId, message.AlarmActive);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling smoke sensor alert event");
+            }
+        }
+
         private async Task HandleAlarmScheduleChanged(AlarmScheduleChangedMessage message)
         {
             try
@@ -248,6 +357,34 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling holiday status changed event");
+            }
+        }
+
+        private async Task HandleWeatherWarning(WeatherWarningEventMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received weather warning event");
+                var evt = new WeatherWarningEvent(message.NewValue ?? string.Empty);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling weather warning event");
+            }
+        }
+
+        private async Task HandleWeatherForecastUpdated(WeatherForecastUpdatedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received weather forecast updated event for {Location}", message.Location);
+                var evt = new WeatherForecastUpdatedEvent(message.ForecastStringForToday ?? string.Empty);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling weather forecast updated event");
             }
         }
 

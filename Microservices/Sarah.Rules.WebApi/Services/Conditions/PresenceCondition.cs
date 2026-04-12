@@ -1,39 +1,23 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
-using System.Linq;
 
 namespace Sarah.Rules.Conditions
 {
     public class PresenceCondition : RuleCondition
     {
-        private readonly IDeviceService _devices;
         public bool Value { get; }
 
-        public PresenceCondition(byte targetNodeId, bool targetValue, IDeviceService devices) : base(targetNodeId)
+        public PresenceCondition(byte targetNodeId, bool targetValue) : base(targetNodeId)
         {
-            this._devices = devices;
             this.Value = targetValue;
         }
 
-        public override bool Evaluate(NetworkEvent evt ) 
+        public override bool Evaluate(NetworkEvent evt)
         {
-            try
-            {
-                IMultiSensor sensor = _devices.Sensors.First(item => item.NodeID == this.TargetNodeId);
-                if (sensor.Presence != null)
-                {
-                    return (((sensor.Presence?.Value) ?? 0) > 0) == this.Value;
-                }
-                else
-                {
-                    return false;
-                }
-            } 
-            catch
-            {
-                return false;
-            }
+            if (evt is MultiSensorStateChangedEvent ms && ms.SourceNodeId == this.TargetNodeId && ms.Presence.HasValue)
+                return (ms.Presence.Value > 0) == this.Value;
+            return false;
         }
     }
 }

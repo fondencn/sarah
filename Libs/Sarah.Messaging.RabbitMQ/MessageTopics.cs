@@ -52,13 +52,34 @@ public static class MessageTopics
     /// </summary>
     public const string NetworkEventsAirQuality = "network.events.airquality";
 
-    // Weather-related topics
-    
     /// <summary>
-    /// Topic for outdoor temperature change events.
-    /// Published when external temperature sensors report new values.
+    /// Topic for door/window sensor open/close state changes.
+    /// Published when a door or window sensor changes its open/closed state.
     /// </summary>
-    public const string WeatherOutdoorTemperature = "weather.outdoortemperature";
+    public const string NetworkEventsDoorState = "network.events.doorstate";
+
+    /// <summary>
+    /// Topic for GPS tracker SOS button press events.
+    /// Published when the button on a LoRaWAN GPS tracker is pressed or released.
+    /// </summary>
+    public const string NetworkEventsTrackerButton = "network.events.trackerbutton";
+
+    /// <summary>
+    /// Topic for wall plug state changes (on/off, power threshold crossings).
+    /// </summary>
+    public const string NetworkEventsWallPlugState = "network.events.wallplugstate";
+
+    /// <summary>
+    /// Topic for multi-sensor presence/luminance state changes.
+    /// </summary>
+    public const string NetworkEventsMultiSensorState = "network.events.multisensorstate";
+
+    /// <summary>
+    /// Topic for smoke sensor alarm state changes.
+    /// </summary>
+    public const string NetworkEventsSmokeSensorAlert = "network.events.smokesensoralert";
+
+    // Weather-related topics
     
     /// <summary>
     /// Topic for weather warning notifications.

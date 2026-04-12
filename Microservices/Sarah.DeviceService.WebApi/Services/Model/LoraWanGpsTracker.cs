@@ -99,7 +99,7 @@ namespace Sarah.DeviceService.Model
                 if (_isButtonPressed != value)
                 {
                     _isButtonPressed = value;
-                    _ = _publisher.ReportEvent(this, nameof(IsButtonPressed), _isButtonPressed?.Value.ToString(CultureInfo.CurrentCulture));
+                    _ = _publisher.ReportTrackerButtonPressed(this, _isButtonPressed?.Value != 0f);
                 }
             }
         }

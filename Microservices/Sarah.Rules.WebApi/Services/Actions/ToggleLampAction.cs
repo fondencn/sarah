@@ -1,25 +1,24 @@
 ﻿using Sarah.API.BusinessObjects;
-using Sarah.API.Interfaces.Services;
+using Sarah.ServiceClients;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Sarah.Rules.Actions
 {
     public class ToggleLampAction : RuleAction
     {
-        private readonly IDeviceService _devices;
+        private readonly DeviceServiceClient _deviceServiceClient;
         private byte TargetNodeId { get; set; }
-        public ToggleLampAction(byte targetNodeId, IDeviceService devices)
+
+        public ToggleLampAction(byte targetNodeId, DeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.TargetNodeId = targetNodeId;
         }
 
-        public override void Execute(NetworkEvent sourceEvent)
+        public override async void Execute(NetworkEvent sourceEvent)
         {
-             _ = _devices.Lamps.First(item => item.NodeID == this.TargetNodeId).ToggleState();
+            _ = _deviceServiceClient.ToggleLampByNodeAsync(this.TargetNodeId);
         }
     }
 }

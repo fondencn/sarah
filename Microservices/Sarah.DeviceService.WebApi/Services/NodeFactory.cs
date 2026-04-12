@@ -12,7 +12,7 @@ namespace Sarah.DeviceService.WebApi.Services
     /// <summary>
     /// Factory Klasse für alle bekannten Netzwerkknoten
     /// </summary>
-    public class NodeFactory(IEventProcessingService _events, ILogger<NodeFactory> _logger, NetworkElementPublisher _networkEventPublisher, IConfiguration _config) : INodeFactory
+    public class NodeFactory(ILogger<NodeFactory> _logger, NetworkElementPublisher _networkEventPublisher, IConfiguration _config) : INodeFactory
     {
         private string TtnApiKey => _config["TheThingsNetwork:ApiKey"] ?? throw new InvalidOperationException("TTN_API_KEY not set in configuration");
 
@@ -99,7 +99,7 @@ namespace Sarah.DeviceService.WebApi.Services
             yield return 252;
 
             // Shelly TRV Gen3 Gateway 1 (2 TRVs)
-            yield return 253;
+            yield return 253; //Wohnzimmer
             yield return 254;
 
             // Shelly TRV Gen3 Gateway 2 (3 TRVs)
@@ -199,7 +199,7 @@ namespace Sarah.DeviceService.WebApi.Services
                     {
                         lampMode = _ColorModeMappings[nodeId];
                     }
-                    el = new Lamp(nodeId, lampMode, _networkEventPublisher, null);
+                    el = new Lamp(nodeId, lampMode, _networkEventPublisher, _logger);
                 }
                 else if (nodeType == typeof(WifiWallPlug))
                 {
@@ -248,7 +248,7 @@ namespace Sarah.DeviceService.WebApi.Services
                 }
                 else if (nodeType == typeof(ZWaveThermoElement))
                 {
-                    el = new ZWaveThermoElement(nodeId, _networkEventPublisher, null);
+                    el = new ZWaveThermoElement(nodeId, _networkEventPublisher, _logger);
                 }
                 else if (nodeType == typeof(ShellyTrvElement))
                 {

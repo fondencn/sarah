@@ -6,6 +6,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.ServiceClients;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -13,7 +14,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor (IReadOnlyList<DeviceDto> _deviceSnapshot, IReadOnlyList<RoomDto> _roomSnapshot, IDeviceService _devices, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger) : INetworkEventSubscriber, ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor (IReadOnlyList<RoomDto> _roomSnapshot, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger, DeviceServiceClient _deviceServiceClient) : ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
@@ -41,11 +42,11 @@ namespace Sarah.Monitoring.Monitors
         /// </summary>
         private Dictionary<byte, byte[]> DoorToHeatingsMapping { get; } = new Dictionary<byte, byte[]>()
         {
-            { 2,  new byte[]{ 40    } },  // Terassentür Arbeitszimmer macht Heizung im Wohnzimmer aus
+            { 2,  new byte[]{ 253    } },  // Terassentür Arbeitszimmer macht Heizung im Wohnzimmer aus
             { 23, new byte[]{ 37    } },  // Fenster Lukaszimmer macht Heizung im Lukaszimmer aus
-            { 22, new byte[]{ 40    } },  // Fenster Wohnzimmer macht Heizung im Wohnzimmer aus
+            { 22, new byte[]{ 253    } },  // Fenster Wohnzimmer macht Heizung im Wohnzimmer aus
             { 44, new byte[]{ 42,19 } },  // Fenster Schlafzimmer macht Heizung im Schlafzimmer und im Bad aus
-            { 33, new byte[]{ 45    } },  // Balkontür Wohnzimmer macht Heizung im Wohnzimmer aus
+            { 33, new byte[]{ 253    } },  // Balkontür Wohnzimmer macht Heizung im Wohnzimmer aus
             { 35, new byte[]{ 15    } },  // Terassentür Mamazimmer macht Heizung im Mamazimmer aus
         };
 
@@ -84,89 +85,100 @@ namespace Sarah.Monitoring.Monitors
         /// Startet alle Überwachungsfunktionen für Türsensoren
         /// </summary>
         /// <returns></returns>
-        public Task Start()
+        public async Task Start()
         {
-            if (!this.IsRunning)
+            if (this.IsRunning)
             {
-                _logger.LogDebug("DoorMonitor gestartet.");
-                this.IsRunning = true;
+                return;
             }
-            return Task.CompletedTask;
+
+            // 2) Door monitoring subscribes to the specific door-state topic introduced for typed events.
+            await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
+                topic: MessageTopics.NetworkEventsDoorState,
+                onMessage: message => Update(message.SourceNodeId),
+                exchange: MessageTopics.NetworkEvents);
+
+            _logger.LogDebug("DoorMonitor gestartet.");
+            this.IsRunning = true;
         }
 
         /// <summary>
         /// Wird aufgerufen, wenn eine Device-Nachricht veröffentlicht wird
         /// </summary>
         /// <param name="changedNodeId">ID des geändertes Knotens</param>
-        private Task Update(byte changedNodeId)
+        private async Task Update(byte changedNodeId)
         {
             try
             {
-                DeviceDto? device = _deviceSnapshot.FirstOrDefault(item => item.NodeId == changedNodeId);
+                
+                DeviceDto? liveDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync(changedNodeId);
+                DoorSensorStateDto? sensorState = liveDevice?.DoorSensor;
 
-                if (device != null)
+                if (liveDevice != null && sensorState != null)
                 {
-                    IDoorSensor? sensor = _devices.GetNetworkItem((byte)device.NodeId) as IDoorSensor;
-
-                    if (sensor != null)
+                    _logger.LogDebug("DoorMonitor: Netzwerkereignis empfangen für NodeId {NodeId}", changedNodeId);
+                    byte nodeId = changedNodeId;
+                    TimeSpan sensorThreshold;
+                    if (!DoorOpenTimeThresholds.TryGetValue(nodeId, out sensorThreshold))
                     {
-                        byte nodeId = (byte)device.NodeId;
-                        TimeSpan sensorThreshold;
-                        if (!DoorOpenTimeThresholds.TryGetValue(nodeId, out sensorThreshold))
+                        sensorThreshold = DefaultOpenTimeThreshold;
+                    }
+    
+                    if (sensorState.State == DoorSensorState.Offen)
+                    {
+                        /* Tür geöffnet -> Uberwachung starten */
+                        if (!this.CurrentOpenDoorTasks.Any(task => task.Device.NodeId == changedNodeId)
+                            && sensorState.LastStateChanged.HasValue)
                         {
-                            sensorThreshold = DefaultOpenTimeThreshold;
-                        }
+                            RoomDto? room = liveDevice.RoomId.HasValue
+                                ? _roomSnapshot.FirstOrDefault(r => r.Id == liveDevice.RoomId.Value)
+                                : null;
 
-                        if (sensor.State == DoorSensorState.Offen)
-                        {
-                            /* Tür geöffnet -> Uberwachung starten */
-                            if (!this.CurrentOpenDoorTasks.Any(task => task.Device.NodeId == changedNodeId)
-                                && sensor.LastStateChanged.HasValue)
+                            bool warnAtOpen = this.WarnImmediateNodeIds.Contains(nodeId);
+
+                            byte[]? associatedHeatings;
+                            if (!DoorToHeatingsMapping.TryGetValue(nodeId, out associatedHeatings))
                             {
-                                RoomDto? room = device.RoomId.HasValue
-                                    ? _roomSnapshot.FirstOrDefault(r => r.Id == device.RoomId.Value)
-                                    : null;
+                                associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
+                            }
 
-                                bool warnAtOpen = this.WarnImmediateNodeIds.Contains(nodeId);
-
-                                byte[]? associatedHeatings;
-                                if (!DoorToHeatingsMapping.TryGetValue(nodeId, out associatedHeatings))
+                            // Pre-resolve heating device DB IDs and room names for speech
+                            var heatingInfo = new Dictionary<byte, HeatingInfo>();
+                            if (associatedHeatings != null)
+                            {
+                                foreach (byte hid in associatedHeatings)
                                 {
-                                    associatedHeatings = null; // keine Heizung zu diesem Fenster konfiguriert...
+                                    DeviceDto? hDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync(hid);
+                                    if (hDevice != null)
+                                    {
+                                        RoomDto? hRoom = hDevice.RoomId.HasValue
+                                            ? _roomSnapshot.FirstOrDefault(r => r.Id == hDevice.RoomId.Value)
+                                            : null;
+                                        heatingInfo[hid] = new HeatingInfo(hDevice.Id, hRoom?.Name);
+                                    }
                                 }
+                            }
 
-                                this.CurrentOpenDoorTasks.Add(new SurveillanceTask(device, sensorThreshold, room, _deviceSnapshot, _roomSnapshot, warnAtOpen, associatedHeatings, _rabbitMQ, _devices, this, _weather, _logger));
-                            }
+                            this.CurrentOpenDoorTasks.Add(new SurveillanceTask(liveDevice, sensorThreshold, room, warnAtOpen, associatedHeatings, _rabbitMQ, heatingInfo, this, _weather, _logger, _deviceServiceClient, sensorState.LastStateChanged.Value));
                         }
-                        else
+                    }
+                    else
+                    {
+                        /* Tür geschlossen, Überwachung beenden, kurze Sprachausgabe zur Info erzeugen */
+                        SurveillanceTask? task = this.CurrentOpenDoorTasks.FirstOrDefault(task => task.Device.NodeId == changedNodeId);
+                        if (task != null)
                         {
-                            /* Tür geschlossen, Überwachung beenden, kurze Sprachausgabe zur Info erzeugen */
-                            SurveillanceTask? task = this.CurrentOpenDoorTasks.FirstOrDefault(task => task.Device.NodeId == changedNodeId);
-                            if (task != null)
-                            {
-                                task.Cancel();
-                                this.CurrentOpenDoorTasks.Remove(task);
-                            }
+                            task.Cancel();
+                            this.CurrentOpenDoorTasks.Remove(task);
                         }
-                    } // else: Kein DoorSensor - nichts für diese Klasse zu tun
-                    this.LastUpdate = DateTime.Now;
-                }
+                    }
+                } // else: Kein DoorSensor - nichts für diese Klasse zu tun
+                this.LastUpdate = DateTime.Now;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fehler beim Aktualisieren der Türzustände");
             }
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Notify (aus <c>INetworkEventSubscriber</c> )
-        /// </summary>
-        /// <param name="e">Nachrichtenereignis</param>
-        /// <returns>Task</returns>
-        public Task Notify(NetworkEvent e)
-        {
-            return Update(e.SourceNodeId);
         }
 
         /// <summary>
@@ -224,15 +236,17 @@ namespace Sarah.Monitoring.Monitors
         /// Ein einzelner Monitoring-Task für ein aktuell geöffnetes Fenster,
         /// der beendet wird, sobald das zugehörige Fenster wieder geschlossen wird.
         /// </summary>
+        private sealed record HeatingInfo(long DbId, string? RoomName);
+
         private class SurveillanceTask
         {
-            private readonly IReadOnlyList<DeviceDto> _deviceSnapshot;
-            private readonly IReadOnlyList<RoomDto> _roomSnapshot;
             private readonly RabbitMQClient _rabbitMQ;
-            private readonly IDeviceService _devices;
+            private readonly IReadOnlyDictionary<byte, HeatingInfo> _heatingInfo;
             private readonly DoorMonitor _doorMonitor;
             private readonly IWeatherProvider _weather;
             private readonly ILogger<DoorMonitor> _logger;
+            private readonly DeviceServiceClient _deviceServiceClient;
+            private readonly DateTime _openedAt;
 
             /// <summary>
             /// Der Türsensor
@@ -284,15 +298,15 @@ namespace Sarah.Monitoring.Monitors
             /// <param name="db">Datenbankkontext</param>
             /// <param name="warnAtOpen">gibt an, ob sofort nach dem öffnen eine Warnung erfolgen soll (z.B. Kinderzimmer)</param>
             /// <param name="associatedHeatings">Zugeordnete Heizkörper, die an/aus geschaltet werden sollen</param>
-            public SurveillanceTask(DeviceDto device, TimeSpan sensorThreshold, RoomDto? room, IReadOnlyList<DeviceDto> deviceSnapshot, IReadOnlyList<RoomDto> roomSnapshot, bool warnAtOpen, byte[]? associatedHeatings, RabbitMQClient rabbitMQ, IDeviceService devices, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger)
+            public SurveillanceTask(DeviceDto device, TimeSpan sensorThreshold, RoomDto? room, bool warnAtOpen, byte[]? associatedHeatings, RabbitMQClient rabbitMQ, IReadOnlyDictionary<byte, HeatingInfo> heatingInfo, DoorMonitor doorMonitor, IWeatherProvider weather, ILogger<DoorMonitor> logger, DeviceServiceClient deviceServiceClient, DateTime openedAt)
             {
-                this._deviceSnapshot = deviceSnapshot;
-                this._roomSnapshot = roomSnapshot;
                 this._rabbitMQ = rabbitMQ;
-                this._devices = devices;
+                this._heatingInfo = heatingInfo;
                 this._doorMonitor = doorMonitor;
                 this._weather = weather;
                 this._logger = logger;
+                this._deviceServiceClient = deviceServiceClient;
+                this._openedAt = openedAt;
                 this.Device = device;
                 this.Room = room;
                 this.SensorThreshold = sensorThreshold;
@@ -350,8 +364,9 @@ namespace Sarah.Monitoring.Monitors
                     }
                     catch (System.Threading.Tasks.TaskCanceledException) { /* Weiter laufen lassen, das bedeutet nur dass die Tür wieder zu ist */ }
 
-                    IDoorSensor? sensor = _devices.GetNetworkItem((byte)this.Device.NodeId) as IDoorSensor;
-                    TimeSpan openTime = sensor?.LastOpenDuration ?? TimeSpan.Zero;
+                    DeviceDto? liveDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync((byte)this.Device.NodeId);
+                    DoorSensorStateDto? sensorState = liveDevice?.DoorSensor;
+                    TimeSpan openTime = DateTime.Now - _openedAt;
 
 
                     if (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
@@ -375,36 +390,7 @@ namespace Sarah.Monitoring.Monitors
                                 else
                                 {
                                     sayMsg = artikel + " " + this.Device.Name + " ist " + minutes + " Minuten offen. ";
-                                    if (this.Room != null)
-                                    {
-                                        var temperatures = _deviceSnapshot
-                                            .Where(d => d.RoomId == this.Room.Id)
-                                            .Select(d => _devices.GetNetworkItem((byte)d.NodeId))
-                                            .OfType<ITemperatureSensor>()
-                                            .Select(d => d.Temperature.Value)
-                                            .DefaultIfEmpty(0);
-                                        var avgTemp = temperatures.Sum() > 0 ? temperatures.Average() : 21;
-                                        if (avgTemp < 18)
-                                        {
-                                            sayMsg += "Die Raumtemperatur beträgt nur noch " + avgTemp + "°C. ";
-                                            if (_weather.CurrentOutdoorTemperature < 12)
-                                            {
-                                                sayMsg += "Draußen ist es kalt, Fenster bitte schließen. ";
-                                            }
-                                        }
-                                        else if (avgTemp > 26)
-                                        {
-                                            sayMsg += "Die Raumtemperatur beträgt mehr als " + avgTemp + "°C. ";
-                                            if (_weather.CurrentOutdoorTemperature > 27)
-                                            {
-                                                sayMsg += "Draußen ist es ziemlich heiß, Fenster bitte schließen. ";
-                                            }
-                                        }
-                                    }
-
-
-
-                                    if (sensor?.State == DoorSensorState.Offen)
+                                    if (sensorState?.State == DoorSensorState.Offen)
                                     {
                                         if (openTime >= TimeSpan.FromMinutes(15) && openTime < TimeSpan.FromMinutes(20) && waitTime < TimeSpan.FromMinutes(15))
                                         {
@@ -439,42 +425,67 @@ namespace Sarah.Monitoring.Monitors
                                 }
 
 
+                                /* Raumtemperatur ansagen */
+                                if (this.Room != null)
+                                {
+                                    try
+                                    {
+                                        float? avgTemp = await _deviceServiceClient.GetRoomAverageTemperatureAsync(this.Room.Id);
+                                        if (avgTemp.HasValue)
+                                        {
+                                            if (avgTemp.Value < 18f)
+                                                sayMsg += $" Die Raumtemperatur beträgt nur noch {avgTemp.Value:F1} Grad.";
+                                            else if (avgTemp.Value > 26f)
+                                                sayMsg += $" Die Raumtemperatur beträgt {avgTemp.Value:F1} Grad.";
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, "Raumtemperatur konnte nicht abgefragt werden");
+                                    }
+                                }
+
                                 /* Wenn Heizkörper zugeordnet sind und noch nicht ausgeschaltet wurden... */
                                 if (this.AssociatedHeatings?.Any() == true && !this.OriginalHeatingTemperatures.Any())
                                 {
                                     foreach (byte heatingId in this.AssociatedHeatings)
                                     {
-                                        IThermoElement? heating = _devices.Heatings.FirstOrDefault(item => item.NodeID == heatingId);
-                                        if (heating != null)
+                                        try
                                         {
-                                            /* 12° bedeutet "aus" - nur ausschalten wenn nicht sowieso schon aus! */
-                                            if (heating.TemperatureSetpoint.Value != 12.0f)
+                                            DeviceDto? heatingDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync(heatingId);
+                                            if (heatingDevice?.Thermostat?.TemperatureSetpoint is float setpoint)
                                             {
-                                                this.OriginalHeatingTemperatures.Add(new KeyValuePair<byte, float>(heatingId, heating.TemperatureSetpoint.Value));
+                                                /* 12° bedeutet "aus" - nur ausschalten wenn nicht sowieso schon aus! */
+                                                if (setpoint != 12.0f)
+                                                {
+                                                    this.OriginalHeatingTemperatures.Add(new KeyValuePair<byte, float>(heatingId, setpoint));
 
-                                                /* Heizung ohne await damit die Sprachausgabe sofort kommt
-                                                 * Könnte zum Problem bei mehreren Heizungen werden (ZWave-RaceCondition!) */
-                                                _ = heating.SetTemperature(12.0f);
+                                                    /* Heizung ohne await damit die Sprachausgabe sofort kommt
+                                                     * Könnte zum Problem bei mehreren Heizungen werden (ZWave-RaceCondition!) */
+                                                    _ = _deviceServiceClient.SetThermostatTemperatureAsync(heatingDevice.Id, 12.0f);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                _logger.LogWarning("Heizkörper {HeatingId} nicht gefunden oder kein Thermostat", heatingId);
                                             }
                                         }
-                                        else
+                                        catch (Exception ex)
                                         {
-                                            throw new InvalidOperationException("Programm/Konfigurationsfehler: Heizkörper" + heatingId + " ist unbekannt!");
+                                            _logger.LogError(ex, "Fehler beim Ausschalten der Heizung {HeatingId}", heatingId);
                                         }
                                     }
 
                                     if (this.OriginalHeatingTemperatures.Any())
                                     {
-                                        var heatingDevices = _deviceSnapshot
-                                            .Where(d => this.AssociatedHeatings.Contains((byte)d.NodeId))
-                                            .ToList();
-                                        var rooms = _roomSnapshot
-                                            .Where(r => heatingDevices.Any(d => d.RoomId == r.Id))
-                                            .ToList();
-
+                                        var roomNames = this.OriginalHeatingTemperatures
+                                            .Select(kv => _heatingInfo.TryGetValue(kv.Key, out HeatingInfo? info) ? info.RoomName : null)
+                                            .Where(n => n != null).Distinct().ToList();
                                         sayMsg += " Heizung" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "")
-                                            + " im " + String.Join(" und ", rooms.Select(r => r.Name)) + " ausgeschalt" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "et");
+                                            + " im " + string.Join(" und ", roomNames) + " ausgeschalt"
+                                            + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "et");
                                     }
+
                                 }
                                 if (DoorMonitor.WarnLouderNodeIds.Contains((byte)this.Device.NodeId))
                                 {
@@ -501,39 +512,34 @@ namespace Sarah.Monitoring.Monitors
                             sayMsg = artikel + " " + this.Device.Name + " ist kurzzeitig offen gewesen. ";
                         }
 
-                        /* Wenn die gekoppelte Heizung bei öffnen an war, dann jetzt wieder einschalten */
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            var heatingDevices = _deviceSnapshot
-                                .Where(d => this.AssociatedHeatings?.Contains((byte)d.NodeId) == true)
-                                .ToList();
-                            var rooms = _roomSnapshot
-                                .Where(r => heatingDevices.Any(d => d.RoomId == r.Id))
-                                .ToList();
-
-                            List<string> heatingMsg = new List<string>();
+                            List<string> heatingMsgParts = new List<string>();
                             foreach (var origTemp in this.OriginalHeatingTemperatures)
                             {
-                                DeviceDto heating = heatingDevices.First(item => item.NodeId == origTemp.Key);
-                                RoomDto room = rooms.First(item => item.Id == heating.RoomId);
-
                                 bool isAnotherWindowOpen = _doorMonitor.GetWindowTrackingsForHeating(origTemp.Key)
-                                    .Any(item => item.Device.Id != this.Device.Id);
+                                    .Any(t => t.Device.Id != this.Device.Id);
+
+                                _heatingInfo.TryGetValue(origTemp.Key, out HeatingInfo? info);
+                                string roomLabel = info?.RoomName ?? origTemp.Key.ToString();
 
                                 if (!isAnotherWindowOpen)
                                 {
-                                    IThermoElement? thermoElement = _devices.GetNetworkItem((byte)heating.NodeId) as IThermoElement;
-                                    if (thermoElement != null)
-                                        _ = thermoElement.SetTemperature(origTemp.Value);
-                                    heatingMsg.Add(" im " + room.Name + " auf " + origTemp.Value + " °C gestellt");
+                                    if (info != null)
+                                        _ = _deviceServiceClient.SetThermostatTemperatureAsync(info.DbId, origTemp.Value);
+                                    heatingMsgParts.Add($" im {roomLabel} auf {origTemp.Value:F1} Grad gestellt");
                                 }
                                 else
                                 {
-                                    heatingMsg.Add(" im " + room.Name + " bleibt aus, weil noch ein anderes Fenster offen ist ");
+                                    heatingMsgParts.Add($" im {roomLabel} bleibt aus wegen anderes offenes Fenster");
                                 }
                             }
-                            sayMsg += " Heizung" + (OriginalHeatingTemperatures.Count > 1 ? "en" : "")
-                                + String.Join(" und ", heatingMsg);
+
+                            if (heatingMsgParts.Any())
+                            {
+                                sayMsg += " Heizung" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "")
+                                    + string.Join(" und", heatingMsgParts);
+                            }
                         }
 
                         await _rabbitMQ.PublishAsync(new SayMessage(sayMsg));

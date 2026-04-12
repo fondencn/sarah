@@ -42,40 +42,9 @@ public class NodeFactoryTests
         var publisher = new NetworkElementPublisher(rabbitMqClient);
 
         return new NodeFactory(
-            new FakeEventProcessingService(),
             NullLogger<NodeFactory>.Instance,
             publisher,
             configuration);
     }
 
-    private sealed class FakeEventProcessingService : IEventProcessingService
-    {
-        public Task Start() => Task.CompletedTask;
-
-        public Task SubscribeNetworkEventAsync(INetworkEventSubscriber subscriber, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task SubscribeSpeechEventAsync(ISpeechEventSubscriber subscriber, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishNetworkEventAsync<T>(NetworkEvent<T> networkEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishNetworkEventAsync(NetworkEvent networkEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishAirQualityEventAsync(AirQualityChangedEvent airQualityChangedEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishSay(SayEvent e, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishPersonAvailabilityAsync(PersonAvailabilityEvent personAvailabilityEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishGeoFenceEventAsync(PersonGeoFenceEvent personGeoFenceEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishOutDoorTemperatureChangedEventAsync(OutDoorTemperatureChangedEvent outDoorTemperatureChangedEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishWeatherWarningEventAsync(WeatherWarningEvent weatherWarningEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishTimerEventAsync(TimerEvent timerEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishStartPlayAudioEventAsync(StartAudioEvent startAudioEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task PublishStopPlayAudioEventAsync(StopAudioEvent stopAudioEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    }
 }

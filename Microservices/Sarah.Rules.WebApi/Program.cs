@@ -41,6 +41,17 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 })
 .AddBearerTokenForwarding();
 
+// Register DeviceServiceClient as concrete type for Rules actions
+builder.Services.AddHttpClient<DeviceServiceClient>(client =>
+{
+    var deviceServiceUrl = builder.Configuration["services__deviceservice__http__0"]
+        ?? builder.Configuration["services__deviceservice__http-api__0"]
+        ?? builder.Configuration["DeviceServiceUrl"]
+        ?? "https+http://deviceservice";
+    client.BaseAddress = new Uri(deviceServiceUrl);
+})
+.AddBearerTokenForwarding();
+
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
@@ -72,9 +83,6 @@ builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => 
 builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedWeatherProvider>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
-
-// Register WeatherWarningHandler as a hosted service
-builder.Services.AddHostedService<Sarah.Rules.Services.WeatherWarningHandler>();
 
 // Register schedule services
 builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();

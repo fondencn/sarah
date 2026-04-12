@@ -120,26 +120,26 @@ namespace Sarah.Ttn
             // _logger?.LogDebug("HandleApplicationMessageReceivedAsync");
             string topic = eventArgs.ApplicationMessage.Topic;
             string contentString = eventArgs.ApplicationMessage.ConvertPayloadToString();
-            TtnMessage deserializedMessage = JsonConvert.DeserializeObject<TtnMessage>(contentString);
-            this.MessageReceived?.Invoke(topic, deserializedMessage);
+            TtnMessage deserializedMessage = JsonConvert.DeserializeObject<TtnMessage>(contentString)!; // must not be null after deserialization, otherwise the message is not valid
+            this.MessageReceived.Invoke(topic, deserializedMessage);
             return Task.CompletedTask;
         }
 
         public Task HandleConnectedAsync(MqttClientConnectedEventArgs eventArgs)
         {
-            this.ConnectionStateChanged?.Invoke(this, true);
+            this.ConnectionStateChanged.Invoke(this, true);
             return Task.CompletedTask;
         }
 
         public Task HandleConnectingFailedAsync(ConnectingFailedEventArgs eventArgs)
         {
-            this.ConnectionStateChanged?.Invoke(this, false);
+            this.ConnectionStateChanged.Invoke(this, false);
             return Task.CompletedTask;
         }
 
-        public event EventHandler<bool> ConnectionStateChanged;
+        public event EventHandler<bool> ConnectionStateChanged = delegate { };
 
-        public event TtnMessageReceivedHandler MessageReceived;
+        public event TtnMessageReceivedHandler MessageReceived = delegate { };
         public delegate void TtnMessageReceivedHandler(string topic, TtnMessage msg);
     }
 }

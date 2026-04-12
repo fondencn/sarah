@@ -19,14 +19,14 @@ namespace Sarah.DeviceService.Model
     /// </summary>
     public class ZWaveThermoElement : ThermoElement
     {
-        private Task UpdateTask { get; set; }
-        private CancellationTokenSource UpdateCancellationTokenSource { get; set; }
-        private IDeviceService _deviceService;
+        private Task? UpdateTask { get; set; }
+        private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
+        private IDeviceService? _deviceService;
 
         /// <summary>
         /// ctor
         /// </summary>
-        public ZWaveThermoElement(byte nodeid, NetworkElementPublisher publisher, ILogger<ZWaveThermoElement>? logger = null) : base(nodeid, publisher, logger)
+        public ZWaveThermoElement(byte nodeid, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, publisher, logger)
         {
         }
 
@@ -41,7 +41,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             try
             {
@@ -106,7 +106,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
+                Node? n = this._deviceService?.GetZWaveNode(this.NodeID);
                 if (n == null)
                 {
                     return;
@@ -138,7 +138,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node? node = this._deviceService.GetZWaveNode(this.NodeID);
+                Node? node = this._deviceService?.GetZWaveNode(this.NodeID);
                 if (node == null)
                 {
                     throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
@@ -162,7 +162,7 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                Node? node = this._deviceService.GetZWaveNode(this.NodeID);
+                Node? node = this._deviceService?.GetZWaveNode(this.NodeID);
                 if (node == null)
                 {
                     throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");

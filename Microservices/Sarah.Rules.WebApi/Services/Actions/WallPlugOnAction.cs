@@ -1,54 +1,40 @@
 ﻿using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
-using Sarah.API.Interfaces.Services;
-using System.Linq;
+using Sarah.ServiceClients;
 
 namespace Sarah.Rules.Actions
 {
-    /// <summary>
-    /// Action die die Steckdose einschaltet
-    /// </summary>
     public class WallPlugOnAction : RuleAction
     {
-        private readonly IDeviceService _devices;
+        private readonly DeviceServiceClient _deviceServiceClient;
         public byte TargetNodeId { get; }
 
-        public WallPlugOnAction(byte nodeid, IDeviceService devices)
+        public WallPlugOnAction(byte nodeid, DeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.TargetNodeId = nodeid;
         }
 
-
         public override async void Execute(NetworkEvent sourceEvent)
         {
-            IWallPlug? device = _devices.WallPlugs.FirstOrDefault(item => item.NodeID == this.TargetNodeId);
-            if (device != null)
-            {
-                await device.SetState(true);
-            }
+            await _deviceServiceClient.SetWallPlugStateByNodeAsync(this.TargetNodeId, true);
         }
     }
 
-
-    /// <summary>
-    /// Action die die Steckdose ausschaltet
-    /// </summary>
     public class WallPlugOffAction : RuleAction
     {
-        private readonly IDeviceService _devices;
+        private readonly DeviceServiceClient _deviceServiceClient;
         public byte TargetNodeId { get; }
 
-        public WallPlugOffAction(byte nodeid, IDeviceService devices)
+        public WallPlugOffAction(byte nodeid, DeviceServiceClient deviceServiceClient)
         {
-            this._devices = devices;
+            this._deviceServiceClient = deviceServiceClient;
             this.TargetNodeId = nodeid;
         }
 
-
         public override async void Execute(NetworkEvent sourceEvent)
         {
-            await _devices.WallPlugs.First(item => item.NodeID == this.TargetNodeId).SetState(false);
+            await _deviceServiceClient.SetWallPlugStateByNodeAsync(this.TargetNodeId, false);
         }
     }
 }

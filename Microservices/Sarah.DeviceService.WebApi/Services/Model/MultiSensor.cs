@@ -54,7 +54,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Helligkeit
         /// </summary>
-        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; _publisher.ReportEvent(this, nameof(Luminance), value?.ToString()); } } }
+        public SensorData Luminance { get => _luminance; private set { if (_luminance != value) { _luminance = value; _publisher.ReportEvent(this, nameof(Luminance), value?.ToString()); _ = _publisher.ReportMultiSensorStateChanged(this, _presence?.Value, value?.Value); } } }
         /// <summary>
         /// Bewegungsalarm / Tamper
         /// </summary>
@@ -71,10 +71,11 @@ namespace Sarah.DeviceService.Model
             get => _presence;
             private set
             {
-                if (_presence?.Value != value?.Value)
+                if (value != null && _presence?.Value != value?.Value)
                 {
-                    _presence = value;
+                    _presence = value!;
                     _publisher.ReportEvent(this, nameof(Presence), value?.ToString());
+                    _ = _publisher.ReportMultiSensorStateChanged(this, value?.Value, _luminance?.Value);
 
                     if (_presence.Value > 0)
                     {
@@ -198,7 +199,7 @@ namespace Sarah.DeviceService.Model
         /// ctor
         /// </summary>
         /// <param name="nodeid"></param>
-        public MultiSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<MultiSensor>? logger = null) : base(nodeid, logger)
+        public MultiSensor(byte nodeid, NetworkElementPublisher publisher, ILogger<MultiSensor> logger) : base(nodeid, logger)
         {
             _publisher = publisher;
         }
@@ -215,7 +216,7 @@ namespace Sarah.DeviceService.Model
         /// Initialisiert das Gerät / startet die Kommunikation mit diesem Gerät
         /// </summary>
         /// <returns></returns>
-        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config = null)
+        public override Task InitializeAsync(IDeviceService deviceService, IConfiguration config)
         {
             this._deviceService = deviceService;
             Node? node = deviceService.GetZWaveNode(this.NodeID);

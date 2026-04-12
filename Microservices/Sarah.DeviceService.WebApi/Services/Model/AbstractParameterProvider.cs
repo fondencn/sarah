@@ -34,7 +34,7 @@ namespace Sarah.DeviceService.Model
                     parameters.Add(new DeviceParameter()
                     {
                         Id = pId,
-                        Name = GetParameterName(pId),
+                        Name = GetParameterName(pId) ?? "Unknown",
                         Value = report.Value,
                         Size = report.Size
                     }); ;
@@ -91,7 +91,7 @@ namespace Sarah.DeviceService.Model
                 parameter = new DeviceParameter()
                 {
                     Id = paramId,
-                    Name = GetParameterName(paramId),
+                    Name = GetParameterName(paramId) ?? "Unknown",
                     Value = report.Value,
                     Size = report.Size
                 };
@@ -102,9 +102,8 @@ namespace Sarah.DeviceService.Model
                 // _logger?.LogDebug("Error reading parameters, device is sleeping or not reachable: " + tEx.Message);
                 throw new InvalidOperationException("Gerätekonfiguration konnte nicht ausgelesen werden, ggf. Gerät per Tastendruck aufwecken!", tEx);
             }
-            catch (Exception ex)
+            catch 
             {
-                // _logger?.LogDebug("Error reading parameters: " + ex.Message);
                 throw;
             }
 

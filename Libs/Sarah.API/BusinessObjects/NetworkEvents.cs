@@ -143,6 +143,76 @@ namespace Sarah.API.BusinessObjects
         public string RoomName { get; }
     }
 
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein Türsensor seinen Öffnungsstatus ändert
+    /// </summary>
+    public class DoorSensorStateChangedEvent : NetworkEvent
+    {
+        public bool IsOpen { get; }
+        public DoorSensorStateChangedEvent(byte source, bool isOpen) : base(source, "DoorState")
+        {
+            this.IsOpen = isOpen;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn der Knopf eines GPS-Trackers gedrückt oder losgelassen wird
+    /// </summary>
+    public class TrackerButtonPressedEvent : NetworkEvent
+    {
+        public bool IsPressed { get; }
+        public TrackerButtonPressedEvent(byte source, bool isPressed) : base(source, "TrackerButton")
+        {
+            this.IsPressed = isPressed;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose ihren Zustand oder Leistungsschwelle ändert
+    /// </summary>
+    public class WallPlugStateChangedEvent : NetworkEvent
+    {
+        public bool IsOn { get; }
+        public DateTime LastChangeToPowerLow { get; }
+        public DateTime LastIncreasePower { get; }
+        public DateTime LastDecreasePower { get; }
+        public WallPlugStateChangedEvent(byte source, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
+            : base(source, "WallPlugState")
+        {
+            IsOn = isOn;
+            LastChangeToPowerLow = lastChangeToPowerLow;
+            LastIncreasePower = lastIncreasePower;
+            LastDecreasePower = lastDecreasePower;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein MultiSensor Präsenz oder Helligkeit ändert
+    /// </summary>
+    public class MultiSensorStateChangedEvent : NetworkEvent
+    {
+        public float? Presence { get; }
+        public float? Luminance { get; }
+        public MultiSensorStateChangedEvent(byte source, float? presence, float? luminance)
+            : base(source, "MultiSensorState")
+        {
+            Presence = presence;
+            Luminance = luminance;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein Rauchmelder Alarm auslöst oder zurückgesetzt wird
+    /// </summary>
+    public class SmokeSensorAlertEvent : NetworkEvent
+    {
+        public bool AlarmActive { get; }
+        public SmokeSensorAlertEvent(byte source, bool alarmActive) : base(source, "SmokeSensorAlert")
+        {
+            AlarmActive = alarmActive;
+        }
+    }
+
     public class SayEvent
     {
         public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string? caller = null) 
@@ -179,19 +249,6 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn sich die Außentemperatur ändert
-    /// </summary>
-    public class OutDoorTemperatureChangedEvent : NetworkEvent
-    {
-        public OutDoorTemperatureChangedEvent(double newVal) : base(0, "OutDoorTemperatureChanged")
-        {
-            this.NewValue = newVal;
-        }
-
-        public double NewValue { get; }
-    }
-
-    /// <summary>
     /// Event wird ausgelöst, wenn eine Wetterwarnung vorliegt
     /// </summary>
     public class WeatherWarningEvent : NetworkEvent
@@ -202,5 +259,18 @@ namespace Sarah.API.BusinessObjects
         }
 
         public string NewValue { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Wettervorhersage aktualisiert wurde
+    /// </summary>
+    public class WeatherForecastUpdatedEvent : NetworkEvent
+    {
+        public WeatherForecastUpdatedEvent(string forecastStringForToday) : base(0, "WeatherForecastUpdated")
+        {
+            this.ForecastStringForToday = forecastStringForToday;
+        }
+
+        public string ForecastStringForToday { get; }
     }
 }

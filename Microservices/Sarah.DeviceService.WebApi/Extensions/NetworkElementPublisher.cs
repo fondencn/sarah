@@ -51,5 +51,59 @@ namespace Sarah.DeviceService.WebApi.Extensions
         {
             await ReportEvent<object>(element, propertyName, null);
         }
+
+        /// <summary>
+        /// Publishes a typed clicked event so Rules can match scene IDs without calling GetNetworkItem.
+        /// </summary>
+        public async Task ReportClickedEvent(NetworkElement element, byte sceneId)
+        {
+            var message = new ClickedEventMessage(element.NodeID, sceneId);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
+
+        /// <summary>
+        /// Publishes a door-state-changed event so Rules can evaluate DoorSensorCondition.
+        /// </summary>
+        public async Task ReportDoorStateChanged(NetworkElement element, bool isOpen)
+        {
+            var message = new DoorSensorStateChangedMessage(element.NodeID, isOpen);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
+
+        /// <summary>
+        /// Publishes a tracker-button event so Rules can evaluate TrackerButtonPressedCondition.
+        /// </summary>
+        public async Task ReportTrackerButtonPressed(NetworkElement element, bool isPressed)
+        {
+            var message = new TrackerButtonPressedMessage(element.NodeID, isPressed);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
+
+        /// <summary>
+        /// Publishes a wall plug state event so Rules can evaluate WallPlug* conditions.
+        /// </summary>
+        public async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
+        {
+            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, lastChangeToPowerLow, lastIncreasePower, lastDecreasePower);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
+
+        /// <summary>
+        /// Publishes a multi-sensor state event so Rules can evaluate Presence/Luminance conditions.
+        /// </summary>
+        public async Task ReportMultiSensorStateChanged(NetworkElement element, float? presence, float? luminance)
+        {
+            var message = new MultiSensorStateChangedMessage(element.NodeID, presence, luminance);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
+
+        /// <summary>
+        /// Publishes a smoke sensor alert event so Rules can evaluate AlertCondition.
+        /// </summary>
+        public async Task ReportSmokeAlarm(NetworkElement element, bool alarmActive)
+        {
+            var message = new SmokeSensorAlertMessage(element.NodeID, alarmActive);
+            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+        }
     }
 }
