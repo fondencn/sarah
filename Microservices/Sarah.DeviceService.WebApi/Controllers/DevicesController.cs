@@ -552,14 +552,14 @@ public class DevicesController : ControllerBase
             var temps = devices
                 .Select(d => _deviceService.GetNetworkItem(d.NodeID))
                 .OfType<ITemperatureSensor>()
-                .Where(s => s.Temperature != null)
+                .Where(s => s.Temperature != null && s.Temperature.Value != 0) // Filter out invalid 0 values
                 .Select(s => s.Temperature.Value)
                 .ToList();
 
             if (!temps.Any())
                 return NoContent();
 
-            return Ok(temps.Average());
+            return Ok(CalculateAverageRoomTemperature(temps));
         }
         catch (Exception ex)
         {
