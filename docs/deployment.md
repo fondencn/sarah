@@ -16,7 +16,7 @@ The deployment has been validated on the current Raspberry Pi target set with th
 
 - `pi`: Raspberry Pi OS / Debian Bookworm, `arm64`, runs the main stack
 - `speaker1`: Raspberry Pi OS Bullseye, `armv7`, runs `SpeechServer` with microphone recognition enabled
-- `speaker3`: Raspberry Pi OS Bullseye, `armv7`, runs `SpeechServer` with text-to-speech enabled and voice recognition disabled because the ReSpeaker hat is currently broken
+- `speaker3`: Raspberry Pi OS Bullseye, `armv7`, runs `SpeechServer` with microphone recognition enabled
 
 Operational status at the time of writing:
 
@@ -75,6 +75,7 @@ Work through this checklist before the first real deployment:
 - [ ] Enable SPI and GPIO on each speaker host with `sudo raspi-config` → Interface Options → SPI / GPIO, then reboot
 - [ ] Verify the audio device exists on each speaker: `aplay -l` should list a capture/playback device
 - [ ] If a speaker microphone hat is missing or broken, set `SPEECH_RECOGNITION_ENABLED=false` in that speaker's env file before deploying
+- [ ] Ensure no legacy host voice daemon is holding `/dev/snd` on speaker hosts (for example `sarah-voice.service` / `InteLuk.VoiceHost.Server`); disable it before enabling recognition in Docker
 - [ ] Verify GPIO and SPI groups on each speaker host: `getent group audio gpio spi` — set `AUDIO_GID`, `GPIO_GID`, and `SPI_GID` in each speaker env file when host values differ from defaults
 - [ ] Confirm `PI_HOST` resolves correctly from both the build machine and the speaker machines
 - [ ] Run `cd deploy && ./deploy-all.sh`
@@ -153,13 +154,13 @@ cp deploy/speaker/.env.example deploy/speaker/speaker3.env
 
 If `deploy/speaker/speaker1.env` or `deploy/speaker/speaker3.env` exists, `deploy-speakers.sh` uses that file for the matching host. Otherwise it falls back to `deploy/speaker/.env`.
 
-For the currently deployed setup, `speaker3.env` also contains:
+For the currently deployed setup, `speaker3.env` contains:
 
 ```bash
-SPEECH_RECOGNITION_ENABLED=false
+SPEECH_RECOGNITION_ENABLED=true
 ```
 
-This keeps `speaker3` operational for playback while skipping Azure microphone initialization.
+This keeps `speaker3` aligned with `speaker1` and enables Azure microphone initialization.
 
 ### 2. Full Deployment (one command)
 
