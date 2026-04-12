@@ -8,7 +8,7 @@ using Sarah.Monitoring.Monitors;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IDeviceService _devices, IPersonService _personService, DeviceServiceClient _deviceServiceClient, RoomServiceClient _roomServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory) : BackgroundService
+public class MonitoringService (IPersonService _personService, DeviceServiceClient _deviceServiceClient, RoomServiceClient _roomServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory) : BackgroundService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
@@ -23,7 +23,6 @@ public class MonitoringService (IDeviceService _devices, IPersonService _personS
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var deviceSnapshot = await _deviceServiceClient.GetAllDevicesAsync();
         var roomSnapshot = await _roomServiceClient.GetAllRoomsAsync();
 
         var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>(), _httpClientFactory);
@@ -32,9 +31,9 @@ public class MonitoringService (IDeviceService _devices, IPersonService _personS
         var doors = new Monitors.DoorMonitor(roomSnapshot, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>(), _deviceServiceClient);
         Monitors = new IMonitor[]
         {
-            new Monitors.AirQualityMonitor(deviceSnapshot, roomSnapshot, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>(), _deviceServiceClient),
+            new Monitors.AirQualityMonitor(roomSnapshot, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.AirQualityMonitor>(), _deviceServiceClient),
             new Monitors.PersonMonitor(_personService, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.PersonMonitor>()),
-            new Monitors.BatteryMonitor(deviceSnapshot, roomSnapshot, _deviceServiceClient, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()),
+            new Monitors.BatteryMonitor(roomSnapshot, _deviceServiceClient, _rabbitMQ, _config, _loggerFactory.CreateLogger<Monitors.BatteryMonitor>()),
             doors,
             ferien,
             weather,

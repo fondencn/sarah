@@ -22,7 +22,6 @@ namespace Sarah.Monitoring.Monitors
     /// </summary>
     internal class AirQualityMonitor : ICanSelfTest, INetworkEventSubscriber, IMonitor
     {
-        private readonly IReadOnlyList<DeviceDto> _deviceSnapshot;
         private readonly IReadOnlyList<RoomDto> _roomSnapshot;
         private readonly RabbitMQClient _rabbitMQ;
         private readonly ILogger<AirQualityMonitor> _logger;
@@ -30,9 +29,8 @@ namespace Sarah.Monitoring.Monitors
         private static IConfiguration? _staticConfig;
         private readonly DeviceServiceClient _deviceServiceClient;
 
-        public AirQualityMonitor(IReadOnlyList<DeviceDto> deviceSnapshot, IReadOnlyList<RoomDto> roomSnapshot, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger, DeviceServiceClient deviceServiceClient)
+        public AirQualityMonitor(IReadOnlyList<RoomDto> roomSnapshot, RabbitMQClient rabbitMQ, IConfiguration config, ILogger<AirQualityMonitor> logger, DeviceServiceClient deviceServiceClient)
         {
-            _deviceSnapshot = deviceSnapshot;
             _roomSnapshot = roomSnapshot;
             _rabbitMQ = rabbitMQ;
             _config = config;

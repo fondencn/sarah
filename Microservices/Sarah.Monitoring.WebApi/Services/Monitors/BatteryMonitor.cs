@@ -18,7 +18,7 @@ using Sarah.ServiceClients;
 
 namespace Sarah.Monitoring.Monitors
 {
-    internal class BatteryMonitor(IReadOnlyList<DeviceDto> _deviceSnapshot, IReadOnlyList<RoomDto> _roomSnapshot, DeviceServiceClient _deviceServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
+    internal class BatteryMonitor(IReadOnlyList<RoomDto> _roomSnapshot, DeviceServiceClient _deviceServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILogger<BatteryMonitor> _logger) : ICanSelfTest, IMonitor
     {
         private static readonly TimeSpan _UpdateInterval = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _WarnInterval = TimeSpan.FromHours(4);
@@ -79,7 +79,7 @@ namespace Sarah.Monitoring.Monitors
                 }
                 if (this.UpdateCancellationTokenSource?.Token.IsCancellationRequested == true) break;
 
-                UpdateCurrentBatteryStats();
+                await UpdateCurrentBatteryStatsAsync();
                 await RaiseWarningsIfNecessary();
             }
         }
@@ -148,18 +148,20 @@ namespace Sarah.Monitoring.Monitors
             }
         }
 
-        private void UpdateCurrentBatteryStats()
+        private async Task UpdateCurrentBatteryStatsAsync()
         {
             try
             {
                 this.CurrentBatteryInfos.Clear();
-                // Use the device snapshot — Battery.Level is hydrated server-side from the live IBatterySensor
-                var batteryDrivenDevices = _deviceSnapshot.Where(d => d.Battery != null).ToList();
+                var batteryDrivenDevices = (await _deviceServiceClient.GetAllDevicesAsync())
+                    .Where(d => d.Battery?.Level is not null)
+                    .ToList();
+
                 if (batteryDrivenDevices.Any())
                 {
                     foreach (DeviceDto device in batteryDrivenDevices)
                     {
-                        float batteryPercentage = device.Battery!.Level.GetValueOrDefault();
+                        float batteryPercentage = device.Battery!.Level!.Value;
                         RoomDto? room = device.RoomId.HasValue
                             ? _roomSnapshot.FirstOrDefault(r => r.Id == device.RoomId!.Value)
                             : null;
