@@ -103,18 +103,20 @@ namespace Sarah.Monitoring.Monitors
         {
             try
             {
+                
                 DeviceDto? liveDevice = await _deviceServiceClient.GetDeviceByNodeIdAsync(changedNodeId);
                 DoorSensorStateDto? sensorState = liveDevice?.DoorSensor;
 
                 if (liveDevice != null && sensorState != null)
                 {
+                    _logger.LogDebug("DoorMonitor: Netzwerkereignis empfangen für NodeId {NodeId}", changedNodeId);
                     byte nodeId = changedNodeId;
                     TimeSpan sensorThreshold;
                     if (!DoorOpenTimeThresholds.TryGetValue(nodeId, out sensorThreshold))
                     {
                         sensorThreshold = DefaultOpenTimeThreshold;
                     }
-
+    
                     if (sensorState.State == DoorSensorState.Offen)
                     {
                         /* Tür geöffnet -> Uberwachung starten */

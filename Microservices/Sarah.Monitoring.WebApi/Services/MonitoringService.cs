@@ -43,7 +43,7 @@ public class MonitoringService (IPersonService _personService, DeviceServiceClie
 
         _logger.LogInformation("MonitoringService started, subscribing to NetworkEvents");
 
-        await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>("network.events", async (message) =>
+        await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>("network.events.#", async (message) =>
         {
             var networkEvent = new NetworkEvent<object>(message.SourceNodeId, message.Property, null);
             var networkEventSubscribers = Monitors.OfType<INetworkEventSubscriber>();
