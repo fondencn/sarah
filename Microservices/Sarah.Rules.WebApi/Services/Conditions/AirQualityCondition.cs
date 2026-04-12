@@ -15,7 +15,7 @@ namespace Sarah.Rules.Conditions
 
         public override bool Evaluate(NetworkEvent evt)
         {
-            AirQualityChangedEvent airEvent = evt as AirQualityChangedEvent;
+            AirQualityChangedEvent? airEvent = evt as AirQualityChangedEvent;
             if(airEvent != null)
             {
                 if(evt.SourceNodeId == this.TargetNodeId)
