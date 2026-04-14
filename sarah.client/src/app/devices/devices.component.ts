@@ -5,6 +5,7 @@ import { CreateDashboardItemDto, DashboardItemType, NetworkElementDto } from '..
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { DialogClosedEventArgs, DialogService } from '../services/dialog.service';
 import { EditDeviceModalComponent } from './edit-device-modal/edit-device-modal.component';
+import { DeviceControlModalComponent } from './device-control-modal/device-control-modal.component';
 import { forkJoin, Subscription } from 'rxjs';
 import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
 import { LoggingService } from '../services/logging.service';
@@ -23,6 +24,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   devices: DeviceDto[] = []; // Member variable to store the devices list
   isLoading: boolean = false; // Member variable to store the loading state
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
+  @ViewChild(DeviceControlModalComponent) deviceControlModal!: DeviceControlModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
   constructor(private devicesService: DevicesClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
@@ -220,6 +222,52 @@ export class DevicesComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  /**
+   * Opens the device control dialog for the given device
+   */
+  public controlDevice(device: DeviceDto): void {
+    this.deviceControlModal.show(device.id as number, device.name ?? '', device.typeName ?? '');
+  }
+
+  /**
+   * Returns the lamp on/off state from the GetAll sub-DTO payload.
+   * The backend returns a `lamp` property that is not part of the generated TypeScript type.
+   */
+  public getLampIsOn(device: DeviceDto): boolean {
+    return ((device as any).lamp?.brightness ?? 0) > 0;
+  }
+
+  /**
+   * Returns the wallplug on/off state from the GetAll sub-DTO payload.
+   */
+  public getWallplugIsOn(device: DeviceDto): boolean {
+    return (device as any).wallPlug?.isOn === true;
+  }
+
+  /**
+   * Returns the door open/closed state from the GetAll sub-DTO payload.
+   * DoorSensorState enum: 0=Unbekannt, 1=Offen, 2=Geschlossen
+   */
+  public getDoorIsOpen(device: DeviceDto): boolean {
+    return (device as any).doorSensor?.state === 1;
+  }
+
+  /**
+   * Returns the thermostat setpoint from the GetAll sub-DTO payload.
+   */
+  public getThermostatSetpoint(device: DeviceDto): number | null {
+    const val = (device as any).thermostat?.temperatureSetpoint;
+    return typeof val === 'number' ? val : null;
+  }
+
+  /**
+   * Returns the CO2 value from the GetAll air quality sub-DTO payload.
+   */
+  public getAirQualityCO2(device: DeviceDto): number | null {
+    const val = (device as any).airQuality?.co2;
+    return typeof val === 'number' ? val : null;
   }
 
 }

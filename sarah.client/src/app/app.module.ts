@@ -48,6 +48,7 @@ import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.
 import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
 import { SpeakPanelComponent } from './admin/speak-panel/speak-panel.component';
 import { AdminClient } from './services/api/admin-service/api/admin.service';
+import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -72,7 +73,8 @@ import { AdminClient } from './services/api/admin-service/api/admin.service';
         ToastContainerComponent,
         ThermostatDialComponent,
         RuleMonitorComponent,
-        SpeakPanelComponent
+        SpeakPanelComponent,
+        DeviceControlModalComponent
     ],
     bootstrap: [AppComponent], 
     imports: [

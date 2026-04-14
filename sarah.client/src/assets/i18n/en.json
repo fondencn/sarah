@@ -61,6 +61,12 @@
       "labelDeviceClass": "Device class:",
       "labelAssignedRoom": "Assigned room",
       "labelReadonly": "Read-only"
+    },
+    "colState": "State",
+    "colControl": "Control",
+    "controlModal": {
+      "title": "Control",
+      "noControls": "No controls available for this device type."
     }
   },
   "persons": {

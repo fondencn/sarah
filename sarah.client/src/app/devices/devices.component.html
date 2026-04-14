@@ -25,6 +25,7 @@
         <th>{{ 'devices.colName' | translate }}</th>
         <th>{{ 'devices.colType' | translate }}</th>
         <th>{{ 'devices.colInfo' | translate }}</th>
+        <th>{{ 'devices.colState' | translate }}</th>
         <th>{{ 'devices.colActions' | translate }}</th>
       </tr>
     </thead>
@@ -36,6 +37,43 @@
         <td>{{ device.typeName }}</td>
         <td [innerHTML]="device.info"></td>
         <td>
+          <ng-container [ngSwitch]="device.typeName">
+            <ng-container *ngSwitchCase="'Lampe'">
+              <span class="badge" [ngClass]="getLampIsOn(device) ? 'bg-success' : 'bg-secondary'">
+                {{ (getLampIsOn(device) ? 'common.on' : 'common.off') | translate }}
+              </span>
+            </ng-container>
+            <ng-container *ngSwitchCase="'Steckdose'">
+              <span class="badge" [ngClass]="getWallplugIsOn(device) ? 'bg-success' : 'bg-secondary'">
+                {{ (getWallplugIsOn(device) ? 'common.on' : 'common.off') | translate }}
+              </span>
+            </ng-container>
+            <ng-container *ngSwitchCase="'DoorSensor'">
+              <span class="badge" [ngClass]="getDoorIsOpen(device) ? 'bg-danger' : 'bg-success'">
+                {{ (getDoorIsOpen(device) ? 'common.open' : 'common.closed') | translate }}
+              </span>
+            </ng-container>
+            <ng-container *ngSwitchCase="'Heizung'">
+              <span *ngIf="getThermostatSetpoint(device) !== null" class="small">
+                🌡️ {{ getThermostatSetpoint(device) | number:'1.1-1' }} °C
+              </span>
+              <span *ngIf="getThermostatSetpoint(device) === null" class="text-muted small">–</span>
+            </ng-container>
+            <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
+              <span *ngIf="getAirQualityCO2(device) !== null" class="small">
+                🫁 {{ getAirQualityCO2(device) | number:'1.0-0' }} ppm
+              </span>
+              <span *ngIf="getAirQualityCO2(device) === null" class="text-muted small">–</span>
+            </ng-container>
+            <ng-container *ngSwitchDefault>
+              <span class="text-muted small">–</span>
+            </ng-container>
+          </ng-container>
+        </td>
+        <td>
+          <button (click)="controlDevice(device)" class="btn btn-info btn-sm me-1" title="{{ 'devices.colControl' | translate }}">
+            <img src="assets/icons/settings.svg" alt="Control" style="width: 16px; height: 16px;">
+          </button>
           <button (click)="editDevice(device)" class="btn btn-secondary btn-sm">
             <img src="assets/icons/edit.svg" alt="Edit" style="width: 16px; height: 16px;">
           </button>
@@ -58,3 +96,6 @@
 
 <!-- Add Device Modal Component (element id ist set inside component!) -->
 <editDeviceModal></editDeviceModal>
+
+<!-- Device Control Modal -->
+<app-device-control-modal></app-device-control-modal>
