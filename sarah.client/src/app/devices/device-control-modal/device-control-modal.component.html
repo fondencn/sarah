@@ -1,0 +1,95 @@
+<div class="modal fade" id="deviceControlModal" tabindex="-1" role="dialog" aria-labelledby="deviceControlModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deviceControlModalLabel">
+          {{ 'devices.controlModal.title' | translate }} – {{ deviceName }}
+        </h5>
+        <button type="button" class="btn-close" (click)="hide()" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="isVisible">
+        <ng-container [ngSwitch]="typeName">
+
+          <!-- Lampe -->
+          <ng-container *ngSwitchCase="'Lampe'">
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch"
+                [checked]="isOn"
+                (change)="toggleLamp($event.target)">
+              <label class="form-check-label">{{ (isOn ? 'common.on' : 'common.off') | translate }}</label>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-secondary btn-sm" style="padding-top: 3px; padding-bottom: 0px;">
+                <input type="color" style="width: 65px; height: 30px;"
+                  [value]="lampColor"
+                  (change)="setLampColor($event.target)" />
+              </button>
+              <button class="btn btn-sm" style="background-color: #ffe0b2; color: #333;" (click)="setLampWarmWhite()">
+                ☀️ {{ 'home.warmWhite' | translate }}
+              </button>
+              <button class="btn btn-sm" style="background-color: #e3f2fd; color: #333;" (click)="setLampColdWhite()">
+                🔵 {{ 'home.coldWhite' | translate }}
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Steckdose -->
+          <ng-container *ngSwitchCase="'Steckdose'">
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch"
+                [checked]="isOn"
+                (change)="toggleWallplug($event.target)">
+              <label class="form-check-label">{{ (isOn ? 'common.on' : 'common.off') | translate }}</label>
+            </div>
+            <p class="mb-0 small text-muted">{{ 'home.powerConsumption' | translate }} {{ powerConsumption }} W</p>
+          </ng-container>
+
+          <!-- Heizung -->
+          <ng-container *ngSwitchCase="'Heizung'">
+            <app-thermostat-dial
+              [itemId]="deviceId"
+              [temperature]="thermostatTemperature"
+              [setpoint]="thermostatSetpoint"
+              [battery]="thermostatBattery"
+              (temperatureSet)="setThermostatTemperatureValue($event.itemId, $event.temperature)"
+            ></app-thermostat-dial>
+          </ng-container>
+
+          <!-- DoorSensor -->
+          <ng-container *ngSwitchCase="'DoorSensor'">
+            <div class="d-flex align-items-center gap-2">
+              <span style="font-size: 2rem;">🚪</span>
+              <span class="badge fs-6" [ngClass]="doorIsOpen ? 'bg-danger' : 'bg-success'">
+                {{ (doorIsOpen ? 'common.open' : 'common.closed') | translate }}
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- EutronicAirQualitySensor -->
+          <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span style="font-size: 2rem;">🌬️</span>
+            </div>
+            <ul class="list-unstyled mb-0">
+              <li *ngIf="airTemperature !== null && airTemperature !== undefined">🌡️ {{ airTemperature | number:'1.1-1' }} °C</li>
+              <li *ngIf="airHumidity !== null && airHumidity !== undefined">💧 {{ airHumidity | number:'1.1-1' }} %</li>
+              <li *ngIf="airCO2 !== null && airCO2 !== undefined">🫁 CO₂ {{ airCO2 | number:'1.0-0' }} ppm</li>
+              <li *ngIf="airVOC !== null && airVOC !== undefined">🧪 VOC {{ airVOC | number:'1.0-0' }} ppb</li>
+            </ul>
+          </ng-container>
+
+          <!-- Default / Unknown -->
+          <ng-container *ngSwitchDefault>
+            <p class="text-muted">{{ 'devices.controlModal.noControls' | translate }}</p>
+          </ng-container>
+
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="hide()">{{ 'common.cancel' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>
