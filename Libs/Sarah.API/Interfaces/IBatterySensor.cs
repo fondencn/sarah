@@ -7,7 +7,7 @@ namespace Sarah.API.Interfaces
 {
     public interface IBatterySensor
     {
-        SensorData Battery { get; }
+        SensorData? Battery { get; }
         byte NodeID { get; }
     }
 }

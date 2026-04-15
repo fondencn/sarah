@@ -33,7 +33,7 @@ namespace Sarah.DeviceService.Model
         private SensorData _alarm = null!;
         private SensorData _unknown = null!;
         private SensorData _presence = null!;
-        private SensorData _battery = null!;
+        private SensorData? _battery = null;
         private DateTime? _firstPresenceTick;
         private SensorData _relativeHumidity = null!;
         private SensorData _dewPoint = null!;
@@ -92,7 +92,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Ladezustand der Batterie des Gerätes
         /// </summary>
-        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
+        public SensorData? Battery { get => _battery; private set { if (_battery != value) { _battery = value; _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
 
         /// <summary>
         /// Luftfeutchtigkeit

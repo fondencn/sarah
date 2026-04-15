@@ -6,7 +6,7 @@ namespace Sarah.API.Interfaces
 {
     public interface IGPSTracker :  INetworkElement
     {
-        SensorData Battery { get; }
+        SensorData? Battery { get; }
         LocatorPosition Position { get; }
         LocatorPosition[] PositionTrace { get; }
         DateTime LastMessageReceived { get; }

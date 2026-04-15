@@ -32,7 +32,7 @@ namespace Sarah.DeviceService.Model
             private set { if (_temperature != value) { _temperature = value; _ = _publisher.ReportEvent(this, nameof(Temperature), value?.ToString()); LastUpdate = DateTime.Now; } }
         }
 
-        public SensorData Battery
+        public SensorData? Battery
         {
             get => _battery ?? SensorData.Empty;
             private set { if (_battery != value) { _battery = value; _ = _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); LastUpdate = DateTime.Now; } }
