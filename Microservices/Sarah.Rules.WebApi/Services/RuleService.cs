@@ -56,6 +56,7 @@ namespace Sarah.Rules
                 await _rabbitMQ.SubscribeAsync<ClickedEventMessage>(
                     topic: MessageTopics.NetworkEventsClicked,
                     onMessage: HandleClickedEvent,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<TimerEventMessage>(
@@ -81,26 +82,31 @@ namespace Sarah.Rules
                 await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
                     topic: MessageTopics.NetworkEventsDoorState,
                     onMessage: HandleDoorSensorStateChanged,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<TrackerButtonPressedMessage>(
                     topic: MessageTopics.NetworkEventsTrackerButton,
                     onMessage: HandleTrackerButtonPressed,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<WallPlugStateChangedMessage>(
                     topic: MessageTopics.NetworkEventsWallPlugState,
                     onMessage: HandleWallPlugStateChanged,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<MultiSensorStateChangedMessage>(
                     topic: MessageTopics.NetworkEventsMultiSensorState,
                     onMessage: HandleMultiSensorStateChanged,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<SmokeSensorAlertMessage>(
                     topic: MessageTopics.NetworkEventsSmokeSensorAlert,
                     onMessage: HandleSmokeSensorAlert,
+                    exchange: "network.events",
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<AlarmScheduleChangedMessage>(
