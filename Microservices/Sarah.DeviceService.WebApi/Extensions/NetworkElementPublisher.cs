@@ -58,7 +58,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportClickedEvent(NetworkElement element, byte sceneId)
         {
             var message = new ClickedEventMessage(element.NodeID, sceneId);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportDoorStateChanged(NetworkElement element, bool isOpen)
         {
             var message = new DoorSensorStateChangedMessage(element.NodeID, isOpen);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportTrackerButtonPressed(NetworkElement element, bool isPressed)
         {
             var message = new TrackerButtonPressedMessage(element.NodeID, isPressed);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
         {
             var message = new WallPlugStateChangedMessage(element.NodeID, isOn, lastChangeToPowerLow, lastIncreasePower, lastDecreasePower);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportMultiSensorStateChanged(NetworkElement element, float? presence, float? luminance)
         {
             var message = new MultiSensorStateChangedMessage(element.NodeID, presence, luminance);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportSmokeAlarm(NetworkElement element, bool alarmActive)
         {
             var message = new SmokeSensorAlertMessage(element.NodeID, alarmActive);
-            await _rabbitMQClient.PublishAsync(message, exchange: "network.events");
+            await _rabbitMQClient.PublishAsync(message);
         }
     }
 }
