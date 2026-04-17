@@ -20,7 +20,7 @@ namespace Sarah.DeviceService.Model
     {
         private SensorData _TemperatureSetpoint = SensorData.Empty;
         private SensorData _Temperature = SensorData.Empty;
-        private SensorData _battery = SensorData.Empty;
+        private SensorData? _battery = SensorData.Empty;
         private SensorData _basic = SensorData.Empty;
         protected readonly NetworkElementPublisher _publisher;
 
@@ -67,7 +67,7 @@ namespace Sarah.DeviceService.Model
             }
         }
 
-        public SensorData Battery
+        public SensorData? Battery
         {
             get { return _battery; }
             set

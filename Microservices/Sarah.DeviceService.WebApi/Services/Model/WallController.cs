@@ -18,7 +18,7 @@ namespace Sarah.DeviceService.Model
     public class WallController : NetworkElement, IBatterySensor, IWallController
     {
 
-        private SensorData _battery = SensorData.Empty;
+        private SensorData? _battery = SensorData.Empty;
         private readonly NetworkElementPublisher _publisher;
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Sarah.DeviceService.Model
         /// Zustandsdaten für die Anzeige
         /// </summary>
         public override string StateInfo => "Letzte Aktivität: " + (LastUsage.HasValue ? LastUsage.Value.ToString() : "Unbekannt") + ", SceneId: " + LastSceneId + ", Batterie: " + Battery;
-        public SensorData Battery { get => _battery; private set { if (_battery != value) { _battery = value; _ = _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
+        public SensorData? Battery { get => _battery; private set { if (_battery != value) { _battery = value; _ = _publisher.ReportEvent(this, nameof(Battery), value?.ToString()); } } }
 
 
         public WallController(byte nodeid, NetworkElementPublisher publisher, ILogger<WallController> logger) : base(nodeid, logger)

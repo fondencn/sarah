@@ -131,7 +131,7 @@ namespace Sarah.DeviceService.WebApi.DTOs
             return new BatterySensorDto
             {
                 NodeID = sensor.NodeID,
-                Battery = sensor.Battery.ToDto()
+                Battery = sensor.Battery?.ToDto()
             };
         }
 
@@ -193,7 +193,7 @@ namespace Sarah.DeviceService.WebApi.DTOs
                 StateInfo = tracker.StateInfo,
                 ClassDescription = tracker.ClassDescription,
                 IsActive = tracker.IsActive,
-                Battery = tracker.Battery.ToDto(),
+                Battery = tracker.Battery?.ToDto(),
                 Position = tracker.Position.ToDto(),
                 PositionTrace = tracker.PositionTrace?
                     .Select(p => p.ToDto())

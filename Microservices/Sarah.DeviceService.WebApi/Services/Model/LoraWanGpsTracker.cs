@@ -75,9 +75,9 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Batterieladezustand in %
         /// </summary>
-        public SensorData Battery
+        public SensorData? Battery
         {
-            get { return _battery ?? SensorData.Empty; }
+            get { return _battery; }
             set
             {
                 if (_battery != value)
