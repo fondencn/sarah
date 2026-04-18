@@ -127,20 +127,21 @@ namespace Sarah.DeviceService.Model
         {
             try
             {
-                //if (this.Brightness != value)
-                //{
                 Node? n = this._deviceService.GetZWaveNode(this.NodeID);
                 if (n == null)
                 {
                     throw new InvalidOperationException($"Node {this.NodeID} not found in ZWave network");
                 }
-                //Basic basic = n.GetCommandClass<Basic>();
-                //await basic.Set(value);
+                // For RGB lamps, restore color channels before turning on so the
+                // hardware actually emits light (channels may be zeroed on device reboot).
+                if (value > 0 && this.ColorMode != LampColorModes.Mono)
+                {
+                    await SendColorChannelsAsync(n, this.Color ?? "#FFFFFF");
+                }
                 SwitchMultiLevel swl = n.GetCommandClass<SwitchMultiLevel>();
                 await swl.Set(value);
                 this.Brightness = value;
                 this.LastChange = DateTime.Now;
-                //}
             }
             catch (Exception ex)
             {
@@ -228,87 +229,75 @@ namespace Sarah.DeviceService.Model
         /// <returns>Task</returns>
         public async Task SetColor(string color)
         {
-            if (!String.Equals(this.Color, color, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                try
+                Node? n = this._deviceService.GetZWaveNode(this.NodeID);
+                if (n != null)
                 {
-                    Node? n = this._deviceService.GetZWaveNode(this.NodeID);
-                    if (n != null && !String.Equals(this.Color, color, StringComparison.OrdinalIgnoreCase))
+                    await SendColorChannelsAsync(n, color);
+                    this.Color = color;
+                    this.LastChange = DateTime.Now;
+
+                    // If the lamp is currently off, turn it on so the new color is visible.
+                    if (this.Brightness == 0)
                     {
-                        {
-                            //Basic basicCmd = n.GetCommandClass<Basic>();
-                            Color colorCmd = n.GetCommandClass<Color>();
-                            System.Drawing.Color cc = ColorConverter.FromHex(color);
-
-                            /* via https://aeotec.freshdesk.com/support/solutions/articles/6000202221-led-bulb-6-multi-color-user-guide-
-                             * Switch Color SET Command Class.
-
-                                LED Bulb 6 uses SWITCH COLOR Command Class to allow you to change between Warm White, Cold White, or a mixture of RGB colors. Warm White takes the highest priority and will default to this setting on factory reset values.
-
-                                Capability ID
-                                Color
-                                0
-                                Warm White
-                                1
-                                Cold White
-                                2
-                                Red
-                                3
-                                Green
-                                4
-                                Blue
-
-                                Notes:
-                                Warm white takes highest priority over all other colors.
-                                In order for Cold White to appear, Warm White must be disabled or set to 0% intensity
-                                For RGB color mixes to work, both Cold White and Warm White must be disabled or set to 0% intensity.
-                             *
-                             */
-                            if (this.ColorMode == LampColorModes.RGBWW)
-                            {
-                                /* Aeotec LED Bulb COnfiguration */
-                                ColorComponent warmWhite = new ColorComponent(ColorComponentType.WarmWhite, 0);
-                                ColorComponent coldWhite = new ColorComponent(ColorComponentType.CoolWhite, 0);
-                                ColorComponent r = new ColorComponent(ColorComponentType.Red, cc.R);
-                                ColorComponent g = new ColorComponent(ColorComponentType.Green, cc.G);
-                                ColorComponent b = new ColorComponent(ColorComponentType.Blue, cc.B);
-                                await colorCmd.Set(new ColorComponent[] { warmWhite, coldWhite, r, g, b });
-                                this.Color = color;
-                                this.LastChange = DateTime.Now;
-                            }
-                            else if (this.ColorMode == LampColorModes.RGBW)
-                            {
-
-
-                                await colorCmd.Set(new ColorComponent[]
-                                {
-                                /* KOnfigfuration momentan für Fibaro RGBW Controller 2 mit RGB-Ledstrip (kein W-Channel) */
-                                new ColorComponent(ColorComponentType.Red ,cc.B),
-                                new ColorComponent(ColorComponentType.Green, cc.G),
-                                new ColorComponent(ColorComponentType.Blue, cc.R), //ACHTUNG: bei FIBARO LED CONTROLLER FALSCH RUM!!!
-                                new ColorComponent(ColorComponentType.Amber, 0), //W
-                                });
-                                this.Color = color;
-                                this.LastChange = DateTime.Now;
-                            }
-                            else if (this.ColorMode == LampColorModes.RGB)
-                            {
-                                /* Ungetestete Konfiguration */
-                                ColorComponent r = new ColorComponent(ColorComponentType.Red, cc.R);
-                                ColorComponent g = new ColorComponent(ColorComponentType.Green, cc.G);
-                                ColorComponent b = new ColorComponent(ColorComponentType.Blue, cc.B);
-                                await colorCmd.Set(new ColorComponent[] { r, g, b });
-                                this.Color = color;
-                                this.LastChange = DateTime.Now;
-                            }
-
-                        }
+                        SwitchMultiLevel swl = n.GetCommandClass<SwitchMultiLevel>();
+                        await swl.Set(255);
+                        this.Brightness = 255;
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
+            }
+        }
+
+        private async Task SendColorChannelsAsync(Node n, string color)
+        {
+            Color colorCmd = n.GetCommandClass<Color>();
+            System.Drawing.Color cc = ColorConverter.FromHex(color);
+
+            /* via https://aeotec.freshdesk.com/support/solutions/articles/6000202221-led-bulb-6-multi-color-user-guide-
+             * Switch Color SET Command Class.
+             *
+             * Notes:
+             * Warm white takes highest priority over all other colors.
+             * In order for Cold White to appear, Warm White must be disabled or set to 0% intensity.
+             * For RGB color mixes to work, both Cold White and Warm White must be disabled or set to 0% intensity.
+             */
+            if (this.ColorMode == LampColorModes.RGBWW)
+            {
+                /* Aeotec LED Bulb configuration */
+                await colorCmd.Set(new ColorComponent[]
                 {
-                    _logger?.LogDebug("Fehler beim Lampenfarbe setzen: " + ex.Message);
-                }
+                    new ColorComponent(ColorComponentType.WarmWhite, 0),
+                    new ColorComponent(ColorComponentType.CoolWhite, 0),
+                    new ColorComponent(ColorComponentType.Red, cc.R),
+                    new ColorComponent(ColorComponentType.Green, cc.G),
+                    new ColorComponent(ColorComponentType.Blue, cc.B),
+                });
+            }
+            else if (this.ColorMode == LampColorModes.RGBW)
+            {
+                /* Fibaro RGBW Controller 2 with RGB LED strip (no W-channel)
+                 * ACHTUNG: Red/Blue channels are swapped on this controller! */
+                await colorCmd.Set(new ColorComponent[]
+                {
+                    new ColorComponent(ColorComponentType.Red, cc.B),
+                    new ColorComponent(ColorComponentType.Green, cc.G),
+                    new ColorComponent(ColorComponentType.Blue, cc.R),
+                    new ColorComponent(ColorComponentType.Amber, 0), //W
+                });
+            }
+            else if (this.ColorMode == LampColorModes.RGB)
+            {
+                await colorCmd.Set(new ColorComponent[]
+                {
+                    new ColorComponent(ColorComponentType.Red, cc.R),
+                    new ColorComponent(ColorComponentType.Green, cc.G),
+                    new ColorComponent(ColorComponentType.Blue, cc.B),
+                });
             }
         }
 
