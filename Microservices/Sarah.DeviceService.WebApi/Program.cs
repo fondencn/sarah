@@ -5,8 +5,8 @@ using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.Data.Repositories;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.DeviceService.WebApi.Extensions;
-using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Services;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -34,9 +34,6 @@ builder.Services.AddSingleton<RabbitMQClient>();
 
 // Register NetworkElementPublisher
 builder.Services.AddSingleton<NetworkElementPublisher>();
-
-// Register EventProcessingService with RabbitMQ
-builder.Services.AddSingleton<IEventProcessingService, EventProcessingService>();
 
 // Register NodeFactory
 builder.Services.AddSingleton<INodeFactory, NodeFactory>();
