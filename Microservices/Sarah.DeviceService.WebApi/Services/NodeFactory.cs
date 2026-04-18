@@ -74,13 +74,13 @@ namespace Sarah.DeviceService.WebApi.Services
             {252, typeof(WifiWallPlug)}, // Delock 11827 Wifi Steckdose (inkl. Power Report)
 
             // Shelly TRV Gen3 Gateway 1 (2 TRVs)
-            {253, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 0
-            {254, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 1
+            {253, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 200
+            {254, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 201
 
             // Shelly TRV Gen3 Gateway 2 (3 TRVs)
-            {240, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 0
-            {241, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 1
-            {242, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 2
+            // {240, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 0
+            // {241, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 1
+            // {242, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 2
         };
 
         /// <summary>
@@ -100,12 +100,12 @@ namespace Sarah.DeviceService.WebApi.Services
 
             // Shelly TRV Gen3 Gateway 1 (2 TRVs)
             yield return 253; //Wohnzimmer
-            yield return 254;
+            yield return 254; // Kinderzimmer
 
             // Shelly TRV Gen3 Gateway 2 (3 TRVs)
-            yield return 240;
-            yield return 241;
-            yield return 242;
+            // yield return 240;
+            // yield return 241;
+            // yield return 242;
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,9 +155,9 @@ namespace Sarah.DeviceService.WebApi.Services
             {254, "shellyblugwg3-b08184e755bc"},
 
             // Gateway 2 (3 TRVs)
-            {240, "shelly-trv-gw-2"},
-            {241, "shelly-trv-gw-2"},
-            {242, "shelly-trv-gw-2"},
+            // {240, "shelly-trv-gw-2"},
+            // {241, "shelly-trv-gw-2"},
+            // {242, "shelly-trv-gw-2"},
         };
 
         /// <summary>
@@ -170,9 +170,9 @@ namespace Sarah.DeviceService.WebApi.Services
             {254, 201},
 
             // Gateway 2
-            {240, 0},
-            {241, 1},
-            {242, 2},
+            // {240, 0},
+            // {241, 1},
+            // {242, 2},
         };
         /// <summary>
         /// Mapping von Node-ID zu The Things Network End Device Names

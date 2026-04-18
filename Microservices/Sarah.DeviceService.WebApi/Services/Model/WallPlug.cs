@@ -90,7 +90,7 @@ namespace Sarah.DeviceService.Model
                         this.LastIncreasePower = DateTime.Now;
                     }
 
-                    if ((newVal - oldVal) > PowerLowThreshold)
+                    if ((newVal - oldVal) < PowerLowThreshold)
                     {
                         this.LastDecreasePower = DateTime.Now;
                     }
