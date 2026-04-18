@@ -307,6 +307,7 @@ services:
       - EmailNotifier__SmtpPort=${SMTP_PORT:-25}
       - EmailNotifier__SmtpUsername=${SMTP_USERNAME:-}
       - EmailNotifier__SmtpPassword=${SMTP_PASSWORD:-}
+      - Keycloak__ServiceClientSecret=${RULES_CLIENT_SECRET}
     ports:
       - "5006:8080"
     depends_on:
