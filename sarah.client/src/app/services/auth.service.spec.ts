@@ -12,12 +12,23 @@ describe('AuthService', () => {
     // Reset shared initialization so each test gets a fresh instance
     (AuthService as any).sharedInitializationPromise = null;
 
-    oauthServiceSpy = jasmine.createSpyObj('OAuthService', [
-      'configure', 'setupAutomaticSilentRefresh', 'getIdentityClaims',
-      'getAccessToken', 'hasValidAccessToken', 'initCodeFlow', 'logOut',
-      'loadDiscoveryDocumentAndTryLogin', 'events'
-    ]);
-    oauthServiceSpy.events = { subscribe: () => ({}) } as any;
+    oauthServiceSpy = jasmine.createSpyObj(
+      'OAuthService',
+      [
+        'configure',
+        'setupAutomaticSilentRefresh',
+        'getIdentityClaims',
+        'getAccessToken',
+        'hasValidAccessToken',
+        'setStorage',
+        'initLoginFlow',
+        'logOut',
+        'loadDiscoveryDocumentAndTryLogin'
+      ],
+      {
+        events: { subscribe: () => ({}) } as any
+      }
+    );
     oauthServiceSpy.loadDiscoveryDocumentAndTryLogin.and.returnValue(Promise.resolve(true));
 
     TestBed.configureTestingModule({
