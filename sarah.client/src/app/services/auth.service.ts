@@ -298,11 +298,10 @@ export class AuthService {
    */
   public get currentUserName(): string {
     const claims = this.identityClaims;
-    let username: string = '';
-    if (claims) {
-      username = claims.preferred_username;
+    if (!claims) {
+      return '';
     }
-    return username;
+    return claims.preferred_username ?? '';
   }
 
   /**
@@ -319,12 +318,12 @@ export class AuthService {
    */
   public get currentUserDisplayName(): string {
     const claims = this.identityClaims;
-    let firstname: string = '';
-    let lastname: string = '';
-    if (claims) {
-      firstname = claims.given_name;
-      lastname = claims.family_name;
+    if (!claims) {
+      return '';
     }
-    return `${firstname} ${lastname}`;
+    const firstname: string = claims.given_name ?? '';
+    const lastname: string = claims.family_name ?? '';
+    const fullName = `${firstname} ${lastname}`.trim();
+    return fullName || (claims.preferred_username ?? '');
   }
 }
