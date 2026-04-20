@@ -41,7 +41,7 @@ public class DevicesController : ControllerBase
                 Name = d.Name,
                 NodeId = d.NodeID,
                 DeviceType = d.SpecificType,
-                TypeName = d.SpecificType.ToString(),
+                TypeName = ResolveTypeName(d.SpecificType),
                 IsReadonly = d.IsReadonly,
                 IsFavourite = d.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(d.NodeID),
@@ -79,7 +79,7 @@ public class DevicesController : ControllerBase
             _dbContext.Devices.Add(entity);
             await _dbContext.SaveChangesAsync(cancellationToken);
             deviceDto.Id = entity.Id;
-            deviceDto.TypeName = entity.SpecificType.ToString();
+            deviceDto.TypeName = ResolveTypeName(entity.SpecificType);
             return Ok(deviceDto);
         }
         catch (Exception ex)
@@ -108,7 +108,7 @@ public class DevicesController : ControllerBase
             entity.IsReadonly = deviceDto.IsReadonly;
             entity.IsFavourite = deviceDto.IsFavourite;
             await _dbContext.SaveChangesAsync(cancellationToken);
-            deviceDto.TypeName = entity.SpecificType.ToString();
+            deviceDto.TypeName = ResolveTypeName(entity.SpecificType);
             return Ok(deviceDto);
         }
         catch (Exception ex)
@@ -390,7 +390,7 @@ public class DevicesController : ControllerBase
                 Name = device.Name,
                 NodeId = device.NodeID,
                 DeviceType = device.SpecificType,
-                TypeName = device.SpecificType.ToString(),
+                TypeName = ResolveTypeName(device.SpecificType),
                 IsReadonly = device.IsReadonly,
                 IsFavourite = device.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
@@ -540,6 +540,26 @@ public class DevicesController : ControllerBase
         return null;
     }
 
+    private static string ResolveTypeName(KnownDeviceTypes deviceType) => deviceType switch
+    {
+        KnownDeviceTypes.AeotecLedBulb
+            or KnownDeviceTypes.AeotecLedBulb6White
+            or KnownDeviceTypes.FibaroRGBWController2
+            or KnownDeviceTypes.ShellyWifiLamp => "Lampe",
+        KnownDeviceTypes.AeotecSmartSwitch7
+            or KnownDeviceTypes.FibaroWallPlug
+            or KnownDeviceTypes.PoppWallPlug
+            or KnownDeviceTypes.WifiWallPlug => "Steckdose",
+        KnownDeviceTypes.FibaroHeatController
+            or KnownDeviceTypes.AeotecThermostat
+            or KnownDeviceTypes.ShellyTrv => "Heizung",
+        KnownDeviceTypes.AeotecDoorSensor
+            or KnownDeviceTypes.FibaroDoorWindowSensor2 => "DoorSensor",
+        KnownDeviceTypes.EutronicAirQualitySensor => "EutronicAirQualitySensor",
+        KnownDeviceTypes.LoraWanGpsTracker => "LoraWanGpsTracker",
+        _ => deviceType.ToString()
+    };
+
     [HttpGet("room/{roomId}/avgtemperature")]
     public async Task<IActionResult> GetRoomAverageTemperature(long roomId, CancellationToken cancellationToken)
     {
@@ -586,7 +606,7 @@ public class DevicesController : ControllerBase
                 Name = device.Name,
                 NodeId = device.NodeID,
                 DeviceType = device.SpecificType,
-                TypeName = device.SpecificType.ToString(),
+                TypeName = ResolveTypeName(device.SpecificType),
                 IsReadonly = device.IsReadonly,
                 IsFavourite = device.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(device.NodeID),
