@@ -1,6 +1,6 @@
 <div class="container-fluid">
-  <div class="row overflow-auto">
-    <div class="col-md-4 m-3 p-2">
+  <div class="row g-3">
+    <div class="col-12 col-sm-6 col-lg-4">
       <div class="card shadow-lg h-100 ">
         <div class="card-body">
           <ng-container *ngIf="isLoggedIn() else loginTemplate">
@@ -18,7 +18,7 @@
     </div>
 
     <ng-container *ngIf="isLoggedIn()">
-      <div class="col-md-4 m-3 p-2">
+      <div class="col-12 col-sm-6 col-lg-4">
         <div class="card shadow-lg  h-100">
           <div class="card-body">
             <h5 class="card-title">{{ 'home.systemStatus' | translate }}</h5>
@@ -40,8 +40,8 @@
 <!-- New Row with all dynamic dashboard items -->
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
-    <div class="row overflow-auto" >
-      <div class="col-md-4 m-3 p-2" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem" [@popIn]="animateItems ? 'enabled' : 'disabled'">
+    <div class="row g-3" >
+      <div class="col-12 col-sm-6 col-lg-4" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem" [@popIn]="animateItems ? 'enabled' : 'disabled'">
 
         <ng-container [ngSwitch]="item.itemType">
           <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
