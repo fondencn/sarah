@@ -110,7 +110,7 @@ preflight_check() {
   # 6. Required images present
   log "  Checking Docker images..."
   local missing=0
-  for img in deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice frontend; do
+  for img in deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice adminservice frontend; do
     if ! remote "docker image inspect sarah/${img}:latest" &>/dev/null; then
       err "  Image sarah/${img}:latest not found on ${PI_HOST}. Run build-and-push.sh first."
       missing=1
@@ -183,7 +183,7 @@ deploy() {
   remote "bash -lc 'cd \"${DEPLOY_DIR}\" && for i in \$(seq 1 60); do pg_id=\$(docker compose ps -q postgres); mq_id=\$(docker compose ps -q rabbitmq); pg=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$pg_id\" 2>/dev/null || echo unknown); mq=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$mq_id\" 2>/dev/null || echo unknown); if [ \"\$pg\" = \"healthy\" ] && [ \"\$mq\" = \"healthy\" ]; then exit 0; fi; sleep 2; done; echo \"Timed out waiting for infrastructure health checks\" >&2; docker compose ps >&2; exit 1'"
 
   # Start app services after infrastructure is confirmed healthy.
-  remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice frontend"
+  remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice adminservice frontend"
 
   log "Starting observability stack on ${PI_HOST}..."
   remote "cd ${DEPLOY_DIR} && docker compose --profile observability up -d otel-collector victoriametrics loki tempo grafana"
@@ -212,7 +212,7 @@ echo "  • Keycloak (identity provider)"
 echo "  • RabbitMQ (message broker)"
 echo "  • PostgreSQL (databases: devices, persons, rules, rooms, dashboard)"
 echo "  • DeviceService, PersonsService, GeofencesService, RoomService"
-echo "  • MonitoringService, RulesService, DashboardService"
+echo "  • MonitoringService, RulesService, DashboardService, AdminService"
 echo "  • Angular frontend (nginx)"
 echo "  • OTel stack: otel-collector, VictoriaMetrics, Loki, Tempo, Grafana"
 echo ""
