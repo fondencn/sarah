@@ -8,6 +8,11 @@ namespace Sarah.Dashboard.WebApi.DTOs;
 public class DashboardItemDto
 {
     /// <summary>
+    /// Database primary key of the dashboard item
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
     /// Unique identifier for the dashboard item
     /// </summary>
     public int ItemId { get; set; }
@@ -36,4 +41,9 @@ public class DashboardItemDto
     /// Extended properties for additional data (key-value pairs)
     /// </summary>
     public List<ExtendedPropertyDto>? ExtendedProperties { get; set; }
+
+    /// <summary>
+    /// Display order position (lower values appear first)
+    /// </summary>
+    public int Position { get; set; }
 }

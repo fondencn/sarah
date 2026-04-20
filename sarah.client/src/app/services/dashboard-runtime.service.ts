@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType } from '../models/api-types';
+import { CreateDashboardItemDto, DashboardItemDto, DashboardItemType, ReorderDashboardItemsDto } from '../models/api-types';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardRuntimeService {
@@ -20,5 +20,9 @@ export class DashboardRuntimeService {
 
   apiDashboardItemIdItemTypeDelete(itemId: number, itemType: DashboardItemType): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/Dashboard/${itemId}/${itemType}`);
+  }
+
+  apiDashboardReorderPut(dto: ReorderDashboardItemsDto): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/api/Dashboard/reorder`, dto);
   }
 }

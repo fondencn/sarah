@@ -17,6 +17,7 @@ public interface IDashboardService
     Task<DashboardItemDto?> GetDashboardItemAsync(int id);
     Task<DashboardItemDto> CreateDashboardItemAsync(CreateDashboardItemDto createDto);
     Task<bool> DeleteDashboardItemAsync(int itemId, DashboardItemType itemType);
+    Task<bool> ReorderDashboardItemsAsync(ReorderDashboardItemsDto reorderDto);
 }
 
 /// <summary>
@@ -44,7 +45,8 @@ public class DashboardService : IDashboardService
     public async Task<IEnumerable<DashboardItemDto>> GetAllDashboardItemsAsync()
     {
         var entities = await _repository.GetAllAsync();
-        var mappedItems = await Task.WhenAll(entities.Select(MapToDtoAsync));
+        var ordered = entities.OrderBy(e => e.Position).ThenBy(e => e.Id);
+        var mappedItems = await Task.WhenAll(ordered.Select(MapToDtoAsync));
         return mappedItems;
     }
 
@@ -83,6 +85,7 @@ public class DashboardService : IDashboardService
             Title = createDto.Title,
             Description = createDto.Description,
             Subtype = subtype,
+            Position = (await _repository.GetAllAsync()).Select(e => e.Position).DefaultIfEmpty(-1).Max() + 1,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -110,15 +113,49 @@ public class DashboardService : IDashboardService
         return true;
     }
 
+    public async Task<bool> ReorderDashboardItemsAsync(ReorderDashboardItemsDto reorderDto)
+    {
+        if (reorderDto.OrderedIds.Count == 0)
+        {
+            return true;
+        }
+
+        var entities = await _repository.GetAllAsync();
+        var entityMap = entities.ToDictionary(e => e.Id);
+
+        // Validate that all provided IDs exist
+        foreach (var id in reorderDto.OrderedIds)
+        {
+            if (!entityMap.ContainsKey(id))
+            {
+                return false;
+            }
+        }
+
+        // Assign new positions based on the order provided
+        for (int i = 0; i < reorderDto.OrderedIds.Count; i++)
+        {
+            var entity = entityMap[reorderDto.OrderedIds[i]];
+            entity.Position = i;
+            entity.UpdatedAt = DateTime.UtcNow;
+            await _repository.UpdateAsync(entity);
+        }
+
+        _logger.LogInformation("Reordered {Count} dashboard items", reorderDto.OrderedIds.Count);
+        return true;
+    }
+
     private async Task<DashboardItemDto> MapToDtoAsync(DashboardItemEntity entity)
     {
         var dto = new DashboardItemDto
         {
+            Id = entity.Id,
             ItemId = entity.ItemId,
             ItemType = entity.ItemType,
             Title = entity.Title,
             Description = entity.Description,
             Subtype = entity.Subtype,
+            Position = entity.Position,
             ExtendedProperties = null
         };
 

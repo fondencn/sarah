@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -94,6 +95,7 @@ import { DeviceControlModalComponent } from './devices/device-control-modal/devi
         FormsModule,
         HttpClientModule, 
         BrowserAnimationsModule,
+        DragDropModule,
         FullCalendarModule,
         TranslateModule.forRoot({
             defaultLanguage: 'de',

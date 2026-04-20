@@ -44,7 +44,9 @@
     "warmWhite": "Warm",
     "coldWhite": "Kalt",
     "openFor": "seit",
-    "minutesAbbr": "min"
+    "minutesAbbr": "min",
+    "editDashboard": "Dashboard bearbeiten",
+    "doneDashboard": "Fertig"
   },
   "devices": {
     "title": "Geräte",

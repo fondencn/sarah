@@ -44,7 +44,9 @@
     "warmWhite": "Warm",
     "coldWhite": "Cold",
     "openFor": "for",
-    "minutesAbbr": "min"
+    "minutesAbbr": "min",
+    "editDashboard": "Edit Dashboard",
+    "doneDashboard": "Done"
   },
   "devices": {
     "title": "Devices",

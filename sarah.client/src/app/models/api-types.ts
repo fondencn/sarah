@@ -24,15 +24,21 @@ export interface ExtendedPropertyDto {
 }
 
 export interface DashboardItemDto {
+  id?: number;
   itemId?: number;
   itemType?: DashboardItemType;
   title?: string | null;
   description?: string | null;
   subtype?: string | null;
   extendedProperties?: Array<ExtendedPropertyDto> | null;
+  position?: number;
 }
 
 export interface CreateDashboardItemDto extends DashboardItemDto {}
+
+export interface ReorderDashboardItemsDto {
+  orderedIds?: number[] | null;
+}
 
 export interface StatusDto {
   hostname?: string | null;
