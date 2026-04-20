@@ -35,8 +35,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private devicesService : DevicesClient,
     private logger: LoggingService) { }  
 
-  currentUserName: string = this.authService.currentUserName;
-  currentUserDisplayName: string = this.authService.currentUserDisplayName;
+  get currentUserName(): string { return this.authService.currentUserName; }
+  get currentUserDisplayName(): string { return this.authService.currentUserDisplayName; }
   statusMessage: string = "";
   statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemViewModel[] = [];
