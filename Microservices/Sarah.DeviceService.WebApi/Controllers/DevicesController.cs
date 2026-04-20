@@ -541,23 +541,30 @@ public class DevicesController : ControllerBase
         return null;
     }
 
+    private const string LampDeviceSubtype = "Lampe";
+    private const string WallPlugDeviceSubtype = "Steckdose";
+    private const string HeatingDeviceSubtype = "Heizung";
+    private const string DoorSensorDeviceSubtype = "DoorSensor";
+    private const string AirQualitySensorDeviceSubtype = "EutronicAirQualitySensor";
+    private const string GpsTrackerDeviceSubtype = "LoraWanGpsTracker";
+
     private static string ResolveTypeName(KnownDeviceTypes deviceType) => deviceType switch
     {
         KnownDeviceTypes.AeotecLedBulb
             or KnownDeviceTypes.AeotecLedBulb6White
             or KnownDeviceTypes.FibaroRGBWController2
-            or KnownDeviceTypes.ShellyWifiLamp => "Lampe",
+            or KnownDeviceTypes.ShellyWifiLamp => LampDeviceSubtype,
         KnownDeviceTypes.AeotecSmartSwitch7
             or KnownDeviceTypes.FibaroWallPlug
             or KnownDeviceTypes.PoppWallPlug
-            or KnownDeviceTypes.WifiWallPlug => "Steckdose",
+            or KnownDeviceTypes.WifiWallPlug => WallPlugDeviceSubtype,
         KnownDeviceTypes.FibaroHeatController
             or KnownDeviceTypes.AeotecThermostat
-            or KnownDeviceTypes.ShellyTrv => "Heizung",
+            or KnownDeviceTypes.ShellyTrv => HeatingDeviceSubtype,
         KnownDeviceTypes.AeotecDoorSensor
-            or KnownDeviceTypes.FibaroDoorWindowSensor2 => "DoorSensor",
-        KnownDeviceTypes.EutronicAirQualitySensor => "EutronicAirQualitySensor",
-        KnownDeviceTypes.LoraWanGpsTracker => "LoraWanGpsTracker",
+            or KnownDeviceTypes.FibaroDoorWindowSensor2 => DoorSensorDeviceSubtype,
+        KnownDeviceTypes.EutronicAirQualitySensor => AirQualitySensorDeviceSubtype,
+        KnownDeviceTypes.LoraWanGpsTracker => GpsTrackerDeviceSubtype,
         _ => deviceType.ToString()
     };
 
