@@ -1,7 +1,9 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace Sarah.Monitoring;
+namespace Sarah.Authentication;
 
 public sealed class ClientCredentialsHandler : DelegatingHandler
 {

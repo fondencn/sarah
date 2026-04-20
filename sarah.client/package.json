@@ -24,6 +24,7 @@
     "@angular/platform-browser": "^18.2.1",
     "@angular/platform-browser-dynamic": "^18.2.1",
     "@angular/router": "^18.2.1",
+    "@angular/service-worker": "18.2.13",
     "@fluentui/svg-icons": "^1.1.317",
     "@fluentui/web-components": "^2.6.1",
     "@fullcalendar/angular": "^6.1.20",

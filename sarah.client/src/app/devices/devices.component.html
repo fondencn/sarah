@@ -37,29 +37,29 @@
         <td>{{ device.typeName }}</td>
         <td [innerHTML]="device.info"></td>
         <td>
-          <ng-container [ngSwitch]="device.typeName">
-            <ng-container *ngSwitchCase="'Lampe'">
+          <ng-container [ngSwitch]="getStatusCategory(device)">
+            <ng-container *ngSwitchCase="'lamp'">
               <span class="badge" [ngClass]="getLampIsOn(device) ? 'bg-success' : 'bg-secondary'">
                 {{ (getLampIsOn(device) ? 'common.on' : 'common.off') | translate }}
               </span>
             </ng-container>
-            <ng-container *ngSwitchCase="'Steckdose'">
+            <ng-container *ngSwitchCase="'wallplug'">
               <span class="badge" [ngClass]="getWallplugIsOn(device) ? 'bg-success' : 'bg-secondary'">
                 {{ (getWallplugIsOn(device) ? 'common.on' : 'common.off') | translate }}
               </span>
             </ng-container>
-            <ng-container *ngSwitchCase="'DoorSensor'">
+            <ng-container *ngSwitchCase="'doorsensor'">
               <span class="badge" [ngClass]="getDoorIsOpen(device) ? 'bg-danger' : 'bg-success'">
                 {{ (getDoorIsOpen(device) ? 'common.open' : 'common.closed') | translate }}
               </span>
             </ng-container>
-            <ng-container *ngSwitchCase="'Heizung'">
+            <ng-container *ngSwitchCase="'thermostat'">
               <span *ngIf="getThermostatSetpoint(device) !== null" class="small">
                 🌡️ {{ getThermostatSetpoint(device) | number:'1.1-1' }} °C
               </span>
               <span *ngIf="getThermostatSetpoint(device) === null" class="text-muted small">–</span>
             </ng-container>
-            <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
+            <ng-container *ngSwitchCase="'airquality'">
               <span *ngIf="getAirQualityCO2(device) !== null" class="small">
                 🫁 {{ getAirQualityCO2(device) | number:'1.0-0' }} ppm
               </span>

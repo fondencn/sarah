@@ -232,6 +232,19 @@ export class DevicesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Returns a stable category string based on which sub-DTO is present on the device,
+   * so the Status column switch does not depend on backend string names.
+   */
+  public getStatusCategory(device: DeviceDto): string {
+    if ((device as any).lamp !== null && (device as any).lamp !== undefined) return 'lamp';
+    if ((device as any).wallPlug !== null && (device as any).wallPlug !== undefined) return 'wallplug';
+    if ((device as any).doorSensor !== null && (device as any).doorSensor !== undefined) return 'doorsensor';
+    if ((device as any).thermostat !== null && (device as any).thermostat !== undefined) return 'thermostat';
+    if ((device as any).airQuality !== null && (device as any).airQuality !== undefined) return 'airquality';
+    return 'unknown';
+  }
+
+  /**
    * Returns the lamp on/off state from the GetAll sub-DTO payload.
    * The backend returns a `lamp` property that is not part of the generated TypeScript type.
    */
