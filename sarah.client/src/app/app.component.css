@@ -32,6 +32,7 @@ html, body {
   margin-top: 4rem;
   margin-bottom: 4rem;
   overflow-y: auto;
+  overflow-x: hidden;
   background: linear-gradient(135deg, #FAF9F8 0%, #EDEBE9 50%, #F3F2F1 100%);
 }
 
