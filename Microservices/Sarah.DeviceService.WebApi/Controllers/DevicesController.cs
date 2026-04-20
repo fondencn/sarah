@@ -42,6 +42,7 @@ public class DevicesController : ControllerBase
                 NodeId = d.NodeID,
                 DeviceType = d.SpecificType,
                 TypeName = ResolveTypeName(d.SpecificType),
+                Info = _deviceService.GetNetworkItem(d.NodeID)?.StateInfo,
                 IsReadonly = d.IsReadonly,
                 IsFavourite = d.IsFavourite,
                 DoorSensor = BuildDoorSensorStateDto(d.NodeID),

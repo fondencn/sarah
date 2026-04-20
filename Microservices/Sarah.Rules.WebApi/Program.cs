@@ -30,6 +30,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 
+// Register client credentials handler for background service → service calls (no HTTP context to forward from)
+builder.Services.AddTransient<ClientCredentialsHandler>();
+
 // Register HTTP client for DeviceService communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
@@ -39,7 +42,7 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
         ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register DeviceServiceClient as concrete type for Rules actions
 builder.Services.AddHttpClient<DeviceServiceClient>(client =>
@@ -50,7 +53,7 @@ builder.Services.AddHttpClient<DeviceServiceClient>(client =>
         ?? "https+http://deviceservice";
     client.BaseAddress = new Uri(deviceServiceUrl);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
@@ -61,7 +64,7 @@ builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
         ?? "https+http://personsservice";
     client.BaseAddress = new Uri(personServiceUrl);
 })
-.AddBearerTokenForwarding();
+.AddHttpMessageHandler<ClientCredentialsHandler>();
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
