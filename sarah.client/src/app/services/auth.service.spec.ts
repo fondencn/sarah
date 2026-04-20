@@ -33,10 +33,8 @@ describe('AuthService', () => {
     oauthServiceSpy.loadDiscoveryDocumentAndTryLogin.and.returnValue(Promise.resolve(true));
 
     aspireResourceServiceSpy = jasmine.createSpyObj('AspireResourceService', [
-      'getResourceUrl',
       'discoverKeycloakIssuer'
     ]);
-    aspireResourceServiceSpy.getResourceUrl.and.returnValue(Promise.resolve(null));
     aspireResourceServiceSpy.discoverKeycloakIssuer.and.returnValue(Promise.resolve(null));
 
     TestBed.configureTestingModule({

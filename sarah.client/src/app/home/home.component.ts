@@ -25,6 +25,7 @@ import { LoggingService } from '../services/logging.service';
   ]
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  private readonly lampOnBrightness = 255;
 
   @ViewChild('personMapModal') personMapModal!: PersonMapModalComponent;
 
@@ -97,7 +98,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   switchLampOn(itemId: number) {
-    this.setLampBrightness(itemId, 100);
+    this.setLampBrightness(itemId, this.lampOnBrightness);
   }
 
   switchWallplugOn(itemId: number) {
