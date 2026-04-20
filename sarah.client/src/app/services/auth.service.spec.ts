@@ -7,6 +7,7 @@ import { LoggingService } from './logging.service';
 describe('AuthService', () => {
   let service: AuthService;
   let oauthServiceSpy: jasmine.SpyObj<OAuthService>;
+  let aspireResourceServiceSpy: jasmine.SpyObj<AspireResourceService>;
 
   beforeEach(() => {
     // Reset shared initialization so each test gets a fresh instance
@@ -31,11 +32,18 @@ describe('AuthService', () => {
     );
     oauthServiceSpy.loadDiscoveryDocumentAndTryLogin.and.returnValue(Promise.resolve(true));
 
+    aspireResourceServiceSpy = jasmine.createSpyObj('AspireResourceService', [
+      'getResourceUrl',
+      'discoverKeycloakIssuer'
+    ]);
+    aspireResourceServiceSpy.getResourceUrl.and.returnValue(Promise.resolve(null));
+    aspireResourceServiceSpy.discoverKeycloakIssuer.and.returnValue(Promise.resolve(null));
+
     TestBed.configureTestingModule({
       providers: [
         AuthService,
         { provide: OAuthService, useValue: oauthServiceSpy },
-        { provide: AspireResourceService, useValue: { getResourceUrl: () => Promise.resolve(null) } },
+        { provide: AspireResourceService, useValue: aspireResourceServiceSpy },
         { provide: LoggingService, useValue: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} } }
       ]
     });
