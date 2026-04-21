@@ -138,14 +138,8 @@ public class DashboardService : IDashboardService
         if (reorderDto.OrderedIds.Count != entityMap.Count || orderedIdsSet.Count != reorderDto.OrderedIds.Count)
         {
             return false;
-        var entityMap = entities.ToDictionary(e => e.Id);
-        var orderedIdsSet = reorderDto.OrderedIds.ToHashSet();
-
-        // Validate that the request contains each dashboard item exactly once.
-        if (reorderDto.OrderedIds.Count != entityMap.Count || orderedIdsSet.Count != reorderDto.OrderedIds.Count)
-        {
-            return false;
         }
+
         // Validate that all provided IDs exist
         foreach (var id in reorderDto.OrderedIds)
         {
