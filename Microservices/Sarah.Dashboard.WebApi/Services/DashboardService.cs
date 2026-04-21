@@ -120,7 +120,12 @@ public class DashboardService : IDashboardService
 
     public async Task<bool> ReorderDashboardItemsAsync(ReorderDashboardItemsDto reorderDto)
     {
-        if (reorderDto.OrderedIds == null || reorderDto.OrderedIds.Count == 0)
+        if (reorderDto.OrderedIds == null)
+        {
+            return false;
+        }
+
+        if (reorderDto.OrderedIds.Count == 0)
         {
             return true;
         }
