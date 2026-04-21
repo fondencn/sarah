@@ -207,7 +207,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.logger.error('Error saving dashboard order:', error);
-        this.isEditMode = false;
+        // Keep edit mode active so the user can retry without losing their reordered state
       }
     });
   }

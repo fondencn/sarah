@@ -34,10 +34,17 @@ export interface DashboardItemDto {
   position?: number;
 }
 
-export interface CreateDashboardItemDto extends DashboardItemDto {}
+export interface CreateDashboardItemDto {
+  itemId?: number;
+  itemType?: DashboardItemType;
+  title?: string | null;
+  description?: string | null;
+  subtype?: string | null;
+  extendedProperties?: Array<ExtendedPropertyDto> | null;
+}
 
 export interface ReorderDashboardItemsDto {
-  orderedIds?: number[] | null;
+  orderedIds: number[];
 }
 
 export interface StatusDto {

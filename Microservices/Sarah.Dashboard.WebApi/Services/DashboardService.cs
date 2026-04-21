@@ -1,9 +1,11 @@
+using Sarah.Dashboard.WebApi.Data;
 using Sarah.Dashboard.WebApi.Data.Entities;
 using Sarah.Dashboard.WebApi.Data.Repositories;
 using Sarah.Dashboard.WebApi.DTOs;
 using Sarah.API.BusinessObjects;
 using Sarah.ServiceClients;
 using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using DeviceDto = Sarah.API.BusinessObjects.DTOs.DeviceDto;
 
 namespace Sarah.Dashboard.WebApi.Services;
@@ -26,17 +28,20 @@ public interface IDashboardService
 public class DashboardService : IDashboardService
 {
     private readonly IRepository<DashboardItemEntity> _repository;
+    private readonly DashboardDbContext _context;
     private readonly DeviceServiceClient _deviceServiceClient;
     private readonly PersonServiceClient _personServiceClient;
     private readonly ILogger<DashboardService> _logger;
 
     public DashboardService(
         IRepository<DashboardItemEntity> repository,
+        DashboardDbContext context,
         DeviceServiceClient deviceServiceClient,
         PersonServiceClient personServiceClient,
         ILogger<DashboardService> logger)
     {
         _repository = repository;
+        _context = context;
         _deviceServiceClient = deviceServiceClient;
         _personServiceClient = personServiceClient;
         _logger = logger;
@@ -85,7 +90,7 @@ public class DashboardService : IDashboardService
             Title = createDto.Title,
             Description = createDto.Description,
             Subtype = subtype,
-            Position = (await _repository.GetAllAsync()).Select(e => e.Position).DefaultIfEmpty(-1).Max() + 1,
+            Position = (await _context.DashboardItems.MaxAsync(e => (int?)e.Position) ?? -1) + 1,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -115,13 +120,20 @@ public class DashboardService : IDashboardService
 
     public async Task<bool> ReorderDashboardItemsAsync(ReorderDashboardItemsDto reorderDto)
     {
-        if (reorderDto.OrderedIds.Count == 0)
+        if (reorderDto.OrderedIds == null || reorderDto.OrderedIds.Count == 0)
         {
             return true;
         }
 
         var entities = await _repository.GetAllAsync();
         var entityMap = entities.ToDictionary(e => e.Id);
+        var orderedIdsSet = reorderDto.OrderedIds.ToHashSet();
+
+        // Validate that the request contains each dashboard item exactly once.
+        if (reorderDto.OrderedIds.Count != entityMap.Count || orderedIdsSet.Count != reorderDto.OrderedIds.Count)
+        {
+            return false;
+        }
 
         // Validate that all provided IDs exist
         foreach (var id in reorderDto.OrderedIds)
@@ -132,14 +144,19 @@ public class DashboardService : IDashboardService
             }
         }
 
-        // Assign new positions based on the order provided
+        // Assign new positions in-memory, then persist once atomically
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
         for (int i = 0; i < reorderDto.OrderedIds.Count; i++)
         {
             var entity = entityMap[reorderDto.OrderedIds[i]];
             entity.Position = i;
             entity.UpdatedAt = DateTime.UtcNow;
-            await _repository.UpdateAsync(entity);
+            _context.DashboardItems.Update(entity);
         }
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         _logger.LogInformation("Reordered {Count} dashboard items", reorderDto.OrderedIds.Count);
         return true;
