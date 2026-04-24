@@ -155,6 +155,32 @@ describe('DeviceControlModalComponent', () => {
     });
   });
 
+  describe('toggleLamp()', () => {
+    it('sends full brightness when turned on', () => {
+      devicesServiceSpy.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness.and.returnValue(of(null) as any);
+      component.deviceId = 11;
+
+      component.toggleLamp({ checked: true } as HTMLInputElement);
+
+      expect(devicesServiceSpy.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness)
+        .toHaveBeenCalledWith(11, 255);
+      expect(component.isOn).toBeTrue();
+      expect(component.lampBrightness).toBe(255);
+    });
+
+    it('sends zero brightness when turned off', () => {
+      devicesServiceSpy.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness.and.returnValue(of(null) as any);
+      component.deviceId = 11;
+
+      component.toggleLamp({ checked: false } as HTMLInputElement);
+
+      expect(devicesServiceSpy.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness)
+        .toHaveBeenCalledWith(11, 0);
+      expect(component.isOn).toBeFalse();
+      expect(component.lampBrightness).toBe(0);
+    });
+  });
+
   describe('ngOnDestroy()', () => {
     it('clears the refresh interval on destroy', () => {
       (component as any).refreshInterval = setInterval(() => {}, 99999);

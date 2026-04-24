@@ -9,6 +9,7 @@ import { LoggingService } from '../../services/logging.service';
   styleUrls: ['./device-control-modal.component.css']
 })
 export class DeviceControlModalComponent implements OnDestroy {
+  private readonly lampOnBrightness = 255;
 
   deviceId: number = 0;
   deviceName: string = '';
@@ -73,7 +74,7 @@ export class DeviceControlModalComponent implements OnDestroy {
   toggleLamp(eventTarget: EventTarget | null): void {
     const el = eventTarget as HTMLInputElement;
     if (el.checked) {
-      this.setLampBrightness(100);
+      this.setLampBrightness(this.lampOnBrightness);
     } else {
       this.setLampBrightness(0);
     }
