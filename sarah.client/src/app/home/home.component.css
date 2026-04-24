@@ -90,3 +90,44 @@ img.big-icon {
     font-weight: 400;
     opacity: 0.9;
 }
+
+/* Edit mode styles */
+.card-edit-mode {
+    outline: 2px dashed rgba(255, 255, 255, 0.6);
+    outline-offset: -2px;
+}
+
+.drag-handle {
+    cursor: grab;
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: calc(0.375rem - 1px) calc(0.375rem - 1px) 0 0;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle-icon {
+    font-size: 1.2rem;
+    opacity: 0.8;
+    letter-spacing: 2px;
+}
+
+/* CDK drag placeholder */
+.cdk-drag-placeholder {
+    opacity: 0.4;
+}
+
+/* CDK drag preview */
+.cdk-drag-preview {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-radius: 0.375rem;
+    opacity: 0.9;
+}
+
+/* CDK drop animation */
+.cdk-drop-list-dragging .col-12:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

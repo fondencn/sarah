@@ -32,6 +32,15 @@
           </div>
         </div>
       </div>
+      <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center">
+        <button class="btn btn-sm ms-auto"
+          [class.btn-outline-secondary]="!isEditMode"
+          [class.btn-success]="isEditMode"
+          (click)="toggleEditMode()">
+          <span *ngIf="!isEditMode">✏️ {{ 'home.editDashboard' | translate }}</span>
+          <span *ngIf="isEditMode">✅ {{ 'home.doneDashboard' | translate }}</span>
+        </button>
+      </div>
     </ng-container>
   </div>
 </div>
@@ -40,12 +49,21 @@
 <!-- New Row with all dynamic dashboard items -->
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
-    <div class="row g-3" >
-      <div class="col-12 col-sm-6 col-lg-4" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem" [@popIn]="animateItems ? 'enabled' : 'disabled'">
+    <div class="row g-3"
+         cdkDropList
+         cdkDropListOrientation="mixed"
+         (cdkDropListDropped)="onDrop($event)">
+      <div class="col-12 col-sm-6 col-lg-4" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem"
+           [@popIn]="animateItems ? 'enabled' : 'disabled'"
+           cdkDrag
+           [cdkDragDisabled]="!isEditMode">
 
         <ng-container [ngSwitch]="item.itemType">
           <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
-            <div class="card shadow-lg h-100 card-device" >
+            <div class="card shadow-lg h-100 card-device" [class.card-edit-mode]="isEditMode">
+              <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
+                <span class="drag-handle-icon">⠿</span>
+              </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-9">
@@ -163,7 +181,10 @@
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_SCENE">
-            <div class="card shadow-lg h-100 card-scene">
+            <div class="card shadow-lg h-100 card-scene" [class.card-edit-mode]="isEditMode">
+              <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
+                <span class="drag-handle-icon">⠿</span>
+              </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
@@ -185,7 +206,10 @@
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_ROOM">
-            <div class="card shadow-lg h-100 card-room">
+            <div class="card shadow-lg h-100 card-room" [class.card-edit-mode]="isEditMode">
+              <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
+                <span class="drag-handle-icon">⠿</span>
+              </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-9">
@@ -221,7 +245,12 @@
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_PERSON">
-            <div class="card shadow-lg h-100 card-person" style="cursor:pointer;" (click)="showPersonMap(item)">
+            <div class="card shadow-lg h-100 card-person" [class.card-edit-mode]="isEditMode"
+                 [style.cursor]="isEditMode ? 'default' : 'pointer'"
+                 (click)="!isEditMode && showPersonMap(item)">
+              <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
+                <span class="drag-handle-icon">⠿</span>
+              </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
@@ -257,7 +286,10 @@
             </div>
           </ng-container>
           <ng-container *ngSwitchDefault>
-            <div class="card shadow-lg h-100">
+            <div class="card shadow-lg h-100" [class.card-edit-mode]="isEditMode">
+              <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
+                <span class="drag-handle-icon">⠿</span>
+              </div>
               <div class="card-body">
                 <h5 class="card-title">{{ item.title }}</h5>
                 <div class="card-text" [innerHTML]="item.description"></div>

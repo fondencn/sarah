@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AuthService } from '../services/auth.service';
 import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { PersonsClient } from '../services/api/persons-service/api/persons.service';
@@ -41,6 +42,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemViewModel[] = [];
   animateItems: boolean = true; // Flag to control animation
+  isEditMode: boolean = false;
 
   ITEM_TYPE_DEVICE : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_0;
   ITEM_TYPE_SCENE  : DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_1;
@@ -174,6 +176,42 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
 
+  toggleEditMode(): void {
+    if (this.isEditMode) {
+      this.saveOrder();
+    } else {
+      this.isEditMode = true;
+    }
+  }
+
+  onDrop(event: CdkDragDrop<DashboardItemViewModel[]>): void {
+    if (event.previousIndex !== event.currentIndex) {
+      moveItemInArray(this.dashboardItems, event.previousIndex, event.currentIndex);
+    }
+  }
+
+  private saveOrder(): void {
+    const orderedIds = this.dashboardItems
+      .map(item => item.id)
+      .filter((id): id is number => id !== undefined && id !== null);
+
+    if (orderedIds.length === 0) {
+      this.isEditMode = false;
+      return;
+    }
+
+    this.dashboardService.apiDashboardReorderPut({ orderedIds }).subscribe({
+      next: () => {
+        this.logger.debug('Dashboard order saved');
+        this.isEditMode = false;
+      },
+      error: (error) => {
+        this.logger.error('Error saving dashboard order:', error);
+        // Keep edit mode active so the user can retry without losing their reordered state
+      }
+    });
+  }
+
   /* ******************** API Calls ******************** */
   private loadDashboardItems(): void {
     this.animateItems = true;
@@ -199,6 +237,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
   updateDashboardItems(): void {
+    if (this.isEditMode) {
+      return; // Don't overwrite user's drag-in-progress ordering
+    }
     this.animateItems = false;
     this.dashboardService.apiDashboardGet().subscribe({
       next: (items: DashboardItemDto[]) => {
@@ -306,6 +347,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 export class DashboardItemViewModel {
   constructor(public item: DashboardItemDto) {}
+
+  get id(): number | undefined {
+    return this.item.id;
+  }
 
   get lampColor(): string | null | undefined {
     return this.item.extendedProperties?.find(x => x.key === 'Color')?.value;

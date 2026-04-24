@@ -80,6 +80,26 @@ public class DashboardController : ControllerBase
     }
 
     /// <summary>
+    /// Reorder dashboard items
+    /// </summary>
+    /// <param name="reorderDto">Ordered list of dashboard item IDs</param>
+    /// <returns>No content if successful</returns>
+    [HttpPut("reorder")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> ReorderDashboardItems([FromBody] ReorderDashboardItemsDto reorderDto)
+    {
+        var success = await _dashboardService.ReorderDashboardItemsAsync(reorderDto);
+        
+        if (!success)
+        {
+            return BadRequest("One or more item IDs were not found.");
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Delete a dashboard item by its ItemId and ItemType
     /// </summary>
     /// <param name="itemId">ID of the item in its source system</param>

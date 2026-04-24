@@ -24,6 +24,17 @@ export interface ExtendedPropertyDto {
 }
 
 export interface DashboardItemDto {
+  id?: number;
+  itemId?: number;
+  itemType?: DashboardItemType;
+  title?: string | null;
+  description?: string | null;
+  subtype?: string | null;
+  extendedProperties?: Array<ExtendedPropertyDto> | null;
+  position?: number;
+}
+
+export interface CreateDashboardItemDto {
   itemId?: number;
   itemType?: DashboardItemType;
   title?: string | null;
@@ -32,7 +43,9 @@ export interface DashboardItemDto {
   extendedProperties?: Array<ExtendedPropertyDto> | null;
 }
 
-export interface CreateDashboardItemDto extends DashboardItemDto {}
+export interface ReorderDashboardItemsDto {
+  orderedIds: number[];
+}
 
 export interface StatusDto {
   hostname?: string | null;

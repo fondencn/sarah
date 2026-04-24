@@ -48,6 +48,11 @@ public class DashboardItemEntity
     public string? Subtype { get; set; }
     
     /// <summary>
+    /// Display order of the item on the dashboard (lower values appear first)
+    /// </summary>
+    public int Position { get; set; } = 0;
+    
+    /// <summary>
     /// When the item was created
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
