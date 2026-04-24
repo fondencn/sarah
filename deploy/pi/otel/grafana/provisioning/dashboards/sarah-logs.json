@@ -381,12 +381,58 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "text": {}
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service_name=\"Sarah.Admin.WebApi\"}[$__range]))",
+          "legendFormat": "Admin",
+          "refId": "A"
+        }
+      ],
+      "title": "Admin",
+      "type": "stat"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 13
       },
       "id": 10,
       "title": "Log Rate \u2014 All Services",
@@ -410,7 +456,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 14
       },
       "id": 11,
       "options": {
@@ -447,7 +493,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 14
       },
       "id": 12,
       "options": {
@@ -477,7 +523,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 23
       },
       "id": 13,
       "title": "Log Stream \u2014 $log_service",
@@ -492,7 +538,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 24
       },
       "id": 14,
       "options": {

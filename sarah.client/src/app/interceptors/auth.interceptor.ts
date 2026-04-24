@@ -20,7 +20,8 @@ export class AuthInterceptor implements HttpInterceptor {
       environment.api.monitoringService,
       environment.api.rulesService,
       environment.api.speechServer,
-      environment.api.dashboardService
+      environment.api.dashboardService,
+      environment.api.adminService
     ];
   }
 
