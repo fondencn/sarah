@@ -130,38 +130,46 @@ public class DashboardService : IDashboardService
             return true;
         }
 
-        var entities = await _repository.GetAllAsync();
-        var entityMap = entities.ToDictionary(e => e.Id);
         var orderedIdsSet = reorderDto.OrderedIds.ToHashSet();
 
-        // Validate that the request contains each dashboard item exactly once.
-        if (reorderDto.OrderedIds.Count != entityMap.Count || orderedIdsSet.Count != reorderDto.OrderedIds.Count)
+        // Validate no duplicates in the provided list
+        if (orderedIdsSet.Count != reorderDto.OrderedIds.Count)
+        {
+            return false;
+        }
+
+        // Validate that the request contains every dashboard item exactly once.
+        var totalCount = await _context.DashboardItems.CountAsync();
+        if (reorderDto.OrderedIds.Count != totalCount)
         {
             return false;
         }
 
         // Validate that all provided IDs exist
+        var existingIds = await _context.DashboardItems
+            .Select(e => e.Id)
+            .ToListAsync();
+
         foreach (var id in reorderDto.OrderedIds)
         {
-            if (!entityMap.ContainsKey(id))
+            if (!existingIds.Contains(id))
             {
                 return false;
             }
         }
 
-        // Assign new positions in-memory, then persist once atomically
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        // Persist new positions in a single batch UPDATE using PostgreSQL unnest
+        var orderedIds = reorderDto.OrderedIds.ToArray();
+        var updatedAt = DateTime.UtcNow;
 
-        for (int i = 0; i < reorderDto.OrderedIds.Count; i++)
-        {
-            var entity = entityMap[reorderDto.OrderedIds[i]];
-            entity.Position = i;
-            entity.UpdatedAt = DateTime.UtcNow;
-            _context.DashboardItems.Update(entity);
-        }
-
-        await _context.SaveChangesAsync();
-        await transaction.CommitAsync();
+        await _context.Database.ExecuteSqlAsync(
+            $"""
+            UPDATE "DashboardItems"
+            SET "Position" = CAST(t."idx" AS integer) - 1,
+                "UpdatedAt" = {updatedAt}
+            FROM unnest({orderedIds}) WITH ORDINALITY AS t("id", "idx")
+            WHERE "Id" = CAST(t."id" AS integer)
+            """);
 
         _logger.LogInformation("Reordered {Count} dashboard items", reorderDto.OrderedIds.Count);
         return true;
