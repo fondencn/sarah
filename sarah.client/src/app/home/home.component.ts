@@ -205,6 +205,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: () => {
         this.logger.debug('Dashboard order saved');
         this.isEditMode = false;
+        this.updateDashboardItems();
       },
       error: (error) => {
         this.logger.error('Error saving dashboard order:', error);
