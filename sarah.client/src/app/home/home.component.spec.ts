@@ -1,3 +1,5 @@
+/// <reference types="jasmine" />
+
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { HomeComponent } from './home.component';
@@ -32,7 +34,7 @@ describe('HomeComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         HomeComponent,
-        { provide: AuthService, useValue: jasmine.createSpyObj('AuthService', ['login', 'logout', 'isLoggedIn'], { currentUserName: 'chris', currentUserDisplayName: 'Chris' }) },
+        { provide: AuthService, useValue: jasmine.createSpyObj('AuthService', ['login', 'isLoggedIn'], { currentUserName: 'chris', currentUserDisplayName: 'Chris' }) },
         { provide: StatusRuntimeService, useValue: jasmine.createSpyObj('StatusRuntimeService', ['statusGet']) },
         { provide: DashboardRuntimeService, useValue: jasmine.createSpyObj('DashboardRuntimeService', ['apiDashboardGet']) },
         { provide: PersonsClient, useValue: jasmine.createSpyObj('PersonsClient', ['apiPersonsGet']) },

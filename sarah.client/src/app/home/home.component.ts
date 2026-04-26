@@ -84,10 +84,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.authService.login();
   }
 
-  logout(): void {
-    this.authService.logout();
-  }
-
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }

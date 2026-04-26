@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LanguageService, SupportedLang } from '../services/language.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-nav',
@@ -9,7 +10,10 @@ import { LanguageService, SupportedLang } from '../services/language.service';
 export class NavComponent {
   navbarOpen = false;
 
-  constructor(public languageService: LanguageService) {}
+  constructor(
+    public languageService: LanguageService,
+    private authService: AuthService
+  ) {}
 
   toggleNavbar() {
     this.navbarOpen = !this.navbarOpen;
@@ -17,5 +21,13 @@ export class NavComponent {
 
   setLang(lang: SupportedLang): void {
     this.languageService.setLanguage(lang);
+  }
+
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }
