@@ -4,13 +4,49 @@ namespace Sarah.Messaging.RabbitMQ.Messages;
 
 public class WeatherWarningEventMessage : AbstractMessage
 {
-    public WeatherWarningEventMessage(string NewValue) 
+    /// <summary>
+    /// Location name for which the warnings apply.
+    /// </summary>
+    public string Location { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Preformatted speech output string built by WeatherMonitor.
+    /// </summary>
+    public string OutputString { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Warning entries that should be announced.
+    /// </summary>
+    public List<string> Warnings { get; set; } = new();
+
+    /// <summary>
+    /// Structured warning entries with additional DWD properties.
+    /// </summary>
+    public List<WeatherWarningDetailMessage> WarningDetails { get; set; } = new();
+
+    public WeatherWarningEventMessage()
     {
         Topic = MessageTopics.WeatherWarning;
-        this.NewValue = NewValue;
     }
+}
 
-    public string NewValue { get; set; }
+/// <summary>
+/// Structured weather warning entry used in WeatherWarningEventMessage.
+/// </summary>
+public class WeatherWarningDetailMessage
+{
+    public string Key { get; set; } = string.Empty;
+    public string? RegionName { get; set; }
+    public string? Description { get; set; }
+    public string? Event { get; set; }
+    public string? Headline { get; set; }
+    public string? Instruction { get; set; }
+    public int? Type { get; set; }
+    public int? Level { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public bool IsAllDayWarning { get; set; }
+    public string OutputString { get; set; } = string.Empty;
 }
 
 /// <summary>

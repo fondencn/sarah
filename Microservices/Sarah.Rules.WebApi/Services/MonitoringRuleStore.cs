@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 namespace Sarah.Rules;
 
 /// <summary>
-/// Rule store that generates speech output for monitor events (battery warnings and door/window alerts).
+/// Rule store that generates speech output for monitor events (battery warnings,
+/// door/window alerts, and weather updates).
 /// This centralises all speech text generation that was previously done inside the individual monitors.
 /// </summary>
 public class MonitoringRuleStore : IRuleStore
@@ -35,6 +36,7 @@ public class MonitoringRuleStore : IRuleStore
     {
         AddBatteryWarningRules();
         AddDoorMonitorAlertRules();
+        AddWeatherRules();
     }
 
     // ─── Battery warning ────────────────────────────────────────────────────────
@@ -172,5 +174,95 @@ public class MonitoringRuleStore : IRuleStore
             default:
                 return string.Empty;
         }
+    }
+
+    // ─── Weather monitor alerts ───────────────────────────────────────────────
+
+    private void AddWeatherRules()
+    {
+        _rules.Add(new Rule
+        {
+            Condition = new PredicateCondition(0, evt => evt is WeatherWarningEvent warningEvent
+                && (!string.IsNullOrWhiteSpace(warningEvent.OutputString)
+                    || warningEvent.WarningDetails.Count > 0
+                    || warningEvent.Warnings.Count > 0)),
+            Action = new ActionRuleAction(evt =>
+            {
+                var warningEvent = (WeatherWarningEvent)evt;
+                string text = BuildWeatherWarningText(warningEvent);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    _rabbitMQ.PublishAsync(new SayMessage(text, "")).GetAwaiter().GetResult();
+                }
+            }, _logger),
+            Name = "Sprachausgabe fuer Wetterwarnungen des WeatherMonitors"
+        });
+
+        _rules.Add(new Rule
+        {
+            Condition = new PredicateCondition(0, evt =>
+                evt is WeatherForecastUpdatedEvent forecastEvent
+                && !string.IsNullOrWhiteSpace(forecastEvent.ForecastStringForToday)
+                && DateTime.Now.Hour >= 18
+                && DateTime.Now.Hour < 19),
+            Action =  new ActionRuleAction(evt =>
+            {
+                var forecastEvent = (WeatherForecastUpdatedEvent)evt;
+                string text = BuildWeatherForecastText(forecastEvent);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    _rabbitMQ.PublishAsync(new SayMessage(text, "")).GetAwaiter().GetResult();
+                }
+            }, _logger),
+            Name = "Sprachausgabe fuer Wettervorhersage zwischen 18 und 19 Uhr"
+        });
+    }
+
+    internal static string BuildWeatherWarningText(WeatherWarningEvent warningEvent)
+    {
+        if (!string.IsNullOrWhiteSpace(warningEvent.OutputString))
+        {
+            return warningEvent.OutputString;
+        }
+
+        var detailOutputs = warningEvent.WarningDetails
+            .Select(d => d.OutputString)
+            .Where(w => !string.IsNullOrWhiteSpace(w))
+            .Distinct()
+            .ToList();
+
+        if (detailOutputs.Count > 0)
+        {
+            string locationPart = string.IsNullOrWhiteSpace(warningEvent.Location)
+                ? string.Empty
+                : $" fuer {warningEvent.Location}";
+            return $"Achtung, Wetterwarnung{locationPart}: {string.Join(". ", detailOutputs)}";
+        }
+
+        var warnings = warningEvent.Warnings
+            .Where(w => !string.IsNullOrWhiteSpace(w))
+            .Distinct()
+            .ToList();
+
+        if (warnings.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        string locationPartFallback = string.IsNullOrWhiteSpace(warningEvent.Location)
+            ? string.Empty
+            : $" fuer {warningEvent.Location}";
+
+        return $"Achtung, Wetterwarnung{locationPartFallback}: {string.Join(". ", warnings)}";
+    }
+
+    internal static string BuildWeatherForecastText(WeatherForecastUpdatedEvent forecastEvent)
+    {
+        if (string.IsNullOrWhiteSpace(forecastEvent.ForecastStringForToday))
+        {
+            return string.Empty;
+        }
+
+        return $"Wettervorhersage: {forecastEvent.ForecastStringForToday}";
     }
 }

@@ -171,7 +171,7 @@ var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
 var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>();
 ruleSvc.RegisterRuleStore(hardCoded);
 
-// register the monitoring rule store (door and battery speech generation)
+// register the monitoring rule store (door, battery and weather speech generation)
 var monitoringRuleStore = app.Services.GetRequiredService<Sarah.Rules.MonitoringRuleStore>();
 ruleSvc.RegisterRuleStore(monitoringRuleStore);
 

@@ -375,7 +375,33 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received weather warning event");
-                var evt = new WeatherWarningEvent(message.NewValue ?? string.Empty);
+                var warnings = message.Warnings?
+                    .Where(w => !string.IsNullOrWhiteSpace(w))
+                    .ToList()
+                    ?? new List<string>();
+
+                var warningDetails = message.WarningDetails?
+                    .Select(d => new WeatherWarningDetail(
+                        key: d.Key ?? string.Empty,
+                        regionName: d.RegionName,
+                        description: d.Description,
+                        @event: d.Event,
+                        headline: d.Headline,
+                        instruction: d.Instruction,
+                        type: d.Type,
+                        level: d.Level,
+                        startDate: d.StartDate,
+                        endDate: d.EndDate,
+                        isAllDayWarning: d.IsAllDayWarning,
+                        outputString: d.OutputString ?? string.Empty))
+                    .ToList()
+                    ?? new List<WeatherWarningDetail>();
+
+                var evt = new WeatherWarningEvent(
+                    location: message.Location ?? string.Empty,
+                    outputString: message.OutputString ?? string.Empty,
+                    warnings: warnings,
+                    warningDetails: warningDetails);
                 EvaluateRules(evt);
             }
             catch (Exception ex)

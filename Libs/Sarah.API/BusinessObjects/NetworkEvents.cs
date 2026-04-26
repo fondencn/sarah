@@ -254,12 +254,69 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public class WeatherWarningEvent : NetworkEvent
     {
-        public WeatherWarningEvent(string newVal) : base(0, "WeatherWarning")
+        public WeatherWarningEvent(
+            string location,
+            string outputString,
+            IReadOnlyList<string> warnings,
+            IReadOnlyList<WeatherWarningDetail> warningDetails) : base(0, "WeatherWarning")
         {
-            this.NewValue = newVal;
+            Location = location;
+            OutputString = outputString;
+            Warnings = warnings;
+            WarningDetails = warningDetails;
         }
 
-        public string NewValue { get; }
+        public string Location { get; }
+        public string OutputString { get; }
+        public IReadOnlyList<string> Warnings { get; }
+        public IReadOnlyList<WeatherWarningDetail> WarningDetails { get; }
+    }
+
+    /// <summary>
+    /// Structured weather warning details from DWD.
+    /// </summary>
+    public class WeatherWarningDetail
+    {
+        public WeatherWarningDetail(
+            string key,
+            string? regionName,
+            string? description,
+            string? @event,
+            string? headline,
+            string? instruction,
+            int? type,
+            int? level,
+            DateTime? startDate,
+            DateTime? endDate,
+            bool isAllDayWarning,
+            string outputString)
+        {
+            Key = key;
+            RegionName = regionName;
+            Description = description;
+            Event = @event;
+            Headline = headline;
+            Instruction = instruction;
+            Type = type;
+            Level = level;
+            StartDate = startDate;
+            EndDate = endDate;
+            IsAllDayWarning = isAllDayWarning;
+            OutputString = outputString;
+        }
+
+        public string Key { get; }
+        public string? RegionName { get; }
+        public string? Description { get; }
+        public string? Event { get; }
+        public string? Headline { get; }
+        public string? Instruction { get; }
+        public int? Type { get; }
+        public int? Level { get; }
+        public DateTime? StartDate { get; }
+        public DateTime? EndDate { get; }
+        public bool IsAllDayWarning { get; }
+        public string OutputString { get; }
     }
 
     /// <summary>

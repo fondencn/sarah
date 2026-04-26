@@ -67,6 +67,114 @@ public class MonitoringRuleStoreTextTests
         Assert.StartsWith("Das Fenster Wohnzimmer wurde geöffnet.", text);
     }
 
+
+        // ─── WeatherWarningEvent ───────────────────────────────────────────────────
+
+        [Fact]
+        public void WeatherWarning_WithLocation_ContainsPrefixLocationAndWarnings()
+        {
+            var evt = new WeatherWarningEvent(
+                location: "Ludwigsburg",
+                outputString: string.Empty,
+                warnings: new[]
+                {
+                    "Sturmböen bis 85 Kilometer pro Stunde.",
+                    "Sturmböen bis 85 Kilometer pro Stunde.",
+                    "Dauerregen erwartet."
+                },
+                warningDetails: Array.Empty<WeatherWarningDetail>());
+
+            string text = MonitoringRuleStore.BuildWeatherWarningText(evt);
+
+            Assert.Contains("Achtung, Wetterwarnung", text);
+            Assert.Contains("fuer Ludwigsburg", text);
+            Assert.Contains("Sturmböen bis 85 Kilometer pro Stunde.", text);
+            Assert.Contains("Dauerregen erwartet.", text);
+        }
+
+        [Fact]
+        public void WeatherWarning_UsesOutputString_WhenProvided()
+        {
+            var evt = new WeatherWarningEvent(
+                location: "Ludwigsburg",
+                outputString: "Achtung, Wetterwarnung fuer Ludwigsburg: Vorformatiert.",
+                warnings: new[]
+                {
+                    "Dieser Text darf nicht verwendet werden."
+                },
+                warningDetails: Array.Empty<WeatherWarningDetail>());
+
+            string text = MonitoringRuleStore.BuildWeatherWarningText(evt);
+
+            Assert.Equal("Achtung, Wetterwarnung fuer Ludwigsburg: Vorformatiert.", text);
+        }
+
+        [Fact]
+        public void WeatherWarning_UsesWarningDetails_WhenOutputStringMissing()
+        {
+            var evt = new WeatherWarningEvent(
+                location: "Ludwigsburg",
+                outputString: string.Empty,
+                warnings: Array.Empty<string>(),
+                warningDetails: new[]
+                {
+                    new WeatherWarningDetail(
+                        key: "k1",
+                        regionName: "Ludwigsburg",
+                        description: "Beschreibung",
+                        @event: "Sturm",
+                        headline: "Headline",
+                        instruction: "Hinweis",
+                        type: 1,
+                        level: 2,
+                        startDate: null,
+                        endDate: null,
+                        isAllDayWarning: false,
+                        outputString: "Sturmböen bis 85 Kilometer pro Stunde.")
+                });
+
+            string text = MonitoringRuleStore.BuildWeatherWarningText(evt);
+
+            Assert.Contains("Achtung, Wetterwarnung", text);
+            Assert.Contains("Sturmböen bis 85 Kilometer pro Stunde.", text);
+        }
+
+        [Fact]
+        public void WeatherWarning_EmptyWarnings_ReturnsEmptyString()
+        {
+            var evt = new WeatherWarningEvent(
+                location: "Ludwigsburg",
+                outputString: string.Empty,
+                warnings: Array.Empty<string>(),
+                warningDetails: Array.Empty<WeatherWarningDetail>());
+
+            string text = MonitoringRuleStore.BuildWeatherWarningText(evt);
+
+            Assert.Equal(string.Empty, text);
+        }
+
+        // ─── WeatherForecastUpdatedEvent ───────────────────────────────────────────
+
+        [Fact]
+        public void WeatherForecast_WithText_ContainsForecastPrefix()
+        {
+            var evt = new WeatherForecastUpdatedEvent("Heute Nachmittag sonnig bei 21 Grad.");
+
+            string text = MonitoringRuleStore.BuildWeatherForecastText(evt);
+
+            Assert.StartsWith("Wettervorhersage:", text);
+            Assert.Contains("Heute Nachmittag sonnig", text);
+        }
+
+        [Fact]
+        public void WeatherForecast_EmptyText_ReturnsEmptyString()
+        {
+            var evt = new WeatherForecastUpdatedEvent(string.Empty);
+
+            string text = MonitoringRuleStore.BuildWeatherForecastText(evt);
+
+            Assert.Equal(string.Empty, text);
+        }
     [Fact]
     public void DoorAlert_Opened_Door_ContainsDieAndDeviceName()
     {
