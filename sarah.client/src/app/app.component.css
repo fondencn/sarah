@@ -29,7 +29,7 @@ html, body {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  margin-top: 4rem;
+  margin-top: 5rem;
   margin-bottom: 4rem;
   overflow-y: auto;
   overflow-x: hidden;
@@ -38,7 +38,7 @@ html, body {
 
 .main__container {
   flex: 1 0 auto;
-  padding: 0rem;
+  padding: 1rem 0 0;
 }
 
 .main__footer {

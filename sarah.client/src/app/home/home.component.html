@@ -13,17 +13,6 @@
         </div>
       </div>
     </ng-container>
-
-    <!-- Edit Mode Toggle Button - only visible when logged in -->
-    <ng-container *ngIf="isLoggedIn()">
-      <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center justify-content-end">
-        <button class="btn btn-sm" [class.btn-outline-secondary]="!isEditMode" [class.btn-success]="isEditMode"
-          (click)="toggleEditMode()">
-          <span *ngIf="!isEditMode">✏️ {{ 'home.editDashboard' | translate }}</span>
-          <span *ngIf="isEditMode">✅ {{ 'home.doneDashboard' | translate }}</span>
-        </button>
-      </div>
-    </ng-container>
   </div>
 </div>
 
@@ -292,6 +281,17 @@
           </ng-container>
         </ng-container>
       </div>
+    </div>
+
+    <!-- Edit / Done Dashboard button - centered below the grid -->
+    <div class="edit-dashboard-bar">
+      <button class="btn edit-dashboard-btn"
+        [class.edit-dashboard-btn--normal]="!isEditMode"
+        [class.edit-dashboard-btn--active]="isEditMode"
+        (click)="toggleEditMode()">
+        <span *ngIf="!isEditMode">✏️ {{ 'home.editDashboard' | translate }}</span>
+        <span *ngIf="isEditMode">✅ {{ 'home.doneDashboard' | translate }}</span>
+      </button>
     </div>
   </div>
 </ng-container>
