@@ -10,6 +10,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
 using Sarah.ServiceDefaults;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Sarah.Rules.Services.Kernel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,10 +74,21 @@ builder.Services.AddSingleton(sp =>
     return new RabbitMQClient(logger, builder.Configuration);
 });
 
+builder.Services
+    .AddOptions<SemanticKernelOptions>()
+    .Bind(builder.Configuration.GetSection("SemanticKernel"))
+    .Validate(options =>
+        !string.IsNullOrWhiteSpace(options.AzureOpenAI.Endpoint)
+        && !string.IsNullOrWhiteSpace(options.AzureOpenAI.DeploymentName)
+        && !string.IsNullOrWhiteSpace(options.AzureOpenAI.ApiKey),
+        "SemanticKernel AzureOpenAI configuration is required.")
+    .ValidateOnStart();
+
 // register helper application services
 builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
-builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
-builder.Services.AddSingleton<Sarah.Rules.MonitoringRuleStore>();
+builder.Services.AddSingleton<SmartHomePromptProvider>();
+builder.Services.AddSingleton<SmartHomePromptRuleStore>();
+builder.Services.AddSingleton<SmartHomeKernelService>();
 
 // Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
@@ -166,14 +178,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-// register the hardcoded rule store    
+// register prompt rules for API visibility and timer scheduling
 var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
-var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>();
-ruleSvc.RegisterRuleStore(hardCoded);
-
-// register the monitoring rule store (door, battery and weather speech generation)
-var monitoringRuleStore = app.Services.GetRequiredService<Sarah.Rules.MonitoringRuleStore>();
-ruleSvc.RegisterRuleStore(monitoringRuleStore);
+var promptRuleStore = app.Services.GetRequiredService<SmartHomePromptRuleStore>();
+ruleSvc.RegisterRuleStore(promptRuleStore);
 
 // Initialize AlarmScheduleService
 using (var scope = app.Services.CreateScope())

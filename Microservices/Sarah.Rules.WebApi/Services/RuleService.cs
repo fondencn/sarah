@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
+using Sarah.Rules.Services.Kernel;
 
 namespace Sarah.Rules
 {
@@ -21,6 +22,7 @@ namespace Sarah.Rules
     {
         private readonly RabbitMQClient _rabbitMQ;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly SmartHomeKernelService _smartHomeKernel;
         public IEnumerable<Rule> Rules => this.RuleStores.SelectMany(store => store.Rules);
 
 
@@ -36,11 +38,12 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel) 
         { 
             this._rabbitMQ = rabbitMQ;
             this._logger = logger;
             this._scopeFactory = scopeFactory;
+            this._smartHomeKernel = smartHomeKernel;
             this.Timers = new TimerEngine(rabbitMQ, logger);
         }
 
@@ -503,65 +506,15 @@ namespace Sarah.Rules
         /// </summary>
         public void EvaluateRules(NetworkEvent e)
         {
-            lock (_evaluateRulesLock)
+            try
             {
-                foreach (var rule in Rules.Where(r => r.Condition != null && (r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0)))
-                {
-                    try
-                    {
-                        // For broadcast rules (TargetNodeId == 0) matched by a specific sensor event,
-                        // deduplicate per (rule, sourceNodeId) so that simultaneous events from
-                        // different sensors are not suppressed by each other.
-                        bool hasOccuredLately;
-                        if (rule.Condition?.TargetNodeId == 0 && e.SourceNodeId != 0)
-                        {
-                            string deduKey = $"{rule.Name}|{e.SourceNodeId}";
-                            hasOccuredLately = _lastOccurrenceByRuleAndNode.TryGetValue(deduKey, out var lastNodeTime)
-                                && (DateTime.Now - lastNodeTime).TotalSeconds < 5;
-                        }
-                        else
-                        {
-                            hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
-                        }
-
-                        if (hasOccuredLately)
-                        {
-                            _logger.LogDebug("Rule {RuleName} skipped – fired too recently (last: {LastOccurence})", rule.Name, rule.LastOccurence);
-                            continue;
-                        }
-
-                        bool conditionMet = rule.Condition != null && rule.Condition.Evaluate(e);
-                        if (conditionMet)
-                        {
-                            if (rule.Name != null && rule.Action != null)
-                            {
-                                _logger.LogInformation("Regel {RuleName} aktiviert", rule.Name);
-                                rule.Action.Execute(e);
-
-                                if (rule.Condition?.TargetNodeId == 0 && e.SourceNodeId != 0)
-                                {
-                                    string deduKey = $"{rule.Name}|{e.SourceNodeId}";
-                                    _lastOccurrenceByRuleAndNode[deduKey] = DateTime.Now;
-                                }
-                                else
-                                {
-                                    rule.LastOccurence = DateTime.Now;
-                                }
-
-                                _ = WriteExecutionLogAsync(rule.Name, success: true);
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogDebug("Rule {RuleName} condition not met for event {EventType} from node {NodeId}", rule.Name, e.GetType().Name, e.SourceNodeId);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "RuleEngine: Error while evaluating rule {RuleName}", rule.Name);
-                        _ = WriteExecutionLogAsync(rule.Name ?? "Unknown", success: false, errorMessage: ex.Message);
-                    }
-                }
+                _smartHomeKernel.ProcessEventAsync(e).GetAwaiter().GetResult();
+                _ = WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Semantic Kernel error while processing event {EventType}", e.GetType().Name);
+                _ = WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: false, errorMessage: ex.Message);
             }
         }
 
@@ -648,7 +601,7 @@ namespace Sarah.Rules
         /// <returns></returns>
         public Task Notify(NetworkEvent e)
         {
-            return Task.Run(() => this.EvaluateRules(e));
+            return _smartHomeKernel.ProcessEventAsync(e);
         }
 
         /// <summary>
