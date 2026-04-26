@@ -350,8 +350,7 @@ namespace Sarah.Monitoring.Monitors
 
             if (warningMessages.Any())
             {
-                string warnMessage = "Achtung, Wetterwarnung für " + this.CurrentLocalWeatherWarnings.First().regionName + ": "
-                    + String.Join(". " + Environment.NewLine, warningMessages.Distinct());
+                string warnMessage = String.Join(". " + Environment.NewLine, warningMessages.Distinct());
                 
                 // Publish weather warning event for periodic re-announcements
                 await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage(warnMessage));
