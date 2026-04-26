@@ -48,7 +48,7 @@ public class MonitoringRuleStore : IRuleStore
             {
                 var bwe = (BatteryWarningEvent)evt;
                 string text = BuildBatteryWarningText(bwe);
-                _rabbitMQ.PublishAsync(new SayMessage(text, "")).Wait();
+                _rabbitMQ.PublishAsync(new SayMessage(text, "")).GetAwaiter().GetResult();
             }, _logger),
             Name = "Sprachausgabe für Batterie-Warnungen des BatteryMonitors"
         });
@@ -84,7 +84,7 @@ public class MonitoringRuleStore : IRuleStore
                     var volume = alert.IsLoud
                         ? Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud
                         : Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.Normal;
-                    _rabbitMQ.PublishAsync(new SayMessage(text, "", volume)).Wait();
+                    _rabbitMQ.PublishAsync(new SayMessage(text, "", volume)).GetAwaiter().GetResult();
                 }
             }, _logger),
             Name = "Sprachausgabe für Tür-/Fenster-Meldungen des DoorMonitors"

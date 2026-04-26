@@ -440,7 +440,7 @@ namespace Sarah.Rules
                     DoorAlertType.Opened   => DoorMonitorAlertType.Opened,
                     DoorAlertType.StillOpen => DoorMonitorAlertType.StillOpen,
                     DoorAlertType.Closed   => DoorMonitorAlertType.Closed,
-                    _ => DoorMonitorAlertType.StillOpen
+                    _ => throw new ArgumentOutOfRangeException(nameof(message.AlertType), message.AlertType, "Unknown DoorAlertType value")
                 };
 
                 var evt = new DoorMonitorAlertEvent(
@@ -467,6 +467,12 @@ namespace Sarah.Rules
         private object _evaluateRulesLock = new object();
 
         /// <summary>
+        /// Per-node dedup tracker for broadcast rules (TargetNodeId == 0) triggered by sensor-specific events.
+        /// Key: "{RuleName}|{SourceNodeId}", Value: last fire time.
+        /// </summary>
+        private readonly Dictionary<string, DateTime> _lastOccurrenceByRuleAndNode = new();
+
+        /// <summary>
         /// Evaluiert alle Regeln führt bei zutreffen die verbundene Aktion aus
         /// </summary>
         public void EvaluateRules(NetworkEvent e)
@@ -477,7 +483,21 @@ namespace Sarah.Rules
                 {
                     try
                     {
-                        bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
+                        // For broadcast rules (TargetNodeId == 0) matched by a specific sensor event,
+                        // deduplicate per (rule, sourceNodeId) so that simultaneous events from
+                        // different sensors are not suppressed by each other.
+                        bool hasOccuredLately;
+                        if (rule.Condition?.TargetNodeId == 0 && e.SourceNodeId != 0)
+                        {
+                            string deduKey = $"{rule.Name}|{e.SourceNodeId}";
+                            hasOccuredLately = _lastOccurrenceByRuleAndNode.TryGetValue(deduKey, out var lastNodeTime)
+                                && (DateTime.Now - lastNodeTime).TotalSeconds < 5;
+                        }
+                        else
+                        {
+                            hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
+                        }
+
                         if (hasOccuredLately)
                         {
                             _logger.LogDebug("Rule {RuleName} skipped – fired too recently (last: {LastOccurence})", rule.Name, rule.LastOccurence);
@@ -491,7 +511,17 @@ namespace Sarah.Rules
                             {
                                 _logger.LogInformation("Regel {RuleName} aktiviert", rule.Name);
                                 rule.Action.Execute(e);
-                                rule.LastOccurence = DateTime.Now;
+
+                                if (rule.Condition?.TargetNodeId == 0 && e.SourceNodeId != 0)
+                                {
+                                    string deduKey = $"{rule.Name}|{e.SourceNodeId}";
+                                    _lastOccurrenceByRuleAndNode[deduKey] = DateTime.Now;
+                                }
+                                else
+                                {
+                                    rule.LastOccurence = DateTime.Now;
+                                }
+
                                 _ = WriteExecutionLogAsync(rule.Name, success: true);
                             }
                         }
