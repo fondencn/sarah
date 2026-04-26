@@ -26,6 +26,7 @@ namespace Sarah.Monitoring.Monitors
         private CancellationTokenSource? UpdateCancellationTokenSource { get; set; }
         private DateTime _lastUpdate;
         private DateTime _lastWarning;
+        private List<int> ExcludedBatteryDevices {get; } = _config.GetSection("BatteryMonitor:ExcludedBatteryDevices").Get<List<int>>() ?? new List<int>();
 
         private List<BatteryInfo> CurrentBatteryInfos { get; } = new List<BatteryInfo>();
 
@@ -156,7 +157,10 @@ namespace Sarah.Monitoring.Monitors
                 // 3) Battery monitoring currently stays polling-based and reads live DTO data via DeviceServiceClient.
                 var batteryDrivenDevices = (await _deviceServiceClient.GetAllDevicesAsync())
                     .Where(d => d.Battery?.Level is not null)
+                    .ToList()
+                    .Where (item => !ExcludedBatteryDevices.Contains(item.NodeId))
                     .ToList();
+
 
                 if (batteryDrivenDevices.Any())
                 {
