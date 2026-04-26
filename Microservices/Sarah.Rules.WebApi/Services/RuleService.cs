@@ -128,6 +128,16 @@ namespace Sarah.Rules
                     onMessage: HandleWeatherForecastUpdated,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<BatteryWarningMessage>(
+                    topic: MessageTopics.MonitoringBatteryWarning,
+                    onMessage: HandleBatteryWarning,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<DoorMonitorAlertMessage>(
+                    topic: MessageTopics.MonitoringDoorAlert,
+                    onMessage: HandleDoorMonitorAlert,
+                    cancellationToken: stoppingToken);
+
                 _logger.LogInformation("RuleService subscribed to all event topics");
 
                 // Keep the service running
@@ -385,6 +395,72 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling weather forecast updated event");
+            }
+        }
+
+        private async Task HandleBatteryWarning(BatteryWarningMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received battery warning event with {Count} warnings", message.Warnings.Count);
+                var warnings = message.Warnings
+                    .Select(w => new BatteryDeviceInfo(w.DeviceName, w.BatteryLevel))
+                    .ToList();
+                var evt = new BatteryWarningEvent(warnings);
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling battery warning event");
+            }
+        }
+
+        private async Task HandleDoorMonitorAlert(DoorMonitorAlertMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door monitor alert: {DeviceName}, type={AlertType}",
+                    message.DeviceName, message.AlertType);
+
+                var heatingsTurnedOff = message.HeatingsTurnedOff != null
+                    ? (IReadOnlyList<string>)message.HeatingsTurnedOff.AsReadOnly()
+                    : null;
+
+                IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges = null;
+                if (message.HeatingChanges != null)
+                {
+                    heatingChanges = message.HeatingChanges
+                        .Select(h => new DoorMonitorHeatingChange(h.RoomName, h.RestoredTemperature))
+                        .ToList()
+                        .AsReadOnly();
+                }
+
+                var alertType = message.AlertType switch
+                {
+                    DoorAlertType.Opened   => DoorMonitorAlertType.Opened,
+                    DoorAlertType.StillOpen => DoorMonitorAlertType.StillOpen,
+                    DoorAlertType.Closed   => DoorMonitorAlertType.Closed,
+                    _ => DoorMonitorAlertType.StillOpen
+                };
+
+                var evt = new DoorMonitorAlertEvent(
+                    sourceNodeId: message.SourceNodeId,
+                    deviceName: message.DeviceName,
+                    isWindow: message.IsWindow,
+                    alertType: alertType,
+                    openDurationMinutes: message.OpenDurationMinutes,
+                    wasOpenLongEnough: message.WasOpenLongEnough,
+                    roomTemperature: message.RoomTemperature,
+                    heatingsTurnedOff: heatingsTurnedOff,
+                    heatingChanges: heatingChanges,
+                    nextAlertIntervalMinutes: message.NextAlertIntervalMinutes,
+                    isLoud: message.Volume == Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud);
+
+                EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door monitor alert event");
             }
         }
 

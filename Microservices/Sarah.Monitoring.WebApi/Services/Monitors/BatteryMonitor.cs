@@ -135,7 +135,18 @@ namespace Sarah.Monitoring.Monitors
                     {
                         sbWarnings.Insert(0, "Achtung, Ladezustand kritisch: " + Environment.NewLine);
                         _logger.LogWarning(sbWarnings.ToString());
-                        await _rabbitMQ.PublishAsync(new SayMessage(sbWarnings.ToString(), ""));
+                        var batteryWarning = new BatteryWarningMessage
+                        {
+                            Warnings = this.CurrentBatteryInfos
+                                .Where(i => i.BatteryLevel <= 10)
+                                .Select(i => new BatteryDeviceWarning
+                                {
+                                    DeviceName = i.NodeDescription,
+                                    BatteryLevel = i.BatteryLevel
+                                })
+                                .ToList()
+                        };
+                        await _rabbitMQ.PublishAsync(batteryWarning);
                     }
 
                     _lastWarning = DateTime.Now;

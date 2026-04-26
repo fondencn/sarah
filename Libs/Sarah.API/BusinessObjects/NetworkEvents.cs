@@ -1,5 +1,6 @@
 ﻿using Sarah.API.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Sarah.API.BusinessObjects
@@ -272,5 +273,111 @@ namespace Sarah.API.BusinessObjects
         }
 
         public string ForecastStringForToday { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn der BatteryMonitor kritisch niedrige Batteriezustände meldet.
+    /// </summary>
+    public class BatteryWarningEvent : NetworkEvent
+    {
+        public BatteryWarningEvent(IReadOnlyList<BatteryDeviceInfo> warnings) : base(0, "BatteryWarning")
+        {
+            Warnings = warnings;
+        }
+
+        /// <summary>
+        /// Geräte mit kritischem Ladestand.
+        /// </summary>
+        public IReadOnlyList<BatteryDeviceInfo> Warnings { get; }
+    }
+
+    /// <summary>
+    /// Beschreibt ein Gerät mit kritischem Batteriezustand.
+    /// </summary>
+    public class BatteryDeviceInfo
+    {
+        public BatteryDeviceInfo(string deviceName, float batteryLevel)
+        {
+            DeviceName = deviceName;
+            BatteryLevel = batteryLevel;
+        }
+
+        public string DeviceName { get; }
+        public float BatteryLevel { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn der DoorMonitor eine Meldung für eine Tür/ein Fenster erzeugt.
+    /// </summary>
+    public class DoorMonitorAlertEvent : NetworkEvent
+    {
+        public DoorMonitorAlertEvent(
+            byte sourceNodeId,
+            string deviceName,
+            bool isWindow,
+            DoorMonitorAlertType alertType,
+            int openDurationMinutes,
+            bool wasOpenLongEnough,
+            float? roomTemperature,
+            IReadOnlyList<string>? heatingsTurnedOff,
+            IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges,
+            int? nextAlertIntervalMinutes,
+            bool isLoud)
+            : base(sourceNodeId, "DoorMonitorAlert")
+        {
+            DeviceName = deviceName;
+            IsWindow = isWindow;
+            AlertType = alertType;
+            OpenDurationMinutes = openDurationMinutes;
+            WasOpenLongEnough = wasOpenLongEnough;
+            RoomTemperature = roomTemperature;
+            HeatingsTurnedOff = heatingsTurnedOff;
+            HeatingChanges = heatingChanges;
+            NextAlertIntervalMinutes = nextAlertIntervalMinutes;
+            IsLoud = isLoud;
+        }
+
+        public string DeviceName { get; }
+        public bool IsWindow { get; }
+        public DoorMonitorAlertType AlertType { get; }
+        public int OpenDurationMinutes { get; }
+        public bool WasOpenLongEnough { get; }
+        public float? RoomTemperature { get; }
+        public IReadOnlyList<string>? HeatingsTurnedOff { get; }
+        public IReadOnlyList<DoorMonitorHeatingChange>? HeatingChanges { get; }
+        public int? NextAlertIntervalMinutes { get; }
+        /// <summary>
+        /// True when a louder volume (VeryLoud) should be used for the speech output.
+        /// </summary>
+        public bool IsLoud { get; }
+    }
+
+    /// <summary>
+    /// Heizungsänderung die beim Schließen eines Fensters vorgenommen wurde.
+    /// </summary>
+    public class DoorMonitorHeatingChange
+    {
+        public DoorMonitorHeatingChange(string roomName, float? restoredTemperature)
+        {
+            RoomName = roomName;
+            RestoredTemperature = restoredTemperature;
+        }
+
+        public string RoomName { get; }
+        /// <summary>
+        /// Wiederhergestellte Zieltemperatur nach Schließen des Fensters.
+        /// Null, wenn die Heizung wegen eines anderen offenen Fensters nicht wiederhergestellt wurde.
+        /// </summary>
+        public float? RestoredTemperature { get; }
+    }
+
+    /// <summary>
+    /// Typ der DoorMonitor-Meldung.
+    /// </summary>
+    public enum DoorMonitorAlertType
+    {
+        Opened,
+        StillOpen,
+        Closed
     }
 }

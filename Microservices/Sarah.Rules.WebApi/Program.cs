@@ -76,6 +76,7 @@ builder.Services.AddSingleton(sp =>
 // register helper application services
 builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
 builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
+builder.Services.AddSingleton<Sarah.Rules.MonitoringRuleStore>();
 
 // Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
@@ -168,8 +169,11 @@ app.MapControllers();
 // register the hardcoded rule store    
 var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
 var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>();
-
 ruleSvc.RegisterRuleStore(hardCoded);
+
+// register the monitoring rule store (door and battery speech generation)
+var monitoringRuleStore = app.Services.GetRequiredService<Sarah.Rules.MonitoringRuleStore>();
+ruleSvc.RegisterRuleStore(monitoringRuleStore);
 
 // Initialize AlarmScheduleService
 using (var scope = app.Services.CreateScope())
