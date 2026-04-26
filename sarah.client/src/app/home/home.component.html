@@ -18,20 +18,6 @@
     </div>
 
     <ng-container *ngIf="isLoggedIn()">
-      <div class="col-12 col-sm-6 col-lg-4">
-        <div class="card shadow-lg  h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ 'home.systemStatus' | translate }}</h5>
-            <p class="card-text">
-              {{ statusMessage }}<br />
-              {{ 'home.hostname' | translate }} {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
-              {{ 'home.authenticated' | translate }} {{ statusDto?.isAuthenticated}}<br />
-	      {{ 'home.username' | translate }} {{ statusDto?.username}} <br />
-              {{ 'home.controller' | translate }} {{ statusDto?.controllerStatus }}
-            </p>
-          </div>
-        </div>
-      </div>
       <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center justify-content-end">
         <button class="btn btn-sm"
           [class.btn-outline-secondary]="!isEditMode"
