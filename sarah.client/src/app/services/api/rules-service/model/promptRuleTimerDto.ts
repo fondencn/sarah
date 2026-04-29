@@ -9,11 +9,12 @@
  */
 
 
-export interface RuleExecutionLogDtoModel { 
-    id?: number;
-    ruleName?: string | null;
-    triggeredAt?: string;
-    success?: boolean;
-    errorMessage?: string | null;
+export interface PromptRuleTimerDtoModel { 
+    hour?: number;
+    minute?: number;
+    weekdays?: number;
+    interval?: number;
+    fromUtc?: string | null;
+    untilUtc?: string | null;
 }
 

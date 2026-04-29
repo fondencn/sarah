@@ -49,6 +49,7 @@ import { ToastContainerComponent } from './shared/toast/toast-container.componen
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
 import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
 import { SpeakPanelComponent } from './admin/speak-panel/speak-panel.component';
+import { PromptRulesManagerComponent } from './admin/prompt-rules-manager/prompt-rules-manager.component';
 import { AdminClient } from './services/api/admin-service/api/admin.service';
 import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
 
@@ -76,6 +77,7 @@ import { DeviceControlModalComponent } from './devices/device-control-modal/devi
         ThermostatDialComponent,
         RuleMonitorComponent,
         SpeakPanelComponent,
+        PromptRulesManagerComponent,
         DeviceControlModalComponent
     ],
     bootstrap: [AppComponent], 

@@ -180,7 +180,10 @@ app.MapControllers();
 
 // register prompt rules for API visibility and timer scheduling
 var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
+var promptProvider = app.Services.GetRequiredService<SmartHomePromptProvider>();
+await promptProvider.ReloadAsync();
 var promptRuleStore = app.Services.GetRequiredService<SmartHomePromptRuleStore>();
+promptRuleStore.ReloadFromProvider();
 ruleSvc.RegisterRuleStore(promptRuleStore);
 
 // Initialize AlarmScheduleService

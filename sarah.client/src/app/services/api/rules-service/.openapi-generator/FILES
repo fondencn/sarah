@@ -10,6 +10,11 @@ git_push.sh
 index.ts
 model/alarmScheduleEntity.ts
 model/models.ts
+model/promptRuleDto.ts
+model/promptRuleTimerDto.ts
+model/promptRuleUpsertDto.ts
+model/ruleExecutionLogDto.ts
+model/ruleOverviewDto.ts
 model/speechVolume.ts
 model/temperatureScheduleEntity.ts
 ng-package.json

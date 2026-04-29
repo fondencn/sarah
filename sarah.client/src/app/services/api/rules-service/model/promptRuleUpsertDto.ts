@@ -7,12 +7,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { PromptRuleTimerDtoModel } from './promptRuleTimerDto';
 
 
-export interface RuleOverviewDtoModel { 
+export interface PromptRuleUpsertDtoModel { 
     name?: string | null;
-    lastOccurence?: string | null;
-    hasCondition?: boolean;
-    hasAction?: boolean;
+    guidance?: string | null;
+    isEnabled?: boolean;
+    sortOrder?: number;
+    timer?: PromptRuleTimerDtoModel;
 }
 
