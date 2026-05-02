@@ -165,7 +165,7 @@ namespace Sarah.Rules
                     message.SceneId, message.SourceNodeId);
 
                 var clickedEvent = new ClickedEvent(message.SourceNodeId, message.SceneId);
-                EvaluateRules(clickedEvent);
+                await EvaluateRules(clickedEvent);
             }
             catch (Exception ex)
             {
@@ -180,7 +180,7 @@ namespace Sarah.Rules
                 _logger.LogDebug("Received timer event from node {NodeId}", message.SourceNodeId);
 
                 var timerEvent = new TimerEvent(message.SourceNodeId);
-                EvaluateRules(timerEvent);
+                await EvaluateRules(timerEvent);
             }
             catch (Exception ex)
             {
@@ -199,7 +199,7 @@ namespace Sarah.Rules
                     message.PersonId, 
                     message.PersonName, 
                     message.IsAvailable);
-                EvaluateRules(availabilityEvent);
+                await EvaluateRules(availabilityEvent);
             }
             catch (Exception ex)
             {
@@ -218,7 +218,7 @@ namespace Sarah.Rules
                     message.PersonName,
                     message.CurrentGeoFenceName, 
                     message.PreviousGeoFenceName); 
-                EvaluateRules(geofenceEvent);
+                await EvaluateRules(geofenceEvent);
             }
             catch (Exception ex)
             {
@@ -238,7 +238,7 @@ namespace Sarah.Rules
                     (Sarah.API.BusinessObjects.AirQualitityLevel)message.Level,
                     message.Message ?? string.Empty,
                     message.RoomName ?? string.Empty);
-                EvaluateRules(airQualityEvent);
+                await EvaluateRules(airQualityEvent);
             }
             catch (Exception ex)
             {
@@ -254,7 +254,7 @@ namespace Sarah.Rules
                     message.SourceNodeId, message.IsOpen);
 
                 var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
-                EvaluateRules(doorEvent);
+                await EvaluateRules(doorEvent);
             }
             catch (Exception ex)
             {
@@ -270,7 +270,7 @@ namespace Sarah.Rules
                     message.SourceNodeId, message.IsPressed);
 
                 var trackerEvent = new TrackerButtonPressedEvent(message.SourceNodeId, message.IsPressed);
-                EvaluateRules(trackerEvent);
+                await EvaluateRules(trackerEvent);
             }
             catch (Exception ex)
             {
@@ -284,7 +284,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
                 var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastIncreasePower, message.LastDecreasePower);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -298,7 +298,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received multi-sensor state changed event: node {NodeId}", message.SourceNodeId);
                 var evt = new MultiSensorStateChangedEvent(message.SourceNodeId, message.Presence, message.Luminance);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -312,7 +312,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received smoke sensor alert event: node {NodeId}, alarmActive={AlarmActive}", message.SourceNodeId, message.AlarmActive);
                 var evt = new SmokeSensorAlertEvent(message.SourceNodeId, message.AlarmActive);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -405,7 +405,7 @@ namespace Sarah.Rules
                     outputString: message.OutputString ?? string.Empty,
                     warnings: warnings,
                     warningDetails: warningDetails);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -419,7 +419,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received weather forecast updated event for {Location}", message.Location);
                 var evt = new WeatherForecastUpdatedEvent(message.ForecastStringForToday ?? string.Empty);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -485,7 +485,7 @@ namespace Sarah.Rules
                     nextAlertIntervalMinutes: message.NextAlertIntervalMinutes,
                     isLoud: message.Volume == Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud);
 
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -504,17 +504,17 @@ namespace Sarah.Rules
         /// <summary>
         /// Evaluiert alle Regeln führt bei zutreffen die verbundene Aktion aus
         /// </summary>
-        public void EvaluateRules(NetworkEvent e)
+        public async Task EvaluateRules(NetworkEvent e)
         {
             try
             {
-                _smartHomeKernel.ProcessEventAsync(e).GetAwaiter().GetResult();
-                _ = WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: true);
+                await _smartHomeKernel.ProcessEventAsync(e);
+                await WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: true);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Semantic Kernel error while processing event {EventType}", e.GetType().Name);
-                _ = WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: false, errorMessage: ex.Message);
+                await WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: false, errorMessage: ex.Message);
             }
         }
 

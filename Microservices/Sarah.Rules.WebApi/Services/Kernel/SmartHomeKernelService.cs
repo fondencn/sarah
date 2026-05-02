@@ -36,6 +36,9 @@ public sealed class SmartHomeKernelService
 
     public async Task ProcessEventAsync(NetworkEvent evt, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Processing network event: {EventType} from node {NodeId} (property: {Property})",
+            evt.GetType().Name, evt.SourceNodeId, evt.Property);
+
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -50,11 +53,16 @@ public sealed class SmartHomeKernelService
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
+        _logger.LogDebug("Sending chat history with {MessageCount} messages to LLM", chatHistory.Count);
+
         ChatMessageContent response = await chatService.GetChatMessageContentAsync(
             chatHistory,
             settings,
             kernel,
             cancellationToken);
+
+        _logger.LogDebug("LLM response received (role: {Role}, length: {Length})",
+            response.Role.Label, response.Content?.Length ?? 0);
 
         await PersistConversationTurnAsync(db, AuthorRole.User.Label, BuildEventPrompt(evt), cancellationToken);
 
@@ -64,6 +72,9 @@ public sealed class SmartHomeKernelService
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Event processing complete for {EventType} from node {NodeId}",
+            evt.GetType().Name, evt.SourceNodeId);
     }
 
     public async Task<int> PruneConversationHistoryAsync(CancellationToken cancellationToken = default)
@@ -84,7 +95,13 @@ public sealed class SmartHomeKernelService
 
         if (expired.Count > 0)
         {
+            _logger.LogInformation("Pruning {Count} expired conversation messages older than {Cutoff:O}",
+                expired.Count, cutoff);
             db.KernelConversationMessages.RemoveRange(expired);
+        }
+        else
+        {
+            _logger.LogDebug("No expired conversation messages to prune (cutoff: {Cutoff:O})", cutoff);
         }
 
         return expired.Count;
@@ -105,13 +122,16 @@ public sealed class SmartHomeKernelService
         sb.AppendLine($"CreationDate: {evt.CreationDate:O}");
         sb.AppendLine("Payload:");
         sb.AppendLine(payload);
-        sb.AppendLine("Pruefe die Legacy-Prompt-Regeln, den Verlauf und entscheide, ob du Plugins ausfuehren musst.");
+        sb.AppendLine("Pruefe die Prompt-Regeln, den Verlauf und entscheide, ob du Plugins ausfuehren musst.");
         sb.AppendLine("Wenn eine Sprachausgabe erforderlich ist, verwende das Speech-Plugin.");
         return sb.ToString();
     }
 
     private Microsoft.SemanticKernel.Kernel BuildKernel(IServiceProvider serviceProvider)
     {
+        _logger.LogDebug("Building kernel with deployment '{Deployment}' at {Endpoint}",
+            _options.AzureOpenAI.DeploymentName, _options.AzureOpenAI.Endpoint);
+
         var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
         builder.AddAzureOpenAIChatCompletion(
             deploymentName: _options.AzureOpenAI.DeploymentName,
@@ -127,6 +147,8 @@ public sealed class SmartHomeKernelService
             serviceProvider.GetRequiredService<RabbitMQClient>()), "audio");
         kernel.Plugins.AddFromObject(new DeviceControlKernelPlugin(
             serviceProvider.GetRequiredService<DeviceServiceClient>()), "devices");
+
+        
         return kernel;
     }
 

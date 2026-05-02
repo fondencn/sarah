@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>cedce0ee-853d-4c75-a8ea-365b319bab2c</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Ical.Net" Version="4.3.1" />
