@@ -7,6 +7,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.Rules.Services.Clients;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
 using Sarah.ServiceClients;
@@ -187,6 +188,117 @@ public sealed class WeatherKernelPlugin
         return string.IsNullOrWhiteSpace(warnings)
             ? "Keine aktuellen Wetterwarnungen vorhanden."
             : warnings;
+    }
+}
+
+public sealed class GridStateKernelPlugin
+{
+    private readonly IGridStateProvider _gridStateProvider;
+
+    public GridStateKernelPlugin(IGridStateProvider gridStateProvider)
+    {
+        _gridStateProvider = gridStateProvider;
+    }
+
+    [KernelFunction, Description("Liefert den aktuellen Stromnetzstatus (StromGedacht Grid Stage) fuer die konfigurierte Region.")]
+    public string GetCurrentGridState()
+    {
+        var state = _gridStateProvider.CurrentGridState;
+        if (!state.HasValue)
+        {
+            return "Es liegen noch keine Stromnetzstatus-Daten vor.";
+        }
+
+        string zip = string.IsNullOrWhiteSpace(_gridStateProvider.CurrentZipCode)
+            ? "unbekannt"
+            : _gridStateProvider.CurrentZipCode;
+        string changedAt = _gridStateProvider.LastChangedAtUtc?.ToString("O") ?? "unbekannt";
+
+        return $"Aktueller Stromnetzstatus fuer PLZ {zip}: {_gridStateProvider.CurrentGridStateText} (Code {state.Value}). Letzte Aenderung: {changedAt}.";
+    }
+}
+
+public sealed class GridStateForecastKernelPlugin
+{
+    private readonly StromGedachtGridStatesApiClient _gridStatesClient;
+    private readonly IConfiguration _configuration;
+
+    public GridStateForecastKernelPlugin(StromGedachtGridStatesApiClient gridStatesClient, IConfiguration configuration)
+    {
+        _gridStatesClient = gridStatesClient;
+        _configuration = configuration;
+    }
+
+    [KernelFunction, Description("Liefert eine kurzfristige Empfehlung anhand der prognostizierten Stromnetzstufen (StromGedacht statesRelative).")]
+    public async Task<string> GetGridStateAdvisoryAsync(int hoursInFuture = 12)
+    {
+        int windowHours = Math.Clamp(hoursInFuture, 1, 48);
+        string zip = _configuration["StromGedacht:ZipCode"] ?? "71638";
+        string? b2bId = _configuration["StromGedacht:B2BId"];
+
+        var forecast = await _gridStatesClient.GetStatesRelativeAsync(
+            zip: zip,
+            hoursInFuture: windowHours,
+            hoursInPast: 0,
+            b2bId: b2bId);
+
+        var states = forecast.States ?? new List<StromGedachtGridStateWindow>();
+        if (states.Count == 0)
+        {
+            return $"Keine Stromnetzprognose fuer PLZ {zip} verfuegbar.";
+        }
+
+        var normalized = states.OrderBy(s => s.From).ToList();
+        int worstState = normalized.Max(s => Priority(s.State));
+        var bestGreenWindow = normalized
+            .Where(s => s.State is -1 or 1)
+            .OrderBy(s => s.From)
+            .FirstOrDefault();
+
+        string overall = worstState switch
+        {
+            >= 3 => "angespannt",
+            2 => "mittel",
+            _ => "entspannt"
+        };
+
+        string recommendation = worstState switch
+        {
+            >= 4 => "Empfehlung: vermeide flexible Grossverbraucher in diesem Zeitraum.",
+            3 => "Empfehlung: verschiebe flexible Lasten wenn moeglich in gruenere Zeitfenster.",
+            _ => "Empfehlung: Lastverschiebung aktuell nicht notwendig."
+        };
+
+        string greenHint = bestGreenWindow == null
+            ? "Kein grueneres Zeitfenster innerhalb des Prognosehorizonts gefunden."
+            : $"Naechstes gutes Zeitfenster: {bestGreenWindow.From:O} bis {bestGreenWindow.To:O} ({ToStateText(bestGreenWindow.State)}).";
+
+        return $"Stromnetzprognose fuer PLZ {zip} (naechste {windowHours}h): insgesamt {overall}. " +
+               $"{recommendation} {greenHint}";
+    }
+
+    private static int Priority(int state)
+    {
+        return state switch
+        {
+            4 => 4,
+            3 => 3,
+            1 => 2,
+            -1 => 1,
+            _ => 2
+        };
+    }
+
+    private static string ToStateText(int state)
+    {
+        return state switch
+        {
+            -1 => "superGreen",
+            1 => "green",
+            3 => "orange",
+            4 => "red",
+            _ => "unknown"
+        };
     }
 }
 

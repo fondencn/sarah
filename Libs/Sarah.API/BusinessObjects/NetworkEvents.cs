@@ -437,4 +437,34 @@ namespace Sarah.API.BusinessObjects
         StillOpen,
         Closed
     }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn sich der aktuelle Stromnetzstatus ändert.
+    /// </summary>
+    public class GridStateChangedEvent : NetworkEvent
+    {
+        public GridStateChangedEvent(
+            string zip,
+            int currentState,
+            string currentStateText,
+            int? previousState,
+            string? previousStateText,
+            DateTime changedAtUtc)
+            : base(0, "GridStateChanged")
+        {
+            Zip = zip;
+            CurrentState = currentState;
+            CurrentStateText = currentStateText;
+            PreviousState = previousState;
+            PreviousStateText = previousStateText;
+            ChangedAtUtc = changedAtUtc;
+        }
+
+        public string Zip { get; }
+        public int CurrentState { get; }
+        public string CurrentStateText { get; }
+        public int? PreviousState { get; }
+        public string? PreviousStateText { get; }
+        public DateTime ChangedAtUtc { get; }
+    }
 }

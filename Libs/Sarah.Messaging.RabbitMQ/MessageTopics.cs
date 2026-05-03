@@ -148,4 +148,10 @@ public static class MessageTopics
     /// Consumed by RuleService to generate voice output.
     /// </summary>
     public const string MonitoringDoorAlert = "monitoring.door.alert";
+
+    /// <summary>
+    /// Topic for power grid state changes from the GridStateMonitor.
+    /// Published when the current StromGedacht grid stage changes.
+    /// </summary>
+    public const string MonitoringGridStateChanged = "monitoring.grid.state.changed";
 }

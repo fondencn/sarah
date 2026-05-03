@@ -10,6 +10,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Messaging.RabbitMQ;
+using Sarah.Rules.Services.Clients;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
 using Sarah.ServiceClients;
@@ -156,6 +157,11 @@ public sealed class SmartHomeKernelService
             serviceProvider.GetRequiredService<IPersonService>()), "presence");
         kernel.Plugins.AddFromObject(new WeatherKernelPlugin(
             serviceProvider.GetRequiredService<IWeatherProvider>()), "weather");
+        kernel.Plugins.AddFromObject(new GridStateKernelPlugin(
+            serviceProvider.GetRequiredService<IGridStateProvider>()), "gridState");
+        kernel.Plugins.AddFromObject(new GridStateForecastKernelPlugin(
+            serviceProvider.GetRequiredService<StromGedachtGridStatesApiClient>(),
+            serviceProvider.GetRequiredService<IConfiguration>()), "gridStateForecast");
         kernel.Plugins.AddFromObject(new TimeContextKernelPlugin(
             serviceProvider.GetRequiredService<IConfiguration>()), "timeContext");
         kernel.Plugins.AddFromObject(new RulesMemoryKernelPlugin(

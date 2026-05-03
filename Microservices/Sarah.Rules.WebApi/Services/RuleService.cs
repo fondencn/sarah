@@ -23,6 +23,7 @@ namespace Sarah.Rules
         private readonly RabbitMQClient _rabbitMQ;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly SmartHomeKernelService _smartHomeKernel;
+        private readonly Sarah.Rules.Services.MessageBasedGridStateProvider _gridStateProvider;
         public IEnumerable<Rule> Rules => this.RuleStores.SelectMany(store => store.Rules);
 
 
@@ -38,12 +39,13 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel, Sarah.Rules.Services.MessageBasedGridStateProvider gridStateProvider) 
         { 
             this._rabbitMQ = rabbitMQ;
             this._logger = logger;
             this._scopeFactory = scopeFactory;
             this._smartHomeKernel = smartHomeKernel;
+            this._gridStateProvider = gridStateProvider;
             this.Timers = new TimerEngine(rabbitMQ, logger);
         }
 
@@ -139,6 +141,11 @@ namespace Sarah.Rules
                 await _rabbitMQ.SubscribeAsync<DoorMonitorAlertMessage>(
                     topic: MessageTopics.MonitoringDoorAlert,
                     onMessage: HandleDoorMonitorAlert,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<GridStateChangedMessage>(
+                    topic: MessageTopics.MonitoringGridStateChanged,
+                    onMessage: HandleGridStateChanged,
                     cancellationToken: stoppingToken);
 
                 _logger.LogInformation("RuleService subscribed to all event topics");
@@ -490,6 +497,31 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling door monitor alert event");
+            }
+        }
+
+        private async Task HandleGridStateChanged(GridStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received grid state changed event for zip {Zip}: {Previous} -> {Current}",
+                    message.ZipCode, message.PreviousStateText ?? "unknown", message.CurrentStateText);
+
+                _gridStateProvider.Update(message);
+
+                var evt = new GridStateChangedEvent(
+                    zip: message.ZipCode,
+                    currentState: message.CurrentState,
+                    currentStateText: message.CurrentStateText,
+                    previousState: message.PreviousState,
+                    previousStateText: message.PreviousStateText,
+                    changedAtUtc: message.ChangedAtUtc);
+
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling grid state changed event");
             }
         }
 

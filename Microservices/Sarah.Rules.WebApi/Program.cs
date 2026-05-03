@@ -10,6 +10,7 @@ using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
 using Sarah.ServiceDefaults;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Sarah.Rules.Services.Clients;
 using Sarah.Rules.Services.Kernel;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,6 +68,15 @@ builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 })
 .AddHttpMessageHandler<ClientCredentialsHandler>();
 
+// Register HTTP client for StromGedacht OpenAPI (statesRelative forecast usage)
+builder.Services.AddHttpClient<StromGedachtGridStatesApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["StromGedacht:BaseUrl"]
+        ?? "https://api.stromgedacht.de";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
 {
@@ -99,6 +109,10 @@ builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => 
 builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedWeatherProvider>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
+
+// Register in-memory provider for current grid state (updated by RuleService message handling)
+builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedGridStateProvider>();
+builder.Services.AddSingleton<Sarah.API.Interfaces.IGridStateProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedGridStateProvider>());
 
 // Register schedule services
 builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
