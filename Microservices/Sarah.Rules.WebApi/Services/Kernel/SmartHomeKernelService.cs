@@ -1,11 +1,14 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Sarah.API.BusinessObjects;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
@@ -147,6 +150,16 @@ public sealed class SmartHomeKernelService
             serviceProvider.GetRequiredService<RabbitMQClient>()), "audio");
         kernel.Plugins.AddFromObject(new DeviceControlKernelPlugin(
             serviceProvider.GetRequiredService<DeviceServiceClient>()), "devices");
+        kernel.Plugins.AddFromObject(new DeviceQueryKernelPlugin(
+            serviceProvider.GetRequiredService<DeviceServiceClient>()), "deviceQuery");
+        kernel.Plugins.AddFromObject(new PresenceKernelPlugin(
+            serviceProvider.GetRequiredService<IPersonService>()), "presence");
+        kernel.Plugins.AddFromObject(new WeatherKernelPlugin(
+            serviceProvider.GetRequiredService<IWeatherProvider>()), "weather");
+        kernel.Plugins.AddFromObject(new TimeContextKernelPlugin(
+            serviceProvider.GetRequiredService<IConfiguration>()), "timeContext");
+        kernel.Plugins.AddFromObject(new RulesMemoryKernelPlugin(
+            serviceProvider.GetRequiredService<ApplicationDbContext>()), "rulesMemory");
 
         
         return kernel;

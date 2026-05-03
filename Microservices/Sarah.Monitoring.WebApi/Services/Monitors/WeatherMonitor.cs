@@ -120,6 +120,7 @@ namespace Sarah.Monitoring.Monitors
                 CurrentTemperature = CurrentOutdoorTemperature,
                 AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                 Sunrise = GetSunrise(),
+                Sunset = GetSunset(),
                 CurrentWeatherString = GetCurrentWeatherString(),
                 ForecastStringForToday = GetWeatherForecastStringForToday(),
                 WeatherWarningString = GetWeatherWarningString(),
@@ -139,6 +140,7 @@ namespace Sarah.Monitoring.Monitors
                     CurrentTemperature = CurrentOutdoorTemperature,
                     AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                     Sunrise = GetSunrise(),
+                    Sunset = GetSunset(),
                     CurrentWeatherString = GetCurrentWeatherString(),
                     ForecastStringForToday = GetWeatherForecastStringForToday(),
                     WeatherWarningString = GetWeatherWarningString(),
@@ -561,6 +563,18 @@ namespace Sarah.Monitoring.Monitors
             {
                 return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather?.sys?.sunrise);
             } 
+            else
+            {
+                return null;
+            }
+        }
+
+        public DateTime? GetSunset()
+        {
+            if (this.CurrentWeather != null)
+            {
+                return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather?.sys?.sunset);
+            }
             else
             {
                 return null;

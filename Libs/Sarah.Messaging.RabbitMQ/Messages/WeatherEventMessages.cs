@@ -70,6 +70,11 @@ public class WeatherForecastUpdatedMessage : AbstractMessage
     public DateTime? Sunrise { get; set; }
 
     /// <summary>
+    /// Sunset time (null if not available)
+    /// </summary>
+    public DateTime? Sunset { get; set; }
+
+    /// <summary>
     /// Weather description for current conditions
     /// </summary>
     public string CurrentWeatherString { get; set; } = string.Empty;

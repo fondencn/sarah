@@ -21,6 +21,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
     private double _currentOutdoorTemperature = 22.0;
     private double? _averageTemperatureNext4Hours;
     private DateTime? _sunrise;
+    private DateTime? _sunset;
     private string _currentWeatherString = string.Empty;
     private string _forecastStringForToday = string.Empty;
     private string _weatherWarningString = string.Empty;
@@ -106,6 +107,14 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
         }
     }
 
+    public DateTime? GetSunset()
+    {
+        lock (_stateLock)
+        {
+            return _sunset;
+        }
+    }
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -122,6 +131,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
                     _currentOutdoorTemperature = msg.CurrentTemperature;
                     _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
                     _sunrise = msg.Sunrise;
+                    _sunset = msg.Sunset;
                     _currentWeatherString = msg.CurrentWeatherString;
                     _forecastStringForToday = msg.ForecastStringForToday;
                     _weatherWarningString = msg.WeatherWarningString;

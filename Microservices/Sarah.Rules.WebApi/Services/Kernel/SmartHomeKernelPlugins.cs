@@ -1,8 +1,14 @@
 using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Sarah.API.Interfaces;
+using Sarah.API.Interfaces.Services;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using Sarah.Rules.WebApi.Data;
+using Sarah.Rules.WebApi.Data.Entities;
 using Sarah.ServiceClients;
 
 namespace Sarah.Rules.Services.Kernel;
@@ -134,5 +140,388 @@ public sealed class DeviceControlKernelPlugin
     {
         await _deviceService.SetThermostatTemperatureAsync(deviceId, (float)temperature);
         return $"Thermostat {deviceId} auf {temperature:F1} Grad gesetzt.";
+    }
+}
+
+public sealed class WeatherKernelPlugin
+{
+    private readonly IWeatherProvider _weatherProvider;
+
+    public WeatherKernelPlugin(IWeatherProvider weatherProvider)
+    {
+        _weatherProvider = weatherProvider;
+    }
+
+    [KernelFunction, Description("Liefert die aktuellen Wetterdaten inklusive Temperatur, Wettertext und Tagesvorhersage. Außerdem der Zeitpunkt des Sonnenaufgangs und Sonnenuntergangs.")]
+    public string GetCurrentWeather()
+    {
+        var currentWeather = _weatherProvider.GetCurrentWeatherString();
+        var currentTemperature = _weatherProvider.CurrentOutdoorTemperature;
+        var averageNext4Hours = _weatherProvider.AverageTemperatureNext4Hours;
+        var sunrise = _weatherProvider.GetSunrise();
+        var sunset = _weatherProvider.GetSunset();
+        var forecastToday = _weatherProvider.GetWeatherForecastStringForToday();
+
+        var averageText = averageNext4Hours.HasValue
+            ? $"{averageNext4Hours.Value:F1}"
+            : "nicht verfuegbar";
+        var sunriseText = sunrise.HasValue
+            ? sunrise.Value.ToString("O")
+            : "nicht verfuegbar";
+        var sunsetText = sunset.HasValue
+            ? sunset.Value.ToString("O")
+            : "nicht verfuegbar";
+
+        return $"Temperatur aktuell: {currentTemperature:F1} Grad C. " +
+               $"Durchschnitt naechste 4 Stunden: {averageText}. " +
+               $"Sonnenaufgang: {sunriseText}. " +
+               $"Sonnenuntergang: {sunsetText}. " +
+               $"Aktuelles Wetter: {currentWeather}. " +
+               $"Vorhersage heute: {forecastToday}";
+    }
+
+    [KernelFunction, Description("Liefert aktuelle Wetterwarnungen.")]
+    public string GetCurrentWarnings()
+    {
+        var warnings = _weatherProvider.GetWeatherWarningString();
+        return string.IsNullOrWhiteSpace(warnings)
+            ? "Keine aktuellen Wetterwarnungen vorhanden."
+            : warnings;
+    }
+}
+
+public sealed class PresenceKernelPlugin
+{
+    private readonly IPersonService _personService;
+
+    public PresenceKernelPlugin(IPersonService personService)
+    {
+        _personService = personService;
+    }
+
+    [KernelFunction, Description("Gibt eine Zusammenfassung der Anwesenheit von Personen zu Hause aus.")]
+    public async Task<string> GetPresenceSummaryAsync()
+    {
+        var persons = (await _personService.GetAllPersonsAsync()).ToList();
+        var atHome = persons.Where(p => p.IsAtHome).ToList();
+
+        if (!persons.Any())
+        {
+            return "Keine Personen konfiguriert.";
+        }
+
+        if (!atHome.Any())
+        {
+            return $"Niemand ist zu Hause. Konfigurierte Personen: {string.Join(", ", persons.Select(p => p.Name))}.";
+        }
+
+        return $"{atHome.Count} von {persons.Count} Personen sind zu Hause: {string.Join(", ", atHome.Select(p => p.Name))}.";
+    }
+
+    [KernelFunction, Description("Prueft, ob aktuell jemand zu Hause ist.")]
+    public async Task<string> IsSomeonePresentAsync()
+    {
+        bool present = await _personService.IsSomeonePresent();
+        return present ? "Ja, mindestens eine Person ist zu Hause." : "Nein, aktuell ist niemand zu Hause.";
+    }
+
+    [KernelFunction, Description("Liefert die Namen aller Personen, die aktuell zu Hause sind.")]
+    public async Task<string> GetAtHomePersonsAsync()
+    {
+        var atHome = (await _personService.GetAllPersonsAsync())
+            .Where(p => p.IsAtHome)
+            .Select(p => p.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToList();
+
+        return atHome.Any()
+            ? string.Join(", ", atHome)
+            : "Keine Person ist aktuell zu Hause.";
+    }
+}
+
+public sealed class DeviceQueryKernelPlugin
+{
+    private readonly DeviceServiceClient _deviceService;
+
+    public DeviceQueryKernelPlugin(DeviceServiceClient deviceService)
+    {
+        _deviceService = deviceService;
+    }
+
+    [KernelFunction, Description("Liefert eine Uebersicht der aktuellen Geraetelandschaft inkl. Anzahl nach Geraetetyp.")]
+    public async Task<string> GetDevicesSummaryAsync()
+    {
+        var devices = await _deviceService.GetAllDevicesAsync();
+        if (devices.Count == 0)
+        {
+            return "Keine Geraete gefunden.";
+        }
+
+        var grouped = devices
+            .GroupBy(d => string.IsNullOrWhiteSpace(d.TypeName) ? d.DeviceType.ToString() : d.TypeName)
+            .OrderByDescending(g => g.Count())
+            .Select(g => $"{g.Key}: {g.Count()}")
+            .ToList();
+
+        return $"Gesamtgeraete: {devices.Count}. Typen: {string.Join("; ", grouped)}.";
+    }
+
+    [KernelFunction, Description("Liefert Details zu einem Geraet anhand der Node-ID.")]
+    public async Task<string> GetDeviceByNodeIdAsync(int nodeId)
+    {
+        if (nodeId < byte.MinValue || nodeId > byte.MaxValue)
+        {
+            return $"Ungueltige Node-ID: {nodeId}.";
+        }
+
+        var device = await _deviceService.GetDeviceByNodeIdAsync((byte)nodeId);
+        return device == null
+            ? $"Kein Geraet fuer Node {nodeId} gefunden."
+            : FormatDevice(device);
+    }
+
+    [KernelFunction, Description("Liefert Details zu einem Geraet anhand der Device-ID.")]
+    public async Task<string> GetDeviceByIdAsync(long deviceId)
+    {
+        var device = await _deviceService.GetDeviceByIdAsync(deviceId);
+        return device == null
+            ? $"Kein Geraet mit ID {deviceId} gefunden."
+            : FormatDevice(device);
+    }
+
+    [KernelFunction, Description("Liefert eine Liste aktuell offener Tueren.")]
+    public async Task<string> GetOpenDoorsAsync()
+    {
+        var openDoors = await _deviceService.GetOpenDoors();
+        if (string.IsNullOrWhiteSpace(openDoors.OpenDoorInfo))
+        {
+            return "Aktuell sind keine Tueren offen.";
+        }
+
+        return "Offene Tueren: " + openDoors.OpenDoorInfo;
+    }
+
+    private static string FormatDevice(Sarah.API.BusinessObjects.DTOs.DeviceDto device)
+    {
+        var name = string.IsNullOrWhiteSpace(device.Name) ? "(ohne Name)" : device.Name;
+        string state;
+
+        if (device.Lamp != null)
+        {
+            state = $"Lampe Helligkeit {device.Lamp.Brightness}, Farbe {device.Lamp.Color ?? "unbekannt"}";
+        }
+        else if (device.WallPlug != null)
+        {
+            state = $"WallPlug {(device.WallPlug.IsOn ? "an" : "aus")}";
+        }
+        else if (device.Thermostat != null)
+        {
+            state = $"Thermostat Solltemperatur {device.Thermostat.TemperatureSetpoint?.ToString("F1") ?? "unbekannt"}";
+        }
+        else if (device.DoorSensor != null)
+        {
+            state = $"DoorSensor Zustand {device.DoorSensor.State}";
+        }
+        else
+        {
+            state = "Kein spezifischer Zustandsblock verfuegbar";
+        }
+
+        return $"Device {device.Id}, Node {device.NodeId}, Name {name}, Typ {device.DeviceType}: {state}.";
+    }
+}
+
+public sealed class TimeContextKernelPlugin
+{
+    private readonly IConfiguration _configuration;
+
+    public TimeContextKernelPlugin(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    [KernelFunction, Description("Liefert aktuellen Zeitkontext mit Datum, Uhrzeit, Wochentag, Wochenende und Ruhezeit.")]
+    public string GetCurrentTimeContext()
+    {
+        var now = DateTime.Now;
+        var (startHour, endHour) = GetQuietHours();
+        bool weekend = now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+        bool quietNow = IsInQuietHours(now, startHour, endHour);
+
+        return $"Lokale Zeit: {now:O}. Wochentag: {now:dddd}. Wochenende: {(weekend ? "ja" : "nein")}. " +
+               $"Ruhezeit aktiv: {(quietNow ? "ja" : "nein")}. Ruhezeit-Konfiguration: {startHour:00}:00 bis {endHour:00}:00.";
+    }
+
+    [KernelFunction, Description("Prueft, ob aktuell Ruhezeit aktiv ist.")]
+    public string IsQuietHoursNow()
+    {
+        var now = DateTime.Now;
+        var (startHour, endHour) = GetQuietHours();
+        bool quietNow = IsInQuietHours(now, startHour, endHour);
+        return quietNow ? "Ja, aktuell ist Ruhezeit." : "Nein, aktuell ist keine Ruhezeit.";
+    }
+
+    [KernelFunction, Description("Liefert den naechsten Beginn und das naechste Ende der Ruhezeit.")]
+    public string GetNextQuietHoursWindow()
+    {
+        var now = DateTime.Now;
+        var (startHour, endHour) = GetQuietHours();
+
+        DateTime start = new DateTime(now.Year, now.Month, now.Day, startHour, 0, 0);
+        DateTime end = new DateTime(now.Year, now.Month, now.Day, endHour, 0, 0);
+
+        if (startHour > endHour)
+        {
+            end = end.AddDays(1);
+        }
+
+        if (now > end)
+        {
+            start = start.AddDays(1);
+            end = end.AddDays(1);
+        }
+        else if (now > start && now <= end)
+        {
+            start = start.AddDays(1);
+            end = end.AddDays(1);
+        }
+
+        return $"Naechste Ruhezeit: Start {start:O}, Ende {end:O}.";
+    }
+
+    private (int startHour, int endHour) GetQuietHours()
+    {
+        int startHour = int.TryParse(_configuration["SilentStartHour"], out int start) ? start : 22;
+        int endHour = int.TryParse(_configuration["SilentEndHour"], out int end) ? end : 6;
+        return (startHour, endHour);
+    }
+
+    private static bool IsInQuietHours(DateTime now, int startHour, int endHour)
+    {
+        if (startHour == 0 && endHour == 0)
+        {
+            return false;
+        }
+
+        var start = new DateTime(now.Year, now.Month, now.Day, startHour, 0, 0);
+        var end = new DateTime(now.Year, now.Month, now.Day, endHour, 0, 0);
+
+        if (startHour > endHour)
+        {
+            end = end.AddDays(1);
+            if (now < start)
+            {
+                start = start.AddDays(-1);
+            }
+        }
+
+        return now >= start && now <= end;
+    }
+}
+
+public sealed class RulesMemoryKernelPlugin
+{
+    private const string ConversationId = "smart-home-main";
+
+    private readonly ApplicationDbContext _db;
+
+    public RulesMemoryKernelPlugin(ApplicationDbContext db)
+    {
+        _db = db;
+    }
+
+    [KernelFunction, Description("Liefert die letzten Konversationseintraege aus dem Rule-Memory.")]
+    public async Task<string> GetRecentConversationAsync(int limit = 10)
+    {
+        int safeLimit = Math.Clamp(limit, 1, 50);
+        var rows = await _db.KernelConversationMessages
+            .Where(m => m.ConversationId == ConversationId)
+            .OrderByDescending(m => m.CreatedAtUtc)
+            .Take(safeLimit)
+            .ToListAsync();
+
+        if (rows.Count == 0)
+        {
+            return "Keine Konversationseintraege vorhanden.";
+        }
+
+        rows.Reverse();
+        return string.Join(Environment.NewLine,
+            rows.Select(r => $"[{r.CreatedAtUtc:O}] {r.Role}: {r.Content}"));
+    }
+
+    [KernelFunction, Description("Sucht in den letzten Konversationseintraegen nach einem Stichwort.")]
+    public async Task<string> SearchConversationAsync(string keyword, int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            return "Bitte ein Suchstichwort angeben.";
+        }
+
+        int safeLimit = Math.Clamp(limit, 1, 50);
+        string needle = keyword.Trim().ToLowerInvariant();
+
+        var rows = await _db.KernelConversationMessages
+            .Where(m => m.ConversationId == ConversationId)
+            .OrderByDescending(m => m.CreatedAtUtc)
+            .Take(200)
+            .ToListAsync();
+
+        var matches = rows
+            .Where(r => r.Content.ToLower().Contains(needle))
+            .Take(safeLimit)
+            .ToList();
+
+        if (matches.Count == 0)
+        {
+            return $"Keine Treffer fuer '{keyword}' gefunden.";
+        }
+
+        matches.Reverse();
+        return string.Join(Environment.NewLine,
+            matches.Select(r => $"[{r.CreatedAtUtc:O}] {r.Role}: {r.Content}"));
+    }
+
+    [KernelFunction, Description("Speichert eine kurze Notiz im Rule-Memory fuer spaetere Entscheidungen.")]
+    public async Task<string> RememberAsync(string note)
+    {
+        if (string.IsNullOrWhiteSpace(note))
+        {
+            return "Leere Notiz wurde nicht gespeichert.";
+        }
+
+        _db.KernelConversationMessages.Add(new KernelConversationMessageEntity
+        {
+            ConversationId = ConversationId,
+            Role = "tool",
+            Content = "memory-note: " + note.Trim(),
+            CreatedAtUtc = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+        return "Notiz gespeichert.";
+    }
+
+    [KernelFunction, Description("Prueft, ob ein Text in den letzten Minuten bereits in der Konversation vorkam.")]
+    public async Task<string> WasMentionedRecentlyAsync(string text, int withinMinutes = 60)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return "Bitte einen Text zum Pruefen angeben.";
+        }
+
+        int safeMinutes = Math.Clamp(withinMinutes, 1, 1440);
+        var cutoff = DateTime.UtcNow.AddMinutes(-safeMinutes);
+        string needle = text.Trim().ToLowerInvariant();
+
+        bool exists = await _db.KernelConversationMessages
+            .AnyAsync(m => m.ConversationId == ConversationId
+                           && m.CreatedAtUtc >= cutoff
+                           && m.Content.ToLower().Contains(needle));
+
+        return exists
+            ? $"Ja, der Text wurde in den letzten {safeMinutes} Minuten bereits erwaehnt."
+            : $"Nein, der Text wurde in den letzten {safeMinutes} Minuten nicht erwaehnt.";
     }
 }
