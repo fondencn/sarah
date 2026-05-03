@@ -7,8 +7,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { WallPlugStateDtoModel } from './wallPlugStateDto';
 import { PositionDtoModel } from './positionDto';
+import { BatteryStateDtoModel } from './batteryStateDto';
 import { ExtendedPropertyDtoModel } from './extendedPropertyDto';
+import { DoorSensorStateDtoModel } from './doorSensorStateDto';
+import { ThermoStateDtoModel } from './thermoStateDto';
+import { AirQualityStateDtoModel } from './airQualityStateDto';
+import { LampStateDtoModel } from './lampStateDto';
 import { KnownDeviceTypesModel } from './knownDeviceTypes';
 
 
@@ -23,6 +29,12 @@ export interface DeviceDtoModel {
     isReadonly?: boolean;
     isFavourite?: boolean;
     position?: PositionDtoModel;
+    doorSensor?: DoorSensorStateDtoModel;
+    thermostat?: ThermoStateDtoModel;
+    airQuality?: AirQualityStateDtoModel;
+    battery?: BatteryStateDtoModel;
+    lamp?: LampStateDtoModel;
+    wallPlug?: WallPlugStateDtoModel;
     extendedProperties?: Array<ExtendedPropertyDtoModel> | null;
 }
 

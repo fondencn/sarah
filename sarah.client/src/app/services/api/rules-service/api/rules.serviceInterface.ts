@@ -12,6 +12,9 @@ import { HttpHeaders }                                       from '@angular/comm
 import { Observable }                                        from 'rxjs';
 
 import { AlarmScheduleEntityModel } from '../model/models';
+import { KernelChatMessageRequestDtoModel } from '../model/models';
+import { KernelChatMessageResponseDtoModel } from '../model/models';
+import { KernelConversationMessageDtoModel } from '../model/models';
 import { PromptRuleDtoModel } from '../model/models';
 import { PromptRuleUpsertDtoModel } from '../model/models';
 import { RuleExecutionLogDtoModel } from '../model/models';
@@ -80,6 +83,28 @@ export interface RulesClientInterface {
      * 
      */
     apiRulesGet(extraHttpRequestParams?: any): Observable<Array<RuleOverviewDtoModel>>;
+
+    /**
+     * 
+     * 
+     */
+    apiRulesKernelConversationDelete(extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param conversationId 
+     * @param hours 
+     * @param limit 
+     */
+    apiRulesKernelConversationGet(conversationId?: string, hours?: number, limit?: number, extraHttpRequestParams?: any): Observable<Array<KernelConversationMessageDtoModel>>;
+
+    /**
+     * 
+     * 
+     * @param kernelChatMessageRequestDtoModel 
+     */
+    apiRulesKernelConversationMessagePost(kernelChatMessageRequestDtoModel?: KernelChatMessageRequestDtoModel, extraHttpRequestParams?: any): Observable<KernelChatMessageResponseDtoModel>;
 
     /**
      * 

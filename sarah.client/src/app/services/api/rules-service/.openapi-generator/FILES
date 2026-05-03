@@ -9,6 +9,9 @@ encoder.ts
 git_push.sh
 index.ts
 model/alarmScheduleEntity.ts
+model/kernelChatMessageRequestDto.ts
+model/kernelChatMessageResponseDto.ts
+model/kernelConversationMessageDto.ts
 model/models.ts
 model/promptRuleDto.ts
 model/promptRuleTimerDto.ts

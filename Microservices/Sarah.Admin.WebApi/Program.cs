@@ -1,6 +1,4 @@
 using Sarah.Authentication;
-using Sarah.Admin;
-using Sarah.Messaging.RabbitMQ;
 using Sarah.ServiceDefaults;
 using Microsoft.OpenApi.Models;
 
@@ -9,9 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
-
-builder.Services.AddSingleton<RabbitMQClient>();
-builder.Services.AddHostedService<RabbitMQStartupService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -22,7 +17,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Sarah Admin Service API",
         Version = "v1",
-        Description = "API for admin operations such as broadcasting speech messages to all speakers"
+        Description = "API for Sarah admin operations"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

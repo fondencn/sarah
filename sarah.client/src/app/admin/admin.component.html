@@ -29,21 +29,11 @@
         {{ 'admin.tabs.promptRules' | translate }}
       </button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button
-        type="button"
-        class="nav-link"
-        [class.active]="activeTab === 'speakPanel'"
-        (click)="setActiveTab('speakPanel')">
-        {{ 'admin.tabs.speakPanel' | translate }}
-      </button>
-    </li>
   </ul>
 
   <div class="admin-tab-panel">
     <app-rule-monitor *ngIf="activeTab === 'ruleMonitor'"></app-rule-monitor>
     <app-kernel-conversation-panel *ngIf="activeTab === 'kernelConversation'"></app-kernel-conversation-panel>
     <app-prompt-rules-manager *ngIf="activeTab === 'promptRules'"></app-prompt-rules-manager>
-    <app-speak-panel *ngIf="activeTab === 'speakPanel'"></app-speak-panel>
   </div>
 </div>

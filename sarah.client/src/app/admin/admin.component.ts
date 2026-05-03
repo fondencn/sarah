@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-type AdminTab = 'ruleMonitor' | 'kernelConversation' | 'promptRules' | 'speakPanel';
+type AdminTab = 'ruleMonitor' | 'kernelConversation' | 'promptRules';
 
 @Component({
   selector: 'app-admin',

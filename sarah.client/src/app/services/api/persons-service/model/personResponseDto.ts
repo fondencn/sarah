@@ -20,3 +20,4 @@ export interface PersonResponseDtoModel {
     mobilePhoneHostname?: string | null;
     isFavourite?: boolean;
 }
+

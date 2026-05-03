@@ -1,6 +1,6 @@
 # admin-service@v1
 
-API for admin operations such as broadcasting speech messages to all speakers
+API for Sarah admin operations
 
 The version of the OpenAPI document: v1
 

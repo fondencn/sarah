@@ -118,6 +118,20 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
+     * @param nodeId 
+     */
+    devicesGetDeviceByNodeIdGETApiDevicesBynodeNodeId(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesGetDeviceByNodeIdGETDevicesBynodeNodeId(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
      */
     devicesGetDoorSensorsGETApiDevicesDoorsensors(extraHttpRequestParams?: any): Observable<{}>;
 
@@ -204,6 +218,34 @@ export interface DevicesClientInterface {
      * @param nodeId 
      */
     devicesGetNodeGETDevicesNodeNodeId(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param roomId 
+     */
+    devicesGetRoomAverageTemperatureGETApiDevicesRoomRoomIdAvgtemperature(roomId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param roomId 
+     */
+    devicesGetRoomAverageTemperatureGETDevicesRoomRoomIdAvgtemperature(roomId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param roomId 
+     */
+    devicesGetRoomSummaryGETApiDevicesRoomRoomIdSummary(roomId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param roomId 
+     */
+    devicesGetRoomSummaryGETDevicesRoomRoomIdSummary(roomId: number, extraHttpRequestParams?: any): Observable<{}>;
 
     /**
      * 
@@ -350,6 +392,52 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
+     * @param nodeId 
+     */
+    devicesSetLampColdWhiteByNodePOSTApiDevicesBynodeNodeIdLampColdwhite(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesSetLampColdWhiteByNodePOSTDevicesBynodeNodeIdLampColdwhite(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    devicesSetLampColdWhitePOSTApiDevicesLampIdColdwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    devicesSetLampColdWhitePOSTDevicesLampIdColdwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     * @param color 
+     * @param brightness 
+     */
+    devicesSetLampColorAndBrightnessByNodePOSTApiDevicesBynodeNodeIdLampColorColorBrightnessBrightness(nodeId: number, color: string, brightness: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     * @param color 
+     * @param brightness 
+     */
+    devicesSetLampColorAndBrightnessByNodePOSTDevicesBynodeNodeIdLampColorColorBrightnessBrightness(nodeId: number, color: string, brightness: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
      * @param id 
      * @param color 
      */
@@ -362,6 +450,66 @@ export interface DevicesClientInterface {
      * @param color 
      */
     devicesSetLampColorPOSTDevicesLampIdColorColor(id: number, color: string, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesSetLampWarmWhiteByNodePOSTApiDevicesBynodeNodeIdLampWarmwhite(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesSetLampWarmWhiteByNodePOSTDevicesBynodeNodeIdLampWarmwhite(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    devicesSetLampWarmWhitePOSTApiDevicesLampIdWarmwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    devicesSetLampWarmWhitePOSTDevicesLampIdWarmwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param temperature 
+     */
+    devicesSetThermostatTemperaturePOSTApiDevicesThermostatIdTemperatureTemperature(id: number, temperature: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param temperature 
+     */
+    devicesSetThermostatTemperaturePOSTDevicesThermostatIdTemperatureTemperature(id: number, temperature: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     * @param isOn 
+     */
+    devicesSetWallPlugStateByNodePOSTApiDevicesBynodeNodeIdWallplugStateIsOn(nodeId: number, isOn: boolean, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     * @param isOn 
+     */
+    devicesSetWallPlugStateByNodePOSTDevicesBynodeNodeIdWallplugStateIsOn(nodeId: number, isOn: boolean, extraHttpRequestParams?: any): Observable<{}>;
 
     /**
      * 
@@ -382,16 +530,30 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
-     * @param id 
+     * @param nodeId 
      */
-    devicesSetLampWarmWhitePOSTApiDevicesLampIdWarmwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+    devicesToggleLampByNodePOSTApiDevicesBynodeNodeIdLampToggle(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
 
     /**
      * 
      * 
-     * @param id 
+     * @param nodeId 
      */
-    devicesSetLampColdWhitePOSTApiDevicesLampIdColdwhite(id: number, extraHttpRequestParams?: any): Observable<{}>;
+    devicesToggleLampByNodePOSTDevicesBynodeNodeIdLampToggle(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesToggleWallPlugByNodePOSTApiDevicesBynodeNodeIdWallplugToggle(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param nodeId 
+     */
+    devicesToggleWallPlugByNodePOSTDevicesBynodeNodeIdWallplugToggle(nodeId: number, extraHttpRequestParams?: any): Observable<{}>;
 
     /**
      * 

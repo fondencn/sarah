@@ -1,4 +1,7 @@
 export * from './alarmScheduleEntity';
+export * from './kernelChatMessageRequestDto';
+export * from './kernelChatMessageResponseDto';
+export * from './kernelConversationMessageDto';
 export * from './promptRuleDto';
 export * from './promptRuleTimerDto';
 export * from './promptRuleUpsertDto';

@@ -132,23 +132,8 @@
     "tabs": {
       "ruleMonitor": "Rule Monitor",
       "kernelConversation": "Kernel Conversation",
-      "promptRules": "Prompt Rules",
-      "speakPanel": "Speech Output"
+      "promptRules": "Prompt Rules"
     }
-  },
-  "speakPanel": {
-    "title": "Broadcast Speech to All Speakers",
-    "description": "Enter text and send it to all connected speakers.",
-    "labelText": "Text",
-    "placeholderText": "Enter text...",
-    "labelVolume": "Volume",
-    "volumeQuieter": "Quieter",
-    "volumeNormal": "Normal",
-    "volumeLouder": "Louder",
-    "volumeVeryLoud": "Very Loud",
-    "buttonSend": "Send",
-    "successMessage": "Message sent.",
-    "errorMessage": "Failed to send the message."
   },
   "ruleMonitor": {
     "title": "Rule Overview",
