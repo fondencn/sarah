@@ -1,5 +1,6 @@
 ﻿using PS.FritzBox.API;
 using PS.FritzBox.API.LANDevice;
+using System.Threading;
 
 namespace Sarah.Persons.WebApi.Services
 {
@@ -17,7 +18,7 @@ namespace Sarah.Persons.WebApi.Services
         private const int UPDATE_WAIT_TIME = 60000;
 
         private bool _initialized = false;
-        private bool _initializing = false;
+        private readonly SemaphoreSlim _initializeLock = new(1, 1);
 
 
         private readonly List<HostsClient> _FritzboxHosts = new List<HostsClient>();
@@ -44,25 +45,23 @@ namespace Sarah.Persons.WebApi.Services
 
         public async Task Initialize(IConfiguration configuration)
         {
-            if (_initializing)
+            if (_initialized)
             {
                 return;
             }
-            else
-            {
-                _initializing = true;
-            }
+
+            await _initializeLock.WaitAsync();
 
             try
             {
-                string username = configuration["FritzBox:Username"] ?? "";
-                string password = configuration["FritzBox:Password"] ?? "";
-                string explicitHost = configuration["FritzBox:Host"] ?? "192.168.178.1";
-
                 if (_initialized)
                 {
                     return;
                 }
+
+                string username = configuration["FritzBox:Username"] ?? "";
+                string password = configuration["FritzBox:Password"] ?? "";
+                string explicitHost = configuration["FritzBox:Host"] ?? "192.168.178.1";
 
                 if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 {
@@ -95,23 +94,28 @@ namespace Sarah.Persons.WebApi.Services
 
                 _logger.LogInformation("HomeNetworkService initialized with {HostClientCount} Fritz host client(s).", _FritzboxHosts.Count);
 
-                CancellationTokenSource cts = new CancellationTokenSource();
-                this.UpdateCancellationTokenSource = cts;
-                this.UpdateTask = Task.Run(async () =>
-                {
-                    while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        await UpdateConnectedHosts();
-                        /* Alle 60 Sekunden */
-                        await Task.Delay(UPDATE_WAIT_TIME, this.UpdateCancellationTokenSource.Token);
-                    }
-                }, cts.Token);
+                await UpdateConnectedHosts();
 
                 _initialized = true;
+
+                CancellationTokenSource cts = new CancellationTokenSource();
+                this.UpdateCancellationTokenSource = cts;
+                using (ExecutionContext.SuppressFlow())
+                {
+                    this.UpdateTask = Task.Run(async () =>
+                    {
+                        while (!this.UpdateCancellationTokenSource.Token.IsCancellationRequested)
+                        {
+                            /* Alle 60 Sekunden */
+                            await Task.Delay(UPDATE_WAIT_TIME, this.UpdateCancellationTokenSource.Token);
+                            await UpdateConnectedHosts();
+                        }
+                    }, cts.Token);
+                }
             }
             finally
             {
-                _initializing = false;
+                _initializeLock.Release();
             }
         }
 
