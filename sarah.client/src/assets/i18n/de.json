@@ -173,9 +173,12 @@
   "kernelConversation": {
     "title": "Kernel-Konversationsverlauf",
     "refresh": "🔄 Aktualisieren",
+    "truncate": "🗑 Verlauf loeschen",
     "description": "Zeigt die letzten {{hours}} Stunden der SmartHomeKernelService-Konversation (neueste zuerst).",
     "loading": "Lade Konversationsverlauf...",
     "error": "Fehler beim Laden des Konversationsverlaufs.",
+    "truncateSuccess": "Konversationsverlauf wurde geloescht.",
+    "truncateError": "Fehler beim Loeschen des Konversationsverlaufs.",
     "empty": "Keine Konversationseintraege in diesem Zeitraum.",
     "colTimestamp": "Zeitpunkt",
     "colRole": "Rolle",

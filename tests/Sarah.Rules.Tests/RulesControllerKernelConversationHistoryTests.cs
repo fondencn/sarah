@@ -41,6 +41,31 @@ public class RulesControllerKernelConversationHistoryTests
         Assert.IsType<BadRequestObjectResult>(actionResult.Result);
     }
 
+    [Fact]
+    public async Task TruncateKernelConversationHistory_RemovesAllRows()
+    {
+        await using var db = CreateDbContext();
+        SeedConversationMessages(db);
+        db.KernelConversationMessages.Add(new KernelConversationMessageEntity
+        {
+            ConversationId = "another-conversation",
+            Role = "user",
+            Content = "third-conversation-message",
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var controller = CreateController(db);
+
+        ActionResult<object> actionResult = await controller.TruncateKernelConversationHistory();
+
+        var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
+        var payload = Assert.IsAssignableFrom<object>(ok.Value);
+
+        Assert.NotNull(payload);
+        Assert.Equal(0, await db.KernelConversationMessages.CountAsync());
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

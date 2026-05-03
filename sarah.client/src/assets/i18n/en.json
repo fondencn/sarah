@@ -173,9 +173,12 @@
   "kernelConversation": {
     "title": "Kernel Conversation History",
     "refresh": "🔄 Refresh",
+    "truncate": "🗑 Truncate",
     "description": "Shows the last {{hours}} hours of SmartHomeKernelService conversation (newest first).",
     "loading": "Loading conversation history...",
     "error": "Failed to load conversation history.",
+    "truncateSuccess": "Conversation history was truncated.",
+    "truncateError": "Failed to truncate conversation history.",
     "empty": "No conversation entries in this time range.",
     "colTimestamp": "Time",
     "colRole": "Role",

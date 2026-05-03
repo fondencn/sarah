@@ -167,6 +167,36 @@ public class RulesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Truncates the whole kernel conversation history table.
+    /// </summary>
+    [HttpDelete("kernel-conversation")]
+    public async Task<ActionResult<object>> TruncateKernelConversationHistory()
+    {
+        try
+        {
+            int deletedCount;
+            try
+            {
+                deletedCount = await _db.KernelConversationMessages.ExecuteDeleteAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                var allRows = await _db.KernelConversationMessages.ToListAsync();
+                deletedCount = allRows.Count;
+                _db.KernelConversationMessages.RemoveRange(allRows);
+                await _db.SaveChangesAsync();
+            }
+
+            return Ok(new { deletedCount });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error truncating kernel conversation history");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
     #region Alarm Schedule CRUD
 
     /// <summary>

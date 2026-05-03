@@ -44,4 +44,10 @@ describe('KernelConversationPanelComponent', () => {
   it('should default to 2h history window', () => {
     expect(component.defaultHours).toBe(2);
   });
+
+  it('should default truncate state to false', () => {
+    expect(component.truncating).toBeFalse();
+    expect(component.truncateError).toBeFalse();
+    expect(component.truncateSuccess).toBeFalse();
+  });
 });

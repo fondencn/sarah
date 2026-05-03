@@ -28,6 +28,9 @@ export class KernelConversationPanelComponent implements OnInit, OnDestroy {
 
   loading = false;
   loadError = false;
+  truncating = false;
+  truncateError = false;
+  truncateSuccess = false;
   messages: KernelConversationMessage[] = [];
 
   constructor(
@@ -75,6 +78,36 @@ export class KernelConversationPanelComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.logger.error('Fehler beim Laden der Kernel-Konversation', err);
         this.loadError = true;
+      }
+    });
+  }
+
+  truncateMessages(): void {
+    const confirmed = window.confirm('Kernel-Konversationsverlauf wirklich komplett loeschen?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.truncating = true;
+    this.truncateError = false;
+    this.truncateSuccess = false;
+
+    const url = `${environment.api.rulesService}/api/Rules/kernel-conversation`;
+
+    this.http.delete(url).pipe(
+      timeout(this.requestTimeoutMs),
+      finalize(() => {
+        this.truncating = false;
+      })
+    ).subscribe({
+      next: () => {
+        this.truncateSuccess = true;
+        this.messages = [];
+        this.loadMessages();
+      },
+      error: (err) => {
+        this.logger.error('Fehler beim Loeschen der Kernel-Konversation', err);
+        this.truncateError = true;
       }
     });
   }

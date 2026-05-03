@@ -1,9 +1,17 @@
 <div class="kernel-conversation-panel mt-4">
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h3 class="mb-0">💬 {{ 'kernelConversation.title' | translate }}</h3>
-    <button class="btn btn-sm btn-outline-secondary" (click)="loadMessages()">
-      {{ 'kernelConversation.refresh' | translate }}
-    </button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" (click)="loadMessages()">
+        {{ 'kernelConversation.refresh' | translate }}
+      </button>
+      <button
+        class="btn btn-sm btn-outline-danger"
+        [disabled]="truncating"
+        (click)="truncateMessages()">
+        {{ 'kernelConversation.truncate' | translate }}
+      </button>
+    </div>
   </div>
 
   <p class="text-muted small mb-2">
@@ -12,6 +20,14 @@
 
   <div class="card">
     <div class="card-body p-0">
+      <div *ngIf="truncateSuccess" class="p-3 text-success">
+        {{ 'kernelConversation.truncateSuccess' | translate }}
+      </div>
+
+      <div *ngIf="truncateError" class="p-3 text-danger">
+        {{ 'kernelConversation.truncateError' | translate }}
+      </div>
+
       <div *ngIf="loading" class="text-center p-3">
         <span class="spinner-border spinner-border-sm" role="status"></span>
         {{ 'kernelConversation.loading' | translate }}
