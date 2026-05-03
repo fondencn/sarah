@@ -66,6 +66,18 @@ public class RulesControllerKernelConversationHistoryTests
         Assert.Equal(0, await db.KernelConversationMessages.CountAsync());
     }
 
+    [Fact]
+    public async Task SendKernelChatMessage_EmptyMessage_ReturnsBadRequest()
+    {
+        await using var db = CreateDbContext();
+        var controller = CreateController(db);
+
+        ActionResult<KernelChatMessageResponseDto> actionResult = await controller.SendKernelChatMessage(
+            new KernelChatMessageRequestDto { Message = "   " });
+
+        Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -121,6 +133,7 @@ public class RulesControllerKernelConversationHistoryTests
             db: db,
             promptProvider: null!,
             promptRuleStore: null!,
+            kernelService: null!,
             logger: NullLogger<RulesController>.Instance);
     }
 }

@@ -23,11 +23,13 @@ public class RulesController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly SmartHomePromptProvider _promptProvider;
     private readonly SmartHomePromptRuleStore _promptRuleStore;
+    private readonly SmartHomeKernelService _kernelService;
     private readonly ILogger<RulesController> _logger;
 
     public RulesController(IRuleService ruleService, AlarmScheduleService alarmService, 
         TemperatureScheduleService temperatureService, ApplicationDbContext db,
         SmartHomePromptProvider promptProvider, SmartHomePromptRuleStore promptRuleStore,
+        SmartHomeKernelService kernelService,
         ILogger<RulesController> logger)
     {
         _ruleService = ruleService;
@@ -36,6 +38,7 @@ public class RulesController : ControllerBase
         _db = db;
         _promptProvider = promptProvider;
         _promptRuleStore = promptRuleStore;
+        _kernelService = kernelService;
         _logger = logger;
     }
 
@@ -193,6 +196,33 @@ public class RulesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error truncating kernel conversation history");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Sends a direct user message to the kernel and persists the conversation turn.
+    /// </summary>
+    [HttpPost("kernel-conversation/message")]
+    public async Task<ActionResult<KernelChatMessageResponseDto>> SendKernelChatMessage(
+        [FromBody] KernelChatMessageRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+                return BadRequest(new { message = "message darf nicht leer sein" });
+
+            var assistantMessage = await _kernelService.ProcessChatMessageAsync(request.Message, cancellationToken);
+
+            return Ok(new KernelChatMessageResponseDto
+            {
+                AssistantMessage = assistantMessage
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending kernel chat message");
             return StatusCode(500, new { message = "Internal server error" });
         }
     }

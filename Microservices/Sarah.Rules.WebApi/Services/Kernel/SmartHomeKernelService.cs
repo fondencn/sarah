@@ -81,6 +81,43 @@ public sealed class SmartHomeKernelService
             evt.GetType().Name, evt.SourceNodeId);
     }
 
+    public async Task<string> ProcessChatMessageAsync(string userMessage, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userMessage))
+            throw new ArgumentException("userMessage must not be empty", nameof(userMessage));
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        await PruneConversationHistoryAsync(db, cancellationToken);
+
+        Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider);
+        var chatService = kernel.GetRequiredService<IChatCompletionService>();
+        ChatHistory chatHistory = await BuildChatHistoryAsync(db, userMessage, cancellationToken);
+
+        var settings = new OpenAIPromptExecutionSettings
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
+
+        ChatMessageContent response = await chatService.GetChatMessageContentAsync(
+            chatHistory,
+            settings,
+            kernel,
+            cancellationToken);
+
+        await PersistConversationTurnAsync(db, AuthorRole.User.Label, userMessage.Trim(), cancellationToken);
+
+        var assistantText = response.Content ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(assistantText))
+        {
+            await PersistConversationTurnAsync(db, response.Role.Label, assistantText, cancellationToken);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return assistantText;
+    }
+
     public async Task<int> PruneConversationHistoryAsync(CancellationToken cancellationToken = default)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
@@ -188,6 +225,26 @@ public sealed class SmartHomeKernelService
         }
 
         history.AddUserMessage(BuildEventPrompt(evt));
+        return history;
+    }
+
+    private async Task<ChatHistory> BuildChatHistoryAsync(ApplicationDbContext db, string userMessage, CancellationToken cancellationToken)
+    {
+        var history = new ChatHistory();
+        history.AddSystemMessage(_promptProvider.BuildSystemPrompt());
+
+        var messages = await db.KernelConversationMessages
+            .Where(m => m.ConversationId == ConversationId)
+            .OrderBy(m => m.CreatedAtUtc)
+            .Take(_options.MaxHistoryMessages)
+            .ToListAsync(cancellationToken);
+
+        foreach (var message in messages)
+        {
+            history.AddMessage(ParseRole(message.Role), message.Content);
+        }
+
+        history.AddUserMessage(userMessage.Trim());
         return history;
     }
 

@@ -50,4 +50,11 @@ describe('KernelConversationPanelComponent', () => {
     expect(component.truncateError).toBeFalse();
     expect(component.truncateSuccess).toBeFalse();
   });
+
+  it('should default send-message state to empty and false', () => {
+    expect(component.chatInput).toBe('');
+    expect(component.sendingMessage).toBeFalse();
+    expect(component.sendMessageError).toBeFalse();
+    expect(component.sendMessageSuccess).toBeFalse();
+  });
 });

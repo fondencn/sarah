@@ -14,6 +14,10 @@ interface KernelConversationMessage {
   createdAtUtc: string;
 }
 
+interface KernelChatMessageResponse {
+  assistantMessage: string;
+}
+
 @Component({
   selector: 'app-kernel-conversation-panel',
   templateUrl: './kernel-conversation-panel.component.html',
@@ -31,6 +35,10 @@ export class KernelConversationPanelComponent implements OnInit, OnDestroy {
   truncating = false;
   truncateError = false;
   truncateSuccess = false;
+  sendingMessage = false;
+  sendMessageError = false;
+  sendMessageSuccess = false;
+  chatInput = '';
   messages: KernelConversationMessage[] = [];
 
   constructor(
@@ -108,6 +116,36 @@ export class KernelConversationPanelComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.logger.error('Fehler beim Loeschen der Kernel-Konversation', err);
         this.truncateError = true;
+      }
+    });
+  }
+
+  sendMessage(): void {
+    const message = this.chatInput.trim();
+    if (!message) {
+      return;
+    }
+
+    this.sendingMessage = true;
+    this.sendMessageError = false;
+    this.sendMessageSuccess = false;
+
+    const url = `${environment.api.rulesService}/api/Rules/kernel-conversation/message`;
+
+    this.http.post<KernelChatMessageResponse>(url, { message }).pipe(
+      timeout(this.requestTimeoutMs),
+      finalize(() => {
+        this.sendingMessage = false;
+      })
+    ).subscribe({
+      next: () => {
+        this.chatInput = '';
+        this.sendMessageSuccess = true;
+        this.loadMessages();
+      },
+      error: (err) => {
+        this.logger.error('Fehler beim Senden einer Kernel-Chat-Nachricht', err);
+        this.sendMessageError = true;
       }
     });
   }

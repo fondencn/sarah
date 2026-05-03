@@ -20,6 +20,31 @@
 
   <div class="card">
     <div class="card-body p-0">
+      <div class="p-3 border-bottom">
+        <label class="form-label mb-2">{{ 'kernelConversation.chatInputLabel' | translate }}</label>
+        <div class="d-flex gap-2 align-items-start">
+          <textarea
+            class="form-control"
+            rows="2"
+            [placeholder]="'kernelConversation.chatInputPlaceholder' | translate"
+            [(ngModel)]="chatInput"></textarea>
+          <button
+            class="btn btn-primary"
+            [disabled]="sendingMessage || !chatInput.trim()"
+            (click)="sendMessage()">
+            {{ sendingMessage ? ('kernelConversation.sending' | translate) : ('kernelConversation.send' | translate) }}
+          </button>
+        </div>
+
+        <div *ngIf="sendMessageSuccess" class="text-success small mt-2">
+          {{ 'kernelConversation.sendSuccess' | translate }}
+        </div>
+
+        <div *ngIf="sendMessageError" class="text-danger small mt-2">
+          {{ 'kernelConversation.sendError' | translate }}
+        </div>
+      </div>
+
       <div *ngIf="truncateSuccess" class="p-3 text-success">
         {{ 'kernelConversation.truncateSuccess' | translate }}
       </div>
