@@ -164,6 +164,17 @@
     "success": "✓ Success",
     "failure": "✗ Error"
   },
+  "kernelConversation": {
+    "title": "Kernel Conversation History",
+    "refresh": "🔄 Refresh",
+    "description": "Shows the last {{hours}} hours of SmartHomeKernelService conversation (newest first).",
+    "loading": "Loading conversation history...",
+    "error": "Failed to load conversation history.",
+    "empty": "No conversation entries in this time range.",
+    "colTimestamp": "Time",
+    "colRole": "Role",
+    "colContent": "Content"
+  },
   "promptRulesManager": {
     "title": "Manage Prompt Rules",
     "description": "These rules are used for the kernel system prompt and timer registration.",

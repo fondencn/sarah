@@ -1,35 +1,45 @@
 using Sarah.Rules.Services.Kernel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Sarah.Rules.Tests;
 
 public class SmartHomePromptingTests
 {
     [Fact]
-    public void SystemPrompt_ContainsSmartHomeRoleAndLegacyRules()
+    public void SystemPrompt_ContainsSmartHomeRoleAndSpeechInstruction()
     {
-        var provider = new SmartHomePromptProvider();
+        var provider = new SmartHomePromptProvider(new NoopScopeFactory());
 
         string prompt = provider.BuildSystemPrompt();
 
-        Assert.Contains("Du bist Sarah", prompt);
+        Assert.Contains("Du bist S.A.R.A.H.", prompt);
         Assert.Contains("Speech-Plugin", prompt);
-        Assert.Contains("Kaffeemaschine", prompt);
-        Assert.Contains("Wetterwarnung", prompt);
+        Assert.Contains("Sicherheit vor Komfort", prompt);
     }
 
     [Fact]
-    public void PromptRuleStore_ExposesTimerRules_ForScheduling()
+    public void PromptRuleStore_IsEmpty_WhenNoRulesLoaded()
     {
-        var provider = new SmartHomePromptProvider();
+        var provider = new SmartHomePromptProvider(new NoopScopeFactory());
         var store = new SmartHomePromptRuleStore(provider);
 
-        var timerRuleNames = store.Rules
-            .Where(rule => rule.Condition != null)
-            .Select(rule => rule.Name)
-            .ToList();
+        Assert.Empty(store.Rules);
+    }
 
-        Assert.Contains("Mittagspause Erinnerung", timerRuleNames);
-        Assert.Contains("Daily Erinnerung 8:00", timerRuleNames);
-        Assert.Contains("Lampe Wohnzimmer aus 6:45", timerRuleNames);
+    private sealed class NoopScopeFactory : IServiceScopeFactory
+    {
+        public IServiceScope CreateScope()
+        {
+            return new NoopScope();
+        }
+    }
+
+    private sealed class NoopScope : IServiceScope
+    {
+        public IServiceProvider ServiceProvider => new ServiceCollection().BuildServiceProvider();
+
+        public void Dispose()
+        {
+        }
     }
 }

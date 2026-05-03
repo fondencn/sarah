@@ -164,6 +164,17 @@
     "success": "✓ Erfolg",
     "failure": "✗ Fehler"
   },
+  "kernelConversation": {
+    "title": "Kernel-Konversationsverlauf",
+    "refresh": "🔄 Aktualisieren",
+    "description": "Zeigt die letzten {{hours}} Stunden der SmartHomeKernelService-Konversation (neueste zuerst).",
+    "loading": "Lade Konversationsverlauf...",
+    "error": "Fehler beim Laden des Konversationsverlaufs.",
+    "empty": "Keine Konversationseintraege in diesem Zeitraum.",
+    "colTimestamp": "Zeitpunkt",
+    "colRole": "Rolle",
+    "colContent": "Inhalt"
+  },
   "promptRulesManager": {
     "title": "Prompt-Regeln verwalten",
     "description": "Diese Regeln werden fuer den Systemprompt und Timer-Registrierung verwendet.",

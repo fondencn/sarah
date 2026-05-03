@@ -1,0 +1,50 @@
+<div class="kernel-conversation-panel mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="mb-0">💬 {{ 'kernelConversation.title' | translate }}</h3>
+    <button class="btn btn-sm btn-outline-secondary" (click)="loadMessages()">
+      {{ 'kernelConversation.refresh' | translate }}
+    </button>
+  </div>
+
+  <p class="text-muted small mb-2">
+    {{ 'kernelConversation.description' | translate:{ hours: defaultHours } }}
+  </p>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="text-center p-3">
+        <span class="spinner-border spinner-border-sm" role="status"></span>
+        {{ 'kernelConversation.loading' | translate }}
+      </div>
+
+      <div *ngIf="!loading && loadError" class="p-3 text-danger">
+        {{ 'kernelConversation.error' | translate }}
+      </div>
+
+      <div *ngIf="!loading && !loadError && messages.length === 0" class="text-center p-3 text-muted">
+        {{ 'kernelConversation.empty' | translate }}
+      </div>
+
+      <div *ngIf="!loading && !loadError && messages.length > 0" class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>{{ 'kernelConversation.colTimestamp' | translate }}</th>
+              <th>{{ 'kernelConversation.colRole' | translate }}</th>
+              <th>{{ 'kernelConversation.colContent' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let message of messages">
+              <td class="text-nowrap">{{ message.createdAtUtc | date:'dd.MM.yyyy HH:mm:ss' }}</td>
+              <td>
+                <span class="badge" [ngClass]="asRoleClass(message.role)">{{ message.role || 'user' }}</span>
+              </td>
+              <td class="content-cell"><pre class="mb-0 message-content">{{ message.content }}</pre></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

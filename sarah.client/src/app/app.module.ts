@@ -52,6 +52,7 @@ import { SpeakPanelComponent } from './admin/speak-panel/speak-panel.component';
 import { PromptRulesManagerComponent } from './admin/prompt-rules-manager/prompt-rules-manager.component';
 import { AdminClient } from './services/api/admin-service/api/admin.service';
 import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
+import { KernelConversationPanelComponent } from './admin/kernel-conversation-panel/kernel-conversation-panel.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -78,6 +79,7 @@ import { DeviceControlModalComponent } from './devices/device-control-modal/devi
         RuleMonitorComponent,
         SpeakPanelComponent,
         PromptRulesManagerComponent,
+        KernelConversationPanelComponent,
         DeviceControlModalComponent
     ],
     bootstrap: [AppComponent], 

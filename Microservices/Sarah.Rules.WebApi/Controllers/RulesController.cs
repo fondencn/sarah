@@ -122,6 +122,51 @@ public class RulesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Gets kernel conversation history entries sorted newest to oldest.
+    /// </summary>
+    [HttpGet("kernel-conversation")]
+    public async Task<ActionResult<IEnumerable<KernelConversationMessageDto>>> GetKernelConversationHistory(
+        [FromQuery] string conversationId = "smart-home-main",
+        [FromQuery] int hours = 2,
+        [FromQuery] int limit = 200)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(conversationId))
+                return BadRequest(new { message = "conversationId darf nicht leer sein" });
+
+            if (hours < 1 || hours > 168)
+                return BadRequest(new { message = "hours muss zwischen 1 und 168 liegen" });
+
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { message = "limit muss zwischen 1 und 1000 liegen" });
+
+            DateTime cutoffUtc = DateTime.UtcNow.AddHours(-hours);
+
+            var entries = await _db.KernelConversationMessages
+                .Where(m => m.ConversationId == conversationId && m.CreatedAtUtc >= cutoffUtc)
+                .OrderByDescending(m => m.CreatedAtUtc)
+                .Take(limit)
+                .Select(m => new KernelConversationMessageDto
+                {
+                    Id = m.Id,
+                    ConversationId = m.ConversationId,
+                    Role = m.Role,
+                    Content = m.Content,
+                    CreatedAtUtc = m.CreatedAtUtc
+                })
+                .ToListAsync();
+
+            return Ok(entries);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting kernel conversation history");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
     #region Alarm Schedule CRUD
 
     /// <summary>
