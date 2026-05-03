@@ -128,7 +128,13 @@
     "saving": "Saving…"
   },
   "admin": {
-    "title": "Admin"
+    "title": "Admin",
+    "tabs": {
+      "ruleMonitor": "Rule Monitor",
+      "kernelConversation": "Kernel Conversation",
+      "promptRules": "Prompt Rules",
+      "speakPanel": "Speech Output"
+    }
   },
   "speakPanel": {
     "title": "Broadcast Speech to All Speakers",

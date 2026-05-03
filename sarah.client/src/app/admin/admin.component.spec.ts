@@ -24,4 +24,14 @@ describe('AdminComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should default to rule monitor tab', () => {
+    expect(component.activeTab).toBe('ruleMonitor');
+  });
+
+  it('should switch active tab', () => {
+    component.setActiveTab('kernelConversation');
+
+    expect(component.activeTab).toBe('kernelConversation');
+  });
 });

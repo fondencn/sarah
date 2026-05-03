@@ -128,7 +128,13 @@
     "saving": "Speichern…"
   },
   "admin": {
-    "title": "Admin"
+    "title": "Admin",
+    "tabs": {
+      "ruleMonitor": "Regelübersicht",
+      "kernelConversation": "Kernel-Konversation",
+      "promptRules": "Prompt-Regeln",
+      "speakPanel": "Sprachausgabe"
+    }
   },
   "speakPanel": {
     "title": "Sprachausgabe an alle Lautsprecher",
