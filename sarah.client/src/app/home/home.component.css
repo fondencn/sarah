@@ -131,3 +131,46 @@ img.big-icon {
 .cdk-drop-list-dragging .col-12:not(.cdk-drag-placeholder) {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+/* Edit dashboard action bar */
+.edit-dashboard-bar {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0 2rem;
+}
+
+.edit-dashboard-btn {
+    min-width: 200px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.55rem 2rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.edit-dashboard-btn--normal {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(0, 120, 212, 0.35);
+    color: #0078D4;
+}
+
+.edit-dashboard-btn--normal:hover {
+    background: rgba(0, 120, 212, 0.08);
+    border-color: #0078D4;
+    box-shadow: 0 4px 12px rgba(0, 120, 212, 0.2);
+    transform: translateY(-1px);
+}
+
+.edit-dashboard-btn--active {
+    background: linear-gradient(135deg, #107C10 0%, #1a9a1a 100%);
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(16, 124, 16, 0.35);
+}
+
+.edit-dashboard-btn--active:hover {
+    box-shadow: 0 6px 18px rgba(16, 124, 16, 0.45);
+    transform: translateY(-1px);
+}

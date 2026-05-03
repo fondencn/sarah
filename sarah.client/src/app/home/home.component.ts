@@ -39,8 +39,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   get currentUserName(): string { return this.authService.currentUserName; }
   get currentUserDisplayName(): string { return this.authService.currentUserDisplayName; }
-  statusMessage: string = "";
-  statusDto: StatusDto|null = null;
   dashboardItems: DashboardItemViewModel[] = [];
   animateItems: boolean = true; // Flag to control animation
   isEditMode: boolean = false;
@@ -61,7 +59,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   onComponentLoad(): void {
     // Add your logic here that should be executed after the component is loaded
     this.logger.debug('HomeComponent loaded');
-    this.loadStatus();
     this.loadDashboardItems();
   }
 
@@ -85,10 +82,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   login(): void {
     this.authService.login();
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   isLoggedIn(): boolean {
@@ -291,27 +284,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  private loadStatus() {
-    this.statusMessage = "Component has been loaded.";
-    this.statusDto = null;
-
-    // Call the /status endpoint using the generated client
-    this.statusService.statusGet().subscribe({
-      next: (response: StatusDto) => {
-        this.logger.debug('Status:', response);
-        this.statusDto = response;
-        this.statusMessage = "Status fetched successfully.";
-      },
-      error: (error) => {
-        this.logger.error('Error fetching status:', error);
-        this.statusMessage = "Error fetching status.";
-        this.statusDto = null;
-      }
-    });
-  }
-
-
 
   private setLampColorInternal(itemId: number, color: string) {
     this.devicesService.devicesSetLampColorPOSTApiDevicesLampIdColorColor(itemId, color).subscribe({
