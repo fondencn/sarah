@@ -130,30 +130,9 @@
   "admin": {
     "title": "Admin",
     "tabs": {
-      "ruleMonitor": "Rule Monitor",
       "kernelConversation": "Kernel Conversation",
       "promptRules": "Prompt Rules"
     }
-  },
-  "ruleMonitor": {
-    "title": "Rule Overview",
-    "refresh": "🔄 Refresh",
-    "rulesCardHeader": "Rules",
-    "loadingRules": "Loading rules...",
-    "noRules": "No rules available.",
-    "colName": "Name",
-    "colCondition": "Condition",
-    "colAction": "Action",
-    "colLastTriggered": "Last triggered",
-    "executionLogHeader": "Execution Log",
-    "loadingLog": "Loading log...",
-    "noLog": "No executions logged yet.",
-    "colTimestamp": "Time",
-    "colRule": "Rule",
-    "colResult": "Result",
-    "colError": "Error",
-    "success": "✓ Success",
-    "failure": "✗ Error"
   },
   "kernelConversation": {
     "title": "Kernel Conversation History",

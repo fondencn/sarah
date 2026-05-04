@@ -25,8 +25,8 @@ describe('AdminComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should default to rule monitor tab', () => {
-    expect(component.activeTab).toBe('ruleMonitor');
+  it('should default to kernel conversation tab', () => {
+    expect(component.activeTab).toBe('kernelConversation');
   });
 
   it('should switch active tab', () => {

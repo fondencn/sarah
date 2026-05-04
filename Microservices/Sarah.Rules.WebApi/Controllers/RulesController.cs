@@ -17,7 +17,6 @@ namespace Sarah.Rules.WebApi.Controllers;
 [Route("api/[controller]")]
 public class RulesController : ControllerBase
 {
-    private readonly IRuleService _ruleService;
     private readonly AlarmScheduleService _alarmService;
     private readonly TemperatureScheduleService _temperatureService;
     private readonly ApplicationDbContext _db;
@@ -26,13 +25,12 @@ public class RulesController : ControllerBase
     private readonly SmartHomeKernelService _kernelService;
     private readonly ILogger<RulesController> _logger;
 
-    public RulesController(IRuleService ruleService, AlarmScheduleService alarmService, 
+    public RulesController(AlarmScheduleService alarmService,
         TemperatureScheduleService temperatureService, ApplicationDbContext db,
         SmartHomePromptProvider promptProvider, SmartHomePromptRuleStore promptRuleStore,
         SmartHomeKernelService kernelService,
         ILogger<RulesController> logger)
     {
-        _ruleService = ruleService;
         _alarmService = alarmService;
         _temperatureService = temperatureService;
         _db = db;
@@ -60,67 +58,6 @@ public class RulesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting rules status");
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets all rules with their overview information (runtime rules from registered rule stores)
-    /// </summary>
-    [HttpGet]
-    public ActionResult<IEnumerable<RuleOverviewDto>> GetRules()
-    {
-        try
-        {
-            var rules = _ruleService.Rules
-                .OrderBy(r => r.Name)
-                .Select(r => new RuleOverviewDto
-                {
-                    Name = r.Name,
-                    LastOccurence = r.LastOccurence,
-                    HasCondition = r.Condition != null,
-                    HasAction = r.Action != null
-                })
-                .ToList();
-
-            return Ok(rules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting rules");
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets the most recent rule execution log entries
-    /// </summary>
-    [HttpGet("log")]
-    public async Task<ActionResult<IEnumerable<RuleExecutionLogDto>>> GetRuleExecutionLog([FromQuery] int limit = 100)
-    {
-        try
-        {
-            if (limit < 1 || limit > 1000)
-                return BadRequest(new { message = "limit muss zwischen 1 und 1000 liegen" });
-
-            var logs = await _db.RuleExecutionLogs
-                .OrderByDescending(l => l.TriggeredAt)
-                .Take(limit)
-                .Select(l => new RuleExecutionLogDto
-                {
-                    Id = l.Id,
-                    RuleName = l.RuleName,
-                    TriggeredAt = l.TriggeredAt,
-                    Success = l.Success,
-                    ErrorMessage = l.ErrorMessage
-                })
-                .ToListAsync();
-
-            return Ok(logs);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting rule execution log");
             return StatusCode(500, new { message = "Internal server error" });
         }
     }

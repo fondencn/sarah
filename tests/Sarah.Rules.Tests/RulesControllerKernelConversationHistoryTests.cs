@@ -127,7 +127,6 @@ public class RulesControllerKernelConversationHistoryTests
     private static RulesController CreateController(ApplicationDbContext db)
     {
         return new RulesController(
-            ruleService: null!,
             alarmService: null!,
             temperatureService: null!,
             db: db,

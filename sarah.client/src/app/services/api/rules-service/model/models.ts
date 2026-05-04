@@ -5,7 +5,5 @@ export * from './kernelConversationMessageDto';
 export * from './promptRuleDto';
 export * from './promptRuleTimerDto';
 export * from './promptRuleUpsertDto';
-export * from './ruleExecutionLogDto';
-export * from './ruleOverviewDto';
 export * from './speechVolume';
 export * from './temperatureScheduleEntity';

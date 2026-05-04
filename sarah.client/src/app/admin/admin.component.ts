@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-type AdminTab = 'ruleMonitor' | 'kernelConversation' | 'promptRules';
+type AdminTab = 'kernelConversation' | 'promptRules';
 
 @Component({
   selector: 'app-admin',
@@ -8,7 +8,7 @@ type AdminTab = 'ruleMonitor' | 'kernelConversation' | 'promptRules';
   styleUrl: './admin.component.css'
 })
 export class AdminComponent {
-  activeTab: AdminTab = 'ruleMonitor';
+  activeTab: AdminTab = 'kernelConversation';
 
   setActiveTab(tab: AdminTab): void {
     this.activeTab = tab;

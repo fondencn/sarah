@@ -47,7 +47,6 @@ import { PersonMapModalComponent } from './home/person-map-modal/person-map-moda
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 import { ToastContainerComponent } from './shared/toast/toast-container.component';
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
-import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
 import { PromptRulesManagerComponent } from './admin/prompt-rules-manager/prompt-rules-manager.component';
 import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
 import { KernelConversationPanelComponent } from './admin/kernel-conversation-panel/kernel-conversation-panel.component';
@@ -74,7 +73,6 @@ import { KernelConversationPanelComponent } from './admin/kernel-conversation-pa
         PinToDashboardButtonComponent,
         ToastContainerComponent,
         ThermostatDialComponent,
-        RuleMonitorComponent,
         PromptRulesManagerComponent,
         KernelConversationPanelComponent,
         DeviceControlModalComponent

@@ -130,30 +130,9 @@
   "admin": {
     "title": "Admin",
     "tabs": {
-      "ruleMonitor": "Regelübersicht",
       "kernelConversation": "Kernel-Konversation",
       "promptRules": "Prompt-Regeln"
     }
-  },
-  "ruleMonitor": {
-    "title": "Regelübersicht",
-    "refresh": "🔄 Aktualisieren",
-    "rulesCardHeader": "Regeln",
-    "loadingRules": "Lade Regeln...",
-    "noRules": "Keine Regeln vorhanden.",
-    "colName": "Name",
-    "colCondition": "Bedingung",
-    "colAction": "Aktion",
-    "colLastTriggered": "Zuletzt ausgelöst",
-    "executionLogHeader": "Ausführungsprotokoll",
-    "loadingLog": "Lade Protokoll...",
-    "noLog": "Noch keine Ausführungen protokolliert.",
-    "colTimestamp": "Zeitpunkt",
-    "colRule": "Regel",
-    "colResult": "Ergebnis",
-    "colError": "Fehler",
-    "success": "✓ Erfolg",
-    "failure": "✗ Fehler"
   },
   "kernelConversation": {
     "title": "Kernel-Konversationsverlauf",

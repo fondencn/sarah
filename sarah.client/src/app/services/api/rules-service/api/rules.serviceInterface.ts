@@ -17,8 +17,6 @@ import { KernelChatMessageResponseDtoModel } from '../model/models';
 import { KernelConversationMessageDtoModel } from '../model/models';
 import { PromptRuleDtoModel } from '../model/models';
 import { PromptRuleUpsertDtoModel } from '../model/models';
-import { RuleExecutionLogDtoModel } from '../model/models';
-import { RuleOverviewDtoModel } from '../model/models';
 import { TemperatureScheduleEntityModel } from '../model/models';
 
 
@@ -82,12 +80,6 @@ export interface RulesClientInterface {
      * 
      * 
      */
-    apiRulesGet(extraHttpRequestParams?: any): Observable<Array<RuleOverviewDtoModel>>;
-
-    /**
-     * 
-     * 
-     */
     apiRulesKernelConversationDelete(extraHttpRequestParams?: any): Observable<{}>;
 
     /**
@@ -105,13 +97,6 @@ export interface RulesClientInterface {
      * @param kernelChatMessageRequestDtoModel 
      */
     apiRulesKernelConversationMessagePost(kernelChatMessageRequestDtoModel?: KernelChatMessageRequestDtoModel, extraHttpRequestParams?: any): Observable<KernelChatMessageResponseDtoModel>;
-
-    /**
-     * 
-     * 
-     * @param limit 
-     */
-    apiRulesLogGet(limit?: number, extraHttpRequestParams?: any): Observable<Array<RuleExecutionLogDtoModel>>;
 
     /**
      * 
