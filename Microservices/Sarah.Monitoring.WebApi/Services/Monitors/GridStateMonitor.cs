@@ -100,7 +100,7 @@ internal sealed class GridStateMonitor(
         };
 
         await _rabbitMq.PublishAsync(message);
-        _logger.LogInformation("StromgGedacht: Grid state changed for zip {Zip}: {PreviousState} -> {CurrentState}", zip, previousText ?? "unknown", newText);
+        _logger.LogInformation("StromGedacht: Grid state changed for zip {Zip}: {PreviousState} -> {CurrentState}", zip, previousText ?? "unknown", newText);
     }
 
     private static string ToGridStateText(int state)
