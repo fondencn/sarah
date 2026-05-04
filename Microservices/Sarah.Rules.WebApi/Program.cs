@@ -57,6 +57,17 @@ builder.Services.AddHttpClient<DeviceServiceClient>(client =>
 })
 .AddHttpMessageHandler<ClientCredentialsHandler>();
 
+// Register RoomServiceClient as concrete type for room state and room lookup kernel plugins
+builder.Services.AddHttpClient<RoomServiceClient>(client =>
+{
+    var roomServiceUrl = builder.Configuration["services__roomservice__http__0"]
+        ?? builder.Configuration["services__roomservice__http-api__0"]
+        ?? builder.Configuration["RoomServiceUrl"]
+        ?? "https+http://roomservice";
+    client.BaseAddress = new Uri(roomServiceUrl);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
+
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {

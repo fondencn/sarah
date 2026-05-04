@@ -190,6 +190,9 @@ public sealed class SmartHomeKernelService
             serviceProvider.GetRequiredService<DeviceServiceClient>()), "devices");
         kernel.Plugins.AddFromObject(new DeviceQueryKernelPlugin(
             serviceProvider.GetRequiredService<DeviceServiceClient>()), "deviceQuery");
+        kernel.Plugins.AddFromObject(new RoomStateKernelPlugin(
+            serviceProvider.GetRequiredService<RoomServiceClient>(),
+            serviceProvider.GetRequiredService<DeviceServiceClient>()), "rooms");
         kernel.Plugins.AddFromObject(new PresenceKernelPlugin(
             serviceProvider.GetRequiredService<IPersonService>()), "presence");
         kernel.Plugins.AddFromObject(new WeatherKernelPlugin(
