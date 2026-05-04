@@ -21,4 +21,5 @@ public class WallPlugStateChangedMessage : NetworkEventMessage
         IsOn = isOn;
         LastChangeToPowerLow = lastChangeToPowerLow;
         LastChangeToPowerHigh = lastChangeToPowerHigh;
+    }
 }

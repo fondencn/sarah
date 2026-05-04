@@ -12,7 +12,7 @@ namespace Sarah.Rules.Conditions
         public override bool Evaluate(NetworkEvent evt)
         {
             if (evt is WallPlugStateChangedEvent wp && wp.SourceNodeId == this.TargetNodeId)
-                return wp.IsOn && (DateTime.Now - wp.LastIncreasePower).TotalSeconds < 60;
+                return wp.IsOn && (DateTime.Now - wp.LastChangeToPowerHigh).TotalSeconds < 60;
             return false;
         }
     }
@@ -24,7 +24,7 @@ namespace Sarah.Rules.Conditions
         public override bool Evaluate(NetworkEvent evt)
         {
             if (evt is WallPlugStateChangedEvent wp && wp.SourceNodeId == this.TargetNodeId)
-                return wp.IsOn && (DateTime.Now - wp.LastDecreasePower).TotalSeconds < 60;
+                return wp.IsOn && (DateTime.Now - wp.LastChangeToPowerLow).TotalSeconds < 60;
             return false;
         }
     }

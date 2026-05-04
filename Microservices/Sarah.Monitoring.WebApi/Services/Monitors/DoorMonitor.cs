@@ -360,6 +360,7 @@ namespace Sarah.Monitoring.Monitors
                             SourceNodeId = (byte)this.Device.NodeId,
                             DeviceName = this.Device.Name!,
                             IsWindow = isWindow,
+                            WasOpenLongEnough = this.WarnAtOpen, // Bei sofortiger Warnung ist die Tür ja schon "lange genug" offen für die Sprachausgabe
                             AlertType = DoorAlertType.Opened,
                             Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
                         });
@@ -483,6 +484,7 @@ namespace Sarah.Monitoring.Monitors
                                     IsWindow = isWindow,
                                     AlertType = DoorAlertType.StillOpen,
                                     OpenDurationMinutes = minutes,
+                                    WasOpenLongEnough = openTime > this.SensorThreshold,
                                     RoomTemperature = roomTemperature,
                                     HeatingsTurnedOff = heatingsTurnedOff,
                                     NextAlertIntervalMinutes = nextAlertIntervalMinutes,

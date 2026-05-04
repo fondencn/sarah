@@ -443,7 +443,7 @@ namespace Sarah.Rules
                     .Select(w => new BatteryDeviceInfo(w.DeviceName, w.BatteryLevel))
                     .ToList();
                 var evt = new BatteryWarningEvent(warnings);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
