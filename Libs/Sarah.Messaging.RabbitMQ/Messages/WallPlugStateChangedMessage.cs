@@ -7,8 +7,7 @@ public class WallPlugStateChangedMessage : NetworkEventMessage
 {
     public bool IsOn { get; set; }
     public DateTime LastChangeToPowerLow { get; set; }
-    public DateTime LastIncreasePower { get; set; }
-    public DateTime LastDecreasePower { get; set; }
+    public DateTime LastChangeToPowerHigh { get; set; }
 
     public WallPlugStateChangedMessage()
     {
@@ -16,12 +15,10 @@ public class WallPlugStateChangedMessage : NetworkEventMessage
         Property = "WallPlugState";
     }
 
-    public WallPlugStateChangedMessage(byte sourceNodeId, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower) : this()
+    public WallPlugStateChangedMessage(byte sourceNodeId, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh) : this()
     {
         SourceNodeId = sourceNodeId;
         IsOn = isOn;
         LastChangeToPowerLow = lastChangeToPowerLow;
-        LastIncreasePower = lastIncreasePower;
-        LastDecreasePower = lastDecreasePower;
-    }
+        LastChangeToPowerHigh = lastChangeToPowerHigh;
 }

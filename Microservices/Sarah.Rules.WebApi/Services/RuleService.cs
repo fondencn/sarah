@@ -290,7 +290,7 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
-                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastIncreasePower, message.LastDecreasePower);
+                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastChangeToPowerHigh);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)
