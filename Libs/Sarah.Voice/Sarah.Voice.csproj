@@ -25,8 +25,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.43.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-    <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
-    <PackageReference Include="Microsoft.Recognizers.Text.Number" Version="1.8.13" />
     <PackageReference Include="NuGet.CommandLine" Version="6.12.2" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
