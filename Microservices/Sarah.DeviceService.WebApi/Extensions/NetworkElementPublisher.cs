@@ -82,9 +82,9 @@ namespace Sarah.DeviceService.WebApi.Extensions
         /// <summary>
         /// Publishes a wall plug state event so Rules can evaluate WallPlug* conditions.
         /// </summary>
-        public async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
+        public async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
         {
-            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, lastChangeToPowerLow, lastIncreasePower, lastDecreasePower);
+            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, lastChangeToPowerLow, lastChangeToPowerHigh);
             await _rabbitMQClient.PublishAsync(message);
         }
 

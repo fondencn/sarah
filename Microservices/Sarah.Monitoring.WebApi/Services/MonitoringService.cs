@@ -4,10 +4,11 @@ using Sarah.API.BusinessObjects;
 using Sarah.ServiceClients;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Monitoring.Monitors;
+using Sarah.Monitoring.Clients;
 
 namespace Sarah.Monitoring;
 
-public class MonitoringService (IPersonService _personService, DeviceServiceClient _deviceServiceClient, RoomServiceClient _roomServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory) : BackgroundService
+public class MonitoringService (IPersonService _personService, DeviceServiceClient _deviceServiceClient, RoomServiceClient _roomServiceClient, RabbitMQClient _rabbitMQ, IConfiguration _config, ILoggerFactory _loggerFactory, ILogger<MonitoringService> _logger, IHttpClientFactory _httpClientFactory, StromGedachtNowApiClient _stromGedachtClient) : BackgroundService
 {
     public IWeatherProvider Weather  => this.Monitors.OfType<IWeatherProvider>().FirstOrDefault() ?? throw new InvalidOperationException("No IWeatherProvider monitor available");
 
@@ -26,6 +27,7 @@ public class MonitoringService (IPersonService _personService, DeviceServiceClie
 
         var weather = new Monitors.WeatherMonitor(_config, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.WeatherMonitor>(), _httpClientFactory);
         weather.WarnLocation = _config["WeatherWarnLocation"] ?? "Berlin";
+        var gridState = new Monitors.GridStateMonitor(_config, _rabbitMQ, _stromGedachtClient, _loggerFactory.CreateLogger<Monitors.GridStateMonitor>());
         var ferien = new Monitors.FerienMonitor(_config, _loggerFactory.CreateLogger<Monitors.FerienMonitor>(), _rabbitMQ);
         var doors = new Monitors.DoorMonitor(roomSnapshot, weather, _rabbitMQ, _loggerFactory.CreateLogger<Monitors.DoorMonitor>(), _deviceServiceClient);
         Monitors = new IMonitor[]
@@ -36,6 +38,7 @@ public class MonitoringService (IPersonService _personService, DeviceServiceClie
             doors,
             ferien,
             weather,
+            gridState,
         };
 
         await Task.WhenAll(Monitors.Select(m => m.Start()).ToArray());

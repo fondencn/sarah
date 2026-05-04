@@ -132,4 +132,26 @@ public static class MessageTopics
     /// Used to notify RuleService to activate/deactivate holiday-dependent alarms.
     /// </summary>
     public const string HolidaysStatusChanged = "holidays.status.changed";
+
+    // Monitoring alert topics
+
+    /// <summary>
+    /// Topic for battery warning alerts from the BatteryMonitor.
+    /// Published when one or more devices report a critically low battery level.
+    /// Consumed by RuleService to generate voice output.
+    /// </summary>
+    public const string MonitoringBatteryWarning = "monitoring.battery.warning";
+
+    /// <summary>
+    /// Topic for door/window monitoring alerts from the DoorMonitor.
+    /// Published when a door or window is opened, still open after a threshold, or closed.
+    /// Consumed by RuleService to generate voice output.
+    /// </summary>
+    public const string MonitoringDoorAlert = "monitoring.door.alert";
+
+    /// <summary>
+    /// Topic for power grid state changes from the GridStateMonitor.
+    /// Published when the current StromGedacht grid stage changes.
+    /// </summary>
+    public const string MonitoringGridStateChanged = "monitoring.grid.state.changed";
 }

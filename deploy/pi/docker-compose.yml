@@ -67,6 +67,7 @@ services:
     profiles: [observability]
     image: grafana/grafana:11.0.0
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-CHANGE_ME_grafana}
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -88,6 +89,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - KC_HOSTNAME=${PI_HOST:-pi}
@@ -108,6 +110,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
@@ -127,6 +130,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=postgres
@@ -150,6 +154,7 @@ services:
   deviceservice:
     image: ${REGISTRY:-sarah}/deviceservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=deviceservice
@@ -179,6 +184,7 @@ services:
   personsservice:
     image: ${REGISTRY:-sarah}/personsservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=personsservice
@@ -214,6 +220,7 @@ services:
   geofencesservice:
     image: ${REGISTRY:-sarah}/geofencesservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=geofencesservice
@@ -236,6 +243,7 @@ services:
   roomservice:
     image: ${REGISTRY:-sarah}/roomservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=roomservice
@@ -258,6 +266,7 @@ services:
   monitoringservice:
     image: ${REGISTRY:-sarah}/monitoringservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=monitoringservice
@@ -289,6 +298,7 @@ services:
   rulesservice:
     image: ${REGISTRY:-sarah}/rulesservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=rulesservice
@@ -308,6 +318,9 @@ services:
       - EmailNotifier__SmtpUsername=${SMTP_USERNAME:-}
       - EmailNotifier__SmtpPassword=${SMTP_PASSWORD:-}
       - Keycloak__ServiceClientSecret=${RULES_CLIENT_SECRET}
+      - SemanticKernel__AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
+      - SemanticKernel__AzureOpenAI__DeploymentName=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - SemanticKernel__AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
     ports:
       - "5006:8080"
     depends_on:
@@ -324,6 +337,7 @@ services:
   dashboardservice:
     image: ${REGISTRY:-sarah}/dashboardservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=dashboardservice
@@ -350,6 +364,7 @@ services:
   adminservice:
     image: ${REGISTRY:-sarah}/adminservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=adminservice

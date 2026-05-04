@@ -86,7 +86,7 @@ public class RulesEventSubscriber : BackgroundService
             var clickedEvent = new Sarah.API.BusinessObjects.ClickedEvent(
                 message.SourceNodeId, 
                 message.SceneId);
-            _ruleService.EvaluateRules(clickedEvent);
+            await _ruleService.EvaluateRules(clickedEvent);
         }
         catch (Exception ex)
         {
@@ -101,7 +101,7 @@ public class RulesEventSubscriber : BackgroundService
             _logger.LogDebug("Received timer event from node {NodeId}", message.SourceNodeId);
 
             var timerEvent = new Sarah.API.BusinessObjects.TimerEvent(message.SourceNodeId);
-            _ruleService.EvaluateRules(timerEvent);
+            await _ruleService.EvaluateRules(timerEvent);
         }
         catch (Exception ex)
         {
@@ -120,7 +120,7 @@ public class RulesEventSubscriber : BackgroundService
                 message.PersonId,
                 message.PersonName,
                 message.IsAvailable);
-            _ruleService.EvaluateRules(personEvent);
+            await _ruleService.EvaluateRules(personEvent);
         }
         catch (Exception ex)
         {
@@ -140,7 +140,7 @@ public class RulesEventSubscriber : BackgroundService
                 message.PersonName,
                 null, // CurrentGeoFence - would need to resolve from message.CurrentGeoFenceId
                 null); // PreviousGeoFence - would need to resolve from message.PreviousGeoFenceId
-            _ruleService.EvaluateRules(geoFenceEvent);
+            await _ruleService.EvaluateRules(geoFenceEvent);
         }
         catch (Exception ex)
         {
@@ -160,7 +160,7 @@ public class RulesEventSubscriber : BackgroundService
                 (Sarah.API.BusinessObjects.AirQualitityLevel)message.Level,
                 message.Message,
                 message.RoomName);
-            _ruleService.EvaluateRules(airQualityEvent);
+            await _ruleService.EvaluateRules(airQualityEvent);
         }
         catch (Exception ex)
         {

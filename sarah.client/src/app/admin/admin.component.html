@@ -1,5 +1,29 @@
 <div class="container mt-4">
   <h2 class="mb-4">⚙️ {{ 'admin.title' | translate }}</h2>
-  <app-rule-monitor></app-rule-monitor>
-  <app-speak-panel></app-speak-panel>
+
+  <ul class="nav nav-tabs admin-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'kernelConversation'"
+        (click)="setActiveTab('kernelConversation')">
+        {{ 'admin.tabs.kernelConversation' | translate }}
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'promptRules'"
+        (click)="setActiveTab('promptRules')">
+        {{ 'admin.tabs.promptRules' | translate }}
+      </button>
+    </li>
+  </ul>
+
+  <div class="admin-tab-panel">
+    <app-kernel-conversation-panel *ngIf="activeTab === 'kernelConversation'"></app-kernel-conversation-panel>
+    <app-prompt-rules-manager *ngIf="activeTab === 'promptRules'"></app-prompt-rules-manager>
+  </div>
 </div>

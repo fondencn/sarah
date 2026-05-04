@@ -112,6 +112,17 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+try
+{
+    var homeNetworkService = app.Services.GetRequiredService<HomeNetworkService>();
+    await homeNetworkService.Initialize(app.Configuration);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred while initializing the home network service.");
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -47,10 +47,9 @@ import { PersonMapModalComponent } from './home/person-map-modal/person-map-moda
 import { PinToDashboardButtonComponent } from './shared/pin-to-dashboard-button/pin-to-dashboard-button.component';
 import { ToastContainerComponent } from './shared/toast/toast-container.component';
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
-import { RuleMonitorComponent } from './admin/rule-monitor/rule-monitor.component';
-import { SpeakPanelComponent } from './admin/speak-panel/speak-panel.component';
-import { AdminClient } from './services/api/admin-service/api/admin.service';
+import { PromptRulesManagerComponent } from './admin/prompt-rules-manager/prompt-rules-manager.component';
 import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
+import { KernelConversationPanelComponent } from './admin/kernel-conversation-panel/kernel-conversation-panel.component';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -74,8 +73,8 @@ import { DeviceControlModalComponent } from './devices/device-control-modal/devi
         PinToDashboardButtonComponent,
         ToastContainerComponent,
         ThermostatDialComponent,
-        RuleMonitorComponent,
-        SpeakPanelComponent,
+        PromptRulesManagerComponent,
+        KernelConversationPanelComponent,
         DeviceControlModalComponent
     ],
     bootstrap: [AppComponent], 
@@ -128,7 +127,6 @@ import { DeviceControlModalComponent } from './devices/device-control-modal/devi
         { provide: RulesClient, useFactory: (http: HttpClient) => new RulesClient(http, environment.api.rulesService, undefined!), deps: [HttpClient] },
         { provide: GeofencesClient, useFactory: (http: HttpClient) => new GeofencesClient(http, environment.api.geofencesService, undefined!), deps: [HttpClient] },
         { provide: DashboardRuntimeService, useFactory: (http: HttpClient) => new DashboardRuntimeService(http), deps: [HttpClient] },
-        { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] },
-        { provide: AdminClient, useFactory: (http: HttpClient) => new AdminClient(http, environment.api.adminService, undefined!), deps: [HttpClient] }
+        { provide: StatusRuntimeService, useFactory: (http: HttpClient) => new StatusRuntimeService(http), deps: [HttpClient] }
     ] })
 export class AppModule { }

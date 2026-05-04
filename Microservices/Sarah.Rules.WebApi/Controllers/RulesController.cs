@@ -5,6 +5,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Rules.Services;
+using Sarah.Rules.Services.Kernel;
 using Sarah.Rules.Data.Entities;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
@@ -16,19 +17,26 @@ namespace Sarah.Rules.WebApi.Controllers;
 [Route("api/[controller]")]
 public class RulesController : ControllerBase
 {
-    private readonly IRuleService _ruleService;
     private readonly AlarmScheduleService _alarmService;
     private readonly TemperatureScheduleService _temperatureService;
     private readonly ApplicationDbContext _db;
+    private readonly SmartHomePromptProvider _promptProvider;
+    private readonly SmartHomePromptRuleStore _promptRuleStore;
+    private readonly SmartHomeKernelService _kernelService;
     private readonly ILogger<RulesController> _logger;
 
-    public RulesController(IRuleService ruleService, AlarmScheduleService alarmService, 
-        TemperatureScheduleService temperatureService, ApplicationDbContext db, ILogger<RulesController> logger)
+    public RulesController(AlarmScheduleService alarmService,
+        TemperatureScheduleService temperatureService, ApplicationDbContext db,
+        SmartHomePromptProvider promptProvider, SmartHomePromptRuleStore promptRuleStore,
+        SmartHomeKernelService kernelService,
+        ILogger<RulesController> logger)
     {
-        _ruleService = ruleService;
         _alarmService = alarmService;
         _temperatureService = temperatureService;
         _db = db;
+        _promptProvider = promptProvider;
+        _promptRuleStore = promptRuleStore;
+        _kernelService = kernelService;
         _logger = logger;
     }
 
@@ -55,62 +63,103 @@ public class RulesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all rules with their overview information (runtime rules from registered rule stores)
+    /// Gets kernel conversation history entries sorted newest to oldest.
     /// </summary>
-    [HttpGet]
-    public ActionResult<IEnumerable<RuleOverviewDto>> GetRules()
+    [HttpGet("kernel-conversation")]
+    public async Task<ActionResult<IEnumerable<KernelConversationMessageDto>>> GetKernelConversationHistory(
+        [FromQuery] string conversationId = "smart-home-main",
+        [FromQuery] int hours = 2,
+        [FromQuery] int limit = 200)
     {
         try
         {
-            var rules = _ruleService.Rules
-                .OrderBy(r => r.Name)
-                .Select(r => new RuleOverviewDto
-                {
-                    Name = r.Name,
-                    LastOccurence = r.LastOccurence,
-                    HasCondition = r.Condition != null,
-                    HasAction = r.Action != null
-                })
-                .ToList();
+            if (string.IsNullOrWhiteSpace(conversationId))
+                return BadRequest(new { message = "conversationId darf nicht leer sein" });
 
-            return Ok(rules);
+            if (hours < 1 || hours > 168)
+                return BadRequest(new { message = "hours muss zwischen 1 und 168 liegen" });
+
+            if (limit < 1 || limit > 1000)
+                return BadRequest(new { message = "limit muss zwischen 1 und 1000 liegen" });
+
+            DateTime cutoffUtc = DateTime.UtcNow.AddHours(-hours);
+
+            var entries = await _db.KernelConversationMessages
+                .Where(m => m.ConversationId == conversationId && m.CreatedAtUtc >= cutoffUtc)
+                .OrderByDescending(m => m.CreatedAtUtc)
+                .Take(limit)
+                .Select(m => new KernelConversationMessageDto
+                {
+                    Id = m.Id,
+                    ConversationId = m.ConversationId,
+                    Role = m.Role,
+                    Content = m.Content,
+                    CreatedAtUtc = m.CreatedAtUtc
+                })
+                .ToListAsync();
+
+            return Ok(entries);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting rules");
+            _logger.LogError(ex, "Error getting kernel conversation history");
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// Gets the most recent rule execution log entries
+    /// Truncates the whole kernel conversation history table.
     /// </summary>
-    [HttpGet("log")]
-    public async Task<ActionResult<IEnumerable<RuleExecutionLogDto>>> GetRuleExecutionLog([FromQuery] int limit = 100)
+    [HttpDelete("kernel-conversation")]
+    public async Task<ActionResult<object>> TruncateKernelConversationHistory()
     {
         try
         {
-            if (limit < 1 || limit > 1000)
-                return BadRequest(new { message = "limit muss zwischen 1 und 1000 liegen" });
+            int deletedCount;
+            try
+            {
+                deletedCount = await _db.KernelConversationMessages.ExecuteDeleteAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                var allRows = await _db.KernelConversationMessages.ToListAsync();
+                deletedCount = allRows.Count;
+                _db.KernelConversationMessages.RemoveRange(allRows);
+                await _db.SaveChangesAsync();
+            }
 
-            var logs = await _db.RuleExecutionLogs
-                .OrderByDescending(l => l.TriggeredAt)
-                .Take(limit)
-                .Select(l => new RuleExecutionLogDto
-                {
-                    Id = l.Id,
-                    RuleName = l.RuleName,
-                    TriggeredAt = l.TriggeredAt,
-                    Success = l.Success,
-                    ErrorMessage = l.ErrorMessage
-                })
-                .ToListAsync();
-
-            return Ok(logs);
+            return Ok(new { deletedCount });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting rule execution log");
+            _logger.LogError(ex, "Error truncating kernel conversation history");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Sends a direct user message to the kernel and persists the conversation turn.
+    /// </summary>
+    [HttpPost("kernel-conversation/message")]
+    public async Task<ActionResult<KernelChatMessageResponseDto>> SendKernelChatMessage(
+        [FromBody] KernelChatMessageRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+                return BadRequest(new { message = "message darf nicht leer sein" });
+
+            var assistantMessage = await _kernelService.ProcessChatMessageAsync(request.Message, cancellationToken);
+
+            return Ok(new KernelChatMessageResponseDto
+            {
+                AssistantMessage = assistantMessage
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending kernel chat message");
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
@@ -417,6 +466,266 @@ public class RulesController : ControllerBase
             _logger.LogError(ex, "Error getting next temperature schedule for room {RoomId}", roomId);
             return StatusCode(500, new { message = "Internal server error" });
         }
+    }
+
+    #endregion
+
+    #region Prompt Rule CRUD
+
+    /// <summary>
+    /// Gets all prompt rules used by the semantic kernel system prompt.
+    /// </summary>
+    [HttpGet("prompt-rules")]
+    public async Task<ActionResult<IEnumerable<PromptRuleDto>>> GetPromptRules()
+    {
+        try
+        {
+            var entities = await _db.PromptRules
+                .OrderBy(r => r.SortOrder)
+                .ThenBy(r => r.Name)
+                .ToListAsync();
+
+            var rules = entities.Select(ToPromptRuleDto).ToList();
+
+            return Ok(rules);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting prompt rules");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Gets one prompt rule by id.
+    /// </summary>
+    [HttpGet("prompt-rules/{id:long}")]
+    public async Task<ActionResult<PromptRuleDto>> GetPromptRuleById(long id)
+    {
+        try
+        {
+            var entity = await _db.PromptRules.FirstOrDefaultAsync(r => r.Id == id);
+            if (entity == null)
+            {
+                return NotFound(new { message = $"Prompt-Regel mit ID {id} nicht gefunden" });
+            }
+
+            return Ok(ToPromptRuleDto(entity));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting prompt rule {PromptRuleId}", id);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Creates a prompt rule.
+    /// </summary>
+    [HttpPost("prompt-rules")]
+    public async Task<ActionResult<PromptRuleDto>> CreatePromptRule([FromBody] PromptRuleUpsertDto dto)
+    {
+        try
+        {
+            if (!TryValidatePromptRule(dto, out var validationError))
+            {
+                return BadRequest(new { message = validationError });
+            }
+
+            var now = DateTime.UtcNow;
+            var entity = new PromptRuleEntity
+            {
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
+            };
+
+            ApplyPromptRuleDto(entity, dto);
+
+            _db.PromptRules.Add(entity);
+            await _db.SaveChangesAsync();
+
+            await ReloadPromptRulesAsync();
+
+            return CreatedAtAction(nameof(GetPromptRuleById), new { id = entity.Id }, ToPromptRuleDto(entity));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating prompt rule");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Updates a prompt rule.
+    /// </summary>
+    [HttpPut("prompt-rules/{id:long}")]
+    public async Task<ActionResult<PromptRuleDto>> UpdatePromptRule(long id, [FromBody] PromptRuleUpsertDto dto)
+    {
+        try
+        {
+            if (!TryValidatePromptRule(dto, out var validationError))
+            {
+                return BadRequest(new { message = validationError });
+            }
+
+            var entity = await _db.PromptRules.FirstOrDefaultAsync(r => r.Id == id);
+            if (entity == null)
+            {
+                return NotFound(new { message = $"Prompt-Regel mit ID {id} nicht gefunden" });
+            }
+
+            ApplyPromptRuleDto(entity, dto);
+            entity.UpdatedAtUtc = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            await ReloadPromptRulesAsync();
+
+            return Ok(ToPromptRuleDto(entity));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating prompt rule {PromptRuleId}", id);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Deletes a prompt rule.
+    /// </summary>
+    [HttpDelete("prompt-rules/{id:long}")]
+    public async Task<IActionResult> DeletePromptRule(long id)
+    {
+        try
+        {
+            var entity = await _db.PromptRules.FirstOrDefaultAsync(r => r.Id == id);
+            if (entity == null)
+            {
+                return NotFound(new { message = $"Prompt-Regel mit ID {id} nicht gefunden" });
+            }
+
+            _db.PromptRules.Remove(entity);
+            await _db.SaveChangesAsync();
+
+            await ReloadPromptRulesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting prompt rule {PromptRuleId}", id);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    private static PromptRuleDto ToPromptRuleDto(PromptRuleEntity entity)
+    {
+        PromptRuleTimerDto? timer = null;
+        if (entity.TimerHour.HasValue && entity.TimerMinute.HasValue && entity.TimerWeekdays.HasValue)
+        {
+            timer = new PromptRuleTimerDto
+            {
+                Hour = entity.TimerHour.Value,
+                Minute = entity.TimerMinute.Value,
+                Weekdays = (long)entity.TimerWeekdays.Value,
+                Interval = entity.TimerInterval.HasValue ? (int)entity.TimerInterval.Value : 0,
+                FromUtc = entity.TimerFromUtc,
+                UntilUtc = entity.TimerUntilUtc
+            };
+        }
+
+        return new PromptRuleDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Guidance = entity.Guidance,
+            IsEnabled = entity.IsEnabled,
+            SortOrder = entity.SortOrder,
+            Timer = timer
+        };
+    }
+
+    private static void ApplyPromptRuleDto(PromptRuleEntity entity, PromptRuleUpsertDto dto)
+    {
+        entity.Name = dto.Name.Trim();
+        entity.Guidance = dto.Guidance.Trim();
+        entity.IsEnabled = dto.IsEnabled;
+        entity.SortOrder = dto.SortOrder;
+
+        if (dto.Timer == null)
+        {
+            entity.TimerHour = null;
+            entity.TimerMinute = null;
+            entity.TimerWeekdays = null;
+            entity.TimerInterval = null;
+            entity.TimerFromUtc = null;
+            entity.TimerUntilUtc = null;
+            return;
+        }
+
+        entity.TimerHour = dto.Timer.Hour;
+        entity.TimerMinute = dto.Timer.Minute;
+        entity.TimerWeekdays = (Weekdays)dto.Timer.Weekdays;
+        entity.TimerInterval = (RecurrenceInterval)dto.Timer.Interval;
+        entity.TimerFromUtc = dto.Timer.FromUtc;
+        entity.TimerUntilUtc = dto.Timer.UntilUtc;
+    }
+
+    private static bool TryValidatePromptRule(PromptRuleUpsertDto? dto, out string? error)
+    {
+        if (dto == null)
+        {
+            error = "Prompt-Regel-Daten sind erforderlich";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Name))
+        {
+            error = "Name ist erforderlich";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Guidance))
+        {
+            error = "Guidance ist erforderlich";
+            return false;
+        }
+
+        if (dto.Timer != null)
+        {
+            if (dto.Timer.Hour < 0 || dto.Timer.Hour > 23)
+            {
+                error = "Timer-Stunde muss zwischen 0 und 23 liegen";
+                return false;
+            }
+
+            if (dto.Timer.Minute < 0 || dto.Timer.Minute > 59)
+            {
+                error = "Timer-Minute muss zwischen 0 und 59 liegen";
+                return false;
+            }
+
+            if (dto.Timer.Weekdays <= 0)
+            {
+                error = "Timer-Wochentage muessen gesetzt sein";
+                return false;
+            }
+
+            if (!Enum.IsDefined(typeof(RecurrenceInterval), dto.Timer.Interval))
+            {
+                error = "Timer-Intervall ist ungueltig";
+                return false;
+            }
+        }
+
+        error = null;
+        return true;
+    }
+
+    private async Task ReloadPromptRulesAsync(CancellationToken cancellationToken = default)
+    {
+        await _promptProvider.ReloadAsync(cancellationToken);
+        _promptRuleStore.ReloadFromProvider();
     }
 
     #endregion

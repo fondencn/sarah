@@ -7,8 +7,7 @@ namespace Sarah.API.Interfaces
     {
         bool IsOn { get; }
         DateTime LastChangeToPowerLow { get; }
-        DateTime LastIncreasePower { get; }
-        DateTime LastDecreasePower { get; }
+        DateTime LastChangeToPowerHigh { get; }
 
         Task SetState(bool newValue);
         void ToggleState();

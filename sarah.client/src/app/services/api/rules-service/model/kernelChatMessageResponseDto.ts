@@ -9,10 +9,7 @@
  */
 
 
-export interface RuleExecutionLogDtoModel {
-    id?: number;
-    ruleName: string;
-    triggeredAt: string;
-    success: boolean;
-    errorMessage?: string | null;
+export interface KernelChatMessageResponseDtoModel { 
+    assistantMessage?: string | null;
 }
+

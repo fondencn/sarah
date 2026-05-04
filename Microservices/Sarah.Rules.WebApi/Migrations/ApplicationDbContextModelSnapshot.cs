@@ -100,6 +100,96 @@ namespace Sarah.Rules.WebApi.Migrations
                     b.ToTable("TemperatureSchedules", (string)null);
                 });
 
+            modelBuilder.Entity("Sarah.Rules.WebApi.Data.Entities.KernelConversationMessageEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConversationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc");
+
+                    b.ToTable("KernelConversationMessages", (string)null);
+                });
+
+            modelBuilder.Entity("Sarah.Rules.WebApi.Data.Entities.PromptRuleEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Guidance")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("TimerFromUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("TimerHour")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TimerInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TimerMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("TimerUntilUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("TimerWeekdays")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsEnabled");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("PromptRules", (string)null);
+                });
+
             modelBuilder.Entity("Sarah.Rules.WebApi.Data.Entities.RuleExecutionLogEntity", b =>
                 {
                     b.Property<long>("Id")

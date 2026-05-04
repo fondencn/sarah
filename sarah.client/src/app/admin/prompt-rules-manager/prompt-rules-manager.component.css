@@ -1,0 +1,9 @@
+.prompt-rule-editor {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}

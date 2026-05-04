@@ -534,8 +534,7 @@ public class DevicesController : ControllerBase
             {
                 IsOn = wp.IsOn,
                 LastChangeToPowerLow = wp.LastChangeToPowerLow,
-                LastIncreasePower = wp.LastIncreasePower,
-                LastDecreasePower = wp.LastDecreasePower
+                LastChangeToPowerHigh = wp.LastChangeToPowerHigh
             };
         }
         return null;

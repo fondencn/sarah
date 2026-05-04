@@ -37,7 +37,7 @@
                       <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: item.itemId }"
                         class="text-decoration-none">{{ item.title }}</a>
                     </h5>
-                    <div class="card-text" [innerHTML]="item.description"></div>
+                    <!-- <div class="card-text" [innerHTML]="item.description"></div> -->
                     <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
                         <!-- <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
@@ -166,7 +166,7 @@
                       <a [routerLink]="['/home/details']" [queryParams]="{ type: 'scene', id: item.itemId }"
                         class="text-decoration-none">{{ item.title }}</a>
                     </h5>
-                    <div class="card-text" [innerHTML]="item.description"></div>
+                    <!-- <div class="card-text" [innerHTML]="item.description"></div> -->
                   </div>
                   <div class="col-2 d-flex align-items-center justify-content-center">
                     <img class="big-icon" src="assets/icons/play.svg" alt="Scene">
@@ -192,7 +192,7 @@
                       <a [routerLink]="['/home/details']" [queryParams]="{ type: 'room', id: item.itemId }"
                         class="text-decoration-none">{{ item.title }}</a>
                     </h5>
-                    <div class="card-text" [innerHTML]="item.description"></div>
+                    <!-- <div class="card-text" [innerHTML]="item.description"></div> -->
                     <ul class="list-unstyled mt-2 mb-0 small">
                       <li *ngIf="item.averageTemperature !== null && item.averageTemperature !== undefined">
                         🌡️ {{ item.averageTemperature }} °C
@@ -234,7 +234,7 @@
                       {{ item.title }}
                     </h5>
 
-                    <div class="card-text" [innerHTML]="item.description"></div>
+                    <!-- <div class="card-text" [innerHTML]="item.description"></div> -->
 
                     <div *ngIf="item.currentGeoFence" class="mt-2">
                       <span class="badge bg-light text-dark">

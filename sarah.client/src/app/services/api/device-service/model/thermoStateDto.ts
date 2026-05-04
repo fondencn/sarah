@@ -1,5 +1,5 @@
 /**
- * Sarah Rules Service API
+ * Sarah Device Service API
  *
  * 
  *
@@ -9,9 +9,7 @@
  */
 
 
-export interface RuleOverviewDtoModel {
-    name: string;
-    lastOccurence?: string | null;
-    hasCondition: boolean;
-    hasAction: boolean;
+export interface ThermoStateDtoModel { 
+    temperatureSetpoint?: number | null;
 }
+

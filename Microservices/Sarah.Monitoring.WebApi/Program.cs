@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.API.Interfaces.Services;
 using Sarah.Monitoring;
+using Sarah.Monitoring.Clients;
 using Sarah.ServiceClients;
 using Sarah.ServiceDefaults;
 
@@ -63,6 +64,15 @@ builder.Services.AddHttpClient<RoomServiceClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<ClientCredentialsHandler>();
+
+// Register HTTP client for StromGedacht OpenAPI
+builder.Services.AddHttpClient<StromGedachtNowApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["StromGedacht:BaseUrl"]
+        ?? "https://api.stromgedacht.de";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

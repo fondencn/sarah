@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
+using Sarah.Rules.Services.Kernel;
 
 namespace Sarah.Rules
 {
@@ -21,6 +22,8 @@ namespace Sarah.Rules
     {
         private readonly RabbitMQClient _rabbitMQ;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly SmartHomeKernelService _smartHomeKernel;
+        private readonly Sarah.Rules.Services.MessageBasedGridStateProvider _gridStateProvider;
         public IEnumerable<Rule> Rules => this.RuleStores.SelectMany(store => store.Rules);
 
 
@@ -36,11 +39,13 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel, Sarah.Rules.Services.MessageBasedGridStateProvider gridStateProvider) 
         { 
             this._rabbitMQ = rabbitMQ;
             this._logger = logger;
             this._scopeFactory = scopeFactory;
+            this._smartHomeKernel = smartHomeKernel;
+            this._gridStateProvider = gridStateProvider;
             this.Timers = new TimerEngine(rabbitMQ, logger);
         }
 
@@ -128,6 +133,21 @@ namespace Sarah.Rules
                     onMessage: HandleWeatherForecastUpdated,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<BatteryWarningMessage>(
+                    topic: MessageTopics.MonitoringBatteryWarning,
+                    onMessage: HandleBatteryWarning,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<DoorMonitorAlertMessage>(
+                    topic: MessageTopics.MonitoringDoorAlert,
+                    onMessage: HandleDoorMonitorAlert,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<GridStateChangedMessage>(
+                    topic: MessageTopics.MonitoringGridStateChanged,
+                    onMessage: HandleGridStateChanged,
+                    cancellationToken: stoppingToken);
+
                 _logger.LogInformation("RuleService subscribed to all event topics");
 
                 // Keep the service running
@@ -152,7 +172,7 @@ namespace Sarah.Rules
                     message.SceneId, message.SourceNodeId);
 
                 var clickedEvent = new ClickedEvent(message.SourceNodeId, message.SceneId);
-                EvaluateRules(clickedEvent);
+                await EvaluateRules(clickedEvent);
             }
             catch (Exception ex)
             {
@@ -167,7 +187,7 @@ namespace Sarah.Rules
                 _logger.LogDebug("Received timer event from node {NodeId}", message.SourceNodeId);
 
                 var timerEvent = new TimerEvent(message.SourceNodeId);
-                EvaluateRules(timerEvent);
+                await EvaluateRules(timerEvent);
             }
             catch (Exception ex)
             {
@@ -186,7 +206,7 @@ namespace Sarah.Rules
                     message.PersonId, 
                     message.PersonName, 
                     message.IsAvailable);
-                EvaluateRules(availabilityEvent);
+                await EvaluateRules(availabilityEvent);
             }
             catch (Exception ex)
             {
@@ -205,7 +225,7 @@ namespace Sarah.Rules
                     message.PersonName,
                     message.CurrentGeoFenceName, 
                     message.PreviousGeoFenceName); 
-                EvaluateRules(geofenceEvent);
+                await EvaluateRules(geofenceEvent);
             }
             catch (Exception ex)
             {
@@ -225,7 +245,7 @@ namespace Sarah.Rules
                     (Sarah.API.BusinessObjects.AirQualitityLevel)message.Level,
                     message.Message ?? string.Empty,
                     message.RoomName ?? string.Empty);
-                EvaluateRules(airQualityEvent);
+                await EvaluateRules(airQualityEvent);
             }
             catch (Exception ex)
             {
@@ -241,7 +261,7 @@ namespace Sarah.Rules
                     message.SourceNodeId, message.IsOpen);
 
                 var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
-                EvaluateRules(doorEvent);
+                await EvaluateRules(doorEvent);
             }
             catch (Exception ex)
             {
@@ -257,7 +277,7 @@ namespace Sarah.Rules
                     message.SourceNodeId, message.IsPressed);
 
                 var trackerEvent = new TrackerButtonPressedEvent(message.SourceNodeId, message.IsPressed);
-                EvaluateRules(trackerEvent);
+                await EvaluateRules(trackerEvent);
             }
             catch (Exception ex)
             {
@@ -270,8 +290,8 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
-                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastIncreasePower, message.LastDecreasePower);
-                EvaluateRules(evt);
+                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastChangeToPowerHigh);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -285,7 +305,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received multi-sensor state changed event: node {NodeId}", message.SourceNodeId);
                 var evt = new MultiSensorStateChangedEvent(message.SourceNodeId, message.Presence, message.Luminance);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -299,7 +319,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received smoke sensor alert event: node {NodeId}, alarmActive={AlarmActive}", message.SourceNodeId, message.AlarmActive);
                 var evt = new SmokeSensorAlertEvent(message.SourceNodeId, message.AlarmActive);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -365,8 +385,34 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received weather warning event");
-                var evt = new WeatherWarningEvent(message.NewValue ?? string.Empty);
-                EvaluateRules(evt);
+                var warnings = message.Warnings?
+                    .Where(w => !string.IsNullOrWhiteSpace(w))
+                    .ToList()
+                    ?? new List<string>();
+
+                var warningDetails = message.WarningDetails?
+                    .Select(d => new WeatherWarningDetail(
+                        key: d.Key ?? string.Empty,
+                        regionName: d.RegionName,
+                        description: d.Description,
+                        @event: d.Event,
+                        headline: d.Headline,
+                        instruction: d.Instruction,
+                        type: d.Type,
+                        level: d.Level,
+                        startDate: d.StartDate,
+                        endDate: d.EndDate,
+                        isAllDayWarning: d.IsAllDayWarning,
+                        outputString: d.OutputString ?? string.Empty))
+                    .ToList()
+                    ?? new List<WeatherWarningDetail>();
+
+                var evt = new WeatherWarningEvent(
+                    location: message.Location ?? string.Empty,
+                    outputString: message.OutputString ?? string.Empty,
+                    warnings: warnings,
+                    warningDetails: warningDetails);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -380,7 +426,7 @@ namespace Sarah.Rules
             {
                 _logger.LogDebug("Received weather forecast updated event for {Location}", message.Location);
                 var evt = new WeatherForecastUpdatedEvent(message.ForecastStringForToday ?? string.Empty);
-                EvaluateRules(evt);
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
@@ -388,48 +434,119 @@ namespace Sarah.Rules
             }
         }
 
+        private async Task HandleBatteryWarning(BatteryWarningMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received battery warning event with {Count} warnings", message.Warnings.Count);
+                var warnings = message.Warnings
+                    .Select(w => new BatteryDeviceInfo(w.DeviceName, w.BatteryLevel))
+                    .ToList();
+                var evt = new BatteryWarningEvent(warnings);
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling battery warning event");
+            }
+        }
+
+        private async Task HandleDoorMonitorAlert(DoorMonitorAlertMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door monitor alert: {DeviceName}, type={AlertType}",
+                    message.DeviceName, message.AlertType);
+
+                var heatingsTurnedOff = message.HeatingsTurnedOff != null
+                    ? (IReadOnlyList<string>)message.HeatingsTurnedOff.AsReadOnly()
+                    : null;
+
+                IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges = null;
+                if (message.HeatingChanges != null)
+                {
+                    heatingChanges = message.HeatingChanges
+                        .Select(h => new DoorMonitorHeatingChange(h.RoomName, h.RestoredTemperature))
+                        .ToList()
+                        .AsReadOnly();
+                }
+
+                var alertType = message.AlertType switch
+                {
+                    DoorAlertType.Opened   => DoorMonitorAlertType.Opened,
+                    DoorAlertType.StillOpen => DoorMonitorAlertType.StillOpen,
+                    DoorAlertType.Closed   => DoorMonitorAlertType.Closed,
+                    _ => throw new ArgumentOutOfRangeException(nameof(message.AlertType), message.AlertType, "Unknown DoorAlertType value")
+                };
+
+                var evt = new DoorMonitorAlertEvent(
+                    sourceNodeId: message.SourceNodeId,
+                    deviceName: message.DeviceName,
+                    isWindow: message.IsWindow,
+                    alertType: alertType,
+                    openDurationMinutes: message.OpenDurationMinutes,
+                    wasOpenLongEnough: message.WasOpenLongEnough,
+                    roomTemperature: message.RoomTemperature,
+                    heatingsTurnedOff: heatingsTurnedOff,
+                    heatingChanges: heatingChanges,
+                    nextAlertIntervalMinutes: message.NextAlertIntervalMinutes,
+                    isLoud: message.Volume == Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud);
+
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door monitor alert event");
+            }
+        }
+
+        private async Task HandleGridStateChanged(GridStateChangedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received grid state changed event for zip {Zip}: {Previous} -> {Current}",
+                    message.ZipCode, message.PreviousStateText ?? "unknown", message.CurrentStateText);
+
+                _gridStateProvider.Update(message);
+
+                var evt = new GridStateChangedEvent(
+                    zip: message.ZipCode,
+                    currentState: message.CurrentState,
+                    currentStateText: message.CurrentStateText,
+                    previousState: message.PreviousState,
+                    previousStateText: message.PreviousStateText,
+                    changedAtUtc: message.ChangedAtUtc);
+
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling grid state changed event");
+            }
+        }
+
         private object _evaluateRulesLock = new object();
+
+        /// <summary>
+        /// Per-node dedup tracker for broadcast rules (TargetNodeId == 0) triggered by sensor-specific events.
+        /// Key: "{RuleName}|{SourceNodeId}", Value: last fire time.
+        /// </summary>
+        private readonly Dictionary<string, DateTime> _lastOccurrenceByRuleAndNode = new();
 
         /// <summary>
         /// Evaluiert alle Regeln führt bei zutreffen die verbundene Aktion aus
         /// </summary>
-        public void EvaluateRules(NetworkEvent e)
+        public async Task EvaluateRules(NetworkEvent e)
         {
-            lock (_evaluateRulesLock)
+            try
             {
-                foreach (var rule in Rules.Where(r => r.Condition != null && (r.Condition.TargetNodeId == e.SourceNodeId || r.Condition.TargetNodeId == 0)))
-                {
-                    try
-                    {
-                        bool hasOccuredLately = rule.LastOccurence.HasValue && (DateTime.Now - rule.LastOccurence.Value).TotalSeconds < 5;
-                        if (hasOccuredLately)
-                        {
-                            _logger.LogDebug("Rule {RuleName} skipped – fired too recently (last: {LastOccurence})", rule.Name, rule.LastOccurence);
-                            continue;
-                        }
-
-                        bool conditionMet = rule.Condition != null && rule.Condition.Evaluate(e);
-                        if (conditionMet)
-                        {
-                            if (rule.Name != null && rule.Action != null)
-                            {
-                                _logger.LogInformation("Regel {RuleName} aktiviert", rule.Name);
-                                rule.Action.Execute(e);
-                                rule.LastOccurence = DateTime.Now;
-                                _ = WriteExecutionLogAsync(rule.Name, success: true);
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogDebug("Rule {RuleName} condition not met for event {EventType} from node {NodeId}", rule.Name, e.GetType().Name, e.SourceNodeId);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "RuleEngine: Error while evaluating rule {RuleName}", rule.Name);
-                        _ = WriteExecutionLogAsync(rule.Name ?? "Unknown", success: false, errorMessage: ex.Message);
-                    }
-                }
+                await _smartHomeKernel.ProcessEventAsync(e);
+                await WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Semantic Kernel error while processing event {EventType}", e.GetType().Name);
+                await WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: false, errorMessage: ex.Message);
             }
         }
 
@@ -516,7 +633,7 @@ namespace Sarah.Rules
         /// <returns></returns>
         public Task Notify(NetworkEvent e)
         {
-            return Task.Run(() => this.EvaluateRules(e));
+            return _smartHomeKernel.ProcessEventAsync(e);
         }
 
         /// <summary>

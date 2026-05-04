@@ -7,6 +7,7 @@ using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 using Sarah.ServiceClients;
+using SpeechVolume = Sarah.Messaging.RabbitMQ.Messages.SpeechVolume;
 
 namespace Sarah.Monitoring.Monitors
 {
@@ -347,14 +348,22 @@ namespace Sarah.Monitoring.Monitors
                 int lastMinutes = -1;
                 TimeSpan waitTime = this.SensorThreshold;
                 bool isInitialLoop = true;
-                string artikel = this.Device.Name!.IndexOf("Fenster", StringComparison.OrdinalIgnoreCase) >= 0 ?
-                    "Das" : "Die";
+                bool isWindow = this.Device.Name!.IndexOf("Fenster", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool isLoud = DoorMonitor.WarnLouderNodeIds.Contains((byte)this.Device.NodeId);
 
                 while (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
                 {
                     if (this.WarnAtOpen && isInitialLoop)
                     {
-                        await _rabbitMQ.PublishAsync(new SayMessage(artikel + " " + this.Device.Name + " wurde geöffnet."));
+                        await _rabbitMQ.PublishAsync(new DoorMonitorAlertMessage
+                        {
+                            SourceNodeId = (byte)this.Device.NodeId,
+                            DeviceName = this.Device.Name!,
+                            IsWindow = isWindow,
+                            WasOpenLongEnough = this.WarnAtOpen, // Bei sofortiger Warnung ist die Tür ja schon "lange genug" offen für die Sprachausgabe
+                            AlertType = DoorAlertType.Opened,
+                            Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
+                        });
                         isInitialLoop = false;
                     }
 
@@ -378,66 +387,47 @@ namespace Sarah.Monitoring.Monitors
                             if (minutes != lastMinutes)
                             {
                                 lastMinutes = minutes;
-                                string sayMsg;
-                                if (minutes == 0)
+
+                                /* Nächsten Meldeintervall berechnen */
+                                int? nextAlertIntervalMinutes = null;
+                                if (sensorState?.State == DoorSensorState.Offen)
                                 {
-                                    sayMsg = artikel + " " + this.Device.Name + " ist seit kurzem offen.";
-                                }
-                                else if (minutes == 1)
-                                {
-                                    sayMsg = artikel + " " + this.Device.Name + " ist eine Minute offen.";
-                                }
-                                else
-                                {
-                                    sayMsg = artikel + " " + this.Device.Name + " ist " + minutes + " Minuten offen. ";
-                                    if (sensorState?.State == DoorSensorState.Offen)
+                                    if (openTime >= TimeSpan.FromMinutes(15) && openTime < TimeSpan.FromMinutes(20) && waitTime < TimeSpan.FromMinutes(15))
                                     {
-                                        if (openTime >= TimeSpan.FromMinutes(15) && openTime < TimeSpan.FromMinutes(20) && waitTime < TimeSpan.FromMinutes(15))
-                                        {
-                                            sayMsg += $"Die nächste Information erfolgt in 15 Minuten. ";
-                                            waitTime = TimeSpan.FromMinutes(15);
-                                        }
-
-                                        else if (openTime >= TimeSpan.FromMinutes(30) && openTime < TimeSpan.FromMinutes(65) && waitTime < TimeSpan.FromMinutes(30))
-                                        {
-                                            sayMsg += $"Die nächste Information erfolgt in 30 Minuten. ";
-                                            waitTime = TimeSpan.FromMinutes(30);
-                                        }
-
-                                        else if (openTime >= TimeSpan.FromMinutes(60) && openTime < TimeSpan.FromMinutes(125) && waitTime < TimeSpan.FromMinutes(60))
-                                        {
-                                            sayMsg += $"Die nächste Information erfolgt in einer Stunde. ";
-                                            waitTime = TimeSpan.FromMinutes(60);
-                                        }
-
-                                        else if (openTime >= TimeSpan.FromMinutes(120) && openTime < TimeSpan.FromMinutes(185) && waitTime < TimeSpan.FromMinutes(120))
-                                        {
-                                            sayMsg += $"Die nächste Information erfolgt in zwei Stunden. ";
-                                            waitTime = TimeSpan.FromMinutes(120);
-                                        }
-
-                                        else if (openTime >= TimeSpan.FromMinutes(240) && openTime < TimeSpan.FromMinutes(245) && waitTime < TimeSpan.FromMinutes(240))
-                                        {
-                                            sayMsg += $"Die nächste Information erfolgt in vier Stunden. ";
-                                            waitTime = TimeSpan.FromMinutes(240);
-                                        }
+                                        nextAlertIntervalMinutes = 15;
+                                        waitTime = TimeSpan.FromMinutes(15);
+                                    }
+                                    else if (openTime >= TimeSpan.FromMinutes(30) && openTime < TimeSpan.FromMinutes(65) && waitTime < TimeSpan.FromMinutes(30))
+                                    {
+                                        nextAlertIntervalMinutes = 30;
+                                        waitTime = TimeSpan.FromMinutes(30);
+                                    }
+                                    else if (openTime >= TimeSpan.FromMinutes(60) && openTime < TimeSpan.FromMinutes(125) && waitTime < TimeSpan.FromMinutes(60))
+                                    {
+                                        nextAlertIntervalMinutes = 60;
+                                        waitTime = TimeSpan.FromMinutes(60);
+                                    }
+                                    else if (openTime >= TimeSpan.FromMinutes(120) && openTime < TimeSpan.FromMinutes(185) && waitTime < TimeSpan.FromMinutes(120))
+                                    {
+                                        nextAlertIntervalMinutes = 120;
+                                        waitTime = TimeSpan.FromMinutes(120);
+                                    }
+                                    else if (openTime >= TimeSpan.FromMinutes(240) && openTime < TimeSpan.FromMinutes(245) && waitTime < TimeSpan.FromMinutes(240))
+                                    {
+                                        nextAlertIntervalMinutes = 240;
+                                        waitTime = TimeSpan.FromMinutes(240);
                                     }
                                 }
 
-
-                                /* Raumtemperatur ansagen */
+                                /* Raumtemperatur ermitteln */
+                                float? roomTemperature = null;
                                 if (this.Room != null)
                                 {
                                     try
                                     {
                                         float? avgTemp = await _deviceServiceClient.GetRoomAverageTemperatureAsync(this.Room.Id);
-                                        if (avgTemp.HasValue)
-                                        {
-                                            if (avgTemp.Value < 18f)
-                                                sayMsg += $" Die Raumtemperatur beträgt nur noch {avgTemp.Value:F1} Grad.";
-                                            else if (avgTemp.Value > 26f)
-                                                sayMsg += $" Die Raumtemperatur beträgt {avgTemp.Value:F1} Grad.";
-                                        }
+                                        if (avgTemp.HasValue && (avgTemp.Value < 18f || avgTemp.Value > 26f))
+                                            roomTemperature = avgTemp.Value;
                                     }
                                     catch (Exception ex)
                                     {
@@ -446,6 +436,7 @@ namespace Sarah.Monitoring.Monitors
                                 }
 
                                 /* Wenn Heizkörper zugeordnet sind und noch nicht ausgeschaltet wurden... */
+                                List<string>? heatingsTurnedOff = null;
                                 if (this.AssociatedHeatings?.Any() == true && !this.OriginalHeatingTemperatures.Any())
                                 {
                                     foreach (byte heatingId in this.AssociatedHeatings)
@@ -478,43 +469,37 @@ namespace Sarah.Monitoring.Monitors
 
                                     if (this.OriginalHeatingTemperatures.Any())
                                     {
-                                        var roomNames = this.OriginalHeatingTemperatures
+                                        heatingsTurnedOff = this.OriginalHeatingTemperatures
                                             .Select(kv => _heatingInfo.TryGetValue(kv.Key, out HeatingInfo? info) ? info.RoomName : null)
-                                            .Where(n => n != null).Distinct().ToList();
-                                        sayMsg += " Heizung" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "")
-                                            + " im " + string.Join(" und ", roomNames) + " ausgeschalt"
-                                            + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "et");
+                                            .Where(n => n != null).Distinct()
+                                            .Select(n => n!)
+                                            .ToList();
                                     }
+                                }
 
-                                }
-                                if (DoorMonitor.WarnLouderNodeIds.Contains((byte)this.Device.NodeId))
+                                await _rabbitMQ.PublishAsync(new DoorMonitorAlertMessage
                                 {
-                                    /* Bei der Haustüre Lautere Sprachausgabe */
-                                    await _rabbitMQ.PublishAsync(new SayMessage(sayMsg, "", Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud));
-                                } 
-                                else 
-                                {
-                                    /* Normale Sprachausgabe */
-                                    await _rabbitMQ.PublishAsync(new SayMessage(sayMsg));
-                                }
+                                    SourceNodeId = (byte)this.Device.NodeId,
+                                    DeviceName = this.Device.Name!,
+                                    IsWindow = isWindow,
+                                    AlertType = DoorAlertType.StillOpen,
+                                    OpenDurationMinutes = minutes,
+                                    WasOpenLongEnough = openTime > this.SensorThreshold,
+                                    RoomTemperature = roomTemperature,
+                                    HeatingsTurnedOff = heatingsTurnedOff,
+                                    NextAlertIntervalMinutes = nextAlertIntervalMinutes,
+                                    Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
+                                });
                             }
                         }
                     }
                     else
                     {
-                        string sayMsg;
-                        if (openTime > this.SensorThreshold)
-                        {
-                            sayMsg = artikel + " " + this.Device.Name + " ist geschlossen. ";
-                        }
-                        else
-                        {
-                            sayMsg = artikel + " " + this.Device.Name + " ist kurzzeitig offen gewesen. ";
-                        }
-
+                        /* Tür/Fenster geschlossen – Heizungen wiederherstellen und Meldung senden */
+                        List<HeatingChangeInfo>? heatingChanges = null;
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            List<string> heatingMsgParts = new List<string>();
+                            heatingChanges = new List<HeatingChangeInfo>();
                             foreach (var origTemp in this.OriginalHeatingTemperatures)
                             {
                                 bool isAnotherWindowOpen = _doorMonitor.GetWindowTrackingsForHeating(origTemp.Key)
@@ -527,22 +512,26 @@ namespace Sarah.Monitoring.Monitors
                                 {
                                     if (info != null)
                                         _ = _deviceServiceClient.SetThermostatTemperatureAsync(info.DbId, origTemp.Value);
-                                    heatingMsgParts.Add($" im {roomLabel} auf {origTemp.Value:F1} Grad gestellt");
+                                    heatingChanges.Add(new HeatingChangeInfo { RoomName = roomLabel, RestoredTemperature = origTemp.Value });
                                 }
                                 else
                                 {
-                                    heatingMsgParts.Add($" im {roomLabel} bleibt aus wegen anderes offenes Fenster");
+                                    heatingChanges.Add(new HeatingChangeInfo { RoomName = roomLabel, RestoredTemperature = null });
                                 }
-                            }
-
-                            if (heatingMsgParts.Any())
-                            {
-                                sayMsg += " Heizung" + (this.OriginalHeatingTemperatures.Count > 1 ? "en" : "")
-                                    + string.Join(" und", heatingMsgParts);
                             }
                         }
 
-                        await _rabbitMQ.PublishAsync(new SayMessage(sayMsg));
+                        await _rabbitMQ.PublishAsync(new DoorMonitorAlertMessage
+                        {
+                            SourceNodeId = (byte)this.Device.NodeId,
+                            DeviceName = this.Device.Name!,
+                            IsWindow = isWindow,
+                            AlertType = DoorAlertType.Closed,
+                            OpenDurationMinutes = (int)openTime.TotalMinutes,
+                            WasOpenLongEnough = openTime > this.SensorThreshold,
+                            HeatingChanges = heatingChanges,
+                            Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
+                        });
 
                         //Ende der Taskausführung!
                         break;

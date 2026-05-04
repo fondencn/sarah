@@ -1,17 +1,12 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.module.ts
-api/admin.service.ts
-api/admin.serviceInterface.ts
 api/api.ts
 configuration.ts
 encoder.ts
 git_push.sh
 index.ts
 model/models.ts
-model/sayRequest.ts
-model/speechVolume.ts
 ng-package.json
 package.json
 param.ts

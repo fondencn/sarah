@@ -12,8 +12,11 @@ import { HttpHeaders }                                       from '@angular/comm
 import { Observable }                                        from 'rxjs';
 
 import { AlarmScheduleEntityModel } from '../model/models';
-import { RuleExecutionLogDtoModel } from '../model/models';
-import { RuleOverviewDtoModel } from '../model/models';
+import { KernelChatMessageRequestDtoModel } from '../model/models';
+import { KernelChatMessageResponseDtoModel } from '../model/models';
+import { KernelConversationMessageDtoModel } from '../model/models';
+import { PromptRuleDtoModel } from '../model/models';
+import { PromptRuleUpsertDtoModel } from '../model/models';
 import { TemperatureScheduleEntityModel } from '../model/models';
 
 
@@ -74,17 +77,61 @@ export interface RulesClientInterface {
     apiRulesAlarmsPost(alarmScheduleEntityModel?: AlarmScheduleEntityModel, extraHttpRequestParams?: any): Observable<AlarmScheduleEntityModel>;
 
     /**
-     * Gets all rules with their overview information (runtime rules from registered rule stores)
+     * 
      * 
      */
-    apiRulesGet(extraHttpRequestParams?: any): Observable<Array<RuleOverviewDtoModel>>;
+    apiRulesKernelConversationDelete(extraHttpRequestParams?: any): Observable<{}>;
 
     /**
-     * Gets the most recent rule execution log entries
      * 
+     * 
+     * @param conversationId 
+     * @param hours 
      * @param limit 
      */
-    apiRulesLogGet(limit?: number, extraHttpRequestParams?: any): Observable<Array<RuleExecutionLogDtoModel>>;
+    apiRulesKernelConversationGet(conversationId?: string, hours?: number, limit?: number, extraHttpRequestParams?: any): Observable<Array<KernelConversationMessageDtoModel>>;
+
+    /**
+     * 
+     * 
+     * @param kernelChatMessageRequestDtoModel 
+     */
+    apiRulesKernelConversationMessagePost(kernelChatMessageRequestDtoModel?: KernelChatMessageRequestDtoModel, extraHttpRequestParams?: any): Observable<KernelChatMessageResponseDtoModel>;
+
+    /**
+     * 
+     * 
+     */
+    apiRulesPromptRulesGet(extraHttpRequestParams?: any): Observable<Array<PromptRuleDtoModel>>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    apiRulesPromptRulesIdDelete(id: number, extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    apiRulesPromptRulesIdGet(id: number, extraHttpRequestParams?: any): Observable<PromptRuleDtoModel>;
+
+    /**
+     * 
+     * 
+     * @param id 
+     * @param promptRuleUpsertDtoModel 
+     */
+    apiRulesPromptRulesIdPut(id: number, promptRuleUpsertDtoModel?: PromptRuleUpsertDtoModel, extraHttpRequestParams?: any): Observable<PromptRuleDtoModel>;
+
+    /**
+     * 
+     * 
+     * @param promptRuleUpsertDtoModel 
+     */
+    apiRulesPromptRulesPost(promptRuleUpsertDtoModel?: PromptRuleUpsertDtoModel, extraHttpRequestParams?: any): Observable<PromptRuleDtoModel>;
 
     /**
      * 
