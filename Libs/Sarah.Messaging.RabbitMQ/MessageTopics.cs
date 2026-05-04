@@ -26,6 +26,12 @@ public static class MessageTopics
     /// </summary>
     public const string SpeechAudioStop = "speech.audio.stop";
 
+    /// <summary>
+    /// Topic for recognized speech input emitted by SpeechServer.
+    /// Contains transcribed user text plus source speaker host metadata.
+    /// </summary>
+    public const string SpeechRecognized = "speech.recognized";
+
     // Network event topics
     
     /// <summary>

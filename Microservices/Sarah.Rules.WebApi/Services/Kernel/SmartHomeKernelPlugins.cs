@@ -17,11 +17,16 @@ namespace Sarah.Rules.Services.Kernel;
 public sealed class SpeechKernelPlugin
 {
     private readonly RabbitMQClient _rabbitMq;
+    private readonly SmartHomeKernelService.ConversationSpeechContext? _speechContext;
     private readonly ILogger<SpeechKernelPlugin> _logger;
 
-    public SpeechKernelPlugin(RabbitMQClient rabbitMq, ILogger<SpeechKernelPlugin> logger)
+    internal SpeechKernelPlugin(
+        RabbitMQClient rabbitMq,
+        SmartHomeKernelService.ConversationSpeechContext? speechContext,
+        ILogger<SpeechKernelPlugin> logger)
     {
         _rabbitMq = rabbitMq;
+        _speechContext = speechContext;
         _logger = logger;
     }
 
@@ -41,9 +46,24 @@ public sealed class SpeechKernelPlugin
             parsedVolume = SpeechVolume.Normal;
         }
 
-        await _rabbitMq.PublishAsync(new SayMessage(text, targetSpeaker, parsedVolume));
-        _logger.LogInformation("Kernel speech output published for speaker '{Speaker}'", targetSpeaker);
+        string resolvedTargetSpeaker = ResolveTargetSpeaker(targetSpeaker, _speechContext?.TargetSpeaker);
+        await _rabbitMq.PublishAsync(new SayMessage(text, resolvedTargetSpeaker, parsedVolume));
+        _speechContext?.MarkSpeechOutput();
+
+        _logger.LogInformation("Kernel speech output published for speaker '{Speaker}'", resolvedTargetSpeaker);
         return $"Sprachausgabe gesendet: {text}";
+    }
+
+    internal static string ResolveTargetSpeaker(string requestedTargetSpeaker, string? fallbackTargetSpeaker)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedTargetSpeaker))
+        {
+            return requestedTargetSpeaker.Trim();
+        }
+
+        return string.IsNullOrWhiteSpace(fallbackTargetSpeaker)
+            ? string.Empty
+            : fallbackTargetSpeaker.Trim();
     }
 }
 

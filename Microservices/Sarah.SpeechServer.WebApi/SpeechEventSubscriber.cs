@@ -9,6 +9,7 @@ public class SpeechEventSubscriber : BackgroundService
 {
     private const int QueueCapacity = 50;
 
+    private readonly string _hostName = Environment.MachineName;
     private readonly ISpeechService _speechService;
     private readonly RabbitMQClient _rabbitMQClient;
     private readonly ILogger<SpeechEventSubscriber> _logger;
@@ -40,7 +41,7 @@ public class SpeechEventSubscriber : BackgroundService
 
             // Subscribe to SayMessage events
             await _rabbitMQClient.SubscribeAsync<SayMessage>(
-                topic: "speech.say",
+                topic: MessageTopics.SpeechSay,
                 onMessage: HandleSayMessage,
                 cancellationToken: stoppingToken);
 
@@ -88,6 +89,15 @@ public class SpeechEventSubscriber : BackgroundService
 
     private Task HandleSayMessage(SayMessage message)
     {
+        if (!ShouldHandleMessageOnThisHost(message, _hostName))
+        {
+            _logger.LogDebug(
+                "Skipping say message targeted to speaker '{TargetSpeaker}' on host '{HostName}'",
+                message.TargetSpeaker,
+                _hostName);
+            return Task.CompletedTask;
+        }
+
         _logger.LogInformation("Received say message: {Message} for speaker: {Speaker}", 
             message.Message, 
             string.IsNullOrEmpty(message.TargetSpeaker) ? "all" : message.TargetSpeaker);
@@ -97,6 +107,21 @@ public class SpeechEventSubscriber : BackgroundService
             _logger.LogWarning("Speech queue is full (capacity {Capacity}); dropping message: {Message}", QueueCapacity, message.Message);
         }
         return Task.CompletedTask;
+    }
+
+    internal static bool ShouldHandleMessageOnThisHost(SayMessage message, string hostName)
+    {
+        if (message == null)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(message.TargetSpeaker))
+        {
+            return true;
+        }
+
+        return string.Equals(message.TargetSpeaker.Trim(), hostName, StringComparison.OrdinalIgnoreCase);
     }
 
     public override void Dispose()

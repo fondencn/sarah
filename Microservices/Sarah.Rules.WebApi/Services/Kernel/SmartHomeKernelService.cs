@@ -10,6 +10,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 using Sarah.Rules.Services.Clients;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
@@ -83,6 +84,11 @@ public sealed class SmartHomeKernelService
 
     public async Task<string> ProcessChatMessageAsync(string userMessage, CancellationToken cancellationToken = default)
     {
+        return await ProcessChatMessageAsync(userMessage, targetSpeaker: string.Empty, cancellationToken);
+    }
+
+    public async Task<string> ProcessChatMessageAsync(string userMessage, string targetSpeaker, CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(userMessage))
             throw new ArgumentException("userMessage must not be empty", nameof(userMessage));
 
@@ -91,7 +97,8 @@ public sealed class SmartHomeKernelService
 
         await PruneConversationHistoryAsync(db, cancellationToken);
 
-        Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider);
+        var speechContext = new ConversationSpeechContext(targetSpeaker);
+        Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider, speechContext);
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
         ChatHistory chatHistory = await BuildChatHistoryAsync(db, userMessage, cancellationToken);
 
@@ -112,6 +119,13 @@ public sealed class SmartHomeKernelService
         if (!string.IsNullOrWhiteSpace(assistantText))
         {
             await PersistConversationTurnAsync(db, response.Role.Label, assistantText, cancellationToken);
+
+            if (!speechContext.HasSpeechOutput)
+            {
+                var rabbitMq = scope.ServiceProvider.GetRequiredService<RabbitMQClient>();
+                await rabbitMq.PublishAsync(new SayMessage(assistantText, speechContext.TargetSpeaker));
+                _logger.LogInformation("Published fallback speech response for speaker '{Speaker}'", speechContext.TargetSpeaker);
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -168,7 +182,7 @@ public sealed class SmartHomeKernelService
         return sb.ToString();
     }
 
-    private Microsoft.SemanticKernel.Kernel BuildKernel(IServiceProvider serviceProvider)
+    private Microsoft.SemanticKernel.Kernel BuildKernel(IServiceProvider serviceProvider, ConversationSpeechContext? speechContext = null)
     {
         _logger.LogDebug("Building kernel with deployment '{Deployment}' at {Endpoint}",
             _options.AzureOpenAI.DeploymentName, _options.AzureOpenAI.Endpoint);
@@ -183,6 +197,7 @@ public sealed class SmartHomeKernelService
         Microsoft.SemanticKernel.Kernel kernel = builder.Build();
         kernel.Plugins.AddFromObject(new SpeechKernelPlugin(
             serviceProvider.GetRequiredService<RabbitMQClient>(),
+            speechContext,
             serviceProvider.GetRequiredService<ILogger<SpeechKernelPlugin>>()), "speech");
         kernel.Plugins.AddFromObject(new AudioKernelPlugin(
             serviceProvider.GetRequiredService<RabbitMQClient>()), "audio");
@@ -209,6 +224,23 @@ public sealed class SmartHomeKernelService
 
         
         return kernel;
+    }
+
+    internal sealed class ConversationSpeechContext
+    {
+        public ConversationSpeechContext(string targetSpeaker)
+        {
+            TargetSpeaker = targetSpeaker ?? string.Empty;
+        }
+
+        public string TargetSpeaker { get; }
+
+        public bool HasSpeechOutput { get; private set; }
+
+        public void MarkSpeechOutput()
+        {
+            HasSpeechOutput = true;
+        }
     }
 
     private async Task<ChatHistory> BuildChatHistoryAsync(ApplicationDbContext db, NetworkEvent evt, CancellationToken cancellationToken)
