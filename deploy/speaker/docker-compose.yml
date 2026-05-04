@@ -2,6 +2,7 @@ services:
   speechserver:
     image: ${REGISTRY:-sarah}/speechserver:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OIDCAuthority=http://${PI_HOST:-pi}:8080/realms/sarah-realm
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@${PI_HOST:-pi}:5672
