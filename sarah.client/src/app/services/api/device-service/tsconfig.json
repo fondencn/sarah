@@ -2,10 +2,11 @@
     "compilerOptions": {
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "ignoreDeprecations": "6.0",
         "noImplicitAny": false,
         "target": "es6",
-        "module": "es6",
-        "moduleResolution": "node",
+        "module": "Node16",
+        "moduleResolution": "node16",
         "removeComments": true,
         "sourceMap": true,
         "outDir": "./dist",

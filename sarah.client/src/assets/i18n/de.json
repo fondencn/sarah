@@ -5,7 +5,8 @@
     "persons": "Personen",
     "rooms": "Räume",
     "alarms": "Wecker",
-    "admin": "Admin"
+    "admin": "Admin",
+    "logout": "Abmelden"
   },
   "common": {
     "on": "An",
@@ -26,7 +27,6 @@
   "home": {
     "welcome": "Willkommen, {{name}}",
     "loggedIn": "Du bist eingeloggt.",
-    "logout": "Abmelden",
     "authNeeded": "Anmeldung erforderlich",
     "pleaseLogin": "Bitte melde dich an.",
     "userLogin": "Anmelden",

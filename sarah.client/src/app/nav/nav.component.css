@@ -72,6 +72,10 @@
   z-index: 1000;
 }
 
+.logout-btn {
+  margin-right: 0.5rem;
+}
+
 .lang-btn {
   font-size: 0.75rem;
   font-weight: 600;

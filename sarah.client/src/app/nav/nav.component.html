@@ -27,6 +27,11 @@
   </div>
   <div class="lang-switcher">
     <button
+      *ngIf="isLoggedIn()"
+      class="btn btn-sm btn-outline-primary logout-btn"
+      (click)="logout()"
+    >{{ 'nav.logout' | translate }}</button>
+    <button
       class="btn btn-sm lang-btn"
       [class.lang-active]="(languageService.currentLang$ | async) === 'de'"
       (click)="setLang('de')"

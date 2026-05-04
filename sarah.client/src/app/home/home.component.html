@@ -1,45 +1,16 @@
 <div class="container-fluid">
   <div class="row g-3">
-    <div class="col-12 col-sm-6 col-lg-4">
-      <div class="card shadow-lg h-100 ">
-        <div class="card-body">
-          <ng-container *ngIf="isLoggedIn() else loginTemplate">
-            <h5 class="card-title">{{ 'home.welcome' | translate:{ name: currentUserDisplayName } }}</h5>
-            <p class="card-text">{{ 'home.loggedIn' | translate }}</p>
-            <button class="btn btn-primary mt-4" (click)="logout()">{{ 'home.logout' | translate }}</button>
-          </ng-container>
-          <ng-template #loginTemplate>
+
+    <!-- Login Button - only visible when not logged in (does never happen!)-->
+    <ng-container *ngIf="!isLoggedIn()">
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card shadow-lg h-100 ">
+          <div class="card-body">
             <h5 class="card-title">{{ 'home.authNeeded' | translate }}</h5>
             <p class="card-text">{{ 'home.pleaseLogin' | translate }}</p>
             <button class="btn btn-primary mt-4" (click)="login()">{{ 'home.userLogin' | translate }}</button>
-          </ng-template>
-        </div>
-      </div>
-    </div>
-
-    <ng-container *ngIf="isLoggedIn()">
-      <div class="col-12 col-sm-6 col-lg-4">
-        <div class="card shadow-lg  h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ 'home.systemStatus' | translate }}</h5>
-            <p class="card-text">
-              {{ statusMessage }}<br />
-              {{ 'home.hostname' | translate }} {{ statusDto?.hostname }}:{{ statusDto?.port }}<br />
-              {{ 'home.authenticated' | translate }} {{ statusDto?.isAuthenticated}}<br />
-	      {{ 'home.username' | translate }} {{ statusDto?.username}} <br />
-              {{ 'home.controller' | translate }} {{ statusDto?.controllerStatus }}
-            </p>
           </div>
         </div>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center justify-content-end">
-        <button class="btn btn-sm"
-          [class.btn-outline-secondary]="!isEditMode"
-          [class.btn-success]="isEditMode"
-          (click)="toggleEditMode()">
-          <span *ngIf="!isEditMode">✏️ {{ 'home.editDashboard' | translate }}</span>
-          <span *ngIf="isEditMode">✅ {{ 'home.doneDashboard' | translate }}</span>
-        </button>
       </div>
     </ng-container>
   </div>
@@ -49,14 +20,9 @@
 <!-- New Row with all dynamic dashboard items -->
 <ng-container *ngIf="isLoggedIn()">
   <div class="container-fluid">
-    <div class="row g-3"
-         cdkDropList
-         cdkDropListOrientation="mixed"
-         (cdkDropListDropped)="onDrop($event)">
+    <div class="row g-3" cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="onDrop($event)">
       <div class="col-12 col-sm-6 col-lg-4" *ngFor="let item of dashboardItems; trackBy: trackByDashboardItem"
-           [@popIn]="animateItems ? 'enabled' : 'disabled'"
-           cdkDrag
-           [cdkDragDisabled]="!isEditMode">
+        [@popIn]="animateItems ? 'enabled' : 'disabled'" cdkDrag [cdkDragDisabled]="!isEditMode">
 
         <ng-container [ngSwitch]="item.itemType">
           <ng-container *ngSwitchCase="ITEM_TYPE_DEVICE">
@@ -68,72 +34,77 @@
                 <div class="row">
                   <div class="col-9">
                     <h5 class="card-title">
-                        <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
+                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'device', id: item.itemId }"
+                        class="text-decoration-none">{{ item.title }}</a>
                     </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                     <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
                         <!-- <button class="btn btn-primary" style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOn(item.itemId)">turn on</button>
                         <button class="btn btn-secondary"  style="margin-right:2px; margin-bottom: 2px; width:85px" *ngIf="item.itemId !== undefined" (click)="switchLampOff(item.itemId)">turn off</button> -->
-                        
+
                         <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" 
-                            [checked]="item.isOn"
+                          <input class="form-check-input" type="checkbox" role="switch" [checked]="item.isOn"
                             (change)="toggleLamp(item.itemId, $event.target)">
-                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ? 'common.on' : 'common.off') | translate }}</label>
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ?
+                            'common.on' : 'common.off') | translate }}</label>
                         </div>
 
                         <div class="d-flex flex-wrap gap-1 mt-1">
-                          <button class="btn btn-secondary btn-sm" style="padding-top: 3px; padding-bottom: 0px;" *ngIf="item.itemId !== undefined">
-                              <input type="color" style="width: 65px; height: 30px;"
-                                [value]="item.lampColor"
-                                (change)="setLampColor(item.itemId, $event.target)" />
+                          <button class="btn btn-secondary btn-sm" style="padding-top: 3px; padding-bottom: 0px;"
+                            *ngIf="item.itemId !== undefined">
+                            <input type="color" style="width: 65px; height: 30px;" [value]="item.lampColor"
+                              (change)="setLampColor(item.itemId, $event.target)" />
                           </button>
-                          <button class="btn btn-sm" style="background-color: #ffe0b2; color: #333;" title="Warm White" *ngIf="item.itemId !== undefined" (click)="setLampWarmWhite(item.itemId)">
+                          <button class="btn btn-sm" style="background-color: #ffe0b2; color: #333;" title="Warm White"
+                            *ngIf="item.itemId !== undefined" (click)="setLampWarmWhite(item.itemId)">
                             ☀️ {{ 'home.warmWhite' | translate }}
                           </button>
-                          <button class="btn btn-sm" style="background-color: #e3f2fd; color: #333;" title="Cold White" *ngIf="item.itemId !== undefined" (click)="setLampColdWhite(item.itemId)">
+                          <button class="btn btn-sm" style="background-color: #e3f2fd; color: #333;" title="Cold White"
+                            *ngIf="item.itemId !== undefined" (click)="setLampColdWhite(item.itemId)">
                             🔵 {{ 'home.coldWhite' | translate }}
                           </button>
                         </div>
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
                         <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" 
-                            [checked]="item.isOn"
+                          <input class="form-check-input" type="checkbox" role="switch" [checked]="item.isOn"
                             (change)="toggleWallplug(item.itemId, $event.target)">
-                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ? 'common.on' : 'common.off') | translate }}</label>
+                          <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">{{ (item.isOn === true ?
+                            'common.on' : 'common.off') | translate }}</label>
                         </div>
                         <span>{{ 'home.powerConsumption' | translate }} {{item.powerConsumption}} W</span>
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
-                        
+
                       </ng-container>
                       <ng-container *ngSwitchCase="'Heizung'">
-                        <app-thermostat-dial
-                          [itemId]="item.itemId"
-                          [temperature]="item.trvTemperature"
-                          [setpoint]="item.trvTemperatureSetpoint"
-                          [battery]="item.trvBattery"
-                          (temperatureSet)="setThermostatTemperatureValue($event.itemId, $event.temperature)"
-                        ></app-thermostat-dial>
+                        <app-thermostat-dial [itemId]="item.itemId" [temperature]="item.trvTemperature"
+                          [setpoint]="item.trvTemperatureSetpoint" [battery]="item.trvBattery"
+                          (temperatureSet)="setThermostatTemperatureValue($event.itemId, $event.temperature)"></app-thermostat-dial>
                       </ng-container>
                       <ng-container *ngSwitchCase="'DoorSensor'">
                         <div class="mt-1">
                           <span class="badge" [ngClass]="item.doorIsOpen ? 'bg-danger' : 'bg-success'">
                             {{ (item.doorIsOpen ? 'common.open' : 'common.closed') | translate }}
                           </span>
-                          <span *ngIf="item.doorIsOpen && item.doorLastOpenDurationMinutes !== null" class="ms-2 small text-white-50">
-                            {{ 'home.openFor' | translate }} {{ item.doorLastOpenDurationMinutes | number:'1.0-1' }} {{ 'home.minutesAbbr' | translate }}
+                          <span *ngIf="item.doorIsOpen && item.doorLastOpenDurationMinutes !== null"
+                            class="ms-2 small text-white-50">
+                            {{ 'home.openFor' | translate }} {{ item.doorLastOpenDurationMinutes | number:'1.0-1' }} {{
+                            'home.minutesAbbr' | translate }}
                           </span>
                         </div>
                       </ng-container>
                       <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
                         <ul class="list-unstyled mt-1 mb-0 small">
-                          <li *ngIf="item.airTemperature !== null && item.airTemperature !== undefined">🌡️ {{ item.airTemperature | number:'1.1-1' }} °C</li>
-                          <li *ngIf="item.airHumidity !== null && item.airHumidity !== undefined">💧 {{ item.airHumidity | number:'1.1-1' }} %</li>
-                          <li *ngIf="item.airCO2 !== null && item.airCO2 !== undefined">🫁 CO₂ {{ item.airCO2 | number:'1.0-0' }} ppm</li>
-                          <li *ngIf="item.airVOC !== null && item.airVOC !== undefined">🧪 VOC {{ item.airVOC | number:'1.0-0' }} ppb</li>
+                          <li *ngIf="item.airTemperature !== null && item.airTemperature !== undefined">🌡️ {{
+                            item.airTemperature | number:'1.1-1' }} °C</li>
+                          <li *ngIf="item.airHumidity !== null && item.airHumidity !== undefined">💧 {{ item.airHumidity
+                            | number:'1.1-1' }} %</li>
+                          <li *ngIf="item.airCO2 !== null && item.airCO2 !== undefined">🫁 CO₂ {{ item.airCO2 |
+                            number:'1.0-0' }} ppm</li>
+                          <li *ngIf="item.airVOC !== null && item.airVOC !== undefined">🧪 VOC {{ item.airVOC |
+                            number:'1.0-0' }} ppb</li>
                         </ul>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
@@ -141,18 +112,20 @@
                           &nbsp;
                         </div>
                       </ng-container>
-                    </ng-container> 
+                    </ng-container>
                   </div>
                   <div class="col-3 d-flex align-items-center justify-content-center">
                     <ng-container [ngSwitch]="item.subType">
                       <ng-container *ngSwitchCase="'Lampe'">
-                        <img class="big-icon" src="assets/icons/lightbulb.svg" [alt]="item.subType" [title]="item.subType">
+                        <img class="big-icon" src="assets/icons/lightbulb.svg" [alt]="item.subType"
+                          [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchCase="'Steckdose'">
                         <img class="big-icon" src="assets/icons/plug.svg" [alt]="item.subType" [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchCase="'LoraWanGpsTracker'">
-                        <img class="big-icon" src="assets/icons/location.svg" [alt]="item.subType" [title]="item.subType">
+                        <img class="big-icon" src="assets/icons/location.svg" [alt]="item.subType"
+                          [title]="item.subType">
                       </ng-container>
                       <ng-container *ngSwitchCase="'Heizung'">
                         <span style="font-size: 2.5rem;" [title]="item.subType">🌡️</span>
@@ -165,11 +138,12 @@
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
-                          <img class="big-icon" src="assets/icons/settings.svg" [alt]="item.subType" [title]="item.subType">
+                          <img class="big-icon" src="assets/icons/settings.svg" [alt]="item.subType"
+                            [title]="item.subType">
                           <small>{{ item.subType }}</small>
                         </div>
                       </ng-container>
-                    </ng-container> 
+                    </ng-container>
                   </div>
                 </div>
               </div>
@@ -189,7 +163,8 @@
                 <div class="row">
                   <div class="col-10">
                     <h5 class="card-title">
-                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'scene', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
+                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'scene', id: item.itemId }"
+                        class="text-decoration-none">{{ item.title }}</a>
                     </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                   </div>
@@ -214,7 +189,8 @@
                 <div class="row">
                   <div class="col-9">
                     <h5 class="card-title">
-                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'room', id: item.itemId }" class="text-decoration-none">{{ item.title }}</a>
+                      <a [routerLink]="['/home/details']" [queryParams]="{ type: 'room', id: item.itemId }"
+                        class="text-decoration-none">{{ item.title }}</a>
                     </h5>
                     <div class="card-text" [innerHTML]="item.description"></div>
                     <ul class="list-unstyled mt-2 mb-0 small">
@@ -246,15 +222,14 @@
           </ng-container>
           <ng-container *ngSwitchCase="ITEM_TYPE_PERSON">
             <div class="card shadow-lg h-100 card-person" [class.card-edit-mode]="isEditMode"
-                 [style.cursor]="isEditMode ? 'default' : 'pointer'"
-                 (click)="!isEditMode && showPersonMap(item)">
+              [style.cursor]="isEditMode ? 'default' : 'pointer'" (click)="!isEditMode && showPersonMap(item)">
               <div *ngIf="isEditMode" class="drag-handle card-header py-1 px-2 text-center" cdkDragHandle>
                 <span class="drag-handle-icon">⠿</span>
               </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-10">
-                    
+
                     <h5 class="card-title">
                       {{ item.title }}
                     </h5>
@@ -269,7 +244,9 @@
 
                     <div class="mt-2">
                       <small class="text-white-50">
-                        <img src="assets/icons/location.svg" alt="Map" style="width:12px;height:12px;filter:brightness(0) invert(1);opacity:0.7;"> {{ 'home.clickToShowOnMap' | translate }}
+                        <img src="assets/icons/location.svg" alt="Map"
+                          style="width:12px;height:12px;filter:brightness(0) invert(1);opacity:0.7;"> {{
+                        'home.clickToShowOnMap' | translate }}
                       </small>
                     </div>
                   </div>
@@ -305,8 +282,18 @@
         </ng-container>
       </div>
     </div>
+
+    <!-- Edit / Done Dashboard button - centered below the grid -->
+    <div class="edit-dashboard-bar">
+      <button class="btn edit-dashboard-btn"
+        [class.edit-dashboard-btn--normal]="!isEditMode"
+        [class.edit-dashboard-btn--active]="isEditMode"
+        (click)="toggleEditMode()">
+        <span *ngIf="!isEditMode">✏️ {{ 'home.editDashboard' | translate }}</span>
+        <span *ngIf="isEditMode">✅ {{ 'home.doneDashboard' | translate }}</span>
+      </button>
+    </div>
   </div>
 </ng-container>
 
 <app-person-map-modal #personMapModal></app-person-map-modal>
-
