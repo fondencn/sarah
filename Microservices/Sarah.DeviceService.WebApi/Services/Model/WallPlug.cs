@@ -26,6 +26,11 @@ namespace Sarah.DeviceService.Model
         private SensorData _meter_W = new SensorData(0, "W");
         private SensorData _meter_A = new SensorData(0, "A");
         private DateTime _lastStateChange;
+        private bool _hasPublishedWallPlugState;
+        private bool _lastPublishedIsOn;
+        private float _lastPublishedCurrentWattage;
+        private DateTime _lastPublishedPowerLow;
+        private DateTime _lastPublishedPowerHigh;
         protected readonly NetworkElementPublisher _publisher;
 
         protected WallPlug(byte nodeid, NetworkElementPublisher publisher, ILogger logger) : base(nodeid, logger)
@@ -40,8 +45,9 @@ namespace Sarah.DeviceService.Model
         /// <returns>Task</returns>
         public abstract Task SetState(bool newState);
 
-        private float PowerHighThreshold { get; } = 20; // 20 W veränderung bedeutet: Jemand hat was angemacht
-        private float PowerLowThreshold { get; } = -20; // -20 W veränderung bedeutet: Jemand hat was ausgemacht
+        private float PowerHighThreshold { get; } = 20f; // 20 W veränderung bedeutet: Jemand hat was angemacht
+        private float PowerLowThreshold { get; } = -20f; // -20 W veränderung bedeutet: Jemand hat was ausgemacht
+        private float ClearNonZeroWattageThreshold { get; } = 5.0f;
 
         /// <summary>
         /// ClassDescription
@@ -56,7 +62,20 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Status des Schalters (an oder aus)
         /// </summary>
-        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); _ = _publisher.ReportWallPlugStateChanged(this, value, this.LastChangeToPowerLow, this.LastChangeToPowerHigh); } } }
+        public bool IsOn
+        {
+            get => _isOn;
+            protected set
+            {
+                if (this._isOn != value)
+                {
+                    this._isOn = value;
+                    this._lastStateChange = DateTime.Now;
+                    _ = _publisher.ReportEvent(this, nameof(IsOn), value);
+                    ReportWallPlugStateChangedIfChanged();
+                }
+            }
+        }
 
         /// <summary>
         /// Meter in Kilowattstunden
@@ -88,18 +107,21 @@ namespace Sarah.DeviceService.Model
                         this.LastChangeToPowerLow = DateTime.Now;
                         reportChanges = true;
                     }
-                    else if (oldVal <= PowerHighThreshold && newVal > PowerHighThreshold)
+
+                    if (IsZero(oldVal) && newVal > PowerHighThreshold && newVal >= ClearNonZeroWattageThreshold)
                     {
                         this.LastChangeToPowerHigh = DateTime.Now;
                         reportChanges = true;
                     }
-                    if (reportChanges)
-                    {
-                        _ = _publisher.ReportWallPlugStateChanged(this, this.IsOn, this.LastChangeToPowerLow, this.LastChangeToPowerHigh);
-                    }
                 }
+
                 _meter_W = value;
                 _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
+
+                if (oldVal != newVal || reportChanges)
+                {
+                    ReportWallPlugStateChangedIfChanged();
+                }
             }
         }
 
@@ -123,6 +145,35 @@ namespace Sarah.DeviceService.Model
         /// Gibt an, ob das Gerät gerade eingeschaltget ist
         /// </summary>
         public override bool? IsActive => this.IsOn;
+
+        private bool IsZero(float value) => Math.Abs(value) < 0.001f;
+
+        private void ReportWallPlugStateChangedIfChanged()
+        {
+            float currentWattage = this.Meter_W?.Value ?? 0;
+
+            if (_hasPublishedWallPlugState
+                && _lastPublishedIsOn == this.IsOn
+                && _lastPublishedCurrentWattage == currentWattage
+                && _lastPublishedPowerLow == this.LastChangeToPowerLow
+                && _lastPublishedPowerHigh == this.LastChangeToPowerHigh)
+            {
+                return;
+            }
+
+            _hasPublishedWallPlugState = true;
+            _lastPublishedIsOn = this.IsOn;
+            _lastPublishedCurrentWattage = currentWattage;
+            _lastPublishedPowerLow = this.LastChangeToPowerLow;
+            _lastPublishedPowerHigh = this.LastChangeToPowerHigh;
+
+            _ = _publisher.ReportWallPlugStateChanged(
+                this,
+                this.IsOn,
+                currentWattage,
+                this.LastChangeToPowerLow,
+                this.LastChangeToPowerHigh);
+        }
 
 
         protected DateTime LastMeterReport { get; set; }
