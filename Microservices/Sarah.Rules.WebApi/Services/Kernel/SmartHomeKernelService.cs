@@ -143,7 +143,7 @@ public sealed class SmartHomeKernelService
 
     internal async Task<int> PruneConversationHistoryAsync(ApplicationDbContext db, CancellationToken cancellationToken)
     {
-        DateTime cutoff = DateTime.UtcNow.AddHours(-_options.ConversationRetentionHours);
+        DateTime cutoff = GetConversationCutoffUtc(DateTime.UtcNow);
         var expired = await db.KernelConversationMessages
             .Where(m => m.ConversationId == ConversationId && m.CreatedAtUtc < cutoff)
             .ToListAsync(cancellationToken);
@@ -160,6 +160,21 @@ public sealed class SmartHomeKernelService
         }
 
         return expired.Count;
+    }
+
+    internal DateTime GetConversationCutoffUtc(DateTime utcNow)
+    {
+        return utcNow.AddHours(-_options.ConversationRetentionHours);
+    }
+
+    internal IQueryable<KernelConversationMessageEntity> QueryRetainedConversationMessages(ApplicationDbContext db, DateTime utcNow)
+    {
+        DateTime cutoff = GetConversationCutoffUtc(utcNow);
+
+        return db.KernelConversationMessages
+            .Where(m => m.ConversationId == ConversationId && m.CreatedAtUtc >= cutoff)
+            .OrderBy(m => m.CreatedAtUtc)
+            .Take(_options.MaxHistoryMessages);
     }
 
     internal string BuildEventPrompt(NetworkEvent evt)
@@ -248,10 +263,7 @@ public sealed class SmartHomeKernelService
         var history = new ChatHistory();
         history.AddSystemMessage(_promptProvider.BuildSystemPrompt());
 
-        var messages = await db.KernelConversationMessages
-            .Where(m => m.ConversationId == ConversationId)
-            .OrderBy(m => m.CreatedAtUtc)
-            .Take(_options.MaxHistoryMessages)
+        var messages = await QueryRetainedConversationMessages(db, DateTime.UtcNow)
             .ToListAsync(cancellationToken);
 
         foreach (var message in messages)
@@ -268,10 +280,7 @@ public sealed class SmartHomeKernelService
         var history = new ChatHistory();
         history.AddSystemMessage(_promptProvider.BuildSystemPrompt());
 
-        var messages = await db.KernelConversationMessages
-            .Where(m => m.ConversationId == ConversationId)
-            .OrderBy(m => m.CreatedAtUtc)
-            .Take(_options.MaxHistoryMessages)
+        var messages = await QueryRetainedConversationMessages(db, DateTime.UtcNow)
             .ToListAsync(cancellationToken);
 
         foreach (var message in messages)
