@@ -62,11 +62,16 @@ namespace Sarah.DeviceService.WebApi.Extensions
         }
 
         /// <summary>
-        /// Publishes a door-state-changed event so Rules can evaluate DoorSensorCondition.
+        /// Publishes a door-state-changed event on the generic network-events topic.
         /// </summary>
         public async Task ReportDoorStateChanged(NetworkElement element, bool isOpen)
         {
-            var message = new DoorSensorStateChangedMessage(element.NodeID, isOpen);
+            var message = new NetworkEventMessage<bool>
+            {
+                SourceNodeId = element.NodeID,
+                Property = "DoorState",
+                NewValue = isOpen
+            };
             await _rabbitMQClient.PublishAsync(message);
         }
 

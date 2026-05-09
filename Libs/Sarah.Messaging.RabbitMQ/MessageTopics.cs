@@ -59,12 +59,6 @@ public static class MessageTopics
     public const string NetworkEventsAirQuality = "network.events.airquality";
 
     /// <summary>
-    /// Topic for door/window sensor open/close state changes.
-    /// Published when a door or window sensor changes its open/closed state.
-    /// </summary>
-    public const string NetworkEventsDoorState = "network.events.doorstate";
-
-    /// <summary>
     /// Topic for GPS tracker SOS button press events.
     /// Published when the button on a LoRaWAN GPS tracker is pressed or released.
     /// </summary>
