@@ -46,8 +46,8 @@ namespace Sarah.DeviceService.Model
         public abstract Task SetState(bool newState);
 
         private float PowerHighThreshold { get; } = 20f; // 20 W veränderung bedeutet: Jemand hat was angemacht
-        private float PowerLowThreshold { get; } = -20f; // -20 W veränderung bedeutet: Jemand hat was ausgemacht
-        private float ClearNonZeroWattageThreshold { get; } = 5.0f;
+        private float PowerLowThreshold { get; } = 20f; // 20 W veränderung bedeutet: Jemand hat was ausgemacht
+
 
         /// <summary>
         /// ClassDescription
@@ -108,15 +108,15 @@ namespace Sarah.DeviceService.Model
                         reportChanges = true;
                     }
 
-                    if (IsZero(oldVal) && newVal > PowerHighThreshold && newVal >= ClearNonZeroWattageThreshold)
+                    if (IsZero(oldVal) && newVal > PowerHighThreshold)
                     {
                         this.LastChangeToPowerHigh = DateTime.Now;
                         reportChanges = true;
                     }
-                }
-
                 _meter_W = value;
                 _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
+                }
+
 
                 if (oldVal != newVal || reportChanges)
                 {
