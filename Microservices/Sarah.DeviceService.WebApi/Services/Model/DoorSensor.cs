@@ -133,8 +133,8 @@ namespace Sarah.DeviceService.Model
                     this.LastStateChanged = DateTime.UtcNow;
                     this._state = value;
                     var stateValue = value == DoorSensorState.Offen
-                        ? DoorSensorStateValue.Open
-                        : DoorSensorStateValue.Closed;
+                        ? Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Open
+                        : Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Closed;
                     _ = _publisher.ReportDoorStateChanged(this, stateValue, this.LastStateChanged.Value);
 
                     if(value == DoorSensorState.Offen)
