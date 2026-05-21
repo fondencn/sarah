@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,11 @@ namespace Sarah.Rules.Services.Kernel;
 public sealed class SmartHomeKernelService
 {
     private const string ConversationId = "smart-home-main";
+    private static readonly JsonSerializerOptions EventPromptJsonOptions = new()
+    {
+        WriteIndented = false,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<SmartHomeKernelService> _logger;
@@ -150,10 +156,7 @@ public sealed class SmartHomeKernelService
 
     internal string BuildEventPrompt(NetworkEvent evt)
     {
-        string payload = JsonSerializer.Serialize(evt, evt.GetType(), new JsonSerializerOptions
-        {
-            WriteIndented = false
-        });
+        string payload = JsonSerializer.Serialize(evt, evt.GetType(), EventPromptJsonOptions);
 
         var sb = new StringBuilder();
         sb.AppendLine("Neues Smart-Home-Ereignis ist eingetroffen.");

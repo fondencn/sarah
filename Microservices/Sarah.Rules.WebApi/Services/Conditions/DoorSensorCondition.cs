@@ -25,8 +25,9 @@ namespace Sarah.Rules.Conditions
         {
             if (evt is DoorSensorStateChangedEvent doorEvt)
             {
-                bool isOpen = doorEvt.IsOpen;
-                return Value == (isOpen ? DoorSensorState.Offen : DoorSensorState.Geschlossen);
+                return Value == (doorEvt.State == DoorSensorStateValue.Open
+                    ? DoorSensorState.Offen
+                    : DoorSensorState.Geschlossen);
             }
             return false;
         }

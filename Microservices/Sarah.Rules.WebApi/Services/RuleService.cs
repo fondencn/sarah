@@ -257,11 +257,13 @@ namespace Sarah.Rules
         {
             try
             {
-                _logger.LogDebug("Received door state changed event: node {NodeId}, isOpen={IsOpen}",
-                    message.SourceNodeId, message.IsOpen);
+                _logger.LogDebug("Received door state changed event: node {NodeId}, state={State}, changedAt={ChangedAtUtc:O}",
+                    message.SourceNodeId, message.State, message.ChangedAtUtc);
 
-                bool isOpen = message.State == DoorSensorStateValue.Open;
-                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, isOpen);
+                var state = message.State == Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Open
+                    ? Sarah.API.BusinessObjects.DoorSensorStateValue.Open
+                    : Sarah.API.BusinessObjects.DoorSensorStateValue.Closed;
+                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, state, message.ChangedAtUtc);
                 await EvaluateRules(doorEvent);
             }
             catch (Exception ex)

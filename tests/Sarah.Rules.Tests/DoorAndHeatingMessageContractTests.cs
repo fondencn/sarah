@@ -11,14 +11,26 @@ public class DoorAndHeatingMessageContractTests
     {
         var changedAt = new DateTime(2026, 5, 21, 5, 0, 0, DateTimeKind.Utc);
 
-        var message = new DoorSensorStateChangedMessage(34, DoorSensorStateValue.Open, changedAt);
+        var message = new DoorSensorStateChangedMessage(34, Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Open, changedAt);
 
         Assert.Equal(MessageTopics.NetworkEventsDoorState, message.Topic);
         Assert.Equal("network.events.door.state.changed", message.Topic);
         Assert.Equal(34, message.SourceNodeId);
-        Assert.Equal(DoorSensorStateValue.Open, message.State);
+        Assert.Equal(Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Open, message.State);
         Assert.Equal(changedAt, message.ChangedAtUtc);
         Assert.True(message.IsOpen);
+    }
+
+    [Fact]
+    public void DoorSensorStateChangedEvent_CarriesTypedStateAndTimestamp()
+    {
+        var changedAt = new DateTime(2026, 5, 21, 5, 10, 0, DateTimeKind.Utc);
+        var evt = new DoorSensorStateChangedEvent(34, Sarah.API.BusinessObjects.DoorSensorStateValue.Closed, changedAt);
+
+        Assert.Equal(34, evt.SourceNodeId);
+        Assert.Equal(Sarah.API.BusinessObjects.DoorSensorStateValue.Closed, evt.State);
+        Assert.False(evt.IsOpen);
+        Assert.Equal(changedAt, evt.ChangedAtUtc);
     }
 
     [Fact]
