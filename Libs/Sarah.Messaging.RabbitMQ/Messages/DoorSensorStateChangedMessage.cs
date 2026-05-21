@@ -6,9 +6,19 @@ namespace Sarah.Messaging.RabbitMQ.Messages;
 public class DoorSensorStateChangedMessage : NetworkEventMessage
 {
     /// <summary>
-    /// True when the door/window is open; false when closed.
+    /// New sensor state after the transition.
     /// </summary>
-    public bool IsOpen { get; set; }
+    public DoorSensorStateValue State { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when the state transition happened on the producer side.
+    /// </summary>
+    public DateTime ChangedAtUtc { get; set; }
+
+    /// <summary>
+    /// Convenience accessor for consumers that only need open/closed as bool.
+    /// </summary>
+    public bool IsOpen => State == DoorSensorStateValue.Open;
 
     public DoorSensorStateChangedMessage()
     {
@@ -16,9 +26,19 @@ public class DoorSensorStateChangedMessage : NetworkEventMessage
         Property = "DoorState";
     }
 
-    public DoorSensorStateChangedMessage(byte sourceNodeId, bool isOpen) : this()
+    public DoorSensorStateChangedMessage(byte sourceNodeId, DoorSensorStateValue state, DateTime changedAtUtc) : this()
     {
         this.SourceNodeId = sourceNodeId;
-        this.IsOpen = isOpen;
+        this.State = state;
+        this.ChangedAtUtc = changedAtUtc;
     }
+}
+
+/// <summary>
+/// Canonical door/window state used for typed sensor transition messages.
+/// </summary>
+public enum DoorSensorStateValue
+{
+    Closed = 0,
+    Open = 1
 }

@@ -436,9 +436,10 @@ namespace Sarah.Monitoring.Monitors
                                 }
 
                                 /* Wenn Heizkörper zugeordnet sind und noch nicht ausgeschaltet wurden... */
-                                List<string>? heatingsTurnedOff = null;
+                                List<HeatingDifferentialInfo>? heatingDifferentials = null;
                                 if (this.AssociatedHeatings?.Any() == true && !this.OriginalHeatingTemperatures.Any())
                                 {
+                                    heatingDifferentials = new List<HeatingDifferentialInfo>();
                                     foreach (byte heatingId in this.AssociatedHeatings)
                                     {
                                         try
@@ -450,6 +451,17 @@ namespace Sarah.Monitoring.Monitors
                                                 if (setpoint != DEFAULT_OFF_TEMPERATURE)
                                                 {
                                                     this.OriginalHeatingTemperatures.Add(new KeyValuePair<byte, float>(heatingId, setpoint));
+                                                    _heatingInfo.TryGetValue(heatingId, out HeatingInfo? info);
+                                                    string roomLabel = info?.RoomName ?? heatingId.ToString();
+                                                    float newTemperature = DEFAULT_OFF_TEMPERATURE;
+                                                    heatingDifferentials.Add(new HeatingDifferentialInfo
+                                                    {
+                                                        RoomName = roomLabel,
+                                                        PreviousTemperature = setpoint,
+                                                        CurrentTemperature = newTemperature,
+                                                        TemperatureDelta = newTemperature - setpoint,
+                                                        ChangeType = HeatingDifferentialType.TurnedOff
+                                                    });
 
                                                     /* Heizung ohne await damit die Sprachausgabe sofort kommt
                                                      * Könnte zum Problem bei mehreren Heizungen werden (ZWave-RaceCondition!) */
@@ -466,15 +478,6 @@ namespace Sarah.Monitoring.Monitors
                                             _logger.LogError(ex, "Fehler beim Ausschalten der Heizung {HeatingId}", heatingId);
                                         }
                                     }
-
-                                    if (this.OriginalHeatingTemperatures.Any())
-                                    {
-                                        heatingsTurnedOff = this.OriginalHeatingTemperatures
-                                            .Select(kv => _heatingInfo.TryGetValue(kv.Key, out HeatingInfo? info) ? info.RoomName : null)
-                                            .Where(n => n != null).Distinct()
-                                            .Select(n => n!)
-                                            .ToList();
-                                    }
                                 }
 
                                 await _rabbitMQ.PublishAsync(new DoorMonitorAlertMessage
@@ -486,7 +489,7 @@ namespace Sarah.Monitoring.Monitors
                                     OpenDurationMinutes = minutes,
                                     WasOpenLongEnough = openTime > this.SensorThreshold,
                                     RoomTemperature = roomTemperature,
-                                    HeatingsTurnedOff = heatingsTurnedOff,
+                                    HeatingDifferentials = heatingDifferentials,
                                     NextAlertIntervalMinutes = nextAlertIntervalMinutes,
                                     Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
                                 });
@@ -496,10 +499,10 @@ namespace Sarah.Monitoring.Monitors
                     else
                     {
                         /* Tür/Fenster geschlossen – Heizungen wiederherstellen und Meldung senden */
-                        List<HeatingChangeInfo>? heatingChanges = null;
+                        List<HeatingDifferentialInfo>? heatingDifferentials = null;
                         if (this.OriginalHeatingTemperatures.Any())
                         {
-                            heatingChanges = new List<HeatingChangeInfo>();
+                            heatingDifferentials = new List<HeatingDifferentialInfo>();
                             foreach (var origTemp in this.OriginalHeatingTemperatures)
                             {
                                 bool isAnotherWindowOpen = _doorMonitor.GetWindowTrackingsForHeating(origTemp.Key)
@@ -512,11 +515,27 @@ namespace Sarah.Monitoring.Monitors
                                 {
                                     if (info != null)
                                         _ = _deviceServiceClient.SetThermostatTemperatureAsync(info.DbId, origTemp.Value);
-                                    heatingChanges.Add(new HeatingChangeInfo { RoomName = roomLabel, RestoredTemperature = origTemp.Value });
+                                    float previousTemperature = DEFAULT_OFF_TEMPERATURE;
+                                    float currentTemperature = origTemp.Value;
+                                    heatingDifferentials.Add(new HeatingDifferentialInfo
+                                    {
+                                        RoomName = roomLabel,
+                                        PreviousTemperature = previousTemperature,
+                                        CurrentTemperature = currentTemperature,
+                                        TemperatureDelta = currentTemperature - previousTemperature,
+                                        ChangeType = HeatingDifferentialType.Restored
+                                    });
                                 }
                                 else
                                 {
-                                    heatingChanges.Add(new HeatingChangeInfo { RoomName = roomLabel, RestoredTemperature = null });
+                                    heatingDifferentials.Add(new HeatingDifferentialInfo
+                                    {
+                                        RoomName = roomLabel,
+                                        PreviousTemperature = DEFAULT_OFF_TEMPERATURE,
+                                        CurrentTemperature = null,
+                                        TemperatureDelta = null,
+                                        ChangeType = HeatingDifferentialType.RestoreSkippedAnotherWindowOpen
+                                    });
                                 }
                             }
                         }
@@ -529,7 +548,7 @@ namespace Sarah.Monitoring.Monitors
                             AlertType = DoorAlertType.Closed,
                             OpenDurationMinutes = (int)openTime.TotalMinutes,
                             WasOpenLongEnough = openTime > this.SensorThreshold,
-                            HeatingChanges = heatingChanges,
+                            HeatingDifferentials = heatingDifferentials,
                             Volume = isLoud ? SpeechVolume.VeryLoud : SpeechVolume.Normal
                         });
 

@@ -374,8 +374,7 @@ namespace Sarah.API.BusinessObjects
             int openDurationMinutes,
             bool wasOpenLongEnough,
             float? roomTemperature,
-            IReadOnlyList<string>? heatingsTurnedOff,
-            IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges,
+            IReadOnlyList<DoorMonitorHeatingDifferential>? heatingDifferentials,
             int? nextAlertIntervalMinutes,
             bool isLoud)
             : base(sourceNodeId, "DoorMonitorAlert")
@@ -386,8 +385,7 @@ namespace Sarah.API.BusinessObjects
             OpenDurationMinutes = openDurationMinutes;
             WasOpenLongEnough = wasOpenLongEnough;
             RoomTemperature = roomTemperature;
-            HeatingsTurnedOff = heatingsTurnedOff;
-            HeatingChanges = heatingChanges;
+            HeatingDifferentials = heatingDifferentials;
             NextAlertIntervalMinutes = nextAlertIntervalMinutes;
             IsLoud = isLoud;
         }
@@ -398,8 +396,7 @@ namespace Sarah.API.BusinessObjects
         public int OpenDurationMinutes { get; }
         public bool WasOpenLongEnough { get; }
         public float? RoomTemperature { get; }
-        public IReadOnlyList<string>? HeatingsTurnedOff { get; }
-        public IReadOnlyList<DoorMonitorHeatingChange>? HeatingChanges { get; }
+        public IReadOnlyList<DoorMonitorHeatingDifferential>? HeatingDifferentials { get; }
         public int? NextAlertIntervalMinutes { get; }
         /// <summary>
         /// True when a louder volume (VeryLoud) should be used for the speech output.
@@ -410,20 +407,44 @@ namespace Sarah.API.BusinessObjects
     /// <summary>
     /// Heizungsänderung die beim Schließen eines Fensters vorgenommen wurde.
     /// </summary>
-    public class DoorMonitorHeatingChange
+    public class DoorMonitorHeatingDifferential
     {
-        public DoorMonitorHeatingChange(string roomName, float? restoredTemperature)
+        public DoorMonitorHeatingDifferential(
+            string roomName,
+            float previousTemperature,
+            float? currentTemperature,
+            float? temperatureDelta,
+            DoorMonitorHeatingDifferentialType changeType)
         {
             RoomName = roomName;
-            RestoredTemperature = restoredTemperature;
+            PreviousTemperature = previousTemperature;
+            CurrentTemperature = currentTemperature;
+            TemperatureDelta = temperatureDelta;
+            ChangeType = changeType;
         }
 
         public string RoomName { get; }
         /// <summary>
-        /// Wiederhergestellte Zieltemperatur nach Schließen des Fensters.
-        /// Null, wenn die Heizung wegen eines anderen offenen Fensters nicht wiederhergestellt wurde.
+        /// Zieltemperatur vor der Änderung.
         /// </summary>
-        public float? RestoredTemperature { get; }
+        public float PreviousTemperature { get; }
+        /// <summary>
+        /// Zieltemperatur nach der Änderung.
+        /// Null, wenn keine neue Zieltemperatur gesetzt wurde.
+        /// </summary>
+        public float? CurrentTemperature { get; }
+        /// <summary>
+        /// Differenz zwischen aktueller und vorheriger Zieltemperatur.
+        /// </summary>
+        public float? TemperatureDelta { get; }
+        public DoorMonitorHeatingDifferentialType ChangeType { get; }
+    }
+
+    public enum DoorMonitorHeatingDifferentialType
+    {
+        TurnedOff = 0,
+        Restored = 1,
+        RestoreSkippedAnotherWindowOpen = 2
     }
 
     /// <summary>

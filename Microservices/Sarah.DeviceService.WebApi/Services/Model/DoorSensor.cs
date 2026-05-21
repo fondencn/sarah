@@ -4,6 +4,7 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.Model.Extensions;
+using Sarah.Messaging.RabbitMQ.Messages;
 using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
@@ -129,16 +130,19 @@ namespace Sarah.DeviceService.Model
             {
                 if (this._state != value)
                 {
-                    this.LastStateChanged = DateTime.Now;
+                    this.LastStateChanged = DateTime.UtcNow;
                     this._state = value;
-                    _ = _publisher.ReportDoorStateChanged(this, value == DoorSensorState.Offen);
+                    var stateValue = value == DoorSensorState.Offen
+                        ? DoorSensorStateValue.Open
+                        : DoorSensorStateValue.Closed;
+                    _ = _publisher.ReportDoorStateChanged(this, stateValue, this.LastStateChanged.Value);
 
                     if(value == DoorSensorState.Offen)
                     {
-                        this.LastOpenTime = DateTime.Now;
+                        this.LastOpenTime = DateTime.UtcNow;
                     } else
                     {
-                        this.LastCloseTime = DateTime.Now;
+                        this.LastCloseTime = DateTime.UtcNow;
                     }
                 }
             }

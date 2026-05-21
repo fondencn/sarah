@@ -42,16 +42,10 @@ public class DoorMonitorAlertMessage : AbstractMessage
     public float? RoomTemperature { get; set; }
 
     /// <summary>
-    /// Room names where the heating was turned off because the window/door was opened.
-    /// Populated for StillOpen alerts when heatings are first turned off.
+    /// Detailed heating setpoint differentials caused by this door/window alert.
+    /// Contains turn-off, restore, and skipped-restore transitions.
     /// </summary>
-    public List<string>? HeatingsTurnedOff { get; set; }
-
-    /// <summary>
-    /// Heating restoration details for Closed alerts.
-    /// Each entry describes what happened to a previously turned-off heating.
-    /// </summary>
-    public List<HeatingChangeInfo>? HeatingChanges { get; set; }
+    public List<HeatingDifferentialInfo>? HeatingDifferentials { get; set; }
 
     /// <summary>
     /// Minutes until the next scheduled alert (e.g. 15, 30, 60, 120, 240).
@@ -74,7 +68,7 @@ public class DoorMonitorAlertMessage : AbstractMessage
 /// <summary>
 /// Heating state change associated with a door/window monitoring event.
 /// </summary>
-public class HeatingChangeInfo
+public class HeatingDifferentialInfo
 {
     /// <summary>
     /// Name of the room whose heating was affected.
@@ -82,10 +76,26 @@ public class HeatingChangeInfo
     public string RoomName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Temperature the heating was restored to after the window was closed.
-    /// Null if the heating was not restored (e.g. another window is still open).
+    /// Previous target temperature before this change.
     /// </summary>
-    public float? RestoredTemperature { get; set; }
+    public float PreviousTemperature { get; set; }
+
+    /// <summary>
+    /// Current/target temperature after this change.
+    /// Null means no new target was set (for example, restore skipped because another window is still open).
+    /// </summary>
+    public float? CurrentTemperature { get; set; }
+
+    /// <summary>
+    /// Difference between current and previous target temperature.
+    /// Null when no current target was applied.
+    /// </summary>
+    public float? TemperatureDelta { get; set; }
+
+    /// <summary>
+    /// Classifies why this differential was produced.
+    /// </summary>
+    public HeatingDifferentialType ChangeType { get; set; }
 }
 
 /// <summary>
@@ -107,4 +117,14 @@ public enum DoorAlertType
     /// The door or window was closed after being monitored.
     /// </summary>
     Closed
+}
+
+/// <summary>
+/// Type of heating differential produced by DoorMonitor.
+/// </summary>
+public enum HeatingDifferentialType
+{
+    TurnedOff = 0,
+    Restored = 1,
+    RestoreSkippedAnotherWindowOpen = 2
 }

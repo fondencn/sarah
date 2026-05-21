@@ -260,7 +260,8 @@ namespace Sarah.Rules
                 _logger.LogDebug("Received door state changed event: node {NodeId}, isOpen={IsOpen}",
                     message.SourceNodeId, message.IsOpen);
 
-                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
+                bool isOpen = message.State == DoorSensorStateValue.Open;
+                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, isOpen);
                 await EvaluateRules(doorEvent);
             }
             catch (Exception ex)
@@ -458,15 +459,22 @@ namespace Sarah.Rules
                 _logger.LogDebug("Received door monitor alert: {DeviceName}, type={AlertType}",
                     message.DeviceName, message.AlertType);
 
-                var heatingsTurnedOff = message.HeatingsTurnedOff != null
-                    ? (IReadOnlyList<string>)message.HeatingsTurnedOff.AsReadOnly()
-                    : null;
-
-                IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges = null;
-                if (message.HeatingChanges != null)
+                IReadOnlyList<DoorMonitorHeatingDifferential>? heatingDifferentials = null;
+                if (message.HeatingDifferentials != null)
                 {
-                    heatingChanges = message.HeatingChanges
-                        .Select(h => new DoorMonitorHeatingChange(h.RoomName, h.RestoredTemperature))
+                    heatingDifferentials = message.HeatingDifferentials
+                        .Select(h => new DoorMonitorHeatingDifferential(
+                            h.RoomName,
+                            h.PreviousTemperature,
+                            h.CurrentTemperature,
+                            h.TemperatureDelta,
+                            h.ChangeType switch
+                            {
+                                HeatingDifferentialType.TurnedOff => DoorMonitorHeatingDifferentialType.TurnedOff,
+                                HeatingDifferentialType.Restored => DoorMonitorHeatingDifferentialType.Restored,
+                                HeatingDifferentialType.RestoreSkippedAnotherWindowOpen => DoorMonitorHeatingDifferentialType.RestoreSkippedAnotherWindowOpen,
+                                _ => throw new ArgumentOutOfRangeException(nameof(h.ChangeType), h.ChangeType, "Unknown HeatingDifferentialType value")
+                            }))
                         .ToList()
                         .AsReadOnly();
                 }
@@ -487,8 +495,7 @@ namespace Sarah.Rules
                     openDurationMinutes: message.OpenDurationMinutes,
                     wasOpenLongEnough: message.WasOpenLongEnough,
                     roomTemperature: message.RoomTemperature,
-                    heatingsTurnedOff: heatingsTurnedOff,
-                    heatingChanges: heatingChanges,
+                    heatingDifferentials: heatingDifferentials,
                     nextAlertIntervalMinutes: message.NextAlertIntervalMinutes,
                     isLoud: message.Volume == Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud);
 
