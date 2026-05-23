@@ -36,10 +36,6 @@ builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 .AddBearerTokenForwarding();
 builder.Services.AddSingleton<ISpeechService, SpeechService>();
 
-// Register MessageBasedWeatherProvider as IWeatherProvider and as IHostedService
-builder.Services.AddSingleton<Sarah.SpeechServer.Services.MessageBasedWeatherProvider>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.SpeechServer.Services.MessageBasedWeatherProvider>());
-builder.Services.AddSingleton<IWeatherProvider>(sp => sp.GetRequiredService<Sarah.SpeechServer.Services.MessageBasedWeatherProvider>());
 
 // Register RabbitMQ client and speech event subscriber
 builder.Services.AddSingleton<RabbitMQClient>();

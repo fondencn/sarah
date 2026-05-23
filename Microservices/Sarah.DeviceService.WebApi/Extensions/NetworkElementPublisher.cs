@@ -24,7 +24,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         /// <param name="propertyName">Name of the changed property</param>
         /// <param name="newValue">The new value</param>
         /// <returns>Task</returns>
-        public async Task ReportEvent<TValue>(
+        public virtual async Task ReportEvent<TValue>(
             NetworkElement element,
             string propertyName,
             TValue? newValue)
@@ -45,7 +45,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
         /// <param name="element">The network element</param>
         /// <param name="propertyName">Name of the changed property</param>
         /// <returns>Task</returns>
-        public async Task ReportEvent(
+        public virtual async Task ReportEvent(
             NetworkElement element,
             string propertyName)
         {
@@ -62,11 +62,16 @@ namespace Sarah.DeviceService.WebApi.Extensions
         }
 
         /// <summary>
-        /// Publishes a door-state-changed event so Rules can evaluate DoorSensorCondition.
+        /// Publishes a door-state-changed event on the generic network-events topic.
         /// </summary>
         public async Task ReportDoorStateChanged(NetworkElement element, bool isOpen)
         {
-            var message = new DoorSensorStateChangedMessage(element.NodeID, isOpen);
+            var message = new NetworkEventMessage<bool>
+            {
+                SourceNodeId = element.NodeID,
+                Property = "DoorState",
+                NewValue = isOpen
+            };
             await _rabbitMQClient.PublishAsync(message);
         }
 
@@ -82,9 +87,9 @@ namespace Sarah.DeviceService.WebApi.Extensions
         /// <summary>
         /// Publishes a wall plug state event so Rules can evaluate WallPlug* conditions.
         /// </summary>
-        public async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
+        public virtual async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
         {
-            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, lastChangeToPowerLow, lastChangeToPowerHigh);
+            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, currentWattage, lastChangeToPowerLow, lastChangeToPowerHigh);
             await _rabbitMQClient.PublishAsync(message);
         }
 

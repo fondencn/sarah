@@ -83,11 +83,6 @@ namespace Sarah.Rules
                     onMessage: HandleAirQualityChanged,
                     cancellationToken: stoppingToken);
 
-                await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
-                    topic: MessageTopics.NetworkEventsDoorState,
-                    onMessage: HandleDoorSensorStateChanged,
-                    cancellationToken: stoppingToken);
-
                 await _rabbitMQ.SubscribeAsync<TrackerButtonPressedMessage>(
                     topic: MessageTopics.NetworkEventsTrackerButton,
                     onMessage: HandleTrackerButtonPressed,
@@ -146,6 +141,11 @@ namespace Sarah.Rules
                 await _rabbitMQ.SubscribeAsync<GridStateChangedMessage>(
                     topic: MessageTopics.MonitoringGridStateChanged,
                     onMessage: HandleGridStateChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<SpeechInputMessage>(
+                    topic: MessageTopics.SpeechRecognized,
+                    onMessage: HandleSpeechRecognized,
                     cancellationToken: stoppingToken);
 
                 _logger.LogInformation("RuleService subscribed to all event topics");
@@ -253,22 +253,6 @@ namespace Sarah.Rules
             }
         }
 
-        private async Task HandleDoorSensorStateChanged(DoorSensorStateChangedMessage message)
-        {
-            try
-            {
-                _logger.LogDebug("Received door state changed event: node {NodeId}, isOpen={IsOpen}",
-                    message.SourceNodeId, message.IsOpen);
-
-                var doorEvent = new DoorSensorStateChangedEvent(message.SourceNodeId, message.IsOpen);
-                await EvaluateRules(doorEvent);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error handling door sensor state changed event");
-            }
-        }
-
         private async Task HandleTrackerButtonPressed(TrackerButtonPressedMessage message)
         {
             try
@@ -290,7 +274,12 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
-                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastChangeToPowerHigh);
+                var evt = new WallPlugStateChangedEvent(
+                    message.SourceNodeId,
+                    message.IsOn,
+                    message.CurrentWattage,
+                    message.LastChangeToPowerLow,
+                    message.LastChangeToPowerHigh);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)
@@ -522,6 +511,32 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling grid state changed event");
+            }
+        }
+
+        private async Task HandleSpeechRecognized(SpeechInputMessage message)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(message.RecognizedText))
+                {
+                    _logger.LogDebug("Ignoring empty speech input from host {HostName}", message.SpeakerHostName);
+                    return;
+                }
+
+                _logger.LogInformation(
+                    "Received recognized speech from host {HostName} at {Location}: {Text}",
+                    message.SpeakerHostName,
+                    message.SpeakerLocation,
+                    message.RecognizedText);
+
+                await _smartHomeKernel.ProcessChatMessageAsync(
+                    message.RecognizedText,
+                    message.SpeakerHostName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling recognized speech input");
             }
         }
 

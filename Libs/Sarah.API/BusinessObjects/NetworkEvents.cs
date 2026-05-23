@@ -145,18 +145,6 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn ein Türsensor seinen Öffnungsstatus ändert
-    /// </summary>
-    public class DoorSensorStateChangedEvent : NetworkEvent
-    {
-        public bool IsOpen { get; }
-        public DoorSensorStateChangedEvent(byte source, bool isOpen) : base(source, "DoorState")
-        {
-            this.IsOpen = isOpen;
-        }
-    }
-
-    /// <summary>
     /// Event wird ausgelöst, wenn der Knopf eines GPS-Trackers gedrückt oder losgelassen wird
     /// </summary>
     public class TrackerButtonPressedEvent : NetworkEvent
@@ -174,12 +162,14 @@ namespace Sarah.API.BusinessObjects
     public class WallPlugStateChangedEvent : NetworkEvent
     {
         public bool IsOn { get; }
-            public DateTime LastChangeToPowerLow { get; }
-            public DateTime LastChangeToPowerHigh { get; }
-        public WallPlugStateChangedEvent(byte source, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
+        public float CurrentWattage { get; }
+        public DateTime LastChangeToPowerLow { get; }
+        public DateTime LastChangeToPowerHigh { get; }
+        public WallPlugStateChangedEvent(byte source, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
             : base(source, "WallPlugState")
         {
             IsOn = isOn;
+            CurrentWattage = currentWattage;
             LastChangeToPowerLow = lastChangeToPowerLow;
             LastChangeToPowerHigh = lastChangeToPowerHigh;
         }

@@ -408,3 +408,6 @@ docker-compos.secrets.yml
 Microservices/Sarah.SpeechServer.WebApi/SpeechCache/*
 deploy/speaker/speaker1.env
 deploy/speaker/speaker3.env
+
+# c# language service
+*.lscache

@@ -26,6 +26,12 @@ public static class MessageTopics
     /// </summary>
     public const string SpeechAudioStop = "speech.audio.stop";
 
+    /// <summary>
+    /// Topic for recognized speech input emitted by SpeechServer.
+    /// Contains transcribed user text plus source speaker host metadata.
+    /// </summary>
+    public const string SpeechRecognized = "speech.recognized";
+
     // Network event topics
     
     /// <summary>
@@ -51,12 +57,6 @@ public static class MessageTopics
     /// Used to broadcast changes in room air quality measurements.
     /// </summary>
     public const string NetworkEventsAirQuality = "network.events.airquality";
-
-    /// <summary>
-    /// Topic for door/window sensor open/close state changes.
-    /// Published when a door or window sensor changes its open/closed state.
-    /// </summary>
-    public const string NetworkEventsDoorState = "network.events.doorstate";
 
     /// <summary>
     /// Topic for GPS tracker SOS button press events.
