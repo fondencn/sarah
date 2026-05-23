@@ -4,7 +4,6 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.Model.Extensions;
-using Sarah.Messaging.RabbitMQ.Messages;
 using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
