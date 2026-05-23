@@ -29,7 +29,6 @@ public class DoorAndHeatingMessageContractTests
 
         Assert.Equal(34, evt.SourceNodeId);
         Assert.Equal(Sarah.API.BusinessObjects.DoorSensorStateValue.Closed, evt.State);
-        Assert.False(evt.IsOpen);
         Assert.Equal(changedAt, evt.ChangedAtUtc);
     }
 

@@ -150,13 +150,11 @@ namespace Sarah.API.BusinessObjects
     public class DoorSensorStateChangedEvent : NetworkEvent
     {
         public DoorSensorStateValue State { get; }
-        public bool IsOpen { get; }
         public DateTime ChangedAtUtc { get; }
 
         public DoorSensorStateChangedEvent(byte source, DoorSensorStateValue state, DateTime changedAtUtc) : base(source, "DoorState")
         {
             State = state;
-            IsOpen = state == DoorSensorStateValue.Open;
             ChangedAtUtc = changedAtUtc;
         }
 
