@@ -6,6 +6,7 @@ namespace Sarah.Messaging.RabbitMQ.Messages;
 public class WallPlugStateChangedMessage : NetworkEventMessage
 {
     public bool IsOn { get; set; }
+    public float CurrentWattage { get; set; }
     public DateTime LastChangeToPowerLow { get; set; }
     public DateTime LastChangeToPowerHigh { get; set; }
 
@@ -15,10 +16,11 @@ public class WallPlugStateChangedMessage : NetworkEventMessage
         Property = "WallPlugState";
     }
 
-    public WallPlugStateChangedMessage(byte sourceNodeId, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh) : this()
+    public WallPlugStateChangedMessage(byte sourceNodeId, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh) : this()
     {
         SourceNodeId = sourceNodeId;
         IsOn = isOn;
+        CurrentWattage = currentWattage;
         LastChangeToPowerLow = lastChangeToPowerLow;
         LastChangeToPowerHigh = lastChangeToPowerHigh;
     }

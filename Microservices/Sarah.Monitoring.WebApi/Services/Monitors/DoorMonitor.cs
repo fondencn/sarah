@@ -93,10 +93,17 @@ namespace Sarah.Monitoring.Monitors
                 return;
             }
 
-            // 2) Door monitoring subscribes to the specific door-state topic introduced for typed events.
-            await _rabbitMQ.SubscribeAsync<DoorSensorStateChangedMessage>(
-                topic: MessageTopics.NetworkEventsDoorState,
-                onMessage: message => Update(message.SourceNodeId));
+            await _rabbitMQ.SubscribeAsync<NetworkEventMessage<object>>(
+                topic: MessageTopics.NetworkEvents,
+                onMessage: message =>
+                {
+                    if (!string.Equals(message.Property, "DoorState", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Task.CompletedTask;
+                    }
+
+                    return Update(message.SourceNodeId);
+                });
 
             _logger.LogDebug("DoorMonitor gestartet.");
             this.IsRunning = true;

@@ -190,12 +190,14 @@ namespace Sarah.API.BusinessObjects
     public class WallPlugStateChangedEvent : NetworkEvent
     {
         public bool IsOn { get; }
-            public DateTime LastChangeToPowerLow { get; }
-            public DateTime LastChangeToPowerHigh { get; }
-        public WallPlugStateChangedEvent(byte source, bool isOn, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
+        public float CurrentWattage { get; }
+        public DateTime LastChangeToPowerLow { get; }
+        public DateTime LastChangeToPowerHigh { get; }
+        public WallPlugStateChangedEvent(byte source, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
             : base(source, "WallPlugState")
         {
             IsOn = isOn;
+            CurrentWattage = currentWattage;
             LastChangeToPowerLow = lastChangeToPowerLow;
             LastChangeToPowerHigh = lastChangeToPowerHigh;
         }

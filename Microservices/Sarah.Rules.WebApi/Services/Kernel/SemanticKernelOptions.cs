@@ -4,7 +4,7 @@ namespace Sarah.Rules.Services.Kernel;
 
 public class SemanticKernelOptions
 {
-    public int ConversationRetentionHours { get; set; } = 48;
+    public int ConversationRetentionHours { get; set; } = 24;
     public int MaxHistoryMessages { get; set; } = 200;
     public AzureOpenAIOptions AzureOpenAI { get; set; } = new();
 }

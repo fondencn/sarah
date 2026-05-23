@@ -148,6 +148,11 @@ namespace Sarah.Rules
                     onMessage: HandleGridStateChanged,
                     cancellationToken: stoppingToken);
 
+                await _rabbitMQ.SubscribeAsync<SpeechInputMessage>(
+                    topic: MessageTopics.SpeechRecognized,
+                    onMessage: HandleSpeechRecognized,
+                    cancellationToken: stoppingToken);
+
                 _logger.LogInformation("RuleService subscribed to all event topics");
 
                 // Keep the service running
@@ -293,7 +298,12 @@ namespace Sarah.Rules
             try
             {
                 _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
-                var evt = new WallPlugStateChangedEvent(message.SourceNodeId, message.IsOn, message.LastChangeToPowerLow, message.LastChangeToPowerHigh);
+                var evt = new WallPlugStateChangedEvent(
+                    message.SourceNodeId,
+                    message.IsOn,
+                    message.CurrentWattage,
+                    message.LastChangeToPowerLow,
+                    message.LastChangeToPowerHigh);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)
@@ -531,6 +541,32 @@ namespace Sarah.Rules
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling grid state changed event");
+            }
+        }
+
+        private async Task HandleSpeechRecognized(SpeechInputMessage message)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(message.RecognizedText))
+                {
+                    _logger.LogDebug("Ignoring empty speech input from host {HostName}", message.SpeakerHostName);
+                    return;
+                }
+
+                _logger.LogInformation(
+                    "Received recognized speech from host {HostName} at {Location}: {Text}",
+                    message.SpeakerHostName,
+                    message.SpeakerLocation,
+                    message.RecognizedText);
+
+                await _smartHomeKernel.ProcessChatMessageAsync(
+                    message.RecognizedText,
+                    message.SpeakerHostName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling recognized speech input");
             }
         }
 
