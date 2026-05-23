@@ -130,7 +130,7 @@ namespace Sarah.DeviceService.Model
             {
                 if (this._state != value)
                 {
-                    this.LastStateChanged = DateTime.UtcNow;
+                    this.LastStateChanged = DateTime.Now;
                     this._state = value;
                     var stateValue = value == DoorSensorState.Offen
                         ? Sarah.Messaging.RabbitMQ.Messages.DoorSensorStateValue.Open
@@ -139,10 +139,10 @@ namespace Sarah.DeviceService.Model
 
                     if(value == DoorSensorState.Offen)
                     {
-                        this.LastOpenTime = DateTime.UtcNow;
+                        this.LastOpenTime = DateTime.Now;
                     } else
                     {
-                        this.LastCloseTime = DateTime.UtcNow;
+                        this.LastCloseTime = DateTime.Now;
                     }
                 }
             }
