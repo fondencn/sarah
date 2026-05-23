@@ -413,7 +413,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
@@ -421,8 +421,8 @@
                 "value": 6
               },
               {
-                "color": "red",
-                "value": 4
+                "color": "green",
+                "value": 8
               }
             ]
           },
@@ -455,6 +455,132 @@
       ],
       "title": "Active Backend Services",
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 12,
+      "title": "Fleet Status - Warning States",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 13,
+      "options": {
+        "displayMode": "gradient",
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "sum by (exported_job) (rate(sarah_http_server_request_duration_seconds_count{exported_job=~\"$service\",http_response_status_code=~\"5..\"}[5m])) / clamp_min(sum by (exported_job) (rate(sarah_http_server_request_duration_seconds_count{exported_job=~\"$service\"}[5m])), 0.0001)",
+          "legendFormat": "{{exported_job}}"
+        }
+      ],
+      "title": "5xx Ratio by Service (warn >=1%, crit >=5%)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 14,
+      "options": {
+        "displayMode": "gradient",
+        "namePlacement": "top",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, exported_job) (rate(sarah_http_server_request_duration_seconds_bucket{exported_job=~\"$service\"}[5m])))",
+          "legendFormat": "{{exported_job}}"
+        }
+      ],
+      "title": "P95 Latency by Service (warn >=0.5s, crit >=2s)",
+      "type": "bargauge"
     }
   ],
   "refresh": "30s",
