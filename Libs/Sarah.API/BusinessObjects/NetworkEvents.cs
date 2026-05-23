@@ -369,78 +369,63 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn der DoorMonitor eine Meldung für eine Tür/ein Fenster erzeugt.
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster geöffnet wurde.
     /// </summary>
-    public class DoorMonitorAlertEvent : NetworkEvent
+    public class DoorOrWindowOpenedEvent : NetworkEvent
     {
-        public DoorMonitorAlertEvent(
-            byte sourceNodeId,
-            string deviceName,
-            bool isWindow,
-            DoorMonitorAlertType alertType,
-            int openDurationMinutes,
-            bool wasOpenLongEnough,
-            float? roomTemperature,
-            IReadOnlyList<string>? heatingsTurnedOff,
-            IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges,
-            int? nextAlertIntervalMinutes,
-            bool isLoud)
-            : base(sourceNodeId, "DoorMonitorAlert")
-        {
-            DeviceName = deviceName;
-            IsWindow = isWindow;
-            AlertType = alertType;
-            OpenDurationMinutes = openDurationMinutes;
-            WasOpenLongEnough = wasOpenLongEnough;
-            RoomTemperature = roomTemperature;
-            HeatingsTurnedOff = heatingsTurnedOff;
-            HeatingChanges = heatingChanges;
-            NextAlertIntervalMinutes = nextAlertIntervalMinutes;
-            IsLoud = isLoud;
-        }
-
-        public string DeviceName { get; }
         public bool IsWindow { get; }
-        public DoorMonitorAlertType AlertType { get; }
-        public int OpenDurationMinutes { get; }
-        public bool WasOpenLongEnough { get; }
-        public float? RoomTemperature { get; }
-        public IReadOnlyList<string>? HeatingsTurnedOff { get; }
-        public IReadOnlyList<DoorMonitorHeatingChange>? HeatingChanges { get; }
-        public int? NextAlertIntervalMinutes { get; }
-        /// <summary>
-        /// True when a louder volume (VeryLoud) should be used for the speech output.
-        /// </summary>
-        public bool IsLoud { get; }
-    }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public IReadOnlyList<string> TurnedOffHeatings { get; }
 
-    /// <summary>
-    /// Heizungsänderung die beim Schließen eines Fensters vorgenommen wurde.
-    /// </summary>
-    public class DoorMonitorHeatingChange
-    {
-        public DoorMonitorHeatingChange(string roomName, float? restoredTemperature)
+        public DoorOrWindowOpenedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOffHeatings)
+            : base(source, "DoorOrWindowOpened")
         {
-            RoomName = roomName;
-            RestoredTemperature = restoredTemperature;
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            TurnedOffHeatings = turnedOffHeatings;
         }
-
-        public string RoomName { get; }
-        /// <summary>
-        /// Wiederhergestellte Zieltemperatur nach Schließen des Fensters.
-        /// Null, wenn die Heizung wegen eines anderen offenen Fensters nicht wiederhergestellt wurde.
-        /// </summary>
-        public float? RestoredTemperature { get; }
     }
 
     /// <summary>
-    /// Typ der DoorMonitor-Meldung.
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster noch geöffnet ist.
     /// </summary>
-    public enum DoorMonitorAlertType
+    public class DoorOrWindowStillOpenEvent : NetworkEvent
     {
-        Opened,
-        StillOpen,
-        Closed
+        public bool IsWindow { get; }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public TimeSpan OpenedSince { get; }
+
+        public DoorOrWindowStillOpenEvent(byte source, bool isWindow, string deviceName, string deviceRoom, TimeSpan openedSince)
+            : base(source, "DoorOrWindowStillOpen")
+        {
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            OpenedSince = openedSince;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster geschlossen wurde.
+    /// </summary>
+    public class DoorOrWindowClosedEvent : NetworkEvent
+    {
+        public bool IsWindow { get; }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public IReadOnlyList<string> TurnedOnHeatings { get; }
+
+        public DoorOrWindowClosedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOnHeatings)
+            : base(source, "DoorOrWindowClosed")
+        {
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            TurnedOnHeatings = turnedOnHeatings;
+        }
     }
 
     /// <summary>

@@ -15,7 +15,7 @@ namespace Sarah.Monitoring.Monitors
     /// Steuerungs- und Überwachungsfunktionen für geöffnete Türen und Fenster.
     /// Hier sind alle NodeIds für Christians Wohnung fest verdrahtet!
     /// </summary>
-    public class DoorMonitor(IReadOnlyList<RoomDto> _roomSnapshot, IWeatherProvider _weather, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger, DeviceServiceClient _deviceServiceClient) : ICanSelfTest, IMonitor, IDoorMonitor
+    public class DoorMonitor(IReadOnlyList<RoomDto> _roomSnapshot, RabbitMQClient _rabbitMQ, ILogger<DoorMonitor> _logger, DeviceServiceClient _deviceServiceClient) : ICanSelfTest, IMonitor, IDoorMonitor
     {
         /// <summary>
         /// Konfiguration für jeden Fenstersensor, ab wann eine Warnung ausgegeben werden soll,
