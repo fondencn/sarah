@@ -143,9 +143,19 @@ namespace Sarah.Rules
                     onMessage: HandleBatteryWarning,
                     cancellationToken: stoppingToken);
 
-                await _rabbitMQ.SubscribeAsync<DoorMonitorAlertMessage>(
-                    topic: MessageTopics.MonitoringDoorAlert,
-                    onMessage: HandleDoorMonitorAlert,
+                await _rabbitMQ.SubscribeAsync<DoorOrWindowOpenedMessage>(
+                    topic: MessageTopics.NetworkEventsDoorOrWindowOpened,
+                    onMessage: HandleDoorOrWindowOpened,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<DoorOrWindowStillOpenMessage>(
+                    topic: MessageTopics.NetworkEventsDoorOrWindowStillOpen,
+                    onMessage: HandleDoorOrWindowStillOpen,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<DoorOrWindowClosedMessage>(
+                    topic: MessageTopics.NetworkEventsDoorOrWindowClosed,
+                    onMessage: HandleDoorOrWindowClosed,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<GridStateChangedMessage>(
@@ -473,52 +483,69 @@ namespace Sarah.Rules
             }
         }
 
-        private async Task HandleDoorMonitorAlert(DoorMonitorAlertMessage message)
+        private async Task HandleDoorOrWindowOpened(DoorOrWindowOpenedMessage message)
         {
             try
             {
-                _logger.LogDebug("Received door monitor alert: {DeviceName}, type={AlertType}",
-                    message.DeviceName, message.AlertType);
-
-                var heatingsTurnedOff = message.HeatingsTurnedOff != null
-                    ? (IReadOnlyList<string>)message.HeatingsTurnedOff.AsReadOnly()
-                    : null;
-
-                IReadOnlyList<DoorMonitorHeatingChange>? heatingChanges = null;
-                if (message.HeatingChanges != null)
-                {
-                    heatingChanges = message.HeatingChanges
-                        .Select(h => new DoorMonitorHeatingChange(h.RoomName, h.RestoredTemperature))
-                        .ToList()
-                        .AsReadOnly();
-                }
-
-                var alertType = message.AlertType switch
-                {
-                    DoorAlertType.Opened   => DoorMonitorAlertType.Opened,
-                    DoorAlertType.StillOpen => DoorMonitorAlertType.StillOpen,
-                    DoorAlertType.Closed   => DoorMonitorAlertType.Closed,
-                    _ => throw new ArgumentOutOfRangeException(nameof(message.AlertType), message.AlertType, "Unknown DoorAlertType value")
-                };
-
-                var evt = new DoorMonitorAlertEvent(
-                    sourceNodeId: message.SourceNodeId,
-                    deviceName: message.DeviceName,
-                    isWindow: message.IsWindow,
-                    alertType: alertType,
-                    openDurationMinutes: message.OpenDurationMinutes,
-                    wasOpenLongEnough: message.WasOpenLongEnough,
-                    roomTemperature: message.RoomTemperature,
-                    heatingsTurnedOff: heatingsTurnedOff,
-                    heatingChanges: heatingChanges,
-                    nextAlertIntervalMinutes: message.NextAlertIntervalMinutes,
-                    isLoud: message.Volume == Sarah.Messaging.RabbitMQ.Messages.SpeechVolume.VeryLoud);
-
+                _logger.LogDebug("Received door/window opened event: {DeviceName}, isWindow={IsWindow}",
+                    message.DeviceName, message.IsWindow);
+                var turnedOff = message.TurnedOffHeatings?
+                    .Select(h => h.HeatingName)
+                    .ToList() ?? new List<string>();
+                var evt = new DoorOrWindowOpenedEvent(
+                    message.SourceNodeId,
+                    message.IsWindow,
+                    message.DeviceName,
+                    message.DeviceRoom,
+                    turnedOff);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error handling door monitor alert event");
+                _logger.LogError(ex, "Error handling door/window opened event");
+            }
+        }
+
+        private async Task HandleDoorOrWindowStillOpen(DoorOrWindowStillOpenMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door/window still open event: {DeviceName}, openedSince={OpenedSince}",
+                    message.DeviceName, message.OpenedSince);
+                var evt = new DoorOrWindowStillOpenEvent(
+                    message.SourceNodeId,
+                    message.IsWindow,
+                    message.DeviceName,
+                    message.DeviceRoom,
+                    message.OpenedSince);
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door/window still open event");
+            }
+        }
+
+        private async Task HandleDoorOrWindowClosed(DoorOrWindowClosedMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received door/window closed event: {DeviceName}, isWindow={IsWindow}",
+                    message.DeviceName, message.IsWindow);
+                var turnedOn = message.TurnedOnHeatings?
+                    .Select(h => h.HeatingName)
+                    .ToList() ?? new List<string>();
+                var evt = new DoorOrWindowClosedEvent(
+                    message.SourceNodeId,
+                    message.IsWindow,
+                    message.DeviceName,
+                    message.DeviceRoom,
+                    turnedOn);
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling door/window closed event");
             }
         }
 

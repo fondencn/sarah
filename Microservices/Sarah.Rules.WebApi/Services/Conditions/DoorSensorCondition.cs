@@ -23,22 +23,12 @@ namespace Sarah.Rules.Conditions
         /// </summary>
         public override bool Evaluate(NetworkEvent evt)
         {
-            if (evt is DoorMonitorAlertEvent doorEvt)
-            {
-                bool? isOpen = doorEvt.AlertType switch
-                {
-                    DoorMonitorAlertType.Opened => true,
-                    DoorMonitorAlertType.Closed => false,
-                    _ => null
-                };
+            if (evt is DoorOrWindowOpenedEvent && Value == DoorSensorState.Offen)
+                return TargetNodeId == 0 || evt.SourceNodeId == TargetNodeId;
 
-                if (!isOpen.HasValue)
-                {
-                    return false;
-                }
+            if (evt is DoorOrWindowClosedEvent && Value == DoorSensorState.Geschlossen)
+                return TargetNodeId == 0 || evt.SourceNodeId == TargetNodeId;
 
-                return Value == (isOpen.Value ? DoorSensorState.Offen : DoorSensorState.Geschlossen);
-            }
             return false;
         }
     }
