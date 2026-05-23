@@ -65,9 +65,9 @@ public static class MessageTopics
     public const string NetworkEventsTrackerButton = "network.events.trackerbutton";
 
     /// <summary>
-    /// Topic for wall plug state changes (on/off, power threshold crossings).
+    /// Topic for wall plug enabled state changes (on/off).
     /// </summary>
-    public const string NetworkEventsWallPlugState = "network.events.wallplugstate";
+    public const string NetworkEventsWallPlugEnabled = "network.events.wallplugenabled";
 
     /// <summary>
     /// Topic for multi-sensor presence/luminance state changes.
@@ -154,4 +154,16 @@ public static class MessageTopics
     /// Published when the current StromGedacht grid stage changes.
     /// </summary>
     public const string MonitoringGridStateChanged = "monitoring.grid.state.changed";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing low threshold.
+    /// Published when a wall plug's power consumption drops below the defined low threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerLow = "network.events.wallplug.power.low";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing high threshold.
+    /// Published when a wall plug's power consumption rises above the defined high threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerHigh = "network.events.wallplug.power.high";
 }

@@ -3,25 +3,31 @@ namespace Sarah.Messaging.RabbitMQ.Messages;
 /// <summary>
 /// Message published when a wall plug changes its on/off state or power metrics cross thresholds.
 /// </summary>
-public class WallPlugStateChangedMessage : NetworkEventMessage
+public class WallPlugEnabledChangedMessage : NetworkEventMessage
 {
     public bool IsOn { get; set; }
-    public float CurrentWattage { get; set; }
-    public DateTime LastChangeToPowerLow { get; set; }
-    public DateTime LastChangeToPowerHigh { get; set; }
 
-    public WallPlugStateChangedMessage()
+    public WallPlugEnabledChangedMessage(bool isOn)
     {
-        Topic = MessageTopics.NetworkEventsWallPlugState;
-        Property = "WallPlugState";
-    }
-
-    public WallPlugStateChangedMessage(byte sourceNodeId, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh) : this()
-    {
-        SourceNodeId = sourceNodeId;
+        Topic = MessageTopics.NetworkEventsWallPlugEnabled;
+        Property = "WallPlugEnabledState";
         IsOn = isOn;
-        CurrentWattage = currentWattage;
-        LastChangeToPowerLow = lastChangeToPowerLow;
-        LastChangeToPowerHigh = lastChangeToPowerHigh;
+    }
+}
+
+public class WallPlugPowerLowMessage : NetworkEventMessage
+{
+    public WallPlugPowerLowMessage()
+    {
+        Topic = MessageTopics.NetworkEventsWallPlugPowerLow;
+        Property = "WallPlugPowerConsumptionChangedToLow";
+    }
+}
+public class WallPlugPowerHighMessage : NetworkEventMessage
+{
+    public WallPlugPowerHighMessage()
+    {
+        Topic = MessageTopics.NetworkEventsWallPlugPowerHigh;
+        Property = "WallPlugPowerConsumptionChangedToHigh";
     }
 }

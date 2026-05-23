@@ -157,21 +157,38 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn eine Steckdose ihren Zustand oder Leistungsschwelle ändert
+    /// Event wird ausgelöst, wenn eine Steckdose ihren Ein/Aus-Zustand ändert.
     /// </summary>
-    public class WallPlugStateChangedEvent : NetworkEvent
+    public class WallPlugEnabledChangedEvent : NetworkEvent
     {
         public bool IsOn { get; }
-        public float CurrentWattage { get; }
-        public DateTime LastChangeToPowerLow { get; }
-        public DateTime LastChangeToPowerHigh { get; }
-        public WallPlugStateChangedEvent(byte source, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
-            : base(source, "WallPlugState")
+
+        public WallPlugEnabledChangedEvent(byte source, bool isOn)
+            : base(source, "WallPlugEnabled")
         {
             IsOn = isOn;
-            CurrentWattage = currentWattage;
-            LastChangeToPowerLow = lastChangeToPowerLow;
-            LastChangeToPowerHigh = lastChangeToPowerHigh;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose in den niedrigen Leistungsbereich wechselt.
+    /// </summary>
+    public class WallPlugPowerLowEvent : NetworkEvent
+    {
+        public WallPlugPowerLowEvent(byte source)
+            : base(source, "WallPlugPowerLow")
+        {
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose in den hohen Leistungsbereich wechselt.
+    /// </summary>
+    public class WallPlugPowerHighEvent : NetworkEvent
+    {
+        public WallPlugPowerHighEvent(byte source)
+            : base(source, "WallPlugPowerHigh")
+        {
         }
     }
 

@@ -88,9 +88,19 @@ namespace Sarah.Rules
                     onMessage: HandleTrackerButtonPressed,
                     cancellationToken: stoppingToken);
 
-                await _rabbitMQ.SubscribeAsync<WallPlugStateChangedMessage>(
-                    topic: MessageTopics.NetworkEventsWallPlugState,
-                    onMessage: HandleWallPlugStateChanged,
+                await _rabbitMQ.SubscribeAsync<WallPlugEnabledChangedMessage>(
+                    topic: MessageTopics.NetworkEventsWallPlugEnabled,
+                    onMessage: HandleWallPlugEnabledChanged,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WallPlugPowerLowMessage>(
+                    topic: MessageTopics.NetworkEventsWallPlugPowerLow,
+                    onMessage: HandleWallPlugPowerLow,
+                    cancellationToken: stoppingToken);
+
+                await _rabbitMQ.SubscribeAsync<WallPlugPowerHighMessage>(
+                    topic: MessageTopics.NetworkEventsWallPlugPowerHigh,
+                    onMessage: HandleWallPlugPowerHigh,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<MultiSensorStateChangedMessage>(
@@ -269,22 +279,45 @@ namespace Sarah.Rules
             }
         }
 
-        private async Task HandleWallPlugStateChanged(WallPlugStateChangedMessage message)
+        private async Task HandleWallPlugEnabledChanged(WallPlugEnabledChangedMessage message)
         {
             try
             {
-                _logger.LogDebug("Received wall plug state changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
-                var evt = new WallPlugStateChangedEvent(
-                    message.SourceNodeId,
-                    message.IsOn,
-                    message.CurrentWattage,
-                    message.LastChangeToPowerLow,
-                    message.LastChangeToPowerHigh);
+                _logger.LogDebug("Received wall plug enabled changed event: node {NodeId}, isOn={IsOn}", message.SourceNodeId, message.IsOn);
+                var evt = new WallPlugEnabledChangedEvent(message.SourceNodeId, message.IsOn);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error handling wall plug state changed event");
+                _logger.LogError(ex, "Error handling wall plug enabled changed event");
+            }
+        }
+
+        private async Task HandleWallPlugPowerLow(WallPlugPowerLowMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received wall plug power low event: node {NodeId}", message.SourceNodeId);
+                var evt = new WallPlugPowerLowEvent(message.SourceNodeId);
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling wall plug power low event");
+            }
+        }
+
+        private async Task HandleWallPlugPowerHigh(WallPlugPowerHighMessage message)
+        {
+            try
+            {
+                _logger.LogDebug("Received wall plug power high event: node {NodeId}", message.SourceNodeId);
+                var evt = new WallPlugPowerHighEvent(message.SourceNodeId);
+                await EvaluateRules(evt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling wall plug power high event");
             }
         }
 
