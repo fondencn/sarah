@@ -40,8 +40,8 @@ namespace Sarah.DeviceService.Model
         /// <returns>Task</returns>
         public abstract Task SetState(bool newState);
 
-        private float PowerHighThreshold { get; } = 10; // unter 10 Watt ist es aus
-        private float PowerLowThreshold { get; } = 20; // über 20 Watt ist es sicher an
+        private float PowerLowThreshold { get; } = 10; // unter 10 Watt ist es aus
+        private float PowerHighThreshold { get; } = 20; // über 20 Watt ist es sicher an
 
         /// <summary>
         /// ClassDescription

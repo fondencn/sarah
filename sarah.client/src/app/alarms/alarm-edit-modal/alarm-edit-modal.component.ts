@@ -305,7 +305,7 @@ export class AlarmEditModalComponent {
       id: this.currentAlarmId,
       contentType,
       contentJson,
-      text: v.text,
+      text,
       alarmTime,
       volume,
       targetSpeaker: v.targetSpeaker || null,

@@ -167,8 +167,8 @@ public static class MessageTopics
     public const string NetworkEventsWallPlugPowerHigh = "network.events.wallplug.power.high";
 
     /// <summary>
-    /// Topic for door or window opened events from the DoorMonitor.
-    /// Published when a door or window is opened, includes info on turned-off heatings.
+    /// Topic for door or window closed events from the DoorMonitor.
+    /// Published when a door or window is closed, includes info on turned-on heatings.
     /// </summary>
     public const string NetworkEventsDoorOrWindowClosed = "network.events.doororwindow.closed";
 
@@ -179,8 +179,8 @@ public static class MessageTopics
     public const string NetworkEventsDoorOrWindowStillOpen = "network.events.doororwindow.stillopen";
 
     /// <summary>
-    /// Topic for door or window closed events from the DoorMonitor.
-    /// Published when a door or window is closed, includes info on turned-on heatings.
+    /// Topic for door or window opened events from the DoorMonitor.
+    /// Published when a door or window is opened, includes info on turned-off heatings.
     /// </summary>
     public const string NetworkEventsDoorOrWindowOpened = "network.events.doororwindow.opened";
 }
