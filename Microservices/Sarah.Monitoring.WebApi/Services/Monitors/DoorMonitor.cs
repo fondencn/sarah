@@ -354,8 +354,9 @@ namespace Sarah.Monitoring.Monitors
                     /* Now continue to report "still open" messages at increasing intervals */
                     while (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
                     {
+                        TimeSpan openDuration = DateTime.Now - _openedAt;
+                        await Task.Delay(GetWaitTime(openDuration, SensorThreshold), cancellationToken);
                         TimeSpan openTime = DateTime.Now - _openedAt;
-                        await Task.Delay(GetWaitTime(openTime, SensorThreshold), cancellationToken);
 
                         var stillOpenMessage = new DoorOrWindowStillOpenMessage()
                         {

@@ -263,9 +263,12 @@ public class AlarmScheduleService : IDisposable
 
     private static DateTime NormalizeLocal(DateTime value)
     {
-        return value.Kind == DateTimeKind.Local
-            ? value
-            : DateTime.SpecifyKind(value, DateTimeKind.Local);
+        return value.Kind switch
+        {
+            DateTimeKind.Local => value,
+            DateTimeKind.Utc => value.ToLocalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc).ToLocalTime()
+        };
     }
 
     private DateTime? CalculateFallbackRecurrence(AlarmScheduleEntity alarm, DateTime localNow)
