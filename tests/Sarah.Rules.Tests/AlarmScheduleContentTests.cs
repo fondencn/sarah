@@ -50,10 +50,9 @@ public class AlarmScheduleContentTests
     {
         var options = new AlarmExecutionOptions
         {
-            SummerModeEnabled = enabled,
+            SuppressTemperatureAlarmsDuringSummer = enabled,
             SummerStartMonth = summerStartMonth,
-            SummerEndMonth = 9,
-            SuppressTemperatureAlarmsDuringSummer = true
+            SummerEndMonth = 9
         };
 
         var now = new DateTime(year, month, day, 12, 0, 0, DateTimeKind.Local);
