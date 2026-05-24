@@ -417,14 +417,16 @@ namespace Sarah.API.BusinessObjects
         public string DeviceName { get; }
         public string DeviceRoom { get; }
         public IReadOnlyList<string> TurnedOnHeatings { get; }
+        public TimeSpan OpenedDuration { get; }
 
-        public DoorOrWindowClosedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOnHeatings)
+        public DoorOrWindowClosedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOnHeatings, TimeSpan openedDuration)
             : base(source, "DoorOrWindowClosed")
         {
             IsWindow = isWindow;
             DeviceName = deviceName;
             DeviceRoom = deviceRoom;
             TurnedOnHeatings = turnedOnHeatings;
+            OpenedDuration = openedDuration;
         }
     }
 

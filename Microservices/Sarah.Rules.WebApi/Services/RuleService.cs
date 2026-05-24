@@ -533,14 +533,15 @@ namespace Sarah.Rules
                 _logger.LogDebug("Received door/window closed event: {DeviceName}, isWindow={IsWindow}",
                     message.DeviceName, message.IsWindow);
                 var turnedOn = message.TurnedOnHeatings?
-                    .Select(h => h.HeatingName)
+                    .Select(h => h.HeatingName + "|" + h.HeatingRoom)
                     .ToList() ?? new List<string>();
                 var evt = new DoorOrWindowClosedEvent(
                     message.SourceNodeId,
                     message.IsWindow,
                     message.DeviceName,
                     message.DeviceRoom,
-                    turnedOn);
+                    turnedOn,
+                    message.OpenedDuration);
                 await EvaluateRules(evt);
             }
             catch (Exception ex)

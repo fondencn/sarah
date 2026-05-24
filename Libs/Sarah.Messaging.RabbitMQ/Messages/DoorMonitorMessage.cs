@@ -35,6 +35,7 @@ public class DoorOrWindowStillOpenMessage : DoorOrWindowMessage
 public class DoorOrWindowClosedMessage : DoorOrWindowMessage
 {
     public TurnedOnHeatingInfo[]? TurnedOnHeatings { get; set; }
+    public TimeSpan OpenedDuration { get; set; }
     public DoorOrWindowClosedMessage()
     {
         Topic = MessageTopics.NetworkEventsDoorOrWindowClosed;

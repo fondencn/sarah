@@ -380,6 +380,7 @@ namespace Sarah.Monitoring.Monitors
                     IsDoor = !isWindow,
                     IsWindow = isWindow,
                     IsOpened = false,
+                    OpenedDuration = DateTime.Now - this._openedAt,
                     TurnedOnHeatings = turnedOnHeatings,
                     DeviceName = this.Device.Name,
                     DeviceRoom = this.Room?.Name ?? ""
