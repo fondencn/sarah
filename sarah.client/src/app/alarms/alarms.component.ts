@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { FullCalendarComponent } from '@fullcalendar/angular';
 import { CalendarOptions, EventInput, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -16,8 +17,9 @@ import { AlarmEditModalComponent, AlarmRecurrence } from './alarm-edit-modal/ala
   templateUrl: './alarms.component.html',
   styleUrls: ['./alarms.component.css']
 })
-export class AlarmsComponent implements OnInit {
+export class AlarmsComponent implements OnInit, AfterViewInit {
   @ViewChild(AlarmEditModalComponent) editModal!: AlarmEditModalComponent;
+  @ViewChild(FullCalendarComponent) fullCalendar?: FullCalendarComponent;
 
   isLoading = false;
 
@@ -37,6 +39,8 @@ export class AlarmsComponent implements OnInit {
     dayMaxEvents: true,
     weekends: true,
     editable: true,
+    handleWindowResize: true,
+    height: 'auto',
     select: this.handleDateSelect.bind(this),
     eventClick: this.handleEventClick.bind(this),
     eventDrop: this.handleEventDrop.bind(this),
@@ -49,6 +53,10 @@ export class AlarmsComponent implements OnInit {
     this.loadAlarms();
   }
 
+  ngAfterViewInit(): void {
+    this.scheduleCalendarResize();
+  }
+
   loadAlarms(): void {
     this.isLoading = true;
     this.rulesClient.apiRulesAlarmsGet().subscribe({
@@ -56,12 +64,19 @@ export class AlarmsComponent implements OnInit {
         const events = alarms.map(a => this.alarmToEvent(a));
         this.calendarOptions = { ...this.calendarOptions, events };
         this.isLoading = false;
+        this.scheduleCalendarResize();
       },
       error: (err) => {
         console.error('Error loading alarms:', err);
         this.isLoading = false;
+        this.scheduleCalendarResize();
       }
     });
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleCalendarResize();
   }
 
   private alarmToEvent(alarm: AlarmScheduleEntityModel): EventInput {
@@ -123,5 +138,17 @@ export class AlarmsComponent implements OnInit {
 
   onAlarmSaved(): void {
     this.loadAlarms();
+  }
+
+  private scheduleCalendarResize(): void {
+    setTimeout(() => {
+      const api = this.fullCalendar?.getApi();
+      if (!api) {
+        return;
+      }
+
+      api.render();
+      api.updateSize();
+    }, 0);
   }
 }
