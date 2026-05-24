@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -182,8 +181,7 @@ public sealed class SmartHomeKernelService
     {
         string payload = JsonSerializer.Serialize(evt, evt.GetType(), new JsonSerializerOptions
         {
-            WriteIndented = false, 
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+            WriteIndented = false
         });
 
         var sb = new StringBuilder();

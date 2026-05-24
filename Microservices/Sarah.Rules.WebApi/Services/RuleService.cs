@@ -118,9 +118,9 @@ namespace Sarah.Rules
                     onMessage: HandleAlarmScheduleChanged,
                     cancellationToken: stoppingToken);
 
-                await _rabbitMQ.SubscribeAsync<TemperatureScheduleChangedMessage>(
-                    topic: MessageTopics.SchedulesTemperatureChanged,
-                    onMessage: HandleTemperatureScheduleChanged,
+                await _rabbitMQ.SubscribeAsync<AlarmTriggeredMessage>(
+                    topic: MessageTopics.SchedulesAlarmTriggered,
+                    onMessage: HandleAlarmTriggered,
                     cancellationToken: stoppingToken);
 
                 await _rabbitMQ.SubscribeAsync<HolidayStatusChangedMessage>(
@@ -376,20 +376,29 @@ namespace Sarah.Rules
             }
         }
 
-        private async Task HandleTemperatureScheduleChanged(TemperatureScheduleChangedMessage message)
+        private async Task HandleAlarmTriggered(AlarmTriggeredMessage message)
         {
             try
             {
-                _logger.LogDebug("Received temperature schedule changed event: {TemperatureScheduleId}, RoomId: {RoomId}, Change: {ChangeType}", 
-                    message.TemperatureScheduleId, message.RoomId, message.Change);
+                _logger.LogInformation(
+                    "Received alarm triggered event {AlarmScheduleId}: {DisplayText} (type {ContentType}, summerSuppressed={Suppressed})",
+                    message.AlarmScheduleId,
+                    message.DisplayText,
+                    message.ContentType,
+                    message.IsSuppressedBySummer);
 
-                // Reconfigure timer rules to reflect schedule changes
-                this.UpdateTimerRules();
-                _logger.LogInformation("Timer rules reconfigured due to temperature schedule change");
+                var evt = new AlarmTriggeredEvent(
+                    message.AlarmScheduleId,
+                    (int)message.ContentType,
+                    message.ContentJson,
+                    message.DisplayText ?? string.Empty,
+                    message.IsSuppressedBySummer);
+
+                await EvaluateRules(evt);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error handling temperature schedule changed event");
+                _logger.LogError(ex, "Error handling alarm triggered event");
             }
         }
 

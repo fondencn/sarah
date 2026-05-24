@@ -8,6 +8,8 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/alarmContentDto.ts
+model/alarmContentType.ts
 model/alarmScheduleEntity.ts
 model/kernelChatMessageRequestDto.ts
 model/kernelChatMessageResponseDto.ts
@@ -16,10 +18,7 @@ model/models.ts
 model/promptRuleDto.ts
 model/promptRuleTimerDto.ts
 model/promptRuleUpsertDto.ts
-model/ruleExecutionLogDto.ts
-model/ruleOverviewDto.ts
 model/speechVolume.ts
-model/temperatureScheduleEntity.ts
 ng-package.json
 package.json
 param.ts

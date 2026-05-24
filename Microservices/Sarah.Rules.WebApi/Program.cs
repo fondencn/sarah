@@ -12,6 +12,7 @@ using Sarah.ServiceDefaults;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Sarah.Rules.Services.Clients;
 using Sarah.Rules.Services.Kernel;
+using Sarah.Rules.WebApi.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +106,11 @@ builder.Services
         "SemanticKernel AzureOpenAI configuration is required.")
     .ValidateOnStart();
 
+builder.Services
+    .AddOptions<AlarmExecutionOptions>()
+    .Bind(builder.Configuration.GetSection("AlarmExecution"))
+    .ValidateOnStart();
+
 // register helper application services
 builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
 builder.Services.AddSingleton<SmartHomePromptProvider>();
@@ -127,7 +133,6 @@ builder.Services.AddSingleton<Sarah.API.Interfaces.IGridStateProvider>(sp => sp.
 
 // Register schedule services
 builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
-builder.Services.AddScoped<Sarah.Rules.Services.TemperatureScheduleService>();
 
 // Add services to the container.
 builder.Services.AddControllers();

@@ -25,15 +25,31 @@
       <div class="modal-body">
         <form [formGroup]="form" novalidate>
 
+          <!-- Alarm type -->
+          <div class="mb-3">
+            <label for="contentType" class="form-label fw-semibold">Alarmtyp <span class="text-danger">*</span></label>
+            <select
+              id="contentType"
+              class="form-select"
+              formControlName="contentType"
+              (change)="onContentTypeChanged()"
+            >
+              <option *ngFor="let type of contentTypeOptions" [value]="type.value">{{ type.label }}</option>
+            </select>
+          </div>
+
           <!-- Title / Text -->
           <div class="mb-3">
-            <label for="alarmText" class="form-label fw-semibold">{{ 'alarms.labelText' | translate }} <span class="text-danger">*</span></label>
+            <label for="alarmText" class="form-label fw-semibold">
+              {{ isTemperatureContent ? 'Bezeichnung' : ('alarms.labelText' | translate) }}
+              <span *ngIf="!isTemperatureContent" class="text-danger">*</span>
+            </label>
             <input
               type="text"
               id="alarmText"
               class="form-control"
               formControlName="text"
-              [placeholder]="'alarms.placeholderText' | translate"
+              [placeholder]="isTemperatureContent ? 'Temperaturplan' : ('alarms.placeholderText' | translate)"
               [class.is-invalid]="form.get('text')?.invalid && form.get('text')?.touched"
             >
             <div class="invalid-feedback">{{ 'alarms.textRequired' | translate }}</div>
@@ -54,7 +70,7 @@
 
           <div class="row">
             <!-- Volume -->
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6 mb-3" *ngIf="!isTemperatureContent">
               <label for="alarmVolume" class="form-label fw-semibold">{{ 'alarms.labelVolume' | translate }}</label>
               <select id="alarmVolume" class="form-select" formControlName="volume">
                 <option *ngFor="let v of volumeOptions" [value]="v.value">{{ v.label }}</option>
@@ -62,7 +78,7 @@
             </div>
 
             <!-- Target Speaker -->
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6 mb-3" *ngIf="!isTemperatureContent">
               <label for="targetSpeaker" class="form-label fw-semibold">{{ 'alarms.labelTargetSpeaker' | translate }}</label>
               <input
                 type="text"
@@ -71,6 +87,65 @@
                 formControlName="targetSpeaker"
                 [placeholder]="'alarms.placeholderSpeaker' | translate"
               >
+            </div>
+          </div>
+
+          <!-- Temperature settings -->
+          <div *ngIf="isTemperatureContent" class="card border-success bg-light p-3 mb-3" formGroupName="temperature">
+            <h6 class="card-title mb-3">Temperaturplan</h6>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="temperatureRoomId" class="form-label fw-semibold">Raum ID <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  id="temperatureRoomId"
+                  class="form-control"
+                  formControlName="roomId"
+                  min="1"
+                  placeholder="z. B. 12"
+                >
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="temperatureTarget" class="form-label fw-semibold">Zieltemperatur °C <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  id="temperatureTarget"
+                  class="form-control"
+                  formControlName="targetTemperature"
+                  min="5"
+                  max="30"
+                  step="0.5"
+                >
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="temperatureDayOfWeek" class="form-label fw-semibold">Wochentag (0-6)</label>
+                <input
+                  type="number"
+                  id="temperatureDayOfWeek"
+                  class="form-control"
+                  formControlName="dayOfWeek"
+                  min="0"
+                  max="6"
+                >
+              </div>
+
+              <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="form-check form-switch mb-0">
+                  <input
+                    type="checkbox"
+                    id="suppressDuringSummer"
+                    class="form-check-input"
+                    formControlName="suppressDuringSummer"
+                    role="switch"
+                  >
+                  <label class="form-check-label fw-semibold" for="suppressDuringSummer">Im Sommer aussetzen</label>
+                </div>
+              </div>
             </div>
           </div>
 

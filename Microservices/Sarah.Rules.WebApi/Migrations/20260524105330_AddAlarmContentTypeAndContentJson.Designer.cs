@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Sarah.Rules.WebApi.Data;
@@ -11,9 +12,11 @@ using Sarah.Rules.WebApi.Data;
 namespace Sarah.Rules.WebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524105330_AddAlarmContentTypeAndContentJson")]
+    partial class AddAlarmContentTypeAndContentJson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,6 +82,31 @@ namespace Sarah.Rules.WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AlarmSchedules", (string)null);
+                });
+
+            modelBuilder.Entity("Sarah.Rules.Data.Entities.TemperatureScheduleEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("Id_Room")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("TargetTemperature")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TemperatureSchedules", (string)null);
                 });
 
             modelBuilder.Entity("Sarah.Rules.WebApi.Data.Entities.KernelConversationMessageEntity", b =>

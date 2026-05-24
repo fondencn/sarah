@@ -1,4 +1,20 @@
-﻿module.exports = function (config) {
+﻿const fs = require('fs');
+
+if (!process.env.CHROME_BIN) {
+  const chromeCandidates = [
+    '/snap/chromium/current/usr/lib/chromium-browser/chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/snap/bin/chromium'
+  ];
+
+  const detectedChromeBin = chromeCandidates.find((candidate) => fs.existsSync(candidate));
+  if (detectedChromeBin) {
+    process.env.CHROME_BIN = detectedChromeBin;
+  }
+}
+
+module.exports = function (config) {
   config.set({
     basePath: '',
     frameworks: ['jasmine', '@angular-devkit/build-angular'],

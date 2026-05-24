@@ -128,7 +128,6 @@ public class RulesControllerKernelConversationHistoryTests
     {
         return new RulesController(
             alarmService: null!,
-            temperatureService: null!,
             db: db,
             promptProvider: null!,
             promptRuleStore: null!,

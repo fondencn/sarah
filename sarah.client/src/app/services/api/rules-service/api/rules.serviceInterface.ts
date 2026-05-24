@@ -17,7 +17,6 @@ import { KernelChatMessageResponseDtoModel } from '../model/models';
 import { KernelConversationMessageDtoModel } from '../model/models';
 import { PromptRuleDtoModel } from '../model/models';
 import { PromptRuleUpsertDtoModel } from '../model/models';
-import { TemperatureScheduleEntityModel } from '../model/models';
 
 
 import { Configuration }                                     from '../configuration';
@@ -138,54 +137,5 @@ export interface RulesClientInterface {
      * 
      */
     apiRulesStatusGet(extraHttpRequestParams?: any): Observable<{}>;
-
-    /**
-     * 
-     * 
-     */
-    apiRulesTemperaturesGet(extraHttpRequestParams?: any): Observable<Array<TemperatureScheduleEntityModel>>;
-
-    /**
-     * 
-     * 
-     * @param id 
-     */
-    apiRulesTemperaturesIdDelete(id: number, extraHttpRequestParams?: any): Observable<{}>;
-
-    /**
-     * 
-     * 
-     * @param id 
-     */
-    apiRulesTemperaturesIdGet(id: number, extraHttpRequestParams?: any): Observable<TemperatureScheduleEntityModel>;
-
-    /**
-     * 
-     * 
-     * @param id 
-     * @param temperatureScheduleEntityModel 
-     */
-    apiRulesTemperaturesIdPut(id: number, temperatureScheduleEntityModel?: TemperatureScheduleEntityModel, extraHttpRequestParams?: any): Observable<TemperatureScheduleEntityModel>;
-
-    /**
-     * 
-     * 
-     * @param temperatureScheduleEntityModel 
-     */
-    apiRulesTemperaturesPost(temperatureScheduleEntityModel?: TemperatureScheduleEntityModel, extraHttpRequestParams?: any): Observable<TemperatureScheduleEntityModel>;
-
-    /**
-     * 
-     * 
-     * @param roomId 
-     */
-    apiRulesTemperaturesRoomRoomIdGet(roomId: number, extraHttpRequestParams?: any): Observable<Array<TemperatureScheduleEntityModel>>;
-
-    /**
-     * 
-     * 
-     * @param roomId 
-     */
-    apiRulesTemperaturesRoomRoomIdNextGet(roomId: number, extraHttpRequestParams?: any): Observable<TemperatureScheduleEntityModel>;
 
 }

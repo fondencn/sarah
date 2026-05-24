@@ -118,11 +118,10 @@ public static class MessageTopics
     public const string SchedulesAlarmChanged = "schedules.alarm.changed";
 
     /// <summary>
-    /// Topic for temperature schedule changes.
-    /// Published when temperature schedules are created, updated, or deleted.
-    /// Used to notify RuleService to reconfigure timer triggers.
+    /// Topic for fired alarm schedules.
+    /// Published when a scheduled alarm reaches its trigger time.
     /// </summary>
-    public const string SchedulesTemperatureChanged = "schedules.temperature.changed";
+    public const string SchedulesAlarmTriggered = "schedules.alarm.triggered";
 
     // Holiday-related topics
 

@@ -18,7 +18,6 @@ namespace Sarah.Rules.WebApi.Controllers;
 public class RulesController : ControllerBase
 {
     private readonly AlarmScheduleService _alarmService;
-    private readonly TemperatureScheduleService _temperatureService;
     private readonly ApplicationDbContext _db;
     private readonly SmartHomePromptProvider _promptProvider;
     private readonly SmartHomePromptRuleStore _promptRuleStore;
@@ -26,13 +25,12 @@ public class RulesController : ControllerBase
     private readonly ILogger<RulesController> _logger;
 
     public RulesController(AlarmScheduleService alarmService,
-        TemperatureScheduleService temperatureService, ApplicationDbContext db,
+        ApplicationDbContext db,
         SmartHomePromptProvider promptProvider, SmartHomePromptRuleStore promptRuleStore,
         SmartHomeKernelService kernelService,
         ILogger<RulesController> logger)
     {
         _alarmService = alarmService;
-        _temperatureService = temperatureService;
         _db = db;
         _promptProvider = promptProvider;
         _promptRuleStore = promptRuleStore;
@@ -312,158 +310,6 @@ public class RulesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error toggling alarm {AlarmId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    #endregion
-
-    #region Temperature Schedule CRUD
-
-    /// <summary>
-    /// Gets all temperature schedules
-    /// </summary>
-    [HttpGet("temperatures")]
-    public async Task<ActionResult<IEnumerable<TemperatureScheduleEntity>>> GetAllTemperatureSchedules()
-    {
-        try
-        {
-            var schedules = await _temperatureService.GetAllSchedulesAsync();
-            return Ok(schedules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting all temperature schedules");
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets temperature schedules for a specific room
-    /// </summary>
-    [HttpGet("temperatures/room/{roomId}")]
-    public async Task<ActionResult<IEnumerable<TemperatureScheduleEntity>>> GetRoomTemperatureSchedules(long roomId)
-    {
-        try
-        {
-            var schedules = await _temperatureService.GetSchedulesForRoomAsync(roomId);
-            return Ok(schedules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting temperature schedules for room {RoomId}", roomId);
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets a specific temperature schedule by ID
-    /// </summary>
-    [HttpGet("temperatures/{id}")]
-    public async Task<ActionResult<TemperatureScheduleEntity>> GetTemperatureScheduleById(long id)
-    {
-        try
-        {
-            var schedule = await _temperatureService.GetScheduleByIdAsync(id);
-            if (schedule == null)
-                return NotFound(new { message = $"Temperaturplan mit ID {id} nicht gefunden" });
-            
-            return Ok(schedule);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting temperature schedule {ScheduleId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Creates a new temperature schedule
-    /// </summary>
-    [HttpPost("temperatures")]
-    public async Task<ActionResult<TemperatureScheduleEntity>> CreateTemperatureSchedule([FromBody] TemperatureScheduleEntity schedule)
-    {
-        try
-        {
-            if (schedule == null)
-                return BadRequest(new { message = "Temperature schedule data is required" });
-
-            var created = await _temperatureService.CreateScheduleAsync(schedule);
-            return CreatedAtAction(nameof(GetTemperatureScheduleById), new { id = created.Id }, created);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating temperature schedule");
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Updates an existing temperature schedule
-    /// </summary>
-    [HttpPut("temperatures/{id}")]
-    public async Task<ActionResult<TemperatureScheduleEntity>> UpdateTemperatureSchedule(long id, [FromBody] TemperatureScheduleEntity schedule)
-    {
-        try
-        {
-            if (schedule == null)
-                return BadRequest(new { message = "Temperature schedule data is required" });
-
-            var updated = await _temperatureService.UpdateScheduleAsync(id, schedule);
-            return Ok(updated);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.LogWarning(ex, "Temperature schedule not found {ScheduleId}", id);
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating temperature schedule {ScheduleId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Deletes a temperature schedule
-    /// </summary>
-    [HttpDelete("temperatures/{id}")]
-    public async Task<IActionResult> DeleteTemperatureSchedule(long id)
-    {
-        try
-        {
-            await _temperatureService.DeleteScheduleAsync(id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.LogWarning(ex, "Temperature schedule not found {ScheduleId}", id);
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting temperature schedule {ScheduleId}", id);
-            return StatusCode(500, new { message = "Internal server error" });
-        }
-    }
-
-    /// <summary>
-    /// Gets the next scheduled temperature change for a room
-    /// </summary>
-    [HttpGet("temperatures/room/{roomId}/next")]
-    public async Task<ActionResult<TemperatureScheduleEntity>> GetNextRoomTemperatureSchedule(long roomId)
-    {
-        try
-        {
-            var schedule = await _temperatureService.GetNextScheduleForRoomAsync(roomId);
-            if (schedule == null)
-                return NotFound(new { message = $"Kein zukünftiger Temperaturplan für Raum {roomId} gefunden" });
-            
-            return Ok(schedule);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting next temperature schedule for room {RoomId}", roomId);
             return StatusCode(500, new { message = "Internal server error" });
         }
     }

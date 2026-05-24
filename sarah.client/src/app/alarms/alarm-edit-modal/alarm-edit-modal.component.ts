@@ -5,6 +5,11 @@ import { RulesClient } from '../../services/api/rules-service/api/rules.service'
 import { AlarmScheduleEntityModel } from '../../services/api/rules-service/model/alarmScheduleEntity';
 import { SpeechVolumeModel } from '../../services/api/rules-service/model/speechVolume';
 
+export enum AlarmContentTypeModel {
+  Text = 0,
+  TemperatureSchedule = 1
+}
+
 export interface AlarmRecurrence {
   freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
   interval: number;
@@ -31,6 +36,7 @@ export class AlarmEditModalComponent {
   isEditing = false;
   isSaving = false;
   currentAlarmId: number | undefined;
+  readonly contentTypes = AlarmContentTypeModel;
 
   form: FormGroup;
 
@@ -58,8 +64,14 @@ export class AlarmEditModalComponent {
     { value: 'yearly', label: 'Yearly' }
   ];
 
+  readonly contentTypeOptions = [
+    { value: AlarmContentTypeModel.Text, label: 'Textalarm' },
+    { value: AlarmContentTypeModel.TemperatureSchedule, label: 'Temperaturplan' }
+  ];
+
   constructor(private fb: FormBuilder, private rulesClient: RulesClient) {
     this.form = this.fb.group({
+      contentType: [AlarmContentTypeModel.Text, Validators.required],
       text: ['', Validators.required],
       alarmTime: ['', Validators.required],
       volume: [SpeechVolumeModel.NUMBER_1, Validators.required],
@@ -68,6 +80,12 @@ export class AlarmEditModalComponent {
       isNurInFerien: [false],
       isNichtInFerien: [false],
       hasRecurrence: [false],
+      temperature: this.fb.group({
+        roomId: [''],
+        targetTemperature: [21],
+        dayOfWeek: [0],
+        suppressDuringSummer: [true]
+      }),
       recurrence: this.fb.group({
         freq: ['weekly'],
         interval: [1, [Validators.min(1)]],
@@ -75,10 +93,17 @@ export class AlarmEditModalComponent {
         until: ['']
       })
     });
+
+    this.form.get('contentType')?.valueChanges.subscribe(() => this.syncValidators());
+    this.syncValidators();
   }
 
   get hasRecurrence(): boolean {
     return this.form.get('hasRecurrence')?.value;
+  }
+
+  get isTemperatureContent(): boolean {
+    return Number(this.form.get('contentType')?.value) === AlarmContentTypeModel.TemperatureSchedule;
   }
 
   get selectedFreq(): string {
@@ -101,6 +126,7 @@ export class AlarmEditModalComponent {
     }
 
     this.form.reset({
+      contentType: AlarmContentTypeModel.Text,
       text: '',
       alarmTime,
       volume: SpeechVolumeModel.NUMBER_1,
@@ -109,8 +135,11 @@ export class AlarmEditModalComponent {
       isNurInFerien: false,
       isNichtInFerien: false,
       hasRecurrence: false,
+      temperature: { roomId: '', targetTemperature: 21, dayOfWeek: 0, suppressDuringSummer: true },
       recurrence: { freq: 'weekly', interval: 1, byweekday: [], until: '' }
     });
+
+    this.syncValidators();
 
     this.isVisible = true;
   }
@@ -122,6 +151,25 @@ export class AlarmEditModalComponent {
     // Convert UTC ISO string from API to local datetime-local format (YYYY-MM-DDTHH:mm).
     const raw = alarm.alarmTime ?? '';
     const alarmTime = raw ? toLocalDatetimeInput(new Date(raw)) : '';
+    const contentType = Number(alarm.contentType ?? AlarmContentTypeModel.Text);
+
+    let temperature = { roomId: '', targetTemperature: 21, dayOfWeek: 0, suppressDuringSummer: true };
+    if (alarm.contentJson) {
+      try {
+        const parsed = JSON.parse(alarm.contentJson) as {
+          roomId?: number;
+          targetTemperature?: number;
+          dayOfWeek?: number;
+          suppressDuringSummer?: boolean;
+        };
+        temperature = {
+          roomId: parsed.roomId != null ? String(parsed.roomId) : '',
+          targetTemperature: parsed.targetTemperature ?? 21,
+          dayOfWeek: parsed.dayOfWeek ?? 0,
+          suppressDuringSummer: parsed.suppressDuringSummer ?? true
+        };
+      } catch { /* ignore parse errors */ }
+    }
 
     let recurrence = { freq: 'weekly', interval: 1, byweekday: [] as string[], until: '' };
     if (alarm.hasRecurrence && alarm.serializedRecurrence) {
@@ -137,6 +185,7 @@ export class AlarmEditModalComponent {
     }
 
     this.form.patchValue({
+      contentType,
       text: alarm.text,
       alarmTime,
       volume: alarm.volume,
@@ -145,8 +194,11 @@ export class AlarmEditModalComponent {
       isNurInFerien: alarm.isNurInFerien ?? false,
       isNichtInFerien: alarm.isNichtInFerien ?? false,
       hasRecurrence: alarm.hasRecurrence,
+      temperature,
       recurrence
     });
+
+    this.syncValidators();
 
     this.isVisible = true;
   }
@@ -183,10 +235,16 @@ export class AlarmEditModalComponent {
     }
   }
 
+  onContentTypeChanged(): void {
+    this.syncValidators();
+  }
+
   save(): void {
     if (this.form.invalid) return;
     this.isSaving = true;
     const v = this.form.value;
+
+    const contentType = Number(v.contentType ?? AlarmContentTypeModel.Text);
 
     // Build ISO datetime string
     const alarmTime = new Date(v.alarmTime).toISOString();
@@ -204,6 +262,26 @@ export class AlarmEditModalComponent {
       serializedRecurrence = JSON.stringify(rec);
     }
 
+    const text = contentType === AlarmContentTypeModel.TemperatureSchedule
+      ? (v.text?.trim() || `Temperatur ${Number(v.temperature?.targetTemperature ?? 0).toFixed(1)}°C`)
+      : v.text;
+
+    const contentJson = contentType === AlarmContentTypeModel.TemperatureSchedule
+      ? JSON.stringify({
+          type: 'temperatureSchedule',
+          roomId: v.temperature?.roomId === '' ? null : Number(v.temperature?.roomId),
+          targetTemperature: Number(v.temperature?.targetTemperature ?? 0),
+          dayOfWeek: Number(v.temperature?.dayOfWeek ?? 0),
+          suppressDuringSummer: !!v.temperature?.suppressDuringSummer,
+          text
+        })
+      : JSON.stringify({
+          type: 'text',
+          text,
+          targetSpeaker: v.targetSpeaker || null,
+          volume: Number(v.volume)
+        });
+
     // Validate volume value against enum before assignment
     const rawVolume = Number(v.volume);
     const validVolumes: number[] = [
@@ -218,6 +296,8 @@ export class AlarmEditModalComponent {
 
     const alarm: AlarmScheduleEntityModel = {
       id: this.currentAlarmId,
+      contentType,
+      contentJson,
       text: v.text,
       alarmTime,
       volume,
@@ -262,5 +342,35 @@ export class AlarmEditModalComponent {
   private onSaveError(err: unknown): void {
     console.error('Alarm operation failed:', err);
     this.isSaving = false;
+  }
+
+  private syncValidators(): void {
+    const textControl = this.form.get('text');
+    const targetSpeakerControl = this.form.get('targetSpeaker');
+    const volumeControl = this.form.get('volume');
+    const temperatureGroup = this.form.get('temperature');
+    const roomIdControl = this.form.get('temperature.roomId');
+    const targetTemperatureControl = this.form.get('temperature.targetTemperature');
+
+    if (this.isTemperatureContent) {
+      textControl?.clearValidators();
+      targetSpeakerControl?.clearValidators();
+      volumeControl?.clearValidators();
+      roomIdControl?.setValidators([Validators.required]);
+      targetTemperatureControl?.setValidators([Validators.required]);
+    } else {
+      textControl?.setValidators([Validators.required]);
+      targetSpeakerControl?.clearValidators();
+      volumeControl?.setValidators([Validators.required]);
+      roomIdControl?.clearValidators();
+      targetTemperatureControl?.clearValidators();
+    }
+
+    textControl?.updateValueAndValidity({ emitEvent: false });
+    targetSpeakerControl?.updateValueAndValidity({ emitEvent: false });
+    volumeControl?.updateValueAndValidity({ emitEvent: false });
+    roomIdControl?.updateValueAndValidity({ emitEvent: false });
+    targetTemperatureControl?.updateValueAndValidity({ emitEvent: false });
+    temperatureGroup?.updateValueAndValidity({ emitEvent: false });
   }
 }

@@ -219,6 +219,37 @@ namespace Sarah.API.BusinessObjects
         }
     }
 
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein geplanter Alarm feuert.
+    /// </summary>
+    public class AlarmTriggeredEvent : NetworkEvent
+    {
+        public long AlarmScheduleId { get; }
+
+        public int ContentType { get; }
+
+        public string? ContentJson { get; }
+
+        public string DisplayText { get; }
+
+        public bool IsSuppressedBySummer { get; }
+
+        public AlarmTriggeredEvent(
+            long alarmScheduleId,
+            int contentType,
+            string? contentJson,
+            string displayText,
+            bool isSuppressedBySummer)
+            : base(0, "AlarmTriggered")
+        {
+            AlarmScheduleId = alarmScheduleId;
+            ContentType = contentType;
+            ContentJson = contentJson;
+            DisplayText = displayText;
+            IsSuppressedBySummer = isSuppressedBySummer;
+        }
+    }
+
     public class SayEvent
     {
         public SayEvent(string msg, string targetSpeaker = "", SpeechVolume vol = SpeechVolume.Normal, [CallerMemberName] string? caller = null) 

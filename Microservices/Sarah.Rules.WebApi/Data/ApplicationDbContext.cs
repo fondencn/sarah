@@ -8,7 +8,6 @@ public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
     public DbSet<AlarmScheduleEntity> AlarmSchedules { get; set; } = null!;
-    public DbSet<TemperatureScheduleEntity> TemperatureSchedules { get; set; } = null!;
     public DbSet<RuleExecutionLogEntity> RuleExecutionLogs { get; set; } = null!;
     public DbSet<KernelConversationMessageEntity> KernelConversationMessages { get; set; } = null!;
     public DbSet<PromptRuleEntity> PromptRules { get; set; } = null!;
@@ -19,12 +18,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<AlarmScheduleEntity>(entity =>
         {
             entity.ToTable("AlarmSchedules");
-            entity.HasKey(e => e.Id);
-        });
-        
-        modelBuilder.Entity<TemperatureScheduleEntity>(entity =>
-        {
-            entity.ToTable("TemperatureSchedules");
             entity.HasKey(e => e.Id);
         });
 
