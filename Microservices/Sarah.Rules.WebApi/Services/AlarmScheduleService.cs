@@ -327,6 +327,14 @@ public class AlarmScheduleService : IDisposable
         return await _db.AlarmSchedules.ToListAsync();
     }
 
+    private static string SanitizeForLog(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return value.Replace("\r", " ").Replace("\n", " ");
+    }
+
     /// <summary>
     /// Creates a new alarm schedule
     /// </summary>
@@ -338,9 +346,11 @@ public class AlarmScheduleService : IDisposable
         _db.AlarmSchedules.Add(alarm);
         await _db.SaveChangesAsync();
 
+        var safeAlarmText = SanitizeForLog(alarm.GetDisplayText());
+
         _logger.LogInformation(
             "Alarm erstellt: {AlarmText} um {AlarmTime}",
-            alarm.GetDisplayText(),
+            safeAlarmText,
             alarm.AlarmTime);
         
         // Notify subscribers of the change
