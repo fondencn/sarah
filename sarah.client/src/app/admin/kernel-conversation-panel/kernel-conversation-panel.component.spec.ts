@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { FormsModule } from '@angular/forms';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,7 +15,7 @@ describe('KernelConversationPanelComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [KernelConversationPanelComponent],
-      imports: [HttpClientTestingModule, TranslateModule.forRoot()],
+      imports: [HttpClientTestingModule, FormsModule, TranslateModule.forRoot()],
       providers: [
         {
           provide: OAuthService,

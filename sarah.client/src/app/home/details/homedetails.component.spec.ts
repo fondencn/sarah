@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { convertToParamMap } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 
 import { HomedetailsComponent } from './homedetails.component';
 
@@ -8,13 +12,21 @@ describe('HomedetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [HomedetailsComponent]
+      declarations: [HomedetailsComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParamMap: of(convertToParamMap({}))
+          }
+        }
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(HomedetailsComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
