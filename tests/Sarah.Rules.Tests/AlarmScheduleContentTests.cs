@@ -27,13 +27,12 @@ public class AlarmScheduleContentTests
     {
         var alarm = new AlarmScheduleEntity();
 
-        alarm.SetTemperatureContent(roomId: 12, targetTemperature: 21.5, dayOfWeek: 2);
+        alarm.SetTemperatureContent(roomId: 12, targetTemperature: 21.5);
 
         Assert.Equal(AlarmContentType.TemperatureSchedule, alarm.ContentType);
         Assert.NotNull(alarm.ContentJson);
         Assert.Equal(12, alarm.Content?.RoomId);
         Assert.Equal(21.5, alarm.Content?.TargetTemperature);
-        Assert.Equal(2, alarm.Content?.DayOfWeek);
         Assert.Equal("Temperatur 21.5°C", alarm.GetDisplayText());
     }
 
