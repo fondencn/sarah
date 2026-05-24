@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Sarah.API.BusinessObjects;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,6 +12,8 @@ namespace Sarah.Rules.Data.Entities;
 [Table("AlarmSchedules")]
 public class AlarmScheduleEntity
 {
+    private static readonly JsonSerializerOptions ContentJsonOptions = CreateContentJsonOptions();
+
     /// <summary>
     /// ID (auto-generated)
     /// </summary>
@@ -26,6 +30,15 @@ public class AlarmScheduleEntity
     [Display(Name = "Text")]
     [Required]
     public string? Text { get; set; }
+
+    [Column(TypeName = "int")]
+    [Display(Name = "Alarmtyp")]
+    [Required]
+    public AlarmContentType ContentType { get; set; } = AlarmContentType.Text;
+
+    [Column(TypeName = "jsonb")]
+    [Display(Name = "Content")]
+    public string? ContentJson { get; set; }
 
     [Column]
     [Display(Name = "Ziel-Gerät")]
@@ -101,6 +114,91 @@ public class AlarmScheduleEntity
 
     [Column]
     public string? SerializedRecurrence { get; set; }
+
+    [NotMapped]
+    public AlarmContentDto? Content
+    {
+        get => DeserializeContent();
+        set => SetContent(value);
+    }
+
+    [NotMapped]
+    public bool IsTemperatureSchedule => ContentType == AlarmContentType.TemperatureSchedule;
+
+    [NotMapped]
+    public bool IsTextSchedule => ContentType == AlarmContentType.Text;
+
+    public void SetTextContent(string text, string? targetSpeaker, SpeechVolume volume)
+    {
+        SetContent(new AlarmContentDto
+        {
+            Type = AlarmContentType.Text,
+            Text = text,
+            TargetSpeaker = targetSpeaker,
+            Volume = (int)volume
+        });
+    }
+
+    public void SetTemperatureContent(long? roomId, double targetTemperature)
+    {
+        SetContent(new AlarmContentDto
+        {
+            Type = AlarmContentType.TemperatureSchedule,
+            RoomId = roomId,
+            TargetTemperature = targetTemperature,
+            Text = $"Temperatur {targetTemperature:0.#}°C"
+        });
+    }
+
+    public string GetDisplayText()
+    {
+        return Content?.DisplayText ?? Text ?? string.Empty;
+    }
+
+    private AlarmContentDto? DeserializeContent()
+    {
+        if (string.IsNullOrWhiteSpace(ContentJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AlarmContentDto>(ContentJson, ContentJsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void SetContent(AlarmContentDto? value)
+    {
+        if (value == null)
+        {
+            ContentJson = null;
+            ContentType = AlarmContentType.Text;
+            return;
+        }
+
+        ContentType = value.Type;
+        ContentJson = JsonSerializer.Serialize(value, ContentJsonOptions);
+        if (!string.IsNullOrWhiteSpace(value.Text))
+        {
+            Text = value.Text;
+        }
+        else if (value.Type == AlarmContentType.TemperatureSchedule && value.TargetTemperature.HasValue)
+        {
+            Text = $"Temperatur {value.TargetTemperature:0.#}°C";
+        }
+    }
+
+    private static JsonSerializerOptions CreateContentJsonOptions()
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        return options;
+    }
 }
 
 public enum AlarmScheduleMode

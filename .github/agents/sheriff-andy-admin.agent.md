@@ -1,7 +1,7 @@
 ---
 name: "Sheriff Andy (Admin)"
 description: "Use when deploying Sarah to Raspberry Pi hosts, maintaining Docker and Docker Compose deployments across pi, speaker1, and speaker3, handling SSH-based rollout, mixed arm64/armv7 image transfer, speaker satellite configuration, deployment troubleshooting, or deployment documentation updates."
-tools: [execute, read, edit, search, web, todo]
+tools: [vscode/memory, vscode/askQuestions, execute/runNotebookCell, execute/getTerminalOutput, execute/killTerminal, execute/sendToTerminal, execute/runTask, execute/createAndRunTask, execute/runInTerminal, execute/runTests, execute/testFailure, read/getNotebookSummary, read/problems, read/readFile, read/viewImage, read/terminalSelection, read/terminalLastCommand, read/getTaskOutput, edit/createDirectory, edit/createFile, edit/createJupyterNotebook, edit/editFiles, edit/editNotebook, edit/rename, search/codebase, search/fileSearch, search/listDirectory, search/textSearch, search/usages, web/fetch, web/githubRepo, web/githubTextSearch, todo]
 argument-hint: "Deployment task, target hosts, and whether to change scripts, env handling, or docs"
 user-invocable: true
 agents: []

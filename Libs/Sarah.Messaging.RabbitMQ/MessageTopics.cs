@@ -65,9 +65,9 @@ public static class MessageTopics
     public const string NetworkEventsTrackerButton = "network.events.trackerbutton";
 
     /// <summary>
-    /// Topic for wall plug state changes (on/off, power threshold crossings).
+    /// Topic for wall plug enabled state changes (on/off).
     /// </summary>
-    public const string NetworkEventsWallPlugState = "network.events.wallplugstate";
+    public const string NetworkEventsWallPlugEnabled = "network.events.wallplugenabled";
 
     /// <summary>
     /// Topic for multi-sensor presence/luminance state changes.
@@ -118,11 +118,10 @@ public static class MessageTopics
     public const string SchedulesAlarmChanged = "schedules.alarm.changed";
 
     /// <summary>
-    /// Topic for temperature schedule changes.
-    /// Published when temperature schedules are created, updated, or deleted.
-    /// Used to notify RuleService to reconfigure timer triggers.
+    /// Topic for fired alarm schedules.
+    /// Published when a scheduled alarm reaches its trigger time.
     /// </summary>
-    public const string SchedulesTemperatureChanged = "schedules.temperature.changed";
+    public const string SchedulesAlarmTriggered = "schedules.alarm.triggered";
 
     // Holiday-related topics
 
@@ -154,4 +153,34 @@ public static class MessageTopics
     /// Published when the current StromGedacht grid stage changes.
     /// </summary>
     public const string MonitoringGridStateChanged = "monitoring.grid.state.changed";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing low threshold.
+    /// Published when a wall plug's power consumption drops below the defined low threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerLow = "network.events.wallplug.power.low";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing high threshold.
+    /// Published when a wall plug's power consumption rises above the defined high threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerHigh = "network.events.wallplug.power.high";
+
+    /// <summary>
+    /// Topic for door or window closed events from the DoorMonitor.
+    /// Published when a door or window is closed, includes info on turned-on heatings.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowClosed = "network.events.doororwindow.closed";
+
+    /// <summary>
+    /// Topic for door or window still open events from the DoorMonitor.
+    /// Published when a door or window remains open for some time; includes opened duration.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowStillOpen = "network.events.doororwindow.stillopen";
+
+    /// <summary>
+    /// Topic for door or window opened events from the DoorMonitor.
+    /// Published when a door or window is opened, includes info on turned-off heatings.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowOpened = "network.events.doororwindow.opened";
 }

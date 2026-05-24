@@ -1,4 +1,5 @@
 using Sarah.API.BusinessObjects;
+using Sarah.DeviceService.Model;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
 
@@ -85,15 +86,6 @@ namespace Sarah.DeviceService.WebApi.Extensions
         }
 
         /// <summary>
-        /// Publishes a wall plug state event so Rules can evaluate WallPlug* conditions.
-        /// </summary>
-        public virtual async Task ReportWallPlugStateChanged(NetworkElement element, bool isOn, float currentWattage, DateTime lastChangeToPowerLow, DateTime lastChangeToPowerHigh)
-        {
-            var message = new WallPlugStateChangedMessage(element.NodeID, isOn, currentWattage, lastChangeToPowerLow, lastChangeToPowerHigh);
-            await _rabbitMQClient.PublishAsync(message);
-        }
-
-        /// <summary>
         /// Publishes a multi-sensor state event so Rules can evaluate Presence/Luminance conditions.
         /// </summary>
         public async Task ReportMultiSensorStateChanged(NetworkElement element, float? presence, float? luminance)
@@ -108,6 +100,33 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportSmokeAlarm(NetworkElement element, bool alarmActive)
         {
             var message = new SmokeSensorAlertMessage(element.NodeID, alarmActive);
+            await _rabbitMQClient.PublishAsync(message);
+        }
+
+        internal async Task  ReportWallPlugEnabledChanged(WallPlug wallPlug)
+        {
+            var message = new WallPlugEnabledChangedMessage(wallPlug.IsOn)
+            {
+                SourceNodeId = wallPlug.NodeID
+            };
+            await _rabbitMQClient.PublishAsync(message);
+        }
+
+        internal async Task ReportWallPlugPowerLow(WallPlug wallPlug)
+        {
+            var message = new WallPlugPowerLowMessage
+            {
+                SourceNodeId = wallPlug.NodeID
+            };
+            await _rabbitMQClient.PublishAsync(message);
+        }
+
+        internal async Task ReportWallPlugPowerHigh(WallPlug wallPlug)
+        {
+            var message = new WallPlugPowerHighMessage
+            {
+                SourceNodeId = wallPlug.NodeID
+            };
             await _rabbitMQClient.PublishAsync(message);
         }
     }

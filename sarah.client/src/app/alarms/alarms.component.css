@@ -2,3 +2,14 @@
   max-width: 1200px;
   margin: 0 auto;
 }
+
+.calendar-shell {
+  min-height: 640px;
+}
+
+.calendar-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+}

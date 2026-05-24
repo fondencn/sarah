@@ -9,11 +9,8 @@
  */
 
 
-export interface TemperatureScheduleEntityModel { 
-    id?: number;
-    id_Room?: number | null;
-    startTime?: string;
-    targetTemperature?: number;
-    dayOfWeek?: number;
+export enum AlarmContentTypeModel {
+    NUMBER_0 = 0,
+    NUMBER_1 = 1
 }
 
