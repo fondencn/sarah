@@ -13,18 +13,12 @@ public class DoorSensorConditionTests
             Value = DoorSensorState.Offen
         };
 
-        var evt = new DoorMonitorAlertEvent(
-            sourceNodeId: 34,
-            deviceName: "Haustuer",
+        var evt = new DoorOrWindowOpenedEvent(
+            source: 34,
             isWindow: false,
-            alertType: DoorMonitorAlertType.Opened,
-            openDurationMinutes: 0,
-            wasOpenLongEnough: false,
-            roomTemperature: null,
-            heatingsTurnedOff: null,
-            heatingChanges: null,
-            nextAlertIntervalMinutes: null,
-            isLoud: false);
+            deviceName: "Haustuer",
+            deviceRoom: "Flur",
+            turnedOffHeatings: new List<string>());
 
         var result = condition.Evaluate(evt);
 
@@ -39,18 +33,13 @@ public class DoorSensorConditionTests
             Value = DoorSensorState.Geschlossen
         };
 
-        var evt = new DoorMonitorAlertEvent(
-            sourceNodeId: 34,
-            deviceName: "Haustuer",
+        var evt = new DoorOrWindowClosedEvent(
+            source: 34,
             isWindow: false,
-            alertType: DoorMonitorAlertType.Closed,
-            openDurationMinutes: 3,
-            wasOpenLongEnough: true,
-            roomTemperature: 20.5f,
-            heatingsTurnedOff: null,
-            heatingChanges: null,
-            nextAlertIntervalMinutes: null,
-            isLoud: false);
+            deviceName: "Haustuer",
+            deviceRoom: "Flur",
+            turnedOnHeatings: new List<string>(),
+            openedDuration: TimeSpan.FromMinutes(3));
 
         var result = condition.Evaluate(evt);
 
@@ -65,18 +54,12 @@ public class DoorSensorConditionTests
             Value = DoorSensorState.Offen
         };
 
-        var evt = new DoorMonitorAlertEvent(
-            sourceNodeId: 34,
-            deviceName: "Haustuer",
+        var evt = new DoorOrWindowStillOpenEvent(
+            source: 34,
             isWindow: false,
-            alertType: DoorMonitorAlertType.StillOpen,
-            openDurationMinutes: 10,
-            wasOpenLongEnough: true,
-            roomTemperature: 19.0f,
-            heatingsTurnedOff: null,
-            heatingChanges: null,
-            nextAlertIntervalMinutes: 15,
-            isLoud: false);
+            deviceName: "Haustuer",
+            deviceRoom: "Flur",
+            openedSince: TimeSpan.FromMinutes(10));
 
         var result = condition.Evaluate(evt);
 
