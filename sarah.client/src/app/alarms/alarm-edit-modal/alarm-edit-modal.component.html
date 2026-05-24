@@ -96,15 +96,11 @@
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="temperatureRoomId" class="form-label fw-semibold">Raum ID <span class="text-danger">*</span></label>
-                <input
-                  type="number"
-                  id="temperatureRoomId"
-                  class="form-control"
-                  formControlName="roomId"
-                  min="1"
-                  placeholder="z. B. 12"
-                >
+                <label for="temperatureRoomId" class="form-label fw-semibold">Raum <span class="text-danger">*</span></label>
+                <select id="temperatureRoomId" class="form-select" formControlName="roomId">
+                  <option value="">Bitte Raum auswählen</option>
+                  <option *ngFor="let room of allRooms" [value]="room.id">{{ room.name }}</option>
+                </select>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -118,33 +114,6 @@
                   max="30"
                   step="0.5"
                 >
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="temperatureDayOfWeek" class="form-label fw-semibold">Wochentag (0-6)</label>
-                <input
-                  type="number"
-                  id="temperatureDayOfWeek"
-                  class="form-control"
-                  formControlName="dayOfWeek"
-                  min="0"
-                  max="6"
-                >
-              </div>
-
-              <div class="col-md-6 mb-3 d-flex align-items-end">
-                <div class="form-check form-switch mb-0">
-                  <input
-                    type="checkbox"
-                    id="suppressDuringSummer"
-                    class="form-check-input"
-                    formControlName="suppressDuringSummer"
-                    role="switch"
-                  >
-                  <label class="form-check-label fw-semibold" for="suppressDuringSummer">Im Sommer aussetzen</label>
-                </div>
               </div>
             </div>
           </div>

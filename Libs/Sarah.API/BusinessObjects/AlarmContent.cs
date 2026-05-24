@@ -22,10 +22,6 @@ namespace Sarah.API.BusinessObjects
 
         public double? TargetTemperature { get; set; }
 
-        public int? DayOfWeek { get; set; }
-
-        public bool? SuppressDuringSummer { get; set; }
-
         [JsonIgnore]
         public string DisplayText
         {

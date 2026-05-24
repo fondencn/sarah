@@ -17,8 +17,6 @@ export interface AlarmContentDtoModel {
     volume?: number | null;
     roomId?: number | null;
     targetTemperature?: number | null;
-    dayOfWeek?: number | null;
-    suppressDuringSummer?: boolean | null;
 }
 
 

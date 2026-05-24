@@ -139,15 +139,13 @@ public class AlarmScheduleEntity
         });
     }
 
-    public void SetTemperatureContent(long? roomId, double targetTemperature, int dayOfWeek, bool suppressDuringSummer = true)
+    public void SetTemperatureContent(long? roomId, double targetTemperature)
     {
         SetContent(new AlarmContentDto
         {
             Type = AlarmContentType.TemperatureSchedule,
             RoomId = roomId,
             TargetTemperature = targetTemperature,
-            DayOfWeek = dayOfWeek,
-            SuppressDuringSummer = suppressDuringSummer,
             Text = $"Temperatur {targetTemperature:0.#}°C"
         });
     }

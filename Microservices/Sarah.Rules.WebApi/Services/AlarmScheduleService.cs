@@ -211,12 +211,8 @@ public class AlarmScheduleService : IDisposable
             return false;
         }
 
-        if (!(_executionOptions.SuppressTemperatureAlarmsDuringSummer && _executionOptions.IsSummer(DateTime.Now)))
-        {
-            return false;
-        }
-
-        return alarm.Content?.SuppressDuringSummer ?? true;
+        return _executionOptions.SuppressTemperatureAlarmsDuringSummer
+               && _executionOptions.IsSummer(DateTime.Now);
     }
 
     private static AlarmTriggeredMessage BuildTriggerMessage(AlarmScheduleEntity alarm, bool suppressedBySummer)
