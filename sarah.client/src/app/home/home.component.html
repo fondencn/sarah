@@ -107,6 +107,22 @@
                             number:'1.0-0' }} ppb</li>
                         </ul>
                       </ng-container>
+                      <ng-container *ngSwitchCase="'MotionSensor'">
+                        <ul class="list-unstyled mt-1 mb-0 small">
+                          <li>
+                            🧍 {{ (item.motionPresence ? 'home.presenceDetected' : 'home.noPresence') | translate }}
+                          </li>
+                          <li *ngIf="item.motionLuminance !== null && item.motionLuminance !== undefined">
+                            💡 {{ item.motionLuminance | number:'1.0-1' }} lx
+                          </li>
+                          <li *ngIf="item.airTemperature !== null && item.airTemperature !== undefined">
+                            🌡️ {{ item.airTemperature | number:'1.1-1' }} °C
+                          </li>
+                          <li *ngIf="item.motionBattery !== null && item.motionBattery !== undefined">
+                            🔋 {{ item.motionBattery | number:'1.0-0' }} %
+                          </li>
+                        </ul>
+                      </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">
                           &nbsp;
@@ -135,6 +151,9 @@
                       </ng-container>
                       <ng-container *ngSwitchCase="'EutronicAirQualitySensor'">
                         <span style="font-size: 2.5rem;" [title]="item.subType">🌬️</span>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'MotionSensor'">
+                        <span style="font-size: 2.5rem;" [title]="item.subType">👁️</span>
                       </ng-container>
                       <ng-container *ngSwitchDefault>
                         <div class="row">

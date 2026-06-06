@@ -449,6 +449,10 @@ public class DevicesController : ControllerBase
         }
         else if (networkItem is IMultiSensor multiSensorItem)
         {
+            if (multiSensorItem.Presence != null)
+                props.Add(new ExtendedPropertyDto { Key = "Presence", Value = (multiSensorItem.Presence.Value > 0).ToString() });
+            if (multiSensorItem.Luminance != null)
+                props.Add(new ExtendedPropertyDto { Key = "Luminance", Value = multiSensorItem.Luminance.Value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) });
             if (networkItem is ITemperatureSensor tempSensorItem && tempSensorItem.Temperature != null)
                 props.Add(new ExtendedPropertyDto { Key = "Temperature", Value = tempSensorItem.Temperature.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
             if (multiSensorItem.RelativeHumidity != null)
@@ -457,6 +461,8 @@ public class DevicesController : ControllerBase
                 props.Add(new ExtendedPropertyDto { Key = "CO2", Value = multiSensorItem.CO2.Value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture) });
             if (multiSensorItem.VolatileOrganicCompounds != null)
                 props.Add(new ExtendedPropertyDto { Key = "VOC", Value = multiSensorItem.VolatileOrganicCompounds.Value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture) });
+            if (networkItem is IBatterySensor batterySensorItem && batterySensorItem.Battery != null)
+                props.Add(new ExtendedPropertyDto { Key = "Battery", Value = batterySensorItem.Battery.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
         }
         return props;
     }

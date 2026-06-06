@@ -29,6 +29,9 @@ export class DeviceControlModalComponent implements OnDestroy {
   airHumidity: number | null = null;
   airCO2: number | null = null;
   airVOC: number | null = null;
+  motionPresence: boolean = false;
+  motionLuminance: number | null = null;
+  motionBattery: number | null = null;
 
   private bootstrapModal: any = null;
   private refreshInterval: any = null;
@@ -155,6 +158,11 @@ export class DeviceControlModalComponent implements OnDestroy {
       this.airHumidity = this.parseNumber(getProp('RelativeHumidity'));
       this.airCO2 = this.parseNumber(getProp('CO2'));
       this.airVOC = this.parseNumber(getProp('VOC'));
+    } else if (this.typeName === 'MotionSensor') {
+      this.motionPresence = getProp('Presence') === 'True';
+      this.motionLuminance = this.parseNumber(getProp('Luminance'));
+      this.motionBattery = this.parseNumber(getProp('Battery'));
+      this.airTemperature = this.parseNumber(getProp('Temperature'));
     }
   }
 

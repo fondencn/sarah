@@ -128,6 +128,27 @@ describe('DeviceControlModalComponent', () => {
       expect(component.airVOC).toBe(150);
     });
 
+    it('parses motion sensor state from extendedProperties', () => {
+      const dev = {
+        extendedProperties: [
+          { key: 'Presence', value: 'True' },
+          { key: 'Luminance', value: '37.5' },
+          { key: 'Battery', value: '78' },
+          { key: 'Temperature', value: '22.4' }
+        ]
+      };
+      devicesServiceSpy.devicesGetDeviceByIdGETApiDevicesId.and.returnValue(of(dev) as any);
+
+      component.typeName = 'MotionSensor';
+      component.deviceId = 8;
+      (component as any).loadState();
+
+      expect(component.motionPresence).toBeTrue();
+      expect(component.motionLuminance).toBe(37.5);
+      expect(component.motionBattery).toBe(78);
+      expect(component.airTemperature).toBe(22.4);
+    });
+
     it('returns null for missing extendedProperties values', () => {
       const dev = { extendedProperties: [] };
       devicesServiceSpy.devicesGetDeviceByIdGETApiDevicesId.and.returnValue(of(dev) as any);
@@ -139,6 +160,19 @@ describe('DeviceControlModalComponent', () => {
       expect(component.thermostatTemperature).toBeNull();
       expect(component.thermostatSetpoint).toBeNull();
       expect(component.thermostatBattery).toBeNull();
+    });
+
+    it('handles missing motion sensor values', () => {
+      const dev = { extendedProperties: [] };
+      devicesServiceSpy.devicesGetDeviceByIdGETApiDevicesId.and.returnValue(of(dev) as any);
+
+      component.typeName = 'MotionSensor';
+      component.deviceId = 9;
+      (component as any).loadState();
+
+      expect(component.motionPresence).toBeFalse();
+      expect(component.motionLuminance).toBeNull();
+      expect(component.motionBattery).toBeNull();
     });
   });
 
