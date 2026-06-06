@@ -2,13 +2,14 @@
 
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { HomeComponent } from './home.component';
+import { DashboardItemViewModel, HomeComponent } from './home.component';
 import { AuthService } from '../services/auth.service';
 import { DevicesClient } from '../services/api/device-service/api/devices.service';
 import { PersonsClient } from '../services/api/persons-service/api/persons.service';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { StatusRuntimeService } from '../services/status-runtime.service';
 import { LoggingService } from '../services/logging.service';
+import { DashboardItemTypeDto } from '../models/api-types';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -73,5 +74,40 @@ describe('HomeComponent', () => {
 
     expect(devicesServiceSpy.devicesSetLampBrightnessPOSTApiDevicesLampIdBrightnessBrightness)
       .toHaveBeenCalledWith(7, 0);
+  });
+
+  it('DashboardItemViewModel reads motion sensor properties', () => {
+    const vm = new DashboardItemViewModel({
+      itemId: 11,
+      itemType: DashboardItemTypeDto.NUMBER_0,
+      title: 'Motion',
+      subtype: 'MotionSensor',
+      extendedProperties: [
+        { key: 'Presence', value: 'True' },
+        { key: 'Luminance', value: '43.5' },
+        { key: 'Battery', value: '88' }
+      ]
+    });
+
+    expect(vm.motionPresence).toBeTrue();
+    expect(vm.motionLuminance).toBe(43.5);
+    expect(vm.motionBattery).toBe(88);
+  });
+
+  it('DashboardItemViewModel motion getters handle missing/invalid values', () => {
+    const vm = new DashboardItemViewModel({
+      itemId: 12,
+      itemType: DashboardItemTypeDto.NUMBER_0,
+      title: 'Motion',
+      subtype: 'MotionSensor',
+      extendedProperties: [
+        { key: 'Presence', value: 'False' },
+        { key: 'Luminance', value: 'not-a-number' }
+      ]
+    });
+
+    expect(vm.motionPresence).toBeFalse();
+    expect(vm.motionLuminance).toBeNull();
+    expect(vm.motionBattery).toBeNull();
   });
 });
