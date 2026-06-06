@@ -73,14 +73,14 @@ namespace Sarah.DeviceService.WebApi.Services
             {251, typeof(WifiWallPlug)}, // Delock 11827 Wifi Steckdose (inkl. Power Report)
             {252, typeof(WifiWallPlug)}, // Delock 11827 Wifi Steckdose (inkl. Power Report)
 
-            // Shelly TRV Gen3 Gateway 1 (2 TRVs)
+            // Shelly TRV Gen3 Gateway 1 (3 TRVs)
             {253, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 200
             {254, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 201
+            {250, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 1, Kanal 201
 
-            // Shelly TRV Gen3 Gateway 2 (3 TRVs)
-            // {240, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 0
-            // {241, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 1
-            // {242, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 2
+            // Shelly TRV Gen3 Gateway 2 (1 TRVs)
+            {240, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 200
+            //{241, typeof(ShellyTrvElement)}, // Shelly TRV Gen3 – Gateway 2, Kanal 201
         };
 
         /// <summary>
@@ -98,14 +98,13 @@ namespace Sarah.DeviceService.WebApi.Services
             yield return 251;
             yield return 252;
 
-            // Shelly TRV Gen3 Gateway 1 (2 TRVs)
+            // Shelly TRV Gen3 Gateway 1 (3 TRVs)
             yield return 253; //Wohnzimmer
             yield return 254; // Kinderzimmer
+            yield return 250; // Schlafzimmer
 
-            // Shelly TRV Gen3 Gateway 2 (3 TRVs)
-            // yield return 240;
-            // yield return 241;
-            // yield return 242;
+            // Shelly TRV Gen3 Gateway 2 (1 TRVs)
+            yield return 240; // Hannahs Zimmer
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,14 +149,13 @@ namespace Sarah.DeviceService.WebApi.Services
         /// </summary>
         private static readonly Dictionary<byte, string> _ShellyTrvHostnames = new Dictionary<byte, string>()
         {
-            // Gateway 1 (2 TRVs)
+            // Gateway 1 (3 TRVs)
             {253, "shellyblugwg3-b08184e755bc"},
             {254, "shellyblugwg3-b08184e755bc"},
+            {250, "shellyblugwg3-b08184e755bc"},
 
-            // Gateway 2 (3 TRVs)
-            // {240, "shelly-trv-gw-2"},
-            // {241, "shelly-trv-gw-2"},
-            // {242, "shelly-trv-gw-2"},
+            // Gateway 2 (1 TRV)
+            {240, "shellyblugwg3-8cbfeaa8cad4"},
         };
 
         /// <summary>
@@ -168,9 +166,10 @@ namespace Sarah.DeviceService.WebApi.Services
             // Gateway 1
             {253, 200},
             {254, 201},
+            {250, 202},
 
             // Gateway 2
-            // {240, 0},
+            {240, 200 },
             // {241, 1},
             // {242, 2},
         };

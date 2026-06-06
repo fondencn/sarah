@@ -29,7 +29,7 @@ namespace Sarah.Monitoring.Monitors
             { 44, TimeSpan.FromMinutes(10) },  // Fenster Schlafzimmer
             { 33, TimeSpan.FromMinutes(1)  },  // Balkontür Wohnzimmer
             { 34, TimeSpan.FromMinutes(1)  },  // Haustür Flur
-            { 35, TimeSpan.FromMinutes(5)  },  // Terassentür Mamazimmer
+            { 35, TimeSpan.FromMinutes(1)  },  // Terassentür Mamazimmer
         };
 
         /// <summary>
@@ -44,11 +44,11 @@ namespace Sarah.Monitoring.Monitors
         private Dictionary<byte, byte[]> DoorToHeatingsMapping { get; } = new Dictionary<byte, byte[]>()
         {
             { 2,  new byte[]{ 253    } },  // Terassentür Arbeitszimmer macht Heizung im Wohnzimmer aus
-            { 23, new byte[]{ 37    } },  // Fenster Lukaszimmer macht Heizung im Lukaszimmer aus
+            { 23, new byte[]{ 254    } },  // Fenster Lukaszimmer macht Heizung im Lukaszimmer aus
             { 22, new byte[]{ 253    } },  // Fenster Wohnzimmer macht Heizung im Wohnzimmer aus
-            { 44, new byte[]{ 42,19 } },  // Fenster Schlafzimmer macht Heizung im Schlafzimmer und im Bad aus
+            { 44, new byte[]{ 250,19 } },  // Fenster Schlafzimmer macht Heizung im Schlafzimmer und im Bad aus
             { 33, new byte[]{ 253    } },  // Balkontür Wohnzimmer macht Heizung im Wohnzimmer aus
-            { 35, new byte[]{ 15    } },  // Terassentür Mamazimmer macht Heizung im Mamazimmer aus
+            { 35, new byte[]{ 240    } },  // Terassentür Mamazimmer macht Heizung im Mamazimmer aus
         };
 
         /// <summary>
