@@ -37,6 +37,7 @@ Current speaker-specific behavior:
 deploy/
 ├── build-and-push.sh          # Build all images & transfer to targets
 ├── deploy-all.sh              # Full deployment orchestrator
+├── deploy-pi-rebuild.sh       # Build selected pi images and deploy them to pi
 ├── deploy-pi.sh               # Deploy main stack to pi
 ├── deploy-speakers.sh         # Deploy SpeechServer to speakers
 ├── pi/
@@ -177,6 +178,18 @@ This will:
 5. Deploy the main stack to `pi`
 6. Deploy SpeechServer to `speaker1` and `speaker3`
 
+### 3. Rebuild and Deploy Pi Only
+
+```bash
+# Rebuild and deploy the full pi stack and frontend
+./deploy-pi-rebuild.sh
+
+# Rebuild and deploy only selected pi services
+./deploy-pi-rebuild.sh deviceservice frontend
+```
+
+If you pass service names, only those Docker images are rebuilt, transferred, and started on `pi`. Omit arguments to rebuild and deploy the full pi stack and frontend.
+
 If you need to refresh an existing remote speaker `.env`, run:
 
 ```bash
@@ -184,7 +197,7 @@ cd deploy
 FORCE_ENV_UPLOAD=true ./deploy-speakers.sh
 ```
 
-### 3. Or Deploy Step-by-Step
+### 4. Or Deploy Step-by-Step
 
 ```bash
 # Build and transfer images
