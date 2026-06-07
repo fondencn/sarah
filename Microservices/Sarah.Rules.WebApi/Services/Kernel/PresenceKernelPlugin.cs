@@ -34,9 +34,13 @@ public sealed class PresenceKernelPlugin
             return $"{person.Name} befindet sich an folgendem Ort: '{person.CurrentGeoFence.Name}'.";
         }
         // Use current location of person
-        if (!string.IsNullOrWhiteSpace(person.CurrentPosition))
+        if (!string.IsNullOrWhiteSpace(person.CurrentNamedPosition))
         {
-            return $"{person.Name} befindet sich aktuell an Position {person.CurrentPosition}.";
+            return $"{person.Name} befindet sich an folgendem Ort: '{person.CurrentNamedPosition}'.";
+        }
+        if (person.CurrentPositionLat.HasValue && person.CurrentPositionLong.HasValue)  
+        {
+            return $"{person.Name} befindet sich aktuell an Position {person.CurrentPositionLat.Value}°, {person.CurrentPositionLong.Value}°.";
         }
 
         return $"{person.Name} kann nicht lokalisiert werden.";
