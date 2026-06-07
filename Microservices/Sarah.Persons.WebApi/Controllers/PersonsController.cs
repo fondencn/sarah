@@ -6,6 +6,7 @@ using Sarah.Persons.WebApi.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.DTOs;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.Persons.WebApi.Controllers;
 
@@ -25,18 +26,26 @@ public class PersonsController : ControllerBase
         _logger = logger;
     }
 
-    private static PersonResponseDto MapToDto(API.Interfaces.IPerson p) => new PersonResponseDto
+    private async Task<PersonResponseDto> MapToDto(API.Interfaces.IPerson p) => new PersonResponseDto
     {
         Id = p.Id,
         Name = p.Name,
         GpsTrackerID = p.GPSTrackerID,
         GpsTrackerName = p.TrackerDeviceName,
         CurrentGeoFence = p.CurrentGeoFence?.Name,
-        CurrentPosition = null,
+        CurrentPositionLong = p.GPSTracker?.Position?.Longtitude.Value,
+        CurrentPositionLat = p.GPSTracker?.Position?.Latitude.Value,
+        CurrentNamedPosition = await GetCurrentNamedPosition(p.GPSTracker?.Position),
         IsAtHome = p.IsAtHome,
         MobilePhoneHostname = p.MobilePhoneHostname,
         IsFavourite = (p as PersonInfoEntity)?.IsFavourite ?? false
     };
+
+    [HttpGet("/namedposition({position})")]
+    public async Task<string> GetCurrentNamedPosition(LocatorPosition? position)
+    {
+        throw new NotImplementedException();
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PersonResponseDto>>> GetAll()
@@ -44,7 +53,12 @@ public class PersonsController : ControllerBase
         try
         {
             var persons = await _personService.GetAllPersonsAsync();
-            return Ok(persons.Select(MapToDto));
+            var personDtos = new List<PersonResponseDto>();
+            foreach (var person in persons)
+            {
+                personDtos.Add(await MapToDto(person));
+            }
+            return Ok(personDtos);
         }
         catch (Exception ex)
         {
@@ -63,7 +77,7 @@ public class PersonsController : ControllerBase
             {
                 return NotFound();
             }
-            return Ok(MapToDto(person));
+            return Ok(await MapToDto(person));
         }
         catch (Exception ex)
         {

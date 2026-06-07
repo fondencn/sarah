@@ -13,6 +13,35 @@ public sealed class PresenceKernelPlugin
         _personService = personService;
     }
 
+    public async Task<string> GetLocationOfPerson(string personName)
+    {
+        var person = (await _personService.GetAllPersonsAsync())
+            .FirstOrDefault(p => string.Equals(p.Name, personName, StringComparison.OrdinalIgnoreCase));
+
+        if (person == null)
+        {
+            return $"Keine Person mit Namen '{personName}' gefunden.";
+        }
+
+        if (person.IsAtHome)
+        {
+            return $"{person.Name} ist zu Hause.";
+        }
+
+        // Get GeoFence of Person
+        if (person.CurrentGeoFence != null)
+        {
+            return $"{person.Name} befindet sich an folgendem Ort: '{person.CurrentGeoFence.Name}'.";
+        }
+        // Use current location of person
+        if (!string.IsNullOrWhiteSpace(person.CurrentPosition))
+        {
+            return $"{person.Name} befindet sich aktuell an Position {person.CurrentPosition}.";
+        }
+
+        return $"{person.Name} kann nicht lokalisiert werden.";
+    }
+
     [KernelFunction, Description("Gibt eine Zusammenfassung der Anwesenheit von Personen zu Hause aus.")]
     public async Task<string> GetPresenceSummaryAsync()
     {
