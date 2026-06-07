@@ -12,6 +12,9 @@ namespace Sarah.API.Interfaces
         string TrackerDeviceName {get;set;}
         IGPSTracker? GPSTracker { get; set; }
         IGeoFence? CurrentGeoFence {get;set;}
+        float? CurrentPositionLong { get; set; }
+        float? CurrentPositionLat { get; set; }
+        string? CurrentNamedPosition { get; set; }
     }
 
 }

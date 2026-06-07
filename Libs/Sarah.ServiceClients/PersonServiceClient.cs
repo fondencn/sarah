@@ -197,7 +197,10 @@ namespace Sarah.ServiceClients
                 CurrentGeoFence = string.IsNullOrWhiteSpace(geoFenceName)
                     ? null
                     : new GeoFenceDto { Name = geoFenceName },
-                GPSTracker = null
+                GPSTracker = null, 
+                CurrentPositionLong = payload.Value<float?>("currentPositionLong"),
+                CurrentPositionLat = payload.Value<float?>("currentPositionLat"),
+                CurrentNamedPosition = payload.Value<string>("currentNamedPosition")
             };
         }
 

@@ -13,5 +13,9 @@ namespace Sarah.API.BusinessObjects.DTOs
         public string TrackerDeviceName { get; set; } = "";
         public IGPSTracker? GPSTracker { get; set; }
         public IGeoFence? CurrentGeoFence { get; set; }
+        public string CurrentPosition { get; set; } = "";
+        public float? CurrentPositionLong { get; set; }
+        public float? CurrentPositionLat { get; set; }
+        public string? CurrentNamedPosition { get; set; }
     }
 }

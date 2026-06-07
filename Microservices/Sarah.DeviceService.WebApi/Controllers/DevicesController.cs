@@ -4,6 +4,7 @@ using Sarah.API.Interfaces.Services;
 using Sarah.DeviceService.WebApi.Data;
 using Sarah.DeviceService.WebApi.DTOs;
 using Sarah.API.BusinessObjects.DTOs;
+using Sarah.API.BusinessObjects.SpeakerRequests;
 using Microsoft.EntityFrameworkCore;
 using Sarah.API.BusinessObjects;
 using System.Linq;
@@ -369,6 +370,40 @@ public class DevicesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving trackers");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpGet("open-doors")]
+    public async Task<IActionResult> GetOpenDoors(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await _dbContext.Devices.ToListAsync(cancellationToken);
+            var namesByNodeId = devices
+                .GroupBy(d => d.NodeID)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(d => d.Name)
+                          .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? $"Node {g.Key}");
+
+            var openDoorNames = _deviceService.DoorSensors
+                .Where(door => door.State == DoorSensorState.Offen)
+                .Select(door => namesByNodeId.TryGetValue(door.NodeID, out var name) ? name : $"Node {door.NodeID}")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var response = new GetOpenDoorsResponse
+            {
+                OpenDoorInfo = string.Join(", ", openDoorNames)
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving open doors");
             return StatusCode(500, "Internal server error");
         }
     }
