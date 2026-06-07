@@ -4,21 +4,15 @@ using Sarah.ServiceClients;
 
 namespace Sarah.Rules.Services.Kernel;
 
-public sealed class DeviceControlKernelPlugin
+public sealed class DeviceControlKernelPlugin(DeviceServiceClient _deviceService)
 {
-    private readonly DeviceServiceClient _deviceService;
-
-    public DeviceControlKernelPlugin(DeviceServiceClient deviceService)
-    {
-        _deviceService = deviceService;
-    }
-
     [KernelFunction, Description("Aktiviert eine Szene anhand ihres Namens.")]
     public async Task<string> ActivateSceneAsync(string sceneName)
     {
         await _deviceService.ActivateScene(sceneName);
         return $"Szene aktiviert: {sceneName}";
     }
+
 
     [KernelFunction, Description("Deaktiviert eine Szene anhand ihres Namens.")]
     public async Task<string> DeactivateSceneAsync(string sceneName)
@@ -27,12 +21,6 @@ public sealed class DeviceControlKernelPlugin
         return $"Szene deaktiviert: {sceneName}";
     }
 
-    [KernelFunction, Description("Schaltet eine Lampe per Node-ID um.")]
-    public async Task<string> ToggleLampByNodeAsync(int nodeId)
-    {
-        await _deviceService.ToggleLampByNodeAsync((byte)nodeId);
-        return $"Lampe Node {nodeId} umgeschaltet.";
-    }
 
     [KernelFunction, Description("Setzt eine Lampe per Node-ID auf warmweiss.")]
     public async Task<string> SetLampWarmWhiteByNodeAsync(int nodeId)
@@ -41,12 +29,14 @@ public sealed class DeviceControlKernelPlugin
         return $"Lampe Node {nodeId} auf warmweiss gesetzt.";
     }
 
+
     [KernelFunction, Description("Setzt eine Lampe per Node-ID auf kaltweiss.")]
     public async Task<string> SetLampColdWhiteByNodeAsync(int nodeId)
     {
         await _deviceService.SetLampColdWhiteByNodeAsync((byte)nodeId);
         return $"Lampe Node {nodeId} auf kaltweiss gesetzt.";
     }
+
 
     [KernelFunction, Description("Setzt eine Lampe per Node-ID auf Farbe und Helligkeit.")]
     public async Task<string> SetLampColorAndBrightnessByNodeAsync(int nodeId, string color, int brightness)
@@ -55,23 +45,51 @@ public sealed class DeviceControlKernelPlugin
         return $"Lampe Node {nodeId} auf Farbe {color} und Helligkeit {brightness} gesetzt.";
     }
 
-    [KernelFunction, Description("Schaltet einen WallPlug per Node-ID ein oder aus.")]
-    public async Task<string> SetWallPlugStateByNodeAsync(int nodeId, bool isOn)
+
+    [KernelFunction, Description("Schaltet eine Lampe per Node-ID aus.")]
+    public async Task<string> TurnLampOffByNodeAsync(int nodeId)
     {
-        await _deviceService.SetWallPlugStateByNodeAsync((byte)nodeId, isOn);
-        return $"WallPlug Node {nodeId} auf {(isOn ? "an" : "aus")} gesetzt.";
+        await _deviceService.SetLampBrightness((byte)nodeId, 0);
+        return $"Lampe Node {nodeId} ausgeschaltet.";
     }
 
-    [KernelFunction, Description("Schaltet einen WallPlug per Node-ID um.")]
-    public async Task<string> ToggleWallPlugByNodeAsync(int nodeId)
+
+    [KernelFunction, Description("Schaltet eine Lampe per Node-ID ein.")]
+    public async Task<string> TurnLampOnByNodeAsync(int nodeId)
     {
-        await _deviceService.ToggleWallPlugByNodeAsync((byte)nodeId);
-        return $"WallPlug Node {nodeId} umgeschaltet.";
+        await _deviceService.SetLampBrightness((byte)nodeId, 255);
+        return $"Lampe Node {nodeId} eingeschaltet.";
     }
 
-    [KernelFunction, Description("Setzt die Thermostat-Temperatur fuer ein Device anhand der Device-ID.")]
+    
+    [KernelFunction, Description("Schaltet ein Gerät (Wallplug, Steckdose) per Node-ID ein.")]
+    public async Task<string> TurnOnDeviceOnByNodeAsync(int nodeId)
+    {
+        await _deviceService.SetWallPlugStateByNodeAsync((byte)nodeId, true);
+        return $"Gerät Node {nodeId} eingeschaltet.";
+    }
+
+
+    [KernelFunction, Description("Schaltet ein Gerät (Wallplug, Steckdose) per Node-ID aus.")]
+    public async Task<string> TurnOffDeviceOnByNodeAsync(int nodeId)
+    {
+        await _deviceService.SetWallPlugStateByNodeAsync((byte)nodeId, false);
+        return $"Gerät Node {nodeId} ausgeschaltet.";
+    }
+
+
+    [KernelFunction, Description("Setzt die Ziel-Temperatur für eine Heizung anhand der Device-ID.")]
     public async Task<string> SetThermostatTemperatureAsync(long deviceId, double temperature)
     {
+        await _deviceService.SetThermostatTemperatureAsync(deviceId, (float)temperature);
+        return $"Thermostat {deviceId} auf {temperature:F1} Grad gesetzt.";
+    }
+
+
+    [KernelFunction, Description("Schaltet eine Heizung anhand der Device-ID aus.")]
+    public async Task<string> TurnOffThermostatAsync(long deviceId)
+    {
+        double temperature = 12.0;
         await _deviceService.SetThermostatTemperatureAsync(deviceId, (float)temperature);
         return $"Thermostat {deviceId} auf {temperature:F1} Grad gesetzt.";
     }

@@ -5,16 +5,7 @@ using Sarah.ServiceClients;
 namespace Sarah.Rules.Services.Kernel;
 
 
-public interface IDeviceQueryKernelPlugin
-{
-    Task<string> GetDeviceByIdAsync(long deviceId);
-    Task<string> GetDeviceByNodeIdAsync(int nodeId);
-    Task<string> GetDevicesSummaryAsync();
-    Task<string> GetOpenDoorsAsync();
-}
-
-
-public sealed class DeviceQueryKernelPlugin : IDeviceQueryKernelPlugin
+public sealed class DeviceQueryKernelPlugin
 {
     private readonly DeviceServiceClient _deviceService;
 

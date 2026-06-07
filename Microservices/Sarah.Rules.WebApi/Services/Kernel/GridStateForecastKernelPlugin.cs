@@ -5,12 +5,7 @@ using Sarah.Rules.Services.Clients;
 namespace Sarah.Rules.Services.Kernel;
 
 
-public interface IGridStateForecastKernelPlugin
-{
-    Task<string> GetGridStateAdvisoryAsync(int hoursInFuture = 12);
-}
-
-public sealed class GridStateForecastKernelPlugin : IGridStateForecastKernelPlugin
+public sealed class GridStateForecastKernelPlugin
 {
     private readonly StromGedachtGridStatesApiClient _gridStatesClient;
     private readonly IConfiguration _configuration;
