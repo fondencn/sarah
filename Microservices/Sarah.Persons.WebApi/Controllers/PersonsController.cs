@@ -6,6 +6,7 @@ using Sarah.Persons.WebApi.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.DTOs;
+using Sarah.Persons.WebApi.Services;
 using Sarah.API.BusinessObjects;
 
 namespace Sarah.Persons.WebApi.Controllers;
@@ -16,12 +17,14 @@ namespace Sarah.Persons.WebApi.Controllers;
 public class PersonsController : ControllerBase
 {
     private readonly IPersonService _personService;
+    private readonly INamedPositionService _namedPositionService;
     private readonly ApplicationDbContext _database;
     private readonly ILogger<PersonsController> _logger;
 
-    public PersonsController(IPersonService personService, ApplicationDbContext database, ILogger<PersonsController> logger)
+    public PersonsController(IPersonService personService, INamedPositionService namedPositionService, ApplicationDbContext database, ILogger<PersonsController> logger)
     {
         _personService = personService;
+        _namedPositionService = namedPositionService;
         _database = database;
         _logger = logger;
     }
@@ -41,10 +44,23 @@ public class PersonsController : ControllerBase
         IsFavourite = (p as PersonInfoEntity)?.IsFavourite ?? false
     };
 
-    [HttpGet("/namedposition({position})")]
+    [NonAction]
     public async Task<string> GetCurrentNamedPosition(LocatorPosition? position)
     {
-        throw new NotImplementedException();
+        return await _namedPositionService.ResolveNamedPositionAsync(position, HttpContext.RequestAborted);
+    }
+
+    [HttpGet("namedposition")]
+    public async Task<ActionResult<string>> GetNamedPosition([FromQuery] float? lat, [FromQuery] float? lon)
+    {
+        if (!lat.HasValue || !lon.HasValue)
+        {
+            return BadRequest("Both lat and lon query parameters are required.");
+        }
+
+        var position = new LocatorPosition(new Sarah.API.Business.SensorData(lat.Value, "°"), new Sarah.API.Business.SensorData(lon.Value, "°"));
+        var namedPosition = await GetCurrentNamedPosition(position);
+        return Ok(namedPosition);
     }
 
     [HttpGet]

@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     // Migrated entities from Sarah.Data
     public DbSet<PersonInfoEntity> Persons { get; set; } = null!;
     public DbSet<UserFavouriteEntity> UserFavourites { get; set; } = null!;
+    public DbSet<NamedPositionCacheEntity> NamedPositionCache { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,13 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("UserFavourites");
             entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<NamedPositionCacheEntity>(entity =>
+        {
+            entity.ToTable("NamedPositionCache");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Latitude, e.Longitude }).IsUnique();
         });
     }
 }

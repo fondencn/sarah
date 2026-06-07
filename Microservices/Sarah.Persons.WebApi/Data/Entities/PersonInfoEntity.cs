@@ -38,4 +38,13 @@ public class PersonInfoEntity : IPerson
 
     [NotMapped]
     public IGeoFence? CurrentGeoFence { get; set; }
+
+    [NotMapped]
+    public float? CurrentPositionLong { get; set; }
+
+    [NotMapped]
+    public float? CurrentPositionLat { get; set; }
+
+    [NotMapped]
+    public string? CurrentNamedPosition { get; set; }
 }

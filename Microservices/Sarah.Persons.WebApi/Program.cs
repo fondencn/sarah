@@ -31,6 +31,18 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddSingleton<HomeNetworkService>();
 
+builder.Services.AddHttpClient<INamedPositionService, NamedPositionService>(client =>
+{
+    var nominatimBaseUrl = builder.Configuration["Nominatim:BaseUrl"]
+        ?? "https://nominatim.openstreetmap.org";
+    var userAgent = builder.Configuration["Nominatim:UserAgent"]
+        ?? "Sarah.Persons.WebApi/1.0 (contact: admin@sarah.local)";
+
+    client.BaseAddress = new Uri(nominatimBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+});
+
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
