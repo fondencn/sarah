@@ -94,17 +94,6 @@ public sealed class RoomStateKernelPlugin
         return $"Raumzustand {room.Name} (ID {roomId}): Temperatur {averageTemperature}, Praesenz {presence}, offene Tueren/Fenster {openDoors}.";
     }
 
-    public async Task<string> GetOpenDoorsAsync()
-    {
-        var openDoors = await _deviceService.GetOpenDoors();
-        if (string.IsNullOrWhiteSpace(openDoors.OpenDoorInfo))
-        {
-            return "Aktuell sind keine Tueren offen.";  
-        } else {
-            return "Offene Tueren: " + openDoors.OpenDoorInfo;
-        }
-    }
-
     private static string FormatDeviceShort(Sarah.API.BusinessObjects.DTOs.DeviceDto device)
     {
         string name = string.IsNullOrWhiteSpace(device.Name) ? "(ohne Name)" : device.Name;

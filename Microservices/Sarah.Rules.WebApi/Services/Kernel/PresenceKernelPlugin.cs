@@ -13,6 +13,7 @@ public sealed class PresenceKernelPlugin
         _personService = personService;
     }
 
+    [KernelFunction, Description("Liefert den aktuellen Aufenthaltsort einer Person anhand ihres Namens.")]
     public async Task<string> GetLocationOfPerson(string personName)
     {
         var person = (await _personService.GetAllPersonsAsync())

@@ -11,6 +11,7 @@ namespace Sarah.Persons.WebApi.Services;
 public class NamedPositionService : INamedPositionService
 {
     private const int CoordinatePrecision = 5;
+    private static readonly TimeSpan CacheUsageRefreshInterval = TimeSpan.FromHours(1);
 
     private readonly ApplicationDbContext _dbContext;
     private readonly HttpClient _httpClient;
@@ -44,8 +45,13 @@ public class NamedPositionService : INamedPositionService
 
         if (cached != null)
         {
-            cached.LastUsedAtUtc = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            DateTime now = DateTime.UtcNow;
+            if (cached.LastUsedAtUtc <= now - CacheUsageRefreshInterval)
+            {
+                cached.LastUsedAtUtc = now;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
             return cached.NamedLocation;
         }
 
@@ -57,7 +63,7 @@ public class NamedPositionService : INamedPositionService
 
         string namedLocation = nominatimResult.DisplayName;
 
-        _dbContext.NamedPositionCache.Add(new NamedPositionCacheEntity
+        var cacheEntry = new NamedPositionCacheEntity
         {
             Latitude = latitude,
             Longitude = longitude,
@@ -66,9 +72,29 @@ public class NamedPositionService : INamedPositionService
             NominatimJson = nominatimResult.RawJson,
             CreatedAtUtc = DateTime.UtcNow,
             LastUsedAtUtc = DateTime.UtcNow
-        });
+        };
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        _dbContext.NamedPositionCache.Add(cacheEntry);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            _dbContext.Entry(cacheEntry).State = EntityState.Detached;
+
+            var existing = await _dbContext.NamedPositionCache
+                .FirstOrDefaultAsync(x => x.Latitude == latitude && x.Longitude == longitude, cancellationToken);
+
+            if (existing != null)
+            {
+                return existing.NamedLocation;
+            }
+
+            throw;
+        }
+
         return namedLocation;
     }
 

@@ -119,7 +119,7 @@ public class PersonsController : ControllerBase
             };
             await _database.Persons.AddAsync(entity);
             await _database.SaveChangesAsync();
-            return Ok(MapToDto(entity));
+            return Ok(await MapToDto(entity));
         }
         catch (Exception ex)
         {
@@ -141,7 +141,7 @@ public class PersonsController : ControllerBase
             await _personService.UpdatePersonAsync(personDto);
             var updated = await _personService.GetPersonByIdAsync(id);
             if (updated == null) return NotFound();
-            return Ok(MapToDto(updated));
+            return Ok(await MapToDto(updated));
         }
         catch (KeyNotFoundException)
         {

@@ -63,7 +63,7 @@ public sealed class DeviceControlKernelPlugin(DeviceServiceClient _deviceService
 
     
     [KernelFunction, Description("Schaltet ein Gerät (Wallplug, Steckdose) per Node-ID ein.")]
-    public async Task<string> TurnOnDeviceOnByNodeAsync(int nodeId)
+    public async Task<string> TurnDeviceOnByNodeAsync(int nodeId)
     {
         await _deviceService.SetWallPlugStateByNodeAsync((byte)nodeId, true);
         return $"Gerät Node {nodeId} eingeschaltet.";
@@ -71,7 +71,7 @@ public sealed class DeviceControlKernelPlugin(DeviceServiceClient _deviceService
 
 
     [KernelFunction, Description("Schaltet ein Gerät (Wallplug, Steckdose) per Node-ID aus.")]
-    public async Task<string> TurnOffDeviceOnByNodeAsync(int nodeId)
+    public async Task<string> TurnDeviceOffByNodeAsync(int nodeId)
     {
         await _deviceService.SetWallPlugStateByNodeAsync((byte)nodeId, false);
         return $"Gerät Node {nodeId} ausgeschaltet.";
