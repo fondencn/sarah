@@ -735,8 +735,15 @@ namespace Sarah.Rules
         /// <returns></returns>
         public async Task Notify(NetworkEvent e)
         {
-            string? deviceName = null;
-            if (e.SourceNodeId > 0)
+            string? deviceName = e switch
+            {
+                DoorOrWindowOpenedEvent x => x.DeviceName,
+                DoorOrWindowStillOpenEvent x => x.DeviceName,
+                DoorOrWindowClosedEvent x => x.DeviceName,
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(deviceName) && e.SourceNodeId > 0)
             {
                 try
                 {
