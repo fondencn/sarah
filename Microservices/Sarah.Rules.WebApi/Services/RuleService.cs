@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
 using Sarah.Rules.Services.Kernel;
+using Sarah.ServiceClients;
 
 namespace Sarah.Rules
 {
@@ -623,9 +624,25 @@ namespace Sarah.Rules
         /// </summary>
         public async Task EvaluateRules(NetworkEvent e)
         {
+            string? deviceName = null;
+            if (e.SourceNodeId > 0)
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var deviceClient = scope.ServiceProvider.GetRequiredService<DeviceServiceClient>();
+                    var device = await deviceClient.GetDeviceByNodeIdAsync(e.SourceNodeId);
+                    deviceName = device?.Name;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not resolve device name for node {NodeId}", e.SourceNodeId);
+                }
+            }
+
             try
             {
-                await _smartHomeKernel.ProcessEventAsync(e);
+                await _smartHomeKernel.ProcessEventAsync(e, deviceName);
                 await WriteExecutionLogAsync($"SemanticKernel:{e.GetType().Name}", success: true);
             }
             catch (Exception ex)
@@ -716,9 +733,25 @@ namespace Sarah.Rules
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public Task Notify(NetworkEvent e)
+        public async Task Notify(NetworkEvent e)
         {
-            return _smartHomeKernel.ProcessEventAsync(e);
+            string? deviceName = null;
+            if (e.SourceNodeId > 0)
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var deviceClient = scope.ServiceProvider.GetRequiredService<DeviceServiceClient>();
+                    var device = await deviceClient.GetDeviceByNodeIdAsync(e.SourceNodeId);
+                    deviceName = device?.Name;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not resolve device name for node {NodeId} in Notify", e.SourceNodeId);
+                }
+            }
+
+            await _smartHomeKernel.ProcessEventAsync(e, deviceName);
         }
 
         /// <summary>
