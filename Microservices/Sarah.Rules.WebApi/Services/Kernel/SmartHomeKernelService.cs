@@ -39,10 +39,10 @@ public sealed class SmartHomeKernelService
         _options = options.Value;
     }
 
-    public async Task ProcessEventAsync(NetworkEvent evt, CancellationToken cancellationToken = default)
+    public async Task ProcessEventAsync(NetworkEvent evt, string? deviceName = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Processing network event: {EventType} from node {NodeId} (property: {Property})",
-            evt.GetType().Name, evt.SourceNodeId, evt.Property);
+        _logger.LogInformation("Processing network event: {EventType} from node {NodeId} (property: {Property}, deviceName: {DeviceName})",
+            evt.GetType().Name, evt.SourceNodeId, evt.Property, deviceName ?? "unknown");
 
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -51,7 +51,7 @@ public sealed class SmartHomeKernelService
 
         Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider);
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
-        ChatHistory chatHistory = await BuildChatHistoryAsync(db, evt, cancellationToken);
+        ChatHistory chatHistory = await BuildChatHistoryAsync(db, evt, deviceName, cancellationToken);
 
         var settings = new OpenAIPromptExecutionSettings
         {
@@ -69,7 +69,7 @@ public sealed class SmartHomeKernelService
         _logger.LogDebug("LLM response received (role: {Role}, length: {Length})",
             response.Role.Label, response.Content?.Length ?? 0);
 
-        await PersistConversationTurnAsync(db, AuthorRole.User.Label, BuildEventPrompt(evt), cancellationToken);
+        await PersistConversationTurnAsync(db, AuthorRole.User.Label, BuildEventPrompt(evt, deviceName), cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(response.Content))
         {
@@ -177,7 +177,7 @@ public sealed class SmartHomeKernelService
             .Take(_options.MaxHistoryMessages);
     }
 
-    internal string BuildEventPrompt(NetworkEvent evt)
+    internal string BuildEventPrompt(NetworkEvent evt, string? deviceName = null)
     {
         string payload = JsonSerializer.Serialize(evt, evt.GetType(), new JsonSerializerOptions
         {
@@ -189,6 +189,8 @@ public sealed class SmartHomeKernelService
         sb.AppendLine($"EventType: {evt.GetType().Name}");
         sb.AppendLine($"Property: {evt.Property}");
         sb.AppendLine($"SourceNodeId: {evt.SourceNodeId}");
+        if (!string.IsNullOrWhiteSpace(deviceName))
+            sb.AppendLine($"DeviceName: {deviceName}");
         sb.AppendLine($"CreationDate: {evt.CreationDate:O}");
         sb.AppendLine("Payload:");
         sb.AppendLine(payload);
@@ -258,7 +260,7 @@ public sealed class SmartHomeKernelService
         }
     }
 
-    private async Task<ChatHistory> BuildChatHistoryAsync(ApplicationDbContext db, NetworkEvent evt, CancellationToken cancellationToken)
+    private async Task<ChatHistory> BuildChatHistoryAsync(ApplicationDbContext db, NetworkEvent evt, string? deviceName, CancellationToken cancellationToken)
     {
         var history = new ChatHistory();
         history.AddSystemMessage(_promptProvider.BuildSystemPrompt());
@@ -271,7 +273,7 @@ public sealed class SmartHomeKernelService
             history.AddMessage(ParseRole(message.Role), message.Content);
         }
 
-        history.AddUserMessage(BuildEventPrompt(evt));
+        history.AddUserMessage(BuildEventPrompt(evt, deviceName));
         return history;
     }
 
