@@ -85,7 +85,7 @@ public class AlarmScheduleService : IDisposable
             {
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var oldAlarms = await db.AlarmSchedules
-                    .Where(item => item.AlarmTime <= DateTime.Now && !item.HasRecurrence && item.IsActive)
+                    .Where(item => item.AlarmTime <= DateTime.UtcNow && !item.HasRecurrence && item.IsActive)
                     .ToListAsync();
 
                 foreach (var alarm in oldAlarms)
