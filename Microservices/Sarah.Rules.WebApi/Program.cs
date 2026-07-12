@@ -132,7 +132,8 @@ builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedGridStateProvider
 builder.Services.AddSingleton<Sarah.API.Interfaces.IGridStateProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedGridStateProvider>());
 
 // Register schedule services
-builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
+builder.Services.AddSingleton<Sarah.Rules.Services.AlarmScheduleService>();
+builder.Services.AddHostedService<Sarah.Rules.Services.AlarmScheduleHostedService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -215,12 +216,5 @@ await promptProvider.ReloadAsync();
 var promptRuleStore = app.Services.GetRequiredService<SmartHomePromptRuleStore>();
 promptRuleStore.ReloadFromProvider();
 ruleSvc.RegisterRuleStore(promptRuleStore);
-
-// Initialize AlarmScheduleService
-using (var scope = app.Services.CreateScope())
-{
-    var alarmService = scope.ServiceProvider.GetRequiredService<Sarah.Rules.Services.AlarmScheduleService>();
-    await alarmService.Start();
-}
 
 app.Run();

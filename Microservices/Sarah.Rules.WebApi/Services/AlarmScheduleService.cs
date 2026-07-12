@@ -21,24 +21,22 @@ namespace Sarah.Rules.Services;
 public class AlarmScheduleService : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
-    private readonly ApplicationDbContext _db;
     private readonly ILogger<AlarmScheduleService> _logger;
     private readonly RabbitMQClient _rabbitMQ;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AlarmExecutionOptions _executionOptions;
     private readonly SemaphoreSlim _reloadLock = new(1, 1);
     private readonly ConcurrentDictionary<long, ScheduledAlarm> _scheduledAlarms = new();
+    private int _isDisposed;
     private CancellationTokenSource? _updateCancellationTokenSource;
     private Task? _updateTask;
 
     public AlarmScheduleService(
-        ApplicationDbContext db,
         ILogger<AlarmScheduleService> logger,
         RabbitMQClient rabbitMQ,
         IServiceScopeFactory serviceScopeFactory,
         IOptions<AlarmExecutionOptions> executionOptions)
     {
-        _db = db;
         _logger = logger;
         _rabbitMQ = rabbitMQ;
         _serviceScopeFactory = serviceScopeFactory;
@@ -50,21 +48,33 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public Task Start()
     {
+        if (Volatile.Read(ref _isDisposed) == 1 || _updateCancellationTokenSource != null)
+        {
+            return Task.CompletedTask;
+        }
+
         _logger.LogDebug("AlarmScheduleService gestartet.");
 
         _updateCancellationTokenSource = new CancellationTokenSource();
         _ = RefreshSchedulesAsync();
         _updateTask = Task.Run(async () =>
         {
-            // Initial delay, then clean up old alarms
-            await Task.Delay(10 * 1000);
-            await CleanupOldAlarms();
-
-            // Every 12 hours check for alarms needing cleanup
-            while (!_updateCancellationTokenSource.Token.IsCancellationRequested)
+            try
             {
-                await Task.Delay(12 * 60 * 1000);
+                // Initial delay, then clean up old alarms
+                await Task.Delay(10 * 1000, _updateCancellationTokenSource.Token);
                 await CleanupOldAlarms();
+
+                // Every 12 hours check for alarms needing cleanup
+                while (!_updateCancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(12 * 60 * 60 * 1000, _updateCancellationTokenSource.Token);
+                    await CleanupOldAlarms();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected during shutdown.
             }
         }, _updateCancellationTokenSource.Token);
 
@@ -109,9 +119,22 @@ public class AlarmScheduleService : IDisposable
 
     private async Task RefreshSchedulesAsync()
     {
-        await _reloadLock.WaitAsync();
+        if (Volatile.Read(ref _isDisposed) == 1)
+        {
+            return;
+        }
+
+        var lockAcquired = false;
         try
         {
+            await _reloadLock.WaitAsync();
+            lockAcquired = true;
+
+            if (Volatile.Read(ref _isDisposed) == 1)
+            {
+                return;
+            }
+
             foreach (var scheduled in _scheduledAlarms.Values)
             {
                 scheduled.Dispose();
@@ -119,7 +142,10 @@ public class AlarmScheduleService : IDisposable
 
             _scheduledAlarms.Clear();
 
-            var alarms = await _db.AlarmSchedules
+            using var scope = _serviceScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var alarms = await db.AlarmSchedules
                 .Where(a => a.IsActive)
                 .OrderBy(a => a.AlarmTime)
                 .ToListAsync();
@@ -131,9 +157,23 @@ public class AlarmScheduleService : IDisposable
 
             _logger.LogDebug("Loaded {Count} active alarms into the scheduler", alarms.Count);
         }
+        catch (ObjectDisposedException)
+        {
+            // Can happen during shutdown races; ignore.
+        }
         finally
         {
-            _reloadLock.Release();
+            if (lockAcquired)
+            {
+                try
+                {
+                    _reloadLock.Release();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore shutdown races.
+                }
+            }
         }
     }
 
@@ -166,6 +206,11 @@ public class AlarmScheduleService : IDisposable
 
     private async Task HandleAlarmFiredAsync(long alarmId)
     {
+        if (Volatile.Read(ref _isDisposed) == 1)
+        {
+            return;
+        }
+
         try
         {
             using var scope = _serviceScopeFactory.CreateScope();
@@ -200,8 +245,25 @@ public class AlarmScheduleService : IDisposable
         }
         finally
         {
-            await RefreshSchedulesAsync();
+            if (Volatile.Read(ref _isDisposed) == 0)
+            {
+                await RefreshSchedulesAsync();
+            }
         }
+    }
+
+    private async Task<TResult> WithDbContextAsync<TResult>(Func<ApplicationDbContext, Task<TResult>> action)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return await action(db);
+    }
+
+    private async Task WithDbContextAsync(Func<ApplicationDbContext, Task> action)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await action(db);
     }
 
     private bool ShouldSuppressTemperatureAlarm(AlarmScheduleEntity alarm)
@@ -309,9 +371,10 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<IEnumerable<AlarmScheduleEntity>> GetActiveAlarmsAsync()
     {
-        return await _db.AlarmSchedules
-            .Where(a => a.IsActive)
-            .ToListAsync();
+        return await WithDbContextAsync(db =>
+            db.AlarmSchedules
+                .Where(a => a.IsActive)
+                .ToListAsync());
     }
 
     /// <summary>
@@ -319,7 +382,7 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<AlarmScheduleEntity?> GetAlarmByIdAsync(long id)
     {
-        return await _db.AlarmSchedules.FindAsync(id);
+        return await WithDbContextAsync(db => db.AlarmSchedules.FindAsync(id).AsTask());
     }
 
     /// <summary>
@@ -327,7 +390,7 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<IEnumerable<AlarmScheduleEntity>> GetAllAlarmsAsync()
     {
-        return await _db.AlarmSchedules.ToListAsync();
+        return await WithDbContextAsync(db => db.AlarmSchedules.ToListAsync());
     }
 
     private static string SanitizeForLog(string? value)
@@ -346,8 +409,11 @@ public class AlarmScheduleService : IDisposable
         if (alarm == null)
             throw new ArgumentNullException(nameof(alarm));
 
-        _db.AlarmSchedules.Add(alarm);
-        await _db.SaveChangesAsync();
+        await WithDbContextAsync(async db =>
+        {
+            db.AlarmSchedules.Add(alarm);
+            await db.SaveChangesAsync();
+        });
 
         var safeAlarmText = SanitizeForLog(alarm.GetDisplayText());
 
@@ -373,7 +439,7 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<AlarmScheduleEntity> UpdateAlarmAsync(long id, AlarmScheduleEntity alarm)
     {
-        var existing = await _db.AlarmSchedules.FindAsync(id);
+        var existing = await WithDbContextAsync(db => db.AlarmSchedules.FindAsync(id).AsTask());
         if (existing == null)
             throw new KeyNotFoundException($"Alarm mit ID {id} nicht gefunden");
 
@@ -393,8 +459,11 @@ public class AlarmScheduleService : IDisposable
         existing.HasRecurrence = alarm.HasRecurrence;
         existing.SerializedRecurrence = alarm.SerializedRecurrence;
 
-        _db.AlarmSchedules.Update(existing);
-        await _db.SaveChangesAsync();
+        await WithDbContextAsync(async db =>
+        {
+            db.AlarmSchedules.Update(existing);
+            await db.SaveChangesAsync();
+        });
         _logger.LogInformation("Alarm aktualisiert: {AlarmId}", id);
         
         // Notify subscribers of the change
@@ -414,12 +483,15 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task DeleteAlarmAsync(long id)
     {
-        var alarm = await _db.AlarmSchedules.FindAsync(id);
+        var alarm = await WithDbContextAsync(db => db.AlarmSchedules.FindAsync(id).AsTask());
         if (alarm == null)
             throw new KeyNotFoundException($"Alarm mit ID {id} nicht gefunden");
 
-        _db.AlarmSchedules.Remove(alarm);
-        await _db.SaveChangesAsync();
+        await WithDbContextAsync(async db =>
+        {
+            db.AlarmSchedules.Remove(alarm);
+            await db.SaveChangesAsync();
+        });
         _logger.LogInformation("Alarm gelöscht: {AlarmId}", id);
         
         // Notify subscribers of the change
@@ -437,13 +509,16 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<AlarmScheduleEntity> ToggleAlarmActiveAsync(long id)
     {
-        var alarm = await _db.AlarmSchedules.FindAsync(id);
+        var alarm = await WithDbContextAsync(db => db.AlarmSchedules.FindAsync(id).AsTask());
         if (alarm == null)
             throw new KeyNotFoundException($"Alarm mit ID {id} nicht gefunden");
 
         alarm.IsActive = !alarm.IsActive;
-        _db.AlarmSchedules.Update(alarm);
-        await _db.SaveChangesAsync();
+        await WithDbContextAsync(async db =>
+        {
+            db.AlarmSchedules.Update(alarm);
+            await db.SaveChangesAsync();
+        });
         _logger.LogInformation("Alarm-Status gewechselt: {AlarmId}, IsActive: {IsActive}", id, alarm.IsActive);
         
         // Notify subscribers of the change
@@ -460,14 +535,19 @@ public class AlarmScheduleService : IDisposable
 
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _isDisposed, 1) == 1)
+        {
+            return;
+        }
+
+        _updateCancellationTokenSource?.Cancel();
+
         foreach (var scheduled in _scheduledAlarms.Values)
         {
             scheduled.Dispose();
         }
 
         _scheduledAlarms.Clear();
-
-        _updateCancellationTokenSource?.Cancel();
         
         // Wait for the background task to complete before disposing
         if (_updateTask != null)
@@ -483,6 +563,8 @@ public class AlarmScheduleService : IDisposable
         }
         
         _updateCancellationTokenSource?.Dispose();
+        _updateCancellationTokenSource = null;
+        _updateTask = null;
         _reloadLock.Dispose();
     }
 
