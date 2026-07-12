@@ -68,7 +68,7 @@ public class AlarmScheduleService : IDisposable
                 // Every 12 hours check for alarms needing cleanup
                 while (!_updateCancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(12 * 60 * 1000, _updateCancellationTokenSource.Token);
+                    await Task.Delay(12 * 60 * 60 * 1000, _updateCancellationTokenSource.Token);
                     await CleanupOldAlarms();
                 }
             }
@@ -565,6 +565,7 @@ public class AlarmScheduleService : IDisposable
         _updateCancellationTokenSource?.Dispose();
         _updateCancellationTokenSource = null;
         _updateTask = null;
+        _reloadLock.Dispose();
     }
 
     private sealed class ScheduledAlarm : IDisposable
