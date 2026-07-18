@@ -320,13 +320,8 @@ services:
       - EmailNotifier__SmtpUsername=${SMTP_USERNAME:-}
       - EmailNotifier__SmtpPassword=${SMTP_PASSWORD:-}
       - Keycloak__ServiceClientSecret=${RULES_CLIENT_SECRET}
-      - SemanticKernel__ConversationRetentionHours=${SEMANTIC_KERNEL_CONVERSATION_RETENTION_HOURS:-24}
-      - SemanticKernel__MaxHistoryMessages=${SEMANTIC_KERNEL_MAX_HISTORY_MESSAGES:-1000}
-      - SemanticKernel__Temperature=${SEMANTIC_KERNEL_TEMPERATURE:-0.2}
       - SemanticKernel__AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
       - SemanticKernel__AzureOpenAI__DeploymentName=${AZURE_OPENAI_DEPLOYMENT_NAME}
-      - SemanticKernel__AzureOpenAI__ModelId=${AZURE_OPENAI_MODEL_ID:-model-router}
-      - SemanticKernel__AzureOpenAI__ApiVersion=${AZURE_OPENAI_API_VERSION:-2024-12-01-preview}
       - SemanticKernel__AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
     ports:
       - "5006:8080"

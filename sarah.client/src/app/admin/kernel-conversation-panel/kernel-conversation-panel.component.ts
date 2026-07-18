@@ -25,7 +25,6 @@ interface KernelChatMessageResponse {
 })
 export class KernelConversationPanelComponent implements OnInit, OnDestroy {
   private readonly requestTimeoutMs = 10000;
-  private readonly chatRequestTimeoutMs = 180000;
   private tokenEventsSubscription: Subscription | null = null;
 
   readonly defaultHours = 2;
@@ -134,7 +133,7 @@ export class KernelConversationPanelComponent implements OnInit, OnDestroy {
     const url = `${environment.api.rulesService}/api/Rules/kernel-conversation/message`;
 
     this.http.post<KernelChatMessageResponse>(url, { message }).pipe(
-      timeout(this.chatRequestTimeoutMs),
+      timeout(this.requestTimeoutMs),
       finalize(() => {
         this.sendingMessage = false;
       })

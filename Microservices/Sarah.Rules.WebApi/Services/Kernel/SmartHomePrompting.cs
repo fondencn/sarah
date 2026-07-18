@@ -65,7 +65,8 @@ public sealed class SmartHomePromptProvider
             "Für Regeln mit Zeitbezug: frage vorher die Uhrzeit über das Plugin im 24h-Format ab.",
             "Wenn mehrere Regeln passen, führe alle notwendigen Aktionen aus.",
             "Beschränkungen und gezielte Anweisungen die sich auf die Eigenschaft SourceNodeid beziehen, sind exakt zu beachten. ",
-            "Wenn keine Aktion erforderlich ist, antworte nur '.' (Keine Sprachausgabe!).",
+            "Wenn keine Aktion erforderlich ist, antworte nur '.' (Keine Sprachausgabe!). ",
+            "Wenn du eine Sprachausgabe ausgibst oder eine Aktions auslöst, schreib das in deine Antwort. ", 
             "Wende die folgenden Regeln als verbindlich an:"
         };
 
