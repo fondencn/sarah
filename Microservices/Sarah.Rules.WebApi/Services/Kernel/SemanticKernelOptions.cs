@@ -6,6 +6,7 @@ public class SemanticKernelOptions
 {
     public int ConversationRetentionHours { get; set; } = 24;
     public int MaxHistoryMessages { get; set; } = 200;
+    public double Temperature { get; set; } = 0.2;
     public AzureOpenAIOptions AzureOpenAI { get; set; } = new();
 }
 
@@ -21,4 +22,6 @@ public class AzureOpenAIOptions
     public string ApiKey { get; set; } = string.Empty;
 
     public string ModelId { get; set; } = string.Empty;
+
+    public string ApiVersion { get; set; } = "2025-11-18";
 }

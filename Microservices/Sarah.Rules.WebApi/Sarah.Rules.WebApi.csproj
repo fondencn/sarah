@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NoWarn>$(NoWarn);SYSLIB0011</NoWarn>
+    <NoWarn>$(NoWarn);SYSLIB0011;SKEXP0010</NoWarn>
     <UserSecretsId>36558766-b025-417c-aa1e-aa303ba69b65</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>

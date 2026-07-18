@@ -53,10 +53,7 @@ public sealed class SmartHomeKernelService
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
         ChatHistory chatHistory = await BuildChatHistoryAsync(db, evt, deviceName, cancellationToken);
 
-        var settings = new OpenAIPromptExecutionSettings
-        {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-        };
+        var settings = CreatePromptExecutionSettings();
 
         _logger.LogDebug("Sending chat history with {MessageCount} messages to LLM", chatHistory.Count);
 
@@ -102,10 +99,7 @@ public sealed class SmartHomeKernelService
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
         ChatHistory chatHistory = await BuildChatHistoryAsync(db, userMessage, cancellationToken);
 
-        var settings = new OpenAIPromptExecutionSettings
-        {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-        };
+        var settings = CreatePromptExecutionSettings();
 
         ChatMessageContent response = await chatService.GetChatMessageContentAsync(
             chatHistory,
@@ -199,17 +193,49 @@ public sealed class SmartHomeKernelService
         return sb.ToString();
     }
 
+    private OpenAIPromptExecutionSettings CreatePromptExecutionSettings()
+    {
+        return new OpenAIPromptExecutionSettings
+        {
+            Temperature = _options.Temperature,
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
+    }
+
     private Microsoft.SemanticKernel.Kernel BuildKernel(IServiceProvider serviceProvider, ConversationSpeechContext? speechContext = null)
     {
-        _logger.LogDebug("Building kernel with deployment '{Deployment}' at {Endpoint}",
-            _options.AzureOpenAI.DeploymentName, _options.AzureOpenAI.Endpoint);
+        string endpoint = _options.AzureOpenAI.Endpoint.Trim();
+        string modelId = string.IsNullOrWhiteSpace(_options.AzureOpenAI.ModelId)
+            ? _options.AzureOpenAI.DeploymentName
+            : _options.AzureOpenAI.ModelId;
 
         var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-        builder.AddAzureOpenAIChatCompletion(
-            deploymentName: _options.AzureOpenAI.DeploymentName,
-            endpoint: _options.AzureOpenAI.Endpoint,
-            apiKey: _options.AzureOpenAI.ApiKey,
-            modelId: string.IsNullOrWhiteSpace(_options.AzureOpenAI.ModelId) ? null : _options.AzureOpenAI.ModelId);
+        if (IsOpenAICompatibleEndpoint(endpoint))
+        {
+            string compatibleEndpoint = NormalizeOpenAICompatibleEndpoint(endpoint);
+            _logger.LogDebug("Building kernel with OpenAI-compatible endpoint {Endpoint} and model '{ModelId}'",
+                compatibleEndpoint, modelId);
+
+            builder.AddOpenAIChatCompletion(
+                modelId: modelId,
+                endpoint: new Uri(compatibleEndpoint),
+                apiKey: _options.AzureOpenAI.ApiKey,
+                orgId: null,
+                serviceId: null,
+                httpClient: null);
+        }
+        else
+        {
+            _logger.LogDebug("Building kernel with Azure OpenAI deployment '{Deployment}' at {Endpoint}",
+                _options.AzureOpenAI.DeploymentName, endpoint);
+
+            builder.AddAzureOpenAIChatCompletion(
+                deploymentName: _options.AzureOpenAI.DeploymentName,
+                endpoint: endpoint,
+                apiKey: _options.AzureOpenAI.ApiKey,
+                modelId: string.IsNullOrWhiteSpace(_options.AzureOpenAI.ModelId) ? null : _options.AzureOpenAI.ModelId,
+                apiVersion: string.IsNullOrWhiteSpace(_options.AzureOpenAI.ApiVersion) ? null : _options.AzureOpenAI.ApiVersion);
+        }
 
         Microsoft.SemanticKernel.Kernel kernel = builder.Build();
         kernel.Plugins.AddFromObject(new SpeechKernelPlugin(
@@ -241,6 +267,29 @@ public sealed class SmartHomeKernelService
 
         
         return kernel;
+    }
+
+    private static bool IsOpenAICompatibleEndpoint(string endpoint)
+    {
+        return endpoint.Contains("services.ai.azure.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeOpenAICompatibleEndpoint(string endpoint)
+    {
+        var trimmed = endpoint.Trim();
+        const string chatCompletionsSuffix = "/chat/completions";
+
+        if (trimmed.EndsWith(chatCompletionsSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[..^chatCompletionsSuffix.Length];
+        }
+
+        if (!trimmed.EndsWith('/'))
+        {
+            trimmed += "/";
+        }
+
+        return trimmed;
     }
 
     internal sealed class ConversationSpeechContext
