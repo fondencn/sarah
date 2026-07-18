@@ -12,9 +12,11 @@ public class SmartHomePromptingTests
 
         string prompt = provider.BuildSystemPrompt();
 
-        Assert.Contains("Du bist Sarah", prompt);
+        Assert.Contains("Identität: Sarah", prompt);
         Assert.Contains("Speech-Plugin", prompt);
         Assert.Contains("Sicherheit vor Komfort", prompt);
+        Assert.Contains("nur 'ok'", prompt);
+        Assert.Contains("24h-Format", prompt);
     }
 
     [Fact]

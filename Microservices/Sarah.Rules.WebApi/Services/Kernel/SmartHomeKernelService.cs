@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -41,17 +42,34 @@ public sealed class SmartHomeKernelService
 
     public async Task ProcessEventAsync(NetworkEvent evt, string? deviceName = null, CancellationToken cancellationToken = default)
     {
+        var traceId = Guid.NewGuid().ToString("N")[..8];
+        var totalTimer = Stopwatch.StartNew();
+
         _logger.LogInformation("Processing network event: {EventType} from node {NodeId} (property: {Property}, deviceName: {DeviceName})",
             evt.GetType().Name, evt.SourceNodeId, evt.Property, deviceName ?? "unknown");
+
+        _logger.LogInformation("Kernel event trace {TraceId} started", traceId);
 
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var pruneTimer = Stopwatch.StartNew();
         await PruneConversationHistoryAsync(db, cancellationToken);
+        pruneTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage prune_history_ms={DurationMs}", traceId, pruneTimer.ElapsedMilliseconds);
 
+        var kernelBuildTimer = Stopwatch.StartNew();
         Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider);
+        kernelBuildTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage build_kernel_ms={DurationMs}", traceId, kernelBuildTimer.ElapsedMilliseconds);
+
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
+
+        var historyTimer = Stopwatch.StartNew();
         ChatHistory chatHistory = await BuildChatHistoryAsync(db, evt, deviceName, cancellationToken);
+        historyTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage build_history_ms={DurationMs} message_count={MessageCount}",
+            traceId, historyTimer.ElapsedMilliseconds, chatHistory.Count);
 
         var settings = new OpenAIPromptExecutionSettings
         {
@@ -60,15 +78,19 @@ public sealed class SmartHomeKernelService
 
         _logger.LogDebug("Sending chat history with {MessageCount} messages to LLM", chatHistory.Count);
 
+        var llmTimer = Stopwatch.StartNew();
         ChatMessageContent response = await chatService.GetChatMessageContentAsync(
             chatHistory,
             settings,
             kernel,
             cancellationToken);
+        llmTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage llm_call_ms={DurationMs}", traceId, llmTimer.ElapsedMilliseconds);
 
         _logger.LogDebug("LLM response received (role: {Role}, length: {Length})",
             response.Role.Label, response.Content?.Length ?? 0);
 
+        var persistTimer = Stopwatch.StartNew();
         await PersistConversationTurnAsync(db, AuthorRole.User.Label, BuildEventPrompt(evt, deviceName), cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(response.Content))
@@ -76,7 +98,16 @@ public sealed class SmartHomeKernelService
             await PersistConversationTurnAsync(db, response.Role.Label, response.Content, cancellationToken);
         }
 
+        persistTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage persist_turns_ms={DurationMs}", traceId, persistTimer.ElapsedMilliseconds);
+
+        var saveTimer = Stopwatch.StartNew();
         await db.SaveChangesAsync(cancellationToken);
+        saveTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} stage save_changes_ms={DurationMs}", traceId, saveTimer.ElapsedMilliseconds);
+
+        totalTimer.Stop();
+        _logger.LogInformation("Kernel event trace {TraceId} completed total_ms={DurationMs}", traceId, totalTimer.ElapsedMilliseconds);
 
         _logger.LogInformation("Event processing complete for {EventType} from node {NodeId}",
             evt.GetType().Name, evt.SourceNodeId);
@@ -92,27 +123,49 @@ public sealed class SmartHomeKernelService
         if (string.IsNullOrWhiteSpace(userMessage))
             throw new ArgumentException("userMessage must not be empty", nameof(userMessage));
 
+        var traceId = Guid.NewGuid().ToString("N")[..8];
+        var totalTimer = Stopwatch.StartNew();
+        _logger.LogInformation("Kernel chat trace {TraceId} started target_speaker='{Speaker}' message_length={Length}",
+            traceId, targetSpeaker, userMessage.Length);
+
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var pruneTimer = Stopwatch.StartNew();
         await PruneConversationHistoryAsync(db, cancellationToken);
+        pruneTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage prune_history_ms={DurationMs}", traceId, pruneTimer.ElapsedMilliseconds);
 
         var speechContext = new ConversationSpeechContext(targetSpeaker);
+
+        var kernelBuildTimer = Stopwatch.StartNew();
         Microsoft.SemanticKernel.Kernel kernel = BuildKernel(scope.ServiceProvider, speechContext);
+        kernelBuildTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage build_kernel_ms={DurationMs}", traceId, kernelBuildTimer.ElapsedMilliseconds);
+
         var chatService = kernel.GetRequiredService<IChatCompletionService>();
+
+        var historyTimer = Stopwatch.StartNew();
         ChatHistory chatHistory = await BuildChatHistoryAsync(db, userMessage, cancellationToken);
+        historyTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage build_history_ms={DurationMs} message_count={MessageCount}",
+            traceId, historyTimer.ElapsedMilliseconds, chatHistory.Count);
 
         var settings = new OpenAIPromptExecutionSettings
         {
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
+        var llmTimer = Stopwatch.StartNew();
         ChatMessageContent response = await chatService.GetChatMessageContentAsync(
             chatHistory,
             settings,
             kernel,
             cancellationToken);
+        llmTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage llm_call_ms={DurationMs}", traceId, llmTimer.ElapsedMilliseconds);
 
+        var persistTimer = Stopwatch.StartNew();
         await PersistConversationTurnAsync(db, AuthorRole.User.Label, userMessage.Trim(), cancellationToken);
 
         var assistantText = response.Content ?? string.Empty;
@@ -128,7 +181,18 @@ public sealed class SmartHomeKernelService
             }
         }
 
+        persistTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage persist_turns_ms={DurationMs}", traceId, persistTimer.ElapsedMilliseconds);
+
+        var saveTimer = Stopwatch.StartNew();
         await db.SaveChangesAsync(cancellationToken);
+        saveTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} stage save_changes_ms={DurationMs}", traceId, saveTimer.ElapsedMilliseconds);
+
+        totalTimer.Stop();
+        _logger.LogInformation("Kernel chat trace {TraceId} completed total_ms={DurationMs} assistant_length={Length}",
+            traceId, totalTimer.ElapsedMilliseconds, assistantText.Length);
+
         return assistantText;
     }
 
