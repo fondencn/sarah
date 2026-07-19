@@ -10,6 +10,48 @@ namespace Sarah.Rules.Tests;
 public class SmartHomeKernelServiceRetentionTests
 {
     [Fact]
+    public async Task QueryRetainedConversationMessages_ExcludesToolRoleMessages()
+    {
+        await using var db = CreateDbContext();
+        DateTime now = new DateTime(2026, 5, 9, 12, 0, 0, DateTimeKind.Utc);
+
+        db.KernelConversationMessages.AddRange(
+            new KernelConversationMessageEntity
+            {
+                ConversationId = "smart-home-main",
+                Role = "user",
+                Content = "retained-user",
+                CreatedAtUtc = now.AddMinutes(-5)
+            },
+            new KernelConversationMessageEntity
+            {
+                ConversationId = "smart-home-main",
+                Role = "tool",
+                Content = "excluded-tool",
+                CreatedAtUtc = now.AddMinutes(-4)
+            },
+            new KernelConversationMessageEntity
+            {
+                ConversationId = "smart-home-main",
+                Role = "assistant",
+                Content = "retained-assistant",
+                CreatedAtUtc = now.AddMinutes(-3)
+            });
+
+        await db.SaveChangesAsync();
+
+        var service = CreateService(retentionHours: 24, maxHistoryMessages: 200);
+
+        var retained = await service.QueryRetainedConversationMessages(db, now)
+            .ToListAsync();
+
+        Assert.Equal(2, retained.Count);
+        Assert.DoesNotContain(retained, m => m.Role == "tool");
+        Assert.Equal("retained-user", retained[0].Content);
+        Assert.Equal("retained-assistant", retained[1].Content);
+    }
+
+    [Fact]
     public async Task QueryRetainedConversationMessages_FiltersByCutoffAndConversation()
     {
         await using var db = CreateDbContext();

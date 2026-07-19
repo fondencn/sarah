@@ -236,7 +236,10 @@ public sealed class SmartHomeKernelService
         DateTime cutoff = GetConversationCutoffUtc(utcNow);
 
         return db.KernelConversationMessages
-            .Where(m => m.ConversationId == ConversationId && m.CreatedAtUtc >= cutoff)
+            .Where(m =>
+                m.ConversationId == ConversationId &&
+                m.CreatedAtUtc >= cutoff &&
+                m.Role.ToLower() != AuthorRole.Tool.Label)
             .OrderBy(m => m.CreatedAtUtc)
             .Take(_options.MaxHistoryMessages);
     }
@@ -360,6 +363,12 @@ public sealed class SmartHomeKernelService
 
     private async Task PersistConversationTurnAsync(ApplicationDbContext db, string role, string content, CancellationToken cancellationToken)
     {
+        if (string.Equals(role, AuthorRole.Tool.Label, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogDebug("Skipping persistence of tool-role message because only structured tool results are supported for replay");
+            return;
+        }
+
         db.KernelConversationMessages.Add(new KernelConversationMessageEntity
         {
             ConversationId = ConversationId,
