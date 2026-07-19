@@ -14,6 +14,8 @@ PI_HOST="${PI_HOST:-pi}"
 DEPLOY_DIR="${REMOTE_DEPLOY_DIR:-/opt/sarah}"
 SSH_USER="${SSH_USER:-pi}"
 PI_TARGET="${SSH_USER}@${PI_HOST}"
+INFRA_HEALTH_TIMEOUT_SEC="${INFRA_HEALTH_TIMEOUT_SEC:-180}"
+INFRA_HEALTH_POLL_SEC="${INFRA_HEALTH_POLL_SEC:-2}"
 
 declare -A PI_SERVICE_DOCKERFILES=(
   [deviceservice]="Microservices/Sarah.DeviceService.WebApi/Dockerfile"
@@ -216,6 +218,47 @@ preflight_check() {
   ok "All pre-flight checks passed for ${PI_HOST}."
 }
 
+wait_for_infra_health() {
+  remote "DEPLOY_DIR='${DEPLOY_DIR}' INFRA_HEALTH_TIMEOUT_SEC='${INFRA_HEALTH_TIMEOUT_SEC}' INFRA_HEALTH_POLL_SEC='${INFRA_HEALTH_POLL_SEC}' bash -s" <<'EOF'
+set -euo pipefail
+
+cd "$DEPLOY_DIR"
+timeout_sec="$INFRA_HEALTH_TIMEOUT_SEC"
+poll_sec="$INFRA_HEALTH_POLL_SEC"
+deadline=$((SECONDS + timeout_sec))
+
+while (( SECONDS < deadline )); do
+  pg_id="$(docker compose ps -q postgres | head -n1)"
+  mq_id="$(docker compose ps -q rabbitmq | head -n1)"
+
+  if [[ -z "$pg_id" || -z "$mq_id" ]]; then
+    echo "Waiting for infrastructure containers (postgres/rabbitmq) to exist..." >&2
+    sleep "$poll_sec"
+    continue
+  fi
+
+  pg="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$pg_id" 2>/dev/null || echo unknown)"
+  mq="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$mq_id" 2>/dev/null || echo unknown)"
+
+  if [[ "$pg" == "healthy" && "$mq" == "healthy" ]]; then
+    echo "Infrastructure healthy: postgres=$pg rabbitmq=$mq"
+    exit 0
+  fi
+
+  echo "Waiting for infrastructure health: postgres=$pg rabbitmq=$mq" >&2
+  sleep "$poll_sec"
+done
+
+echo "ERROR: Timed out after ${timeout_sec}s waiting for infrastructure health (postgres/rabbitmq)." >&2
+docker compose ps postgres rabbitmq keycloak >&2 || true
+echo "--- recent postgres logs ---" >&2
+docker compose logs --tail=40 postgres >&2 || true
+echo "--- recent rabbitmq logs ---" >&2
+docker compose logs --tail=40 rabbitmq >&2 || true
+exit 1
+EOF
+}
+
 deploy() {
   log "Uploading compose files to ${PI_TARGET}:${DEPLOY_DIR}/"
   remote "mkdir -p ${DEPLOY_DIR}"
@@ -260,11 +303,20 @@ deploy() {
     log "  Volumes: $(echo "$existing_volumes" | tr '\n' ' ')"
   fi
 
-  log "Starting infrastructure on ${PI_HOST}..."
-  remote "cd ${DEPLOY_DIR} && docker compose up -d postgres rabbitmq keycloak"
+  local is_full_deploy=0
+  if [[ ${#SELECTED_SERVICES[@]} -eq ${#ALL_PI_SERVICES[@]} ]]; then
+    is_full_deploy=1
+  fi
 
-  log "Waiting for PostgreSQL and RabbitMQ health checks..."
-  remote "bash -lc 'cd "${DEPLOY_DIR}" && for i in \$(seq 1 60); do pg_id=\$(docker compose ps -q postgres); mq_id=\$(docker compose ps -q rabbitmq); pg=\$(docker inspect --format="{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}" "\$pg_id" 2>/dev/null || echo unknown); mq=\$(docker inspect --format="{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}" "\$mq_id" 2>/dev/null || echo unknown); if [ "\$pg" = "healthy" ] && [ "\$mq" = "healthy" ]; then exit 0; fi; sleep 2; done; echo "Timed out waiting for infrastructure health checks" >&2; docker compose ps >&2; exit 1'"
+  if (( is_full_deploy )); then
+    log "Starting infrastructure on ${PI_HOST}..."
+    remote "cd ${DEPLOY_DIR} && docker compose up -d postgres rabbitmq keycloak"
+  else
+    log "Partial deploy detected; leaving existing infrastructure containers unchanged."
+  fi
+
+  log "Waiting for PostgreSQL and RabbitMQ health checks (timeout: ${INFRA_HEALTH_TIMEOUT_SEC}s)..."
+  wait_for_infra_health
 
   log "Starting selected app services on ${PI_HOST}..."
   remote "cd ${DEPLOY_DIR} && docker compose up -d ${SELECTED_SERVICES[*]}"
