@@ -57,7 +57,7 @@ namespace Sarah.DeviceService.Model
                 {
                     /* Wifi Dosen kann man immer Abfragen, die Haben ja keinen Akku */
                     await this.UpdateSensorData();
-                    await Task.Delay(1 * 60 * 1000); // Check jede Minute
+                    await Task.Delay(TimeSpan.FromMinutes(2), this._UpdateSensorDataCancellationTokenSource.Token); 
                 }
             }, cts.Token);
 
