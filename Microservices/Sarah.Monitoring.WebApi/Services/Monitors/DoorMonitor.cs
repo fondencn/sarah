@@ -54,7 +54,8 @@ namespace Sarah.Monitoring.Monitors
         /// <summary>
         /// Für diese Sensoren wird sofort eine Warnung ausgegben,  wenn sie geöffnet werden
         /// /// </summary>
-        public byte[] WarnImmediateNodeIds { get; } = new byte[] { 22, 23, 29, 33, 34 };
+        public byte[] WarnImmediateNodeIds { get; } = new byte[] { 22, 23, 29, 33, 34, 35, 44 }; 
+        // Fenster Wohnzimmer, Fenster Lukaszimmer, Balkontür Wohnzimmer, Haustür Flur, Terassentür Mamazimmer, Fenster Schlafzimmer
 
 
         private List<SurveillanceTask> CurrentOpenDoorTasks { get; } = new List<SurveillanceTask>();
