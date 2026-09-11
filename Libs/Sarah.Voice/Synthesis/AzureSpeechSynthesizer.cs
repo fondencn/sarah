@@ -105,6 +105,11 @@ namespace Sarah.Voice.Synthesis
                             using (SpeechSynthesisResult result = synthesizer.SpeakTextAsync(text).Result)
                             {
                                 _logger.LogDebug("after SpeakTextAsync: Reason is {Reason}", result.Reason);
+                                if (result.Reason == ResultReason.Canceled)
+                                {
+                                    var cancellationCause = SpeechSynthesisCancellationDetails.FromResult(result);
+                                    _logger.LogError("Speech synthesis canceled: {Reason}; {ErrorDetails}", cancellationCause.Reason, cancellationCause.ErrorDetails);
+                                }
                             }
 
 

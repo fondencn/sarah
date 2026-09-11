@@ -1,6 +1,9 @@
 services:
   speechserver:
     image: ${REGISTRY:-sarah}/speechserver:${TAG:-latest}
+    # SpeechServer routes targeted messages using its machine name. Keep that
+    # name stable instead of letting Docker use the generated container ID.
+    hostname: ${SPEAKER_HOSTNAME:-speaker1}
     environment:
       - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
@@ -9,10 +12,13 @@ services:
       - services__deviceservice__http-api__0=http://${PI_HOST:-pi}:5001
       - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
       - AzureSpeech__Region=${AZURE_SPEECH_REGION:-westeurope}
+      - AzureSpeech__VoiceName=${AZURE_SPEECH_VOICE_NAME:-de-DE-KatjaNeural}
       - Speech__SubscriptionKey=${AZURE_SPEECH_KEY}
       - Speech__Region=${AZURE_SPEECH_REGION:-westeurope}
       - Location=${SPEAKER_LOCATION:-Wohnzimmer}
       - Speech__RecognitionEnabled=${SPEECH_RECOGNITION_ENABLED:-true}
+      - Logging__LogLevel__Sarah__Voice__Synthesis__AzureSpeechSynthesizer=${SPEECH_SYNTHESIS_LOG_LEVEL:-Information}
+      - Logging__LogLevel__Sarah.Voice.Synthesis.AzureSpeechSynthesizer=${SPEECH_SYNTHESIS_LOG_LEVEL:-Information}
     ports:
       - "5008:8080"
     restart: unless-stopped
@@ -37,3 +43,28 @@ services:
       - ./asound.conf:/etc/asound.conf:ro
     # Uncomment the line below as a last resort if hardware access still fails:
     # privileged: true
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      # Plain TCP+HTTP probe via bash (no curl/wget in the aspnet base image).
+      # Same silent-hang risk as the pi RabbitMQ-backed services: see
+      # docs/deployment.md → Troubleshooting → "No speech output on any/all speakers".
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -qE 'HTTP/1\\.[01] [0-9]{3}'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ─── Autoheal ───────────────────────────────────────────────────────
+  # Docker's healthcheck only marks a container "unhealthy" — it does NOT
+  # restart it on its own. autoheal watches containers labeled
+  # "autoheal=true" and force-restarts any that go unhealthy.
+  autoheal:
+    image: willfarrell/autoheal:latest
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

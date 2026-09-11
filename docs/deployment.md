@@ -31,6 +31,65 @@ Current speaker-specific behavior:
 - `speaker1`: `SPEECH_RECOGNITION_ENABLED=true`
 - `speaker3`: `SPEECH_RECOGNITION_ENABLED=true`
 
+## Resilience: healthchecks and autoheal (added 2026-09-10)
+
+`deviceservice`, `monitoringservice`, `rulesservice` (on `pi`) and `speechserver`
+(on both speakers) each subscribe to RabbitMQ topics via a long-running
+`BackgroundService`. If that background loop wedges (see incident below), the
+container stays `Up` and `restart: unless-stopped` never fires because the
+process never actually crashes or exits — only the Kestrel HTTP listener
+becomes unresponsive.
+
+To catch this, those four services now have a `healthcheck:` that does a raw
+TCP+HTTP probe from inside the container (`bash`'s `/dev/tcp`, since the
+`aspnet` base image ships no `curl`/`wget`):
+```yaml
+healthcheck:
+  test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -qE 'HTTP/1\.[01] [0-9]{3}'"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 30s
+```
+Any HTTP status line (even a 404) proves Kestrel is alive and processing
+requests; a hung/CPU-starved process stops accepting connections entirely and
+the probe times out.
+
+Docker's healthcheck only *reports* `unhealthy` — it does not restart the
+container. A `willfarrell/autoheal` sidecar (multi-arch: amd64/arm64/arm-v7/
+arm-v6, confirmed working on `pi`, `speaker1`, `speaker3`) is deployed
+alongside both stacks, watches containers labeled `autoheal=true`, and
+force-restarts any that go unhealthy — closing the gap.
+
+**Root cause incident (2026-09):** `rulesservice` hung at 100%+ CPU with an
+unresponsive HTTP listener for ~4 days, silently stopping all `speech.say`
+publishing (weather, door/window, appliance notices) fleet-wide, with no
+crash/exit for `restart: unless-stopped` to react to. See Troubleshooting →
+"No speech output on any/all speakers" below for the diagnostic steps.
+
+**Known limitation — this is a mitigation, not the fix:** the healthcheck/
+autoheal pair bounds the *impact* of a hang to ~2 minutes (3 failed probes ×
+30s interval) instead of days, but does not address the underlying cause.
+`Libs/Sarah.Messaging.RabbitMQ/RabbitMQClient.cs` has no reconnect
+visibility/backoff logic: `_isConnected` is a plain bool that is never reset
+if the connection breaks and RabbitMQ.Client's automatic recovery fails or
+races, there's no locking around connect/publish/subscribe on the shared
+singleton `RabbitMQClient` (multiple `BackgroundService`s call `ConnectAsync`
+concurrently at startup), and the initial `ConnectAsync` has no retry/backoff
+— a RabbitMQ-not-yet-ready race at startup throws immediately and (combined
+with `HostOptions.BackgroundServiceExceptionBehavior = StopHost`) kills the
+whole host. This is application code, out of deployment-operator scope to
+change directly; recommended fix for the dev team:
+- Track connection health via `_connection.IsOpen` / `_channel.IsOpen` (or
+  handle `IConnection.ConnectionShutdownAsync` / `ConnectionRecoveryErrorAsync`)
+  instead of a one-way `_isConnected` flag.
+- Guard `ConnectAsync`/reconnect with a `SemaphoreSlim` so concurrent callers
+  don't race on `_connection`/`_channel`.
+- Add retry-with-backoff around the initial `CreateConnectionAsync` instead of
+  throwing straight into `BackgroundService.ExecuteAsync`.
+- Log `ConnectionShutdownAsync` / `RecoverySucceededAsync` /
+  `ConnectionRecoveryErrorAsync` for operational visibility into reconnects.
+
 ## Directory Layout
 
 ```
@@ -72,6 +131,7 @@ Work through this checklist before the first real deployment:
 - [ ] Create `deploy/pi/.env` from `deploy/pi/.env.example` and replace every `CHANGE_ME` value
 - [ ] Create either one shared `deploy/speaker/.env` or one file per speaker such as `deploy/speaker/speaker1.env` and `deploy/speaker/speaker3.env`
 - [ ] Set a unique `SPEAKER_LOCATION` for each speaker env file
+- [ ] Set `SPEAKER_HOSTNAME` to the matching target name (`speaker1` / `speaker3`) for targeted speech messages
 - [ ] Confirm `RABBITMQ_PASSWORD` is identical on `pi` and every speaker env file
 - [ ] Enable SPI and GPIO on each speaker host with `sudo raspi-config` → Interface Options → SPI / GPIO, then reboot
 - [ ] Verify the audio device exists on each speaker: `aplay -l` should list a capture/playback device
@@ -385,6 +445,77 @@ Existing speaker `.env` files on the targets are only uploaded on first deploy b
 - If an earlier failed deployment left behind stale containers, run `docker compose up -d --force-recreate --remove-orphans` on the target to cleanly reconcile the state
 
 ## Troubleshooting
+
+### No speech output on any/all speakers
+
+Symptom: speakers are reachable, `speechserver` containers show `Up`, but no TTS is heard
+(weather, door/window, appliance notices, etc.).
+
+Since 2026-09-10, `rulesservice`/`deviceservice`/`monitoringservice`/`speechserver` all
+have a healthcheck + `autoheal` sidecar (see "Resilience: healthchecks and autoheal" above)
+that auto-restarts a hung container within ~2 minutes. Check `docker compose ps` first —
+if a service shows `(unhealthy)` it should self-heal shortly; if it's stuck `(unhealthy)`
+for more than a few minutes, autoheal itself may be down (`docker compose ps autoheal`).
+
+Diagnostic order (cheapest signal first — stop as soon as one step explains it):
+
+1. **Check for RulesService hang on `pi`** — this is the most common root cause; a
+   `speech.say` message is *published* by `rulesservice`, so if it's stuck nothing downstream
+   will ever fire even if RabbitMQ/speakers are perfectly healthy.
+   ```bash
+   ssh pi 'docker exec sarah-rulesservice-1 ps aux'          # CPU should be low single digits
+   ssh pi 'curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5006/health'
+   ```
+   A container stuck near 100%+ CPU with no HTTP response and no new log lines for
+   hours/days (check `docker compose logs --since <time> rulesservice`) is a **silent hang**,
+   not a crash — Docker's restart policy will *not* catch this on its own. Fix: `docker
+   compose restart rulesservice` on `pi`, then confirm CPU drops and logs show
+   `Subscribed to topic ...` lines for all topics again.
+
+2. **Check RabbitMQ bindings/consumers** on `pi` — confirms speakers are actually
+   subscribed to `speech.say`:
+   ```bash
+   ssh pi 'docker exec sarah-rabbitmq-1 rabbitmqctl list_bindings | grep speech'
+   ssh pi 'docker exec sarah-rabbitmq-1 rabbitmqctl list_queues name messages consumers state | grep -v 0'
+   ```
+
+3. **Check speechserver logs on each speaker** for `Received say message` entries and their
+   timestamps — a long gap since the last one (vs. current time) confirms upstream isn't
+   publishing (points back to step 1), not a speaker-side problem:
+   ```bash
+   ssh speaker1 'cd /opt/sarah && docker compose logs speechserver | grep -c "Received say message"'
+   ssh speaker1 'cd /opt/sarah && docker compose logs --timestamps speechserver | grep "Received say message" | tail -5'
+   ```
+
+   For messages targeted to one speaker, verify `docker exec sarah-speechserver-1 hostname`
+   matches `TargetSpeaker`. The speaker Compose deployment pins this hostname via
+   `SPEAKER_HOSTNAME`; the deploy script adds the key to an existing remote `.env` without
+   replacing the rest of that host's settings.
+
+4. **Send a manual test message** to confirm the full pipeline end-to-end once the above
+   look healthy. `Volume` is a numeric enum (0=Silent … 4=VeryLoud) — **do not** send it as a
+   string, it will fail JSON deserialization silently (visible as a `JsonException` in the
+   speaker's logs, easy to mistake for something else). `TargetSpeaker` must be the
+   **container hostname** (`docker exec sarah-speechserver-1 hostname` on that speaker), not
+   the SSH host alias:
+   ```bash
+   ssh pi "docker exec sarah-rabbitmq-1 rabbitmqadmin -u sarah -p '<RABBITMQ_PASSWORD>' \
+     publish exchange=speech.say routing_key=speech.say \
+     payload='{\"Message\":\"test\",\"TargetSpeaker\":\"<container-hostname>\",\"Volume\":2}'"
+   ```
+   A successful run logs `Received say message: ... for speaker: <hostname>` followed by
+   `Playing WAVE '...'` on that speaker.
+
+5. **Check playback loudness** while you're in there — misconfigured/unset volume is a
+   separate, easy-to-miss issue that looks identical to "no sound" from a distance:
+   ```bash
+   ssh speaker1 'cd /opt/sarah && docker compose exec speechserver sh -lc "amixer sget Headphone"'
+   ssh speaker3 'cd /opt/sarah && docker compose exec speechserver sh -lc "amixer sget PCM"'
+   ```
+   Compare against `SPEAKER_PLAYBACK_CONTROL` / `SPEAKER_PLAYBACK_VOLUME` in that speaker's
+   env file (`deploy/speaker/<host>.env`). If those keys are absent, the mixer runs at
+   whatever level ALSA defaulted to (can be near 0dB/max) — add them and redeploy, or apply
+   live with `amixer sset <control> <volume>` inside the container.
 
 ### Apply updated speaker config manually
 

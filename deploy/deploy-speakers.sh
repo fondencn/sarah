@@ -239,6 +239,7 @@ deploy_speaker() {
   local env_source
   local playback_volume
   local playback_control
+  local speaker_hostname
 
   if ! env_source="$(resolve_speaker_env "$host")"; then
     err "No speaker environment file found for ${host}."
@@ -259,6 +260,15 @@ deploy_speaker() {
     log "Uploaded $(basename "$env_source") to ${target}."
   else
     ok ".env already exists on ${target} — not overwriting."
+  fi
+
+  # Preserve existing speaker settings while ensuring targeted speech messages
+  # have a stable hostname to match against inside the container.
+  speaker_hostname="$(get_env_value "$env_source" "SPEAKER_HOSTNAME" || true)"
+  speaker_hostname="${speaker_hostname:-$host}"
+  if ! ssh "${target}" "grep -q '^SPEAKER_HOSTNAME=' '${DEPLOY_DIR}/.env'"; then
+    ssh "${target}" "printf '\\nSPEAKER_HOSTNAME=%s\\n' '${speaker_hostname}' >> '${DEPLOY_DIR}/.env'"
+    log "Added missing SPEAKER_HOSTNAME=${speaker_hostname} to the existing remote .env."
   fi
 
   log "Starting SpeechServer on ${target}..."
