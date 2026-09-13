@@ -150,15 +150,15 @@ namespace Sarah.Geofences
             Name = "Stuttgart",
             Points = new LocatorPosition[]
             {
-                // Approximately 25 km around Stuttgart city centre.
-                new LocatorPosition(new API.Business.SensorData(49.000000f, "°"), new API.Business.SensorData(9.182900f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.935000f, "°"), new API.Business.SensorData(9.410000f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(9.512900f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.616600f, "°"), new API.Business.SensorData(9.410000f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.551600f, "°"), new API.Business.SensorData(9.182900f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.616600f, "°"), new API.Business.SensorData(8.955800f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(8.852900f, "°")),
-                new LocatorPosition(new API.Business.SensorData(48.935000f, "°"), new API.Business.SensorData(8.955800f, "°")),
+                // Approximately 12.5 km around Stuttgart city centre.
+                new LocatorPosition(new API.Business.SensorData(48.887900f, "°"), new API.Business.SensorData(9.182900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.855400f, "°"), new API.Business.SensorData(9.296450f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(9.347900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.696200f, "°"), new API.Business.SensorData(9.296450f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.663700f, "°"), new API.Business.SensorData(9.182900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.696200f, "°"), new API.Business.SensorData(9.069350f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(9.017900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.855400f, "°"), new API.Business.SensorData(9.069350f, "°")),
             }
         };
 
