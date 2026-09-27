@@ -356,7 +356,7 @@ namespace Sarah.Monitoring.Monitors
                     while (!UpdateCancellationTokenSource.Token.IsCancellationRequested)
                     {
                         TimeSpan openDuration = DateTime.Now - _openedAt;
-                        await Task.Delay(GetWaitTime(openDuration, SensorThreshold), cancellationToken);
+                        await Task.Delay(GetWaitTime(openDuration, SensorThreshold, Device.NodeId), cancellationToken);
                         TimeSpan openTime = DateTime.Now - _openedAt;
 
                         var stillOpenMessage = new DoorOrWindowStillOpenMessage()
@@ -428,8 +428,15 @@ namespace Sarah.Monitoring.Monitors
                 return heatingsTurnedOn.ToArray();
             }
 
-            private TimeSpan GetWaitTime(TimeSpan openTime, TimeSpan sensorThreshold)
+            private TimeSpan GetWaitTime(TimeSpan openTime, TimeSpan sensorThreshold, int nodeId)
             {
+                if (nodeId == 33 && openTime < TimeSpan.FromMinutes(15))
+                {
+                    TimeSpan infoInterval = TimeSpan.FromMinutes(5);
+                    long nextReportTicks = ((openTime.Ticks / infoInterval.Ticks) + 1) * infoInterval.Ticks;
+                    return TimeSpan.FromTicks(Math.Min(nextReportTicks, TimeSpan.FromMinutes(15).Ticks) - openTime.Ticks);
+                }
+
                 if (openTime < sensorThreshold) // erster Intervall
                 {
                     return sensorThreshold - openTime;
