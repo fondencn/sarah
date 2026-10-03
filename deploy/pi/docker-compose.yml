@@ -166,6 +166,9 @@ services:
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
       - ZWave__SerialPortName=${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}
       - TheThingsNetwork__ApiKey=${TTN_API_KEY:-}
+    # Use Pi-hole: the Fritzbox DNS returns only AAAA for the Shelly gateway, but the container has no IPv6
+    dns:
+      - ${PIHOLE_DNS:-192.168.178.69}
     ports:
       - "5001:8080"
     depends_on:
