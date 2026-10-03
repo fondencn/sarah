@@ -1,0 +1,19 @@
+.kernel-conversation-panel .card {
+  border-radius: 0.5rem;
+}
+
+.kernel-conversation-panel .table th {
+  font-weight: 600;
+}
+
+.kernel-conversation-panel .content-cell {
+  min-width: 420px;
+}
+
+.kernel-conversation-panel .message-content {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}

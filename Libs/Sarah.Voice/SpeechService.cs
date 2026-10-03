@@ -4,8 +4,9 @@ using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
 using Sarah.API.Interfaces.Services;
 using Sarah.API.Interfaces.Service;
+using Sarah.Messaging.RabbitMQ;
+using Sarah.Messaging.RabbitMQ.Messages;
 using Sarah.Voice.Recognition;
-using Sarah.Voice.Recognition.Understanding;
 using Sarah.Voice.Synthesis;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ApiSpeechVolume = Sarah.API.BusinessObjects.SpeechVolume;
 
 namespace Sarah.Voice
 {
@@ -71,19 +73,16 @@ namespace Sarah.Voice
         public bool IsSilent => EndOfSilentTime.HasValue && DateTime.Now < EndOfSilentTime.Value;
 
         private ILEDService _LEDService;
-
-        private IDeviceService _DeviceServiceClient;
-        private readonly IWeatherProvider _weatherProvider;
         private IConfiguration _Configuration;
+        private RabbitMQClient _rabbitMq;
         private ILogger<SpeechService> _logger;
         private ILoggerFactory _loggerFactory;
 
-        public SpeechService(ILEDService ledService, IDeviceService deviceServiceClient, IWeatherProvider weatherProvider, IConfiguration configuration, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
+        public SpeechService(ILEDService ledService,  IConfiguration configuration, RabbitMQClient rabbitMq, ILogger<SpeechService> logger, ILoggerFactory loggerFactory)
         {
             this._Configuration = configuration;
             this._LEDService = ledService;
-            this._DeviceServiceClient = deviceServiceClient;
-            this._weatherProvider = weatherProvider;
+            this._rabbitMq = rabbitMq;
             this._logger = logger;
             this._loggerFactory = loggerFactory;
             this.Location = "Unbekannt";
@@ -107,7 +106,6 @@ namespace Sarah.Voice
 
             if (isRecognitionEnabled)
             {
-                Intents.Initialize(this, this._DeviceServiceClient, this._LEDService, this._weatherProvider, this._loggerFactory);
                 this.Recognizer = new AzureSpeechRecognizer(this._LEDService, this._Configuration, _loggerFactory.CreateLogger<AzureSpeechRecognizer>());
                 this.Recognizer.Initialize();
                 this.Recognizer.Recognized += this.Recognizer_Recognized;
@@ -209,7 +207,29 @@ namespace Sarah.Voice
         private async void Recognizer_Recognized(object sender, string recognizedText)
         {
             this.RecognizedTexts.Add(new SpeechInfo("👂", recognizedText));
-            await Intents.Instance.Handle(recognizedText);
+            await RaiseSpeechInputMessage(recognizedText);
+        }
+
+        private async Task RaiseSpeechInputMessage(string recognizedText)
+        {
+            if (string.IsNullOrWhiteSpace(recognizedText))
+            {
+                return;
+            }
+
+            try
+            {
+                string trimmedText = recognizedText.Trim();
+                string hostName = Environment.MachineName;
+                var message = new SpeechInputMessage(trimmedText, hostName, this.Location);
+                await _rabbitMq.PublishAsync(message);
+
+                _logger.LogInformation("Published recognized speech from host {HostName} at location {Location}", hostName, this.Location);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish recognized speech input message");
+            }
         }
 
         /// <summary>
@@ -217,7 +237,7 @@ namespace Sarah.Voice
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public void Say(string text) => SayWithVolume(text, SpeechVolume.Normal);
+        public void Say(string text) => SayWithVolume(text, ApiSpeechVolume.Normal);
 
 
         /// <summary>
@@ -225,7 +245,7 @@ namespace Sarah.Voice
         /// </summary>
         /// <param name="text"></param>
         /// <param name="vol"></param>
-        public void SayWithVolume(string text, SpeechVolume vol)
+        public void SayWithVolume(string text, ApiSpeechVolume vol)
         {
             if (this.IsSynthesisEnabled)
             {

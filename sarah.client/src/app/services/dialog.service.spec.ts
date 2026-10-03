@@ -1,12 +1,25 @@
 import { TestBed } from '@angular/core/testing';
+import { Modal } from 'bootstrap';
 import { DialogService } from './dialog.service';
+import { LoggingService } from './logging.service';
 
 describe('DialogService', () => {
   let service: DialogService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LoggingService,
+          useValue: {
+            debug: () => undefined
+          }
+        }
+      ]
+    });
     service = TestBed.inject(DialogService);
+    spyOn(Modal.prototype, 'show').and.callFake(() => undefined);
+    spyOn(Modal.prototype, 'hide').and.callFake(() => undefined);
   });
 
   it('should be created', () => {
@@ -53,8 +66,9 @@ describe('DialogService', () => {
     document.body.appendChild(modalElement);
 
     service.showDialog(modalId);
-    service.dialogClosed.subscribe((success) => {
-      expect(success).toBeTrue();
+    service.dialogClosed.subscribe((args) => {
+      expect(args.success).toBeTrue();
+      expect(args.dialogId).toBe(modalId);
       done();
     });
 

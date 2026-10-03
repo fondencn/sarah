@@ -40,8 +40,8 @@ namespace Sarah.DeviceService.Model
         /// <returns>Task</returns>
         public abstract Task SetState(bool newState);
 
-        private float PowerHighThreshold { get; } = 20; // 20 W veränderung bedeutet: Jemand hat was angemacht
-        private float PowerLowThreshold { get; } = -20; // -20 W veränderung bedeutet: Jemand hat was ausgemacht
+        private float PowerLowThreshold { get; } = 10; // unter 10 Watt ist es aus
+        private float PowerHighThreshold { get; } = 20; // über 20 Watt ist es sicher an
 
         /// <summary>
         /// ClassDescription
@@ -56,7 +56,7 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Status des Schalters (an oder aus)
         /// </summary>
-        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); _ = _publisher.ReportWallPlugStateChanged(this, value, this.LastChangeToPowerLow, this.LastIncreasePower, this.LastDecreasePower); } } }
+        public bool IsOn { get => _isOn; protected set { if (this._isOn != value) { this._isOn = value; this._lastStateChange = DateTime.Now; _ = _publisher.ReportEvent(this, nameof(IsOn), value); _ = _publisher.ReportWallPlugEnabledChanged(this); } } }
 
         /// <summary>
         /// Meter in Kilowattstunden
@@ -78,26 +78,23 @@ namespace Sarah.DeviceService.Model
             {
                 float oldVal = _meter_W.Value;
                 float newVal = value.Value;
+
                 if (oldVal != newVal)
                 {
-                    if (oldVal > 5.0f && newVal <= 5.0f)
-                    {
-                        this.LastChangeToPowerLow = DateTime.Now;
-                    }
-
-                    if ((newVal - oldVal) > PowerHighThreshold)
-                    {
-                        this.LastIncreasePower = DateTime.Now;
-                    }
-
-                    if ((newVal - oldVal) < PowerLowThreshold)
-                    {
-                        this.LastDecreasePower = DateTime.Now;
-                    }
-                    _ = _publisher.ReportWallPlugStateChanged(this, this.IsOn, this.LastChangeToPowerLow, this.LastIncreasePower, this.LastDecreasePower);
+                    _meter_W = value;
+                    _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
                 }
-                _meter_W = value;
-                _ = _publisher.ReportEvent(this, nameof(Meter_W), value?.ToString());
+
+                if (newVal < PowerLowThreshold && oldVal >= PowerLowThreshold)
+                {
+                    this.LastChangeToPowerLow = DateTime.Now;
+                    _ = _publisher.ReportWallPlugPowerLow(this);
+                }
+                else if (newVal > PowerHighThreshold && oldVal <= PowerHighThreshold)
+                {
+                    this.LastChangeToPowerHigh = DateTime.Now;
+                    _ = _publisher.ReportWallPlugPowerHigh(this);
+                }
             }
         }
 
@@ -113,14 +110,9 @@ namespace Sarah.DeviceService.Model
         public DateTime LastChangeToPowerLow { get; private set; }
 
         /// <summary>
-        /// Zeitpunkt, zu welchem die Leistung zuletzt merkbar angestiegen ist
+        /// Zeitpunkt, zu welchem die anliegende Leistung zuletzt angestiegen ist
         /// </summary>
-        public DateTime LastIncreasePower { get; private set; }
-
-        /// <summary>
-        /// Zeitpunkt, zu welchem die Leistung zuletzt merkbar abgefallen ist
-        /// </summary>
-        public DateTime LastDecreasePower { get; private set; }
+        public DateTime LastChangeToPowerHigh { get; private set; }
 
         /// <summary>
         /// Gibt an, ob das Gerät gerade eingeschaltget ist
@@ -128,13 +120,13 @@ namespace Sarah.DeviceService.Model
         public override bool? IsActive => this.IsOn;
 
 
-        protected DateTime LastMeterReport { get; set; }
-
 
         /// <summary>
         /// Schaltet zwischen an und aus um
         /// </summary>
         public void ToggleState() => this.SetState(!this.IsOn);
+
+        public DateTime LastMeterReport {get; protected set; }
 
         /// <summary>
         ///

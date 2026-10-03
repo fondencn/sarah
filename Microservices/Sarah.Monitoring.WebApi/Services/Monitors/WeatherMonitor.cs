@@ -120,6 +120,7 @@ namespace Sarah.Monitoring.Monitors
                 CurrentTemperature = CurrentOutdoorTemperature,
                 AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                 Sunrise = GetSunrise(),
+                Sunset = GetSunset(),
                 CurrentWeatherString = GetCurrentWeatherString(),
                 ForecastStringForToday = GetWeatherForecastStringForToday(),
                 WeatherWarningString = GetWeatherWarningString(),
@@ -139,6 +140,7 @@ namespace Sarah.Monitoring.Monitors
                     CurrentTemperature = CurrentOutdoorTemperature,
                     AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                     Sunrise = GetSunrise(),
+                    Sunset = GetSunset(),
                     CurrentWeatherString = GetCurrentWeatherString(),
                     ForecastStringForToday = GetWeatherForecastStringForToday(),
                     WeatherWarningString = GetWeatherWarningString(),
@@ -320,6 +322,7 @@ namespace Sarah.Monitoring.Monitors
         private async Task RaisePendingWarnings()
         {
             List<string> warningMessages = new List<string>();
+            List<WeatherWarningDetailMessage> warningDetails = new List<WeatherWarningDetailMessage>();
             foreach (DwdWarning warning in CurrentLocalWeatherWarnings)
             {
                 bool warnNow = false;
@@ -344,16 +347,48 @@ namespace Sarah.Monitoring.Monitors
                 if (warnNow)
                 {
                     warning.LastWarn = now;
-                    warningMessages.Add(warning.GetOutputString());
+                    string outputString = warning.GetOutputString();
+                    warningMessages.Add(outputString);
+                    warningDetails.Add(new WeatherWarningDetailMessage
+                    {
+                        Key = warning.Key,
+                        RegionName = warning.regionName,
+                        Description = warning.description,
+                        Event = warning.@event,
+                        Headline = warning.headline,
+                        Instruction = warning.instruction,
+                        Type = warning.type,
+                        Level = warning.level,
+                        StartDate = warning.StartDate,
+                        EndDate = warning.EndDate,
+                        IsAllDayWarning = warning.IsAllDayWarning,
+                        OutputString = outputString
+                    });
                 }
             }
 
             if (warningMessages.Any())
             {
-                string warnMessage = String.Join(". " + Environment.NewLine, warningMessages.Distinct());
+                var distinctWarningMessages = warningMessages
+                    .Where(msg => !string.IsNullOrWhiteSpace(msg))
+                    .Distinct()
+                    .ToList();
+
+                var distinctWarningDetails = warningDetails
+                    .GroupBy(w => w.Key, StringComparer.CurrentCultureIgnoreCase)
+                    .Select(g => g.First())
+                    .ToList();
+
+                string warnMessage = "Achtung, Wetterwarnung für " + this.WarnLocation + ": "
+                    + String.Join(". " + Environment.NewLine, distinctWarningMessages);
                 
-                // Publish weather warning event for periodic re-announcements
-                await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage(warnMessage));
+                await _rabbitMQ.PublishAsync(new WeatherWarningEventMessage
+                {
+                    Location = this.WarnLocation,
+                    OutputString = warnMessage,
+                    Warnings = distinctWarningMessages,
+                    WarningDetails = distinctWarningDetails
+                });
                 
                 _logger.LogInformation("{WarnMessage}", warnMessage);
             }
@@ -528,6 +563,18 @@ namespace Sarah.Monitoring.Monitors
             {
                 return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather?.sys?.sunrise);
             } 
+            else
+            {
+                return null;
+            }
+        }
+
+        public DateTime? GetSunset()
+        {
+            if (this.CurrentWeather != null)
+            {
+                return UnixTime.GetDateTimeFromLinuxEpochSeconds(this.CurrentWeather?.sys?.sunset);
+            }
             else
             {
                 return null;

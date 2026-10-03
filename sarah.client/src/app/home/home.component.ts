@@ -490,4 +490,22 @@ export class DashboardItemViewModel {
     const n = Number(val);
     return Number.isFinite(n) ? n : null;
   }
+
+  get motionPresence(): boolean {
+    return this.item.extendedProperties?.find(x => x.key === 'Presence')?.value === 'True';
+  }
+
+  get motionLuminance(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'Luminance')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  get motionBattery(): number | null {
+    const val = this.item.extendedProperties?.find(x => x.key === 'Battery')?.value;
+    if (val === undefined || val === null || val === '') return null;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
 }

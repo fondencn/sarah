@@ -31,6 +31,18 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddSingleton<HomeNetworkService>();
 
+builder.Services.AddHttpClient<INamedPositionService, NamedPositionService>(client =>
+{
+    var nominatimBaseUrl = builder.Configuration["Nominatim:BaseUrl"]
+        ?? "https://nominatim.openstreetmap.org";
+    var userAgent = builder.Configuration["Nominatim:UserAgent"]
+        ?? "Sarah.Persons.WebApi/1.0 (contact: admin@sarah.local)";
+
+    client.BaseAddress = new Uri(nominatimBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+});
+
 // Register HTTP client for Device Service communication
 builder.Services.AddHttpClient<IDeviceService, DeviceServiceClient>(client =>
 {
@@ -110,6 +122,17 @@ using (var scope = app.Services.CreateScope())
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating the database.");
     }
+}
+
+try
+{
+    var homeNetworkService = app.Services.GetRequiredService<HomeNetworkService>();
+    await homeNetworkService.Initialize(app.Configuration);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred while initializing the home network service.");
 }
 
 // Configure the HTTP request pipeline.

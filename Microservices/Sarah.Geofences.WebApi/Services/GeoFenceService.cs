@@ -145,6 +145,41 @@ namespace Sarah.Geofences
         };
 
 
+        public static readonly GeoFence Stuttgart = new GeoFence()
+        {
+            Name = "Stuttgart",
+            Points = new LocatorPosition[]
+            {
+                // Approximately 6.25 km around Stuttgart city centre.
+                new LocatorPosition(new API.Business.SensorData(48.831850f, "°"), new API.Business.SensorData(9.182900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.815600f, "°"), new API.Business.SensorData(9.239675f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(9.265400f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.736000f, "°"), new API.Business.SensorData(9.239675f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.719750f, "°"), new API.Business.SensorData(9.182900f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.736000f, "°"), new API.Business.SensorData(9.126125f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.775800f, "°"), new API.Business.SensorData(9.100400f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.815600f, "°"), new API.Business.SensorData(9.126125f, "°")),
+            }
+        };
+
+        public static readonly GeoFence Muenchen = new GeoFence()
+        {
+            Name = "München",
+            Points = new LocatorPosition[]
+            {
+                // Approximately 25 km around Munich city centre.
+                new LocatorPosition(new API.Business.SensorData(48.360000f, "°"), new API.Business.SensorData(11.582000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.294000f, "°"), new API.Business.SensorData(11.828000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.135100f, "°"), new API.Business.SensorData(11.932000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(47.976200f, "°"), new API.Business.SensorData(11.828000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(47.910200f, "°"), new API.Business.SensorData(11.582000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(47.976200f, "°"), new API.Business.SensorData(11.336000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.135100f, "°"), new API.Business.SensorData(11.232000f, "°")),
+                new LocatorPosition(new API.Business.SensorData(48.294000f, "°"), new API.Business.SensorData(11.336000f, "°")),
+            }
+        };
+
+
         public static IEnumerable<GeoFence> All
         {
             get
@@ -159,6 +194,8 @@ namespace Sarah.Geofences
                 yield return Schwetzingen;
                 yield return Speyer;
                 yield return FuerthNuremberg;
+                yield return Stuttgart;
+                yield return Muenchen;
             }
         }
 

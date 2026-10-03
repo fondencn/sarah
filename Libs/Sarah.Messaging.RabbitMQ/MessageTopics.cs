@@ -26,6 +26,12 @@ public static class MessageTopics
     /// </summary>
     public const string SpeechAudioStop = "speech.audio.stop";
 
+    /// <summary>
+    /// Topic for recognized speech input emitted by SpeechServer.
+    /// Contains transcribed user text plus source speaker host metadata.
+    /// </summary>
+    public const string SpeechRecognized = "speech.recognized";
+
     // Network event topics
     
     /// <summary>
@@ -53,21 +59,15 @@ public static class MessageTopics
     public const string NetworkEventsAirQuality = "network.events.airquality";
 
     /// <summary>
-    /// Topic for door/window sensor open/close state changes.
-    /// Published when a door or window sensor changes its open/closed state.
-    /// </summary>
-    public const string NetworkEventsDoorState = "network.events.doorstate";
-
-    /// <summary>
     /// Topic for GPS tracker SOS button press events.
     /// Published when the button on a LoRaWAN GPS tracker is pressed or released.
     /// </summary>
     public const string NetworkEventsTrackerButton = "network.events.trackerbutton";
 
     /// <summary>
-    /// Topic for wall plug state changes (on/off, power threshold crossings).
+    /// Topic for wall plug enabled state changes (on/off).
     /// </summary>
-    public const string NetworkEventsWallPlugState = "network.events.wallplugstate";
+    public const string NetworkEventsWallPlugEnabled = "network.events.wallplugenabled";
 
     /// <summary>
     /// Topic for multi-sensor presence/luminance state changes.
@@ -118,11 +118,10 @@ public static class MessageTopics
     public const string SchedulesAlarmChanged = "schedules.alarm.changed";
 
     /// <summary>
-    /// Topic for temperature schedule changes.
-    /// Published when temperature schedules are created, updated, or deleted.
-    /// Used to notify RuleService to reconfigure timer triggers.
+    /// Topic for fired alarm schedules.
+    /// Published when a scheduled alarm reaches its trigger time.
     /// </summary>
-    public const string SchedulesTemperatureChanged = "schedules.temperature.changed";
+    public const string SchedulesAlarmTriggered = "schedules.alarm.triggered";
 
     // Holiday-related topics
 
@@ -132,4 +131,56 @@ public static class MessageTopics
     /// Used to notify RuleService to activate/deactivate holiday-dependent alarms.
     /// </summary>
     public const string HolidaysStatusChanged = "holidays.status.changed";
+
+    // Monitoring alert topics
+
+    /// <summary>
+    /// Topic for battery warning alerts from the BatteryMonitor.
+    /// Published when one or more devices report a critically low battery level.
+    /// Consumed by RuleService to generate voice output.
+    /// </summary>
+    public const string MonitoringBatteryWarning = "monitoring.battery.warning";
+
+    /// <summary>
+    /// Topic for door/window monitoring alerts from the DoorMonitor.
+    /// Published when a door or window is opened, still open after a threshold, or closed.
+    /// Consumed by RuleService to generate voice output.
+    /// </summary>
+    public const string MonitoringDoorAlert = "monitoring.door.alert";
+
+    /// <summary>
+    /// Topic for power grid state changes from the GridStateMonitor.
+    /// Published when the current StromGedacht grid stage changes.
+    /// </summary>
+    public const string MonitoringGridStateChanged = "monitoring.grid.state.changed";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing low threshold.
+    /// Published when a wall plug's power consumption drops below the defined low threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerLow = "network.events.wallplug.power.low";
+
+    /// <summary>
+    /// Topic for wall plug power consumption crossing high threshold.
+    /// Published when a wall plug's power consumption rises above the defined high threshold.
+    /// </summary>
+    public const string NetworkEventsWallPlugPowerHigh = "network.events.wallplug.power.high";
+
+    /// <summary>
+    /// Topic for door or window closed events from the DoorMonitor.
+    /// Published when a door or window is closed, includes info on turned-on heatings.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowClosed = "network.events.doororwindow.closed";
+
+    /// <summary>
+    /// Topic for door or window still open events from the DoorMonitor.
+    /// Published when a door or window remains open for some time; includes opened duration.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowStillOpen = "network.events.doororwindow.stillopen";
+
+    /// <summary>
+    /// Topic for door or window opened events from the DoorMonitor.
+    /// Published when a door or window is opened, includes info on turned-off heatings.
+    /// </summary>
+    public const string NetworkEventsDoorOrWindowOpened = "network.events.doororwindow.opened";
 }

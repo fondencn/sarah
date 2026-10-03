@@ -10,7 +10,7 @@ namespace Sarah.Rules.Conditions
 
         public override bool Evaluate(NetworkEvent evt)
         {
-            if (evt is WallPlugStateChangedEvent wp && wp.SourceNodeId == this.TargetNodeId)
+            if (evt is WallPlugEnabledChangedEvent wp && wp.SourceNodeId == this.TargetNodeId)
                 return !wp.IsOn;
             return false;
         }

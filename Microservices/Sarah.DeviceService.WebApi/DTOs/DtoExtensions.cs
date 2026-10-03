@@ -65,8 +65,7 @@ namespace Sarah.DeviceService.WebApi.DTOs
                 IsActive = plug.IsActive,
                 IsOn = plug.IsOn,
                 LastChangeToPowerLow = plug.LastChangeToPowerLow,
-                LastIncreasePower = plug.LastIncreasePower,
-                LastDecreasePower = plug.LastDecreasePower
+                LastChangeToPowerHigh = plug.LastChangeToPowerHigh
             };
         }
 

@@ -1,0 +1,153 @@
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>🧠 {{ 'promptRulesManager.title' | translate }}</strong>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" (click)="loadPromptRules()">
+        {{ 'promptRulesManager.refresh' | translate }}
+      </button>
+      <button class="btn btn-sm btn-primary" (click)="startCreate()">
+        {{ 'promptRulesManager.add' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <p class="text-muted small mb-3">{{ 'promptRulesManager.description' | translate }}</p>
+
+    <div *ngIf="loadingRules" class="text-center p-3">
+      <span class="spinner-border spinner-border-sm" role="status"></span>
+      {{ 'promptRulesManager.loading' | translate }}
+    </div>
+
+    <div *ngIf="!loadingRules && promptRules.length === 0" class="text-center p-3 text-muted">
+      {{ 'promptRulesManager.empty' | translate }}
+    </div>
+
+    <div class="table-responsive" *ngIf="!loadingRules && promptRules.length > 0">
+      <table class="table table-sm table-hover align-middle">
+        <thead>
+          <tr>
+            <th>{{ 'promptRulesManager.colOrder' | translate }}</th>
+            <th>{{ 'promptRulesManager.colName' | translate }}</th>
+            <th>{{ 'promptRulesManager.colEnabled' | translate }}</th>
+            <th>{{ 'promptRulesManager.colTimer' | translate }}</th>
+            <th class="text-end">{{ 'promptRulesManager.colActions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rule of promptRules">
+            <td>{{ rule.sortOrder }}</td>
+            <td>{{ rule.name }}</td>
+            <td>
+              <span class="badge" [ngClass]="rule.isEnabled ? 'bg-success' : 'bg-secondary'">
+                {{ rule.isEnabled ? ('promptRulesManager.enabled' | translate) : ('promptRulesManager.disabled' | translate) }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="rule.timer; else noTimer">
+                {{ rule.timer.hour | number:'2.0-0' }}:{{ rule.timer.minute | number:'2.0-0' }}
+              </span>
+              <ng-template #noTimer>–</ng-template>
+            </td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(rule)">
+                {{ 'promptRulesManager.edit' | translate }}
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="delete(rule)" [disabled]="deletingRuleId === rule.id">
+                <span *ngIf="deletingRuleId === rule.id" class="spinner-border spinner-border-sm" role="status"></span>
+                <span *ngIf="deletingRuleId !== rule.id">{{ 'promptRulesManager.delete' | translate }}</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prompt-rule-editor mt-4" *ngIf="showCreateForm || editingRuleId !== null">
+      <h6 class="mb-3">
+        {{ editingRuleId !== null ? ('promptRulesManager.editRule' | translate) : ('promptRulesManager.newRule' | translate) }}
+      </h6>
+
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label">{{ 'promptRulesManager.fieldName' | translate }}</label>
+          <input class="form-control" type="text" [(ngModel)]="formModel.name" />
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">{{ 'promptRulesManager.fieldOrder' | translate }}</label>
+          <input class="form-control" type="number" [(ngModel)]="formModel.sortOrder" />
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <div class="form-check form-switch">
+            <input class="form-check-input" id="ruleEnabled" type="checkbox" [(ngModel)]="formModel.isEnabled" />
+            <label class="form-check-label" for="ruleEnabled">{{ 'promptRulesManager.fieldEnabled' | translate }}</label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">{{ 'promptRulesManager.fieldGuidance' | translate }}</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="formModel.guidance"></textarea>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" id="timerEnabled" type="checkbox" [(ngModel)]="formModel.hasTimer" (change)="onTimerEnabledChanged()" />
+            <label class="form-check-label" for="timerEnabled">{{ 'promptRulesManager.fieldTimerEnabled' | translate }}</label>
+          </div>
+        </div>
+
+        <ng-container *ngIf="formModel.hasTimer">
+          <div class="col-md-2">
+            <label class="form-label">{{ 'promptRulesManager.fieldHour' | translate }}</label>
+            <input class="form-control" type="number" min="0" max="23" [(ngModel)]="formModel.timerHour" />
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">{{ 'promptRulesManager.fieldMinute' | translate }}</label>
+            <input class="form-control" type="number" min="0" max="59" [(ngModel)]="formModel.timerMinute" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">{{ 'promptRulesManager.fieldInterval' | translate }}</label>
+            <select class="form-select" [(ngModel)]="formModel.timerInterval">
+              <option [ngValue]="0">{{ 'promptRulesManager.intervalDaily' | translate }}</option>
+              <option [ngValue]="1">{{ 'promptRulesManager.intervalWeekly' | translate }}</option>
+              <option [ngValue]="2">{{ 'promptRulesManager.intervalMonthly' | translate }}</option>
+              <option [ngValue]="3">{{ 'promptRulesManager.intervalYearly' | translate }}</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label mb-2">{{ 'promptRulesManager.fieldWeekdays' | translate }}</label>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="form-check" *ngFor="let day of [
+                { flag: 1, key: 'promptRulesManager.weekdayMon' },
+                { flag: 2, key: 'promptRulesManager.weekdayTue' },
+                { flag: 4, key: 'promptRulesManager.weekdayWed' },
+                { flag: 8, key: 'promptRulesManager.weekdayThu' },
+                { flag: 16, key: 'promptRulesManager.weekdayFri' },
+                { flag: 32, key: 'promptRulesManager.weekdaySat' },
+                { flag: 64, key: 'promptRulesManager.weekdaySun' }
+              ]">
+                <input class="form-check-input" type="checkbox" [checked]="isWeekdayChecked(day.flag)" (change)="toggleWeekday(day.flag, $any($event.target).checked)" [id]="'weekday-' + day.flag" />
+                <label class="form-check-label" [for]="'weekday-' + day.flag">{{ day.key | translate }}</label>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <div class="col-12 d-flex justify-content-end gap-2">
+          <button class="btn btn-outline-secondary" (click)="cancelEdit()" [disabled]="saving">
+            {{ 'promptRulesManager.cancel' | translate }}
+          </button>
+          <button class="btn btn-primary" (click)="save()" [disabled]="saving || !formModel.name.trim() || !formModel.guidance.trim()">
+            <span *ngIf="saving" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            {{ 'promptRulesManager.save' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

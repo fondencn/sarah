@@ -1,9 +1,0 @@
- cd /home/cf/git/sarah/sarah.client && cat ngsw-config.json 2>/dev/null && echo "---manifest---" && cat src/manifest.webmanifest 2>/dev/null
- ls /home/cf/git/sarah/sarah.client/src/manifest.webmanifest 2>&1; ls /home/cf/git/sarah/sarah.client/ngsw-config.json 2>&1
- ls /home/cf/git/sarah/sarah.client/src/manifest.webmanifest /home/cf/git/sarah/sarah.client/ngsw-config.json
- test -f /home/cf/git/sarah/sarah.client/ngsw-config.json && echo "EXISTS" || echo "MISSING"
- cd /home/cf/git/sarah/sarah.client && npm install --legacy-peer-deps 2>&1 | tail -5
- ssh -o ConnectTimeout=5 -o BatchMode=yes pi@pi 'echo "SSH OK: $(uname -m)"'
- ssh -o ConnectTimeout=5 -o BatchMode=yes pi@pi 'echo "SSH OK: $(uname -m)"' 2>&1
- echo "ping test"
- grep -E '"@angular/(service-worker|common|core)"' /home/cf/git/sarah/sarah.client/package.json

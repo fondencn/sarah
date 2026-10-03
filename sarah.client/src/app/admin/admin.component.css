@@ -1,0 +1,7 @@
+.admin-tabs .nav-link {
+	cursor: pointer;
+}
+
+.admin-tab-panel {
+	min-height: 240px;
+}

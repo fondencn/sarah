@@ -6,6 +6,8 @@ using Sarah.Persons.WebApi.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Sarah.Persons.WebApi.Data;
 using Sarah.Persons.WebApi.DTOs;
+using Sarah.Persons.WebApi.Services;
+using Sarah.API.BusinessObjects;
 
 namespace Sarah.Persons.WebApi.Controllers;
 
@@ -15,28 +17,51 @@ namespace Sarah.Persons.WebApi.Controllers;
 public class PersonsController : ControllerBase
 {
     private readonly IPersonService _personService;
+    private readonly INamedPositionService _namedPositionService;
     private readonly ApplicationDbContext _database;
     private readonly ILogger<PersonsController> _logger;
 
-    public PersonsController(IPersonService personService, ApplicationDbContext database, ILogger<PersonsController> logger)
+    public PersonsController(IPersonService personService, INamedPositionService namedPositionService, ApplicationDbContext database, ILogger<PersonsController> logger)
     {
         _personService = personService;
+        _namedPositionService = namedPositionService;
         _database = database;
         _logger = logger;
     }
 
-    private static PersonResponseDto MapToDto(API.Interfaces.IPerson p) => new PersonResponseDto
+    private async Task<PersonResponseDto> MapToDto(API.Interfaces.IPerson p) => new PersonResponseDto
     {
         Id = p.Id,
         Name = p.Name,
         GpsTrackerID = p.GPSTrackerID,
         GpsTrackerName = p.TrackerDeviceName,
         CurrentGeoFence = p.CurrentGeoFence?.Name,
-        CurrentPosition = null,
+        CurrentPositionLong = p.GPSTracker?.Position?.Longtitude.Value,
+        CurrentPositionLat = p.GPSTracker?.Position?.Latitude.Value,
+        CurrentNamedPosition = await GetCurrentNamedPosition(p.GPSTracker?.Position),
         IsAtHome = p.IsAtHome,
         MobilePhoneHostname = p.MobilePhoneHostname,
         IsFavourite = (p as PersonInfoEntity)?.IsFavourite ?? false
     };
+
+    [NonAction]
+    public async Task<string> GetCurrentNamedPosition(LocatorPosition? position)
+    {
+        return await _namedPositionService.ResolveNamedPositionAsync(position, HttpContext.RequestAborted);
+    }
+
+    [HttpGet("namedposition")]
+    public async Task<ActionResult<string>> GetNamedPosition([FromQuery] float? lat, [FromQuery] float? lon)
+    {
+        if (!lat.HasValue || !lon.HasValue)
+        {
+            return BadRequest("Both lat and lon query parameters are required.");
+        }
+
+        var position = new LocatorPosition(new Sarah.API.Business.SensorData(lat.Value, "°"), new Sarah.API.Business.SensorData(lon.Value, "°"));
+        var namedPosition = await GetCurrentNamedPosition(position);
+        return Ok(namedPosition);
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PersonResponseDto>>> GetAll()
@@ -44,7 +69,12 @@ public class PersonsController : ControllerBase
         try
         {
             var persons = await _personService.GetAllPersonsAsync();
-            return Ok(persons.Select(MapToDto));
+            var personDtos = new List<PersonResponseDto>();
+            foreach (var person in persons)
+            {
+                personDtos.Add(await MapToDto(person));
+            }
+            return Ok(personDtos);
         }
         catch (Exception ex)
         {
@@ -63,7 +93,7 @@ public class PersonsController : ControllerBase
             {
                 return NotFound();
             }
-            return Ok(MapToDto(person));
+            return Ok(await MapToDto(person));
         }
         catch (Exception ex)
         {
@@ -89,7 +119,7 @@ public class PersonsController : ControllerBase
             };
             await _database.Persons.AddAsync(entity);
             await _database.SaveChangesAsync();
-            return Ok(MapToDto(entity));
+            return Ok(await MapToDto(entity));
         }
         catch (Exception ex)
         {
@@ -111,7 +141,7 @@ public class PersonsController : ControllerBase
             await _personService.UpdatePersonAsync(personDto);
             var updated = await _personService.GetPersonByIdAsync(id);
             if (updated == null) return NotFound();
-            return Ok(MapToDto(updated));
+            return Ok(await MapToDto(updated));
         }
         catch (KeyNotFoundException)
         {

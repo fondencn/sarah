@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { AdminComponent } from './admin.component';
 
@@ -8,7 +10,9 @@ describe('AdminComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AdminComponent]
+      declarations: [AdminComponent],
+      imports: [TranslateModule.forRoot()],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
 
@@ -19,5 +23,15 @@ describe('AdminComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should default to kernel conversation tab', () => {
+    expect(component.activeTab).toBe('kernelConversation');
+  });
+
+  it('should switch active tab', () => {
+    component.setActiveTab('kernelConversation');
+
+    expect(component.activeTab).toBe('kernelConversation');
   });
 });

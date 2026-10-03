@@ -10,6 +10,9 @@ using Sarah.API.Interfaces;
 using Sarah.API.Businessobjects;
 using Sarah.ServiceDefaults;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Sarah.Rules.Services.Clients;
+using Sarah.Rules.Services.Kernel;
+using Sarah.Rules.WebApi.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +58,17 @@ builder.Services.AddHttpClient<DeviceServiceClient>(client =>
 })
 .AddHttpMessageHandler<ClientCredentialsHandler>();
 
+// Register RoomServiceClient as concrete type for room state and room lookup kernel plugins
+builder.Services.AddHttpClient<RoomServiceClient>(client =>
+{
+    var roomServiceUrl = builder.Configuration["services__roomservice__http__0"]
+        ?? builder.Configuration["services__roomservice__http-api__0"]
+        ?? builder.Configuration["RoomServiceUrl"]
+        ?? "https+http://roomservice";
+    client.BaseAddress = new Uri(roomServiceUrl);
+})
+.AddHttpMessageHandler<ClientCredentialsHandler>();
+
 // Register HTTP client for PersonService communication
 builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 {
@@ -66,6 +80,15 @@ builder.Services.AddHttpClient<IPersonService, PersonServiceClient>(client =>
 })
 .AddHttpMessageHandler<ClientCredentialsHandler>();
 
+// Register HTTP client for StromGedacht OpenAPI (statesRelative forecast usage)
+builder.Services.AddHttpClient<StromGedachtGridStatesApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["StromGedacht:BaseUrl"]
+        ?? "https://api.stromgedacht.de";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>
 {
@@ -73,9 +96,26 @@ builder.Services.AddSingleton(sp =>
     return new RabbitMQClient(logger, builder.Configuration);
 });
 
+builder.Services
+    .AddOptions<SemanticKernelOptions>()
+    .Bind(builder.Configuration.GetSection("SemanticKernel"))
+    .Validate(options =>
+        !string.IsNullOrWhiteSpace(options.AzureOpenAI.Endpoint)
+        && !string.IsNullOrWhiteSpace(options.AzureOpenAI.DeploymentName)
+        && !string.IsNullOrWhiteSpace(options.AzureOpenAI.ApiKey),
+        "SemanticKernel AzureOpenAI configuration is required.")
+    .ValidateOnStart();
+
+builder.Services
+    .AddOptions<AlarmExecutionOptions>()
+    .Bind(builder.Configuration.GetSection("AlarmExecution"))
+    .ValidateOnStart();
+
 // register helper application services
 builder.Services.AddSingleton<IEmailNotifier, DieRooterEmailNotifier>();
-builder.Services.AddSingleton<Sarah.Rules.HardCodedRuleStore>();
+builder.Services.AddSingleton<SmartHomePromptProvider>();
+builder.Services.AddSingleton<SmartHomePromptRuleStore>();
+builder.Services.AddSingleton<SmartHomeKernelService>();
 
 // Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
@@ -87,9 +127,13 @@ builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedWeatherProvider>(
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.IWeatherProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedWeatherProvider>());
 
+// Register in-memory provider for current grid state (updated by RuleService message handling)
+builder.Services.AddSingleton<Sarah.Rules.Services.MessageBasedGridStateProvider>();
+builder.Services.AddSingleton<Sarah.API.Interfaces.IGridStateProvider>(sp => sp.GetRequiredService<Sarah.Rules.Services.MessageBasedGridStateProvider>());
+
 // Register schedule services
-builder.Services.AddScoped<Sarah.Rules.Services.AlarmScheduleService>();
-builder.Services.AddScoped<Sarah.Rules.Services.TemperatureScheduleService>();
+builder.Services.AddSingleton<Sarah.Rules.Services.AlarmScheduleService>();
+builder.Services.AddHostedService<Sarah.Rules.Services.AlarmScheduleHostedService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -165,17 +209,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-// register the hardcoded rule store    
+// register prompt rules for API visibility and timer scheduling
 var ruleSvc = app.Services.GetRequiredService<Sarah.Rules.RuleService>();
-var hardCoded = app.Services.GetRequiredService<Sarah.Rules.HardCodedRuleStore>();
-
-ruleSvc.RegisterRuleStore(hardCoded);
-
-// Initialize AlarmScheduleService
-using (var scope = app.Services.CreateScope())
-{
-    var alarmService = scope.ServiceProvider.GetRequiredService<Sarah.Rules.Services.AlarmScheduleService>();
-    await alarmService.Start();
-}
+var promptProvider = app.Services.GetRequiredService<SmartHomePromptProvider>();
+await promptProvider.ReloadAsync();
+var promptRuleStore = app.Services.GetRequiredService<SmartHomePromptRuleStore>();
+promptRuleStore.ReloadFromProvider();
+ruleSvc.RegisterRuleStore(promptRuleStore);
 
 app.Run();

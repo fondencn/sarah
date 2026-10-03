@@ -67,6 +67,7 @@ services:
     profiles: [observability]
     image: grafana/grafana:11.0.0
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-CHANGE_ME_grafana}
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -88,6 +89,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - KC_HOSTNAME=${PI_HOST:-pi}
@@ -108,6 +110,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
@@ -127,6 +130,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=postgres
@@ -150,6 +154,7 @@ services:
   deviceservice:
     image: ${REGISTRY:-sarah}/deviceservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=deviceservice
@@ -161,6 +166,9 @@ services:
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
       - ZWave__SerialPortName=${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}
       - TheThingsNetwork__ApiKey=${TTN_API_KEY:-}
+    # Use Pi-hole: the Fritzbox DNS returns only AAAA for the Shelly gateway, but the container has no IPv6
+    dns:
+      - ${PIHOLE_DNS:-192.168.178.69}
     ports:
       - "5001:8080"
     depends_on:
@@ -175,10 +183,23 @@ services:
     restart: unless-stopped
     devices:
       - "${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}:${ZWAVE_SERIAL_PORT:-/dev/ttyACM0}"
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      # Plain TCP+HTTP probe via bash (no curl/wget in the aspnet base image).
+      # Catches the "process alive but Kestrel unresponsive" hang seen when a
+      # RabbitMQ background subscriber wedges the host (any HTTP status line
+      # back — even 404 — proves the app is actually processing requests).
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -qE 'HTTP/1\\.[01] [0-9]{3}'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   personsservice:
     image: ${REGISTRY:-sarah}/personsservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=personsservice
@@ -214,6 +235,7 @@ services:
   geofencesservice:
     image: ${REGISTRY:-sarah}/geofencesservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=geofencesservice
@@ -236,6 +258,7 @@ services:
   roomservice:
     image: ${REGISTRY:-sarah}/roomservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=roomservice
@@ -258,6 +281,7 @@ services:
   monitoringservice:
     image: ${REGISTRY:-sarah}/monitoringservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=monitoringservice
@@ -285,10 +309,19 @@ services:
     networks:
       - sarah-network
     restart: unless-stopped
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -qE 'HTTP/1\\.[01] [0-9]{3}'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   rulesservice:
     image: ${REGISTRY:-sarah}/rulesservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=rulesservice
@@ -297,8 +330,10 @@ services:
       - ConnectionStrings__rabbitmq=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672
       - services__deviceservice__http-api__0=http://deviceservice:8080
       - services__personsservice__http-api__0=http://personsservice:8080
+      - services__roomservice__http-api__0=http://roomservice:8080
       - DeviceServiceUrl=http://deviceservice:8080
       - PersonServiceUrl=http://personsservice:8080
+      - RoomServiceUrl=http://roomservice:8080
       - AllowedOrigins__0=http://${PI_HOST:-pi}
       - AllowedOrigins__1=http://${PI_HOST:-pi}:4200
       - AllowedOrigins__2=http://${PI_HOST:-pi}:8081
@@ -308,6 +343,9 @@ services:
       - EmailNotifier__SmtpUsername=${SMTP_USERNAME:-}
       - EmailNotifier__SmtpPassword=${SMTP_PASSWORD:-}
       - Keycloak__ServiceClientSecret=${RULES_CLIENT_SECRET}
+      - SemanticKernel__AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
+      - SemanticKernel__AzureOpenAI__DeploymentName=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - SemanticKernel__AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
     ports:
       - "5006:8080"
     depends_on:
@@ -320,10 +358,23 @@ services:
     networks:
       - sarah-network
     restart: unless-stopped
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      # rulesservice is the RabbitMQ subscriber that publishes speech.say
+      # (TTS), device automations, and notifications — it is the single
+      # most impactful "silent hang" target in the stack. See docs/deployment.md
+      # → Troubleshooting → "No speech output on any/all speakers".
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET / HTTP/1.0\r\n\r\n' >&3 && head -1 <&3 | grep -qE 'HTTP/1\\.[01] [0-9]{3}'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   dashboardservice:
     image: ${REGISTRY:-sarah}/dashboardservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=dashboardservice
@@ -350,6 +401,7 @@ services:
   adminservice:
     image: ${REGISTRY:-sarah}/adminservice:${TAG:-latest}
     environment:
+      - TZ=${TZ:-Europe/Berlin}
       - ASPNETCORE_ENVIRONMENT=Production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=adminservice
@@ -377,6 +429,26 @@ services:
       - "8081:80"
     depends_on:
       - deviceservice
+    networks:
+      - sarah-network
+    restart: unless-stopped
+
+  # ─── Autoheal ───────────────────────────────────────────────────────
+  # Docker's healthcheck only marks a container "unhealthy" — it does NOT
+  # restart it on its own. autoheal watches containers labeled
+  # "autoheal=true" and force-restarts any that go unhealthy. This closes
+  # the gap seen 2026-09: rulesservice hung (100%+ CPU, unresponsive HTTP)
+  # for 4 days with `restart: unless-stopped` never firing because the
+  # process never actually crashed/exited. See docs/deployment.md →
+  # Troubleshooting → "No speech output on any/all speakers".
+  autoheal:
+    image: willfarrell/autoheal:latest
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - sarah-network
     restart: unless-stopped

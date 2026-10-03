@@ -1,17 +1,17 @@
 <div class="alarms-container container-fluid mt-4">
   <h2 class="mb-4">⏰ {{ 'alarms.title' | translate }}</h2>
 
-  <!-- Loading indicator -->
-  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">{{ 'alarms.loading' | translate }}</span>
-    </div>
-    <span class="ms-3">{{ 'alarms.loading' | translate }}</span>
-  </div>
-
-  <!-- Calendar -->
-  <div [class.d-none]="isLoading">
+  <div class="calendar-shell position-relative">
+    <!-- Calendar -->
     <full-calendar [options]="calendarOptions"></full-calendar>
+
+    <!-- Loading overlay -->
+    <div *ngIf="isLoading" class="calendar-loading-overlay d-flex justify-content-center align-items-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">{{ 'alarms.loading' | translate }}</span>
+      </div>
+      <span class="ms-3">{{ 'alarms.loading' | translate }}</span>
+    </div>
   </div>
 
   <!-- Hint text -->

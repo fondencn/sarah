@@ -3,6 +3,9 @@
 // Add configuration for Keycloak admin credentials
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
 var keycloakAdminPassword = builder.Configuration["Keycloak:AdminPassword"] ?? "admin";
+// Service-to-service client credentials. Default matches the 'sarah-services' client secret imported from sarah-realm-realm.json.
+var serviceClientSecret = builder.Configuration["Keycloak:ServiceClientSecret"] ?? "";
+var serviceClientId = builder.Configuration["Keycloak:ServiceClientId"] ?? "sarah-services";
 
 var postgresUserName = builder.AddParameter(
     "postgres-username",
@@ -85,7 +88,11 @@ var monitoringService = builder.AddProject<Projects.Sarah_Monitoring_WebApi>("mo
     .WithReference(deviceService)
     .WithReference(personsService)
     .WithReference(roomService)
-    .WaitFor(rabbitmq);
+    .WithEnvironment("Keycloak__ServiceClientId", serviceClientId)
+    .WithEnvironment("Keycloak__ServiceClientSecret", serviceClientSecret)
+    .WaitFor(rabbitmq)
+    .WaitFor(keycloak)
+    .WaitFor(roomService);
 
 var rulesService = builder.AddProject<Projects.Sarah_Rules_WebApi>("rulesservice")
     .WithHttpEndpoint(port: 5006, name: "http-api")

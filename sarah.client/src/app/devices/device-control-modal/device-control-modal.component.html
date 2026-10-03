@@ -79,6 +79,21 @@
             </ul>
           </ng-container>
 
+          <!-- MotionSensor -->
+          <ng-container *ngSwitchCase="'MotionSensor'">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span style="font-size: 2rem;">👁️</span>
+              <span class="badge fs-6" [ngClass]="motionPresence ? 'bg-success' : 'bg-secondary'">
+                {{ (motionPresence ? 'home.presenceDetected' : 'home.noPresence') | translate }}
+              </span>
+            </div>
+            <ul class="list-unstyled mb-0">
+              <li *ngIf="motionLuminance !== null && motionLuminance !== undefined">💡 {{ motionLuminance | number:'1.0-1' }} lx</li>
+              <li *ngIf="airTemperature !== null && airTemperature !== undefined">🌡️ {{ airTemperature | number:'1.1-1' }} °C</li>
+              <li *ngIf="motionBattery !== null && motionBattery !== undefined">🔋 {{ motionBattery | number:'1.0-0' }} %</li>
+            </ul>
+          </ng-container>
+
           <!-- Default / Unknown -->
           <ng-container *ngSwitchDefault>
             <p class="text-muted">{{ 'devices.controlModal.noControls' | translate }}</p>

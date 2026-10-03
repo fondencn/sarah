@@ -1,5 +1,6 @@
 ﻿using Sarah.API.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Sarah.API.BusinessObjects
@@ -144,18 +145,6 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn ein Türsensor seinen Öffnungsstatus ändert
-    /// </summary>
-    public class DoorSensorStateChangedEvent : NetworkEvent
-    {
-        public bool IsOpen { get; }
-        public DoorSensorStateChangedEvent(byte source, bool isOpen) : base(source, "DoorState")
-        {
-            this.IsOpen = isOpen;
-        }
-    }
-
-    /// <summary>
     /// Event wird ausgelöst, wenn der Knopf eines GPS-Trackers gedrückt oder losgelassen wird
     /// </summary>
     public class TrackerButtonPressedEvent : NetworkEvent
@@ -168,21 +157,38 @@ namespace Sarah.API.BusinessObjects
     }
 
     /// <summary>
-    /// Event wird ausgelöst, wenn eine Steckdose ihren Zustand oder Leistungsschwelle ändert
+    /// Event wird ausgelöst, wenn eine Steckdose ihren Ein/Aus-Zustand ändert.
     /// </summary>
-    public class WallPlugStateChangedEvent : NetworkEvent
+    public class WallPlugEnabledChangedEvent : NetworkEvent
     {
         public bool IsOn { get; }
-        public DateTime LastChangeToPowerLow { get; }
-        public DateTime LastIncreasePower { get; }
-        public DateTime LastDecreasePower { get; }
-        public WallPlugStateChangedEvent(byte source, bool isOn, DateTime lastChangeToPowerLow, DateTime lastIncreasePower, DateTime lastDecreasePower)
-            : base(source, "WallPlugState")
+
+        public WallPlugEnabledChangedEvent(byte source, bool isOn)
+            : base(source, "WallPlugEnabled")
         {
             IsOn = isOn;
-            LastChangeToPowerLow = lastChangeToPowerLow;
-            LastIncreasePower = lastIncreasePower;
-            LastDecreasePower = lastDecreasePower;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose in den niedrigen Leistungsbereich wechselt.
+    /// </summary>
+    public class WallPlugPowerLowEvent : NetworkEvent
+    {
+        public WallPlugPowerLowEvent(byte source)
+            : base(source, "WallPlugPowerLow")
+        {
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Steckdose in den hohen Leistungsbereich wechselt.
+    /// </summary>
+    public class WallPlugPowerHighEvent : NetworkEvent
+    {
+        public WallPlugPowerHighEvent(byte source)
+            : base(source, "WallPlugPowerHigh")
+        {
         }
     }
 
@@ -210,6 +216,37 @@ namespace Sarah.API.BusinessObjects
         public SmokeSensorAlertEvent(byte source, bool alarmActive) : base(source, "SmokeSensorAlert")
         {
             AlarmActive = alarmActive;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn ein geplanter Alarm feuert.
+    /// </summary>
+    public class AlarmTriggeredEvent : NetworkEvent
+    {
+        public long AlarmScheduleId { get; }
+
+        public int ContentType { get; }
+
+        public string? ContentJson { get; }
+
+        public string DisplayText { get; }
+
+        public bool IsSuppressedBySummer { get; }
+
+        public AlarmTriggeredEvent(
+            long alarmScheduleId,
+            int contentType,
+            string? contentJson,
+            string displayText,
+            bool isSuppressedBySummer)
+            : base(0, "AlarmTriggered")
+        {
+            AlarmScheduleId = alarmScheduleId;
+            ContentType = contentType;
+            ContentJson = contentJson;
+            DisplayText = displayText;
+            IsSuppressedBySummer = isSuppressedBySummer;
         }
     }
 
@@ -253,12 +290,69 @@ namespace Sarah.API.BusinessObjects
     /// </summary>
     public class WeatherWarningEvent : NetworkEvent
     {
-        public WeatherWarningEvent(string newVal) : base(0, "WeatherWarning")
+        public WeatherWarningEvent(
+            string location,
+            string outputString,
+            IReadOnlyList<string> warnings,
+            IReadOnlyList<WeatherWarningDetail> warningDetails) : base(0, "WeatherWarning")
         {
-            this.NewValue = newVal;
+            Location = location;
+            OutputString = outputString;
+            Warnings = warnings;
+            WarningDetails = warningDetails;
         }
 
-        public string NewValue { get; }
+        public string Location { get; }
+        public string OutputString { get; }
+        public IReadOnlyList<string> Warnings { get; }
+        public IReadOnlyList<WeatherWarningDetail> WarningDetails { get; }
+    }
+
+    /// <summary>
+    /// Structured weather warning details from DWD.
+    /// </summary>
+    public class WeatherWarningDetail
+    {
+        public WeatherWarningDetail(
+            string key,
+            string? regionName,
+            string? description,
+            string? @event,
+            string? headline,
+            string? instruction,
+            int? type,
+            int? level,
+            DateTime? startDate,
+            DateTime? endDate,
+            bool isAllDayWarning,
+            string outputString)
+        {
+            Key = key;
+            RegionName = regionName;
+            Description = description;
+            Event = @event;
+            Headline = headline;
+            Instruction = instruction;
+            Type = type;
+            Level = level;
+            StartDate = startDate;
+            EndDate = endDate;
+            IsAllDayWarning = isAllDayWarning;
+            OutputString = outputString;
+        }
+
+        public string Key { get; }
+        public string? RegionName { get; }
+        public string? Description { get; }
+        public string? Event { get; }
+        public string? Headline { get; }
+        public string? Instruction { get; }
+        public int? Type { get; }
+        public int? Level { get; }
+        public DateTime? StartDate { get; }
+        public DateTime? EndDate { get; }
+        public bool IsAllDayWarning { get; }
+        public string OutputString { get; }
     }
 
     /// <summary>
@@ -272,5 +366,128 @@ namespace Sarah.API.BusinessObjects
         }
 
         public string ForecastStringForToday { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn der BatteryMonitor kritisch niedrige Batteriezustände meldet.
+    /// </summary>
+    public class BatteryWarningEvent : NetworkEvent
+    {
+        public BatteryWarningEvent(IReadOnlyList<BatteryDeviceInfo> warnings) : base(0, "BatteryWarning")
+        {
+            Warnings = warnings;
+        }
+
+        /// <summary>
+        /// Geräte mit kritischem Ladestand.
+        /// </summary>
+        public IReadOnlyList<BatteryDeviceInfo> Warnings { get; }
+    }
+
+    /// <summary>
+    /// Beschreibt ein Gerät mit kritischem Batteriezustand.
+    /// </summary>
+    public class BatteryDeviceInfo
+    {
+        public BatteryDeviceInfo(string deviceName, float batteryLevel)
+        {
+            DeviceName = deviceName;
+            BatteryLevel = batteryLevel;
+        }
+
+        public string DeviceName { get; }
+        public float BatteryLevel { get; }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster geöffnet wurde.
+    /// </summary>
+    public class DoorOrWindowOpenedEvent : NetworkEvent
+    {
+        public bool IsWindow { get; }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public IReadOnlyList<string> TurnedOffHeatings { get; }
+
+        public DoorOrWindowOpenedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOffHeatings)
+            : base(source, "DoorOrWindowOpened")
+        {
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            TurnedOffHeatings = turnedOffHeatings;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster noch geöffnet ist.
+    /// </summary>
+    public class DoorOrWindowStillOpenEvent : NetworkEvent
+    {
+        public bool IsWindow { get; }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public TimeSpan OpenedSince { get; }
+
+        public DoorOrWindowStillOpenEvent(byte source, bool isWindow, string deviceName, string deviceRoom, TimeSpan openedSince)
+            : base(source, "DoorOrWindowStillOpen")
+        {
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            OpenedSince = openedSince;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn eine Tür oder ein Fenster geschlossen wurde.
+    /// </summary>
+    public class DoorOrWindowClosedEvent : NetworkEvent
+    {
+        public bool IsWindow { get; }
+        public string DeviceName { get; }
+        public string DeviceRoom { get; }
+        public IReadOnlyList<string> TurnedOnHeatings { get; }
+        public TimeSpan OpenedDuration { get; }
+
+        public DoorOrWindowClosedEvent(byte source, bool isWindow, string deviceName, string deviceRoom, IReadOnlyList<string> turnedOnHeatings, TimeSpan openedDuration)
+            : base(source, "DoorOrWindowClosed")
+        {
+            IsWindow = isWindow;
+            DeviceName = deviceName;
+            DeviceRoom = deviceRoom;
+            TurnedOnHeatings = turnedOnHeatings;
+            OpenedDuration = openedDuration;
+        }
+    }
+
+    /// <summary>
+    /// Event wird ausgelöst, wenn sich der aktuelle Stromnetzstatus ändert.
+    /// </summary>
+    public class GridStateChangedEvent : NetworkEvent
+    {
+        public GridStateChangedEvent(
+            string zip,
+            int currentState,
+            string currentStateText,
+            int? previousState,
+            string? previousStateText,
+            DateTime changedAtUtc)
+            : base(0, "GridStateChanged")
+        {
+            Zip = zip;
+            CurrentState = currentState;
+            CurrentStateText = currentStateText;
+            PreviousState = previousState;
+            PreviousStateText = previousStateText;
+            ChangedAtUtc = changedAtUtc;
+        }
+
+        public string Zip { get; }
+        public int CurrentState { get; }
+        public string CurrentStateText { get; }
+        public int? PreviousState { get; }
+        public string? PreviousStateText { get; }
+        public DateTime ChangedAtUtc { get; }
     }
 }

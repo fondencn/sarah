@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RoomdetailsComponent } from './roomdetails.component';
+import { RoomsClient } from '../../../../services/api/room-service/api/rooms.service';
 
 describe('RoomdetailsComponent', () => {
   let component: RoomdetailsComponent;
@@ -8,13 +9,13 @@ describe('RoomdetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [RoomdetailsComponent]
+      declarations: [RoomdetailsComponent],
+      providers: [{ provide: RoomsClient, useValue: {} }]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(RoomdetailsComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

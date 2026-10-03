@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using Sarah.API.Extensions;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Messaging.RabbitMQ.Messages;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Sarah.Rules.Services;
 
@@ -50,11 +52,27 @@ public class WeatherWarningHandler : IHostedService, IDisposable
                 return;
             }
 
+            var warnings = message.Warnings?
+                .Where(w => !string.IsNullOrWhiteSpace(w))
+                .Distinct()
+                .ToList()
+                ?? new List<string>();
+
+            if (warnings.Count == 0)
+            {
+                _logger.LogDebug("Weather warning message contained no warnings");
+                return;
+            }
+
+            string locationPart = string.IsNullOrWhiteSpace(message.Location)
+                ? string.Empty
+                : $" fuer {message.Location}";
+
             // Raise a say message for the weather warning
-            string warningMessage = $"Achtung, Wetterwarnung: {message.NewValue}";
+            string warningMessage = $"Achtung, Wetterwarnung{locationPart}: {string.Join(". ", warnings)}";
             await _rabbitMQ.PublishAsync(new SayMessage(warningMessage));
             
-            _logger.LogInformation("Published say message for weather warning: {Warning}", message.NewValue);
+            _logger.LogInformation("Published say message for weather warning ({WarningCount} items)", warnings.Count);
         }
         catch (Exception ex)
         {

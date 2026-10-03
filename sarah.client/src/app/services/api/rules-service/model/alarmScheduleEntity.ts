@@ -7,6 +7,8 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { AlarmContentDtoModel } from './alarmContentDto';
+import { AlarmContentTypeModel } from './alarmContentType';
 import { SpeechVolumeModel } from './speechVolume';
 
 
@@ -14,6 +16,8 @@ export interface AlarmScheduleEntityModel {
     id?: number;
     alarmTime: string;
     text: string;
+    contentType: AlarmContentTypeModel;
+    contentJson?: string | null;
     targetSpeaker?: string | null;
     isActive: boolean;
     volume: SpeechVolumeModel;
@@ -27,6 +31,9 @@ export interface AlarmScheduleEntityModel {
     isNichtInFerienNotNull?: boolean;
     hasRecurrence: boolean;
     serializedRecurrence?: string | null;
+    content?: AlarmContentDtoModel;
+    readonly isTemperatureSchedule?: boolean;
+    readonly isTextSchedule?: boolean;
 }
 
 

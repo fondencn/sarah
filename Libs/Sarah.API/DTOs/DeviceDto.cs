@@ -60,8 +60,7 @@ namespace Sarah.API.BusinessObjects.DTOs
     {
         public bool IsOn { get; set; }
         public DateTime LastChangeToPowerLow { get; set; }
-        public DateTime LastIncreasePower { get; set; }
-        public DateTime LastDecreasePower { get; set; }
+        public DateTime LastChangeToPowerHigh { get; set; }
     }
 
     public class PositionDto
