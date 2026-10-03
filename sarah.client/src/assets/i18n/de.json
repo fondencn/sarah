@@ -54,6 +54,8 @@
     "colNodeId": "Node ID",
     "colName": "Name",
     "colType": "Typ",
+    "searchPlaceholder": "Nach Node-ID, Name, Typ oder Info suchen…",
+    "noMatches": "Keine Geräte entsprechen der Suche.",
     "colInfo": "Info",
     "colActions": "Aktionen",
     "noDevices": "Keine Geräte geladen.",

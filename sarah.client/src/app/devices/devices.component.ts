@@ -11,6 +11,8 @@ import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
 import { LoggingService } from '../services/logging.service';
 
 
+type SortColumn = 'id' | 'nodeId' | 'name' | 'typeName' | 'info' | 'state';
+
 @Component({
   selector: 'app-devices',
   templateUrl: './devices.component.html',
@@ -22,12 +24,61 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
 
   devices: DeviceDto[] = []; // Member variable to store the devices list
+  searchText = '';
+  sortColumn: SortColumn | null = null;
+  sortAscending = true;
   isLoading: boolean = false; // Member variable to store the loading state
   @ViewChild(EditDeviceModalComponent) editDeviceModal!: EditDeviceModalComponent;
   @ViewChild(DeviceControlModalComponent) deviceControlModal!: DeviceControlModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
   constructor(private devicesService: DevicesClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
+
+  get filteredDevices(): DeviceDto[] {
+    const term = this.searchText.trim().toLowerCase();
+    let result = this.devices;
+    if (term) {
+      result = result.filter(d =>
+        [d.nodeId, d.name, d.typeName, this.stripHtml(d.info)]
+          .some(v => (v ?? '').toString().toLowerCase().includes(term)));
+    }
+    if (this.sortColumn) {
+      const col = this.sortColumn;
+      const dir = this.sortAscending ? 1 : -1;
+      result = [...result].sort((a, b) => this.compareValues(this.getSortValue(a, col), this.getSortValue(b, col)) * dir);
+    }
+    return result;
+  }
+
+  sortBy(column: SortColumn): void {
+    if (this.sortColumn === column) {
+      this.sortAscending = !this.sortAscending;
+    } else {
+      this.sortColumn = column;
+      this.sortAscending = true;
+    }
+  }
+
+  getSortIndicator(column: SortColumn): string {
+    return this.sortColumn === column ? (this.sortAscending ? ' ▲' : ' ▼') : '';
+  }
+
+  private stripHtml(value: string | null | undefined): string {
+    return (value ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  private getSortValue(d: DeviceDto, col: SortColumn): string | number {
+    switch (col) {
+      case 'info': return this.stripHtml(d.info);
+      case 'state': return this.getStatusCategory(d) ?? '';
+      default: return (d as any)[col] ?? '';
+    }
+  }
+
+  private compareValues(a: string | number, b: string | number): number {
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+  }
 
   ngOnInit(): void {
     this.onLoad();
