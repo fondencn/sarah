@@ -314,11 +314,17 @@ deploy() {
     log "Starting infrastructure on ${PI_HOST}..."
     remote "cd ${DEPLOY_DIR} && docker compose up -d postgres rabbitmq keycloak"
   else
-    log "Partial deploy detected; leaving existing infrastructure containers unchanged."
+    log "Partial deploy detected; leaving existing infrastructure containers unchanged (ensuring postgres is up)."
+    remote "cd ${DEPLOY_DIR} && docker compose up -d postgres"
   fi
 
   log "Waiting for PostgreSQL and RabbitMQ health checks (timeout: ${INFRA_HEALTH_TIMEOUT_SEC}s)..."
   wait_for_infra_health
+
+  # The postgres image only runs /docker-entrypoint-initdb.d on an empty volume, so re-run the
+  # idempotent init script on every deploy to create any newly added databases.
+  log "Ensuring PostgreSQL databases exist (re-running init-databases.sh)..."
+  remote "cd ${DEPLOY_DIR} && docker compose exec -T postgres bash /docker-entrypoint-initdb.d/init-databases.sh"
 
   log "Starting selected app services on ${PI_HOST}..."
   remote "cd ${DEPLOY_DIR} && docker compose up -d ${SELECTED_SERVICES[*]}"

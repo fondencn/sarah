@@ -182,6 +182,11 @@ deploy() {
   log "Waiting for PostgreSQL and RabbitMQ health checks..."
   remote "bash -lc 'cd \"${DEPLOY_DIR}\" && for i in \$(seq 1 60); do pg_id=\$(docker compose ps -q postgres); mq_id=\$(docker compose ps -q rabbitmq); pg=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$pg_id\" 2>/dev/null || echo unknown); mq=\$(docker inspect --format=\"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}\" \"\$mq_id\" 2>/dev/null || echo unknown); if [ \"\$pg\" = \"healthy\" ] && [ \"\$mq\" = \"healthy\" ]; then exit 0; fi; sleep 2; done; echo \"Timed out waiting for infrastructure health checks\" >&2; docker compose ps >&2; exit 1'"
 
+  # The postgres image only runs /docker-entrypoint-initdb.d on an empty volume, so re-run the
+  # idempotent init script on every deploy to create any newly added databases.
+  log "Ensuring PostgreSQL databases exist (re-running init-databases.sh)..."
+  remote "cd ${DEPLOY_DIR} && docker compose exec -T postgres bash /docker-entrypoint-initdb.d/init-databases.sh"
+
   # Start app services after infrastructure is confirmed healthy.
   remote "cd ${DEPLOY_DIR} && docker compose up -d deviceservice personsservice geofencesservice roomservice monitoringservice rulesservice dashboardservice adminservice statisticsservice frontend"
 
