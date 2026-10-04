@@ -345,6 +345,7 @@ After deployment, these services are accessible:
 | RulesService | pi | `http://pi:5006` |
 | DashboardService | pi | `http://pi:5007` |
 | AdminService | pi | `http://pi:5009` |
+| StatisticsService | pi | `http://pi:5010` |
 | SpeechServer | speaker1 | `http://speaker1:5008` |
 | SpeechServer | speaker3 | `http://speaker3:5008` |
 | Grafana *(observability profile)* | pi | `http://pi:3000` |

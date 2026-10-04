@@ -26,6 +26,7 @@ declare -A PI_SERVICE_DOCKERFILES=(
   [rulesservice]="Microservices/Sarah.Rules.WebApi/Dockerfile"
   [dashboardservice]="Microservices/Sarah.Dashboard.WebApi/Dockerfile"
   [adminservice]="Microservices/Sarah.Admin.WebApi/Dockerfile"
+  [statisticsservice]="Microservices/Sarah.Statistics.WebApi/Dockerfile"
   [frontend]="sarah.client/Dockerfile"
 )
 
@@ -38,6 +39,7 @@ ALL_PI_SERVICES=(
   rulesservice
   dashboardservice
   adminservice
+  statisticsservice
   frontend
 )
 
@@ -339,7 +341,7 @@ If no services are provided, all pi services and the frontend are rebuilt and de
 
 Recognized services:
   deviceservice personsservice geofencesservice roomservice
-  monitoringservice rulesservice dashboardservice adminservice frontend
+  monitoringservice rulesservice dashboardservice adminservice statisticsservice frontend
 EOF
 }
 
