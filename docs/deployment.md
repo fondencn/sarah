@@ -250,6 +250,8 @@ This will:
 
 If you pass service names, only those Docker images are rebuilt, transferred, and started on `pi`. Omit arguments to rebuild and deploy the full pi stack and frontend.
 
+Both `deploy-pi.sh` and `deploy-pi-rebuild.sh` start `postgres`, wait for it to be healthy, and re-run `init-databases.sh` inside the container (`docker compose exec -T postgres bash /docker-entrypoint-initdb.d/init-databases.sh`) before starting or recreating application services. Postgres only runs its init directory on an empty volume, so this is how newly added databases (e.g. `statisticsdb`) get created on an existing Pi. The script is idempotent.
+
 If you need to refresh an existing remote speaker `.env`, run:
 
 ```bash
@@ -345,6 +347,7 @@ After deployment, these services are accessible:
 | RulesService | pi | `http://pi:5006` |
 | DashboardService | pi | `http://pi:5007` |
 | AdminService | pi | `http://pi:5009` |
+| StatisticsService | pi | `http://pi:5010` |
 | SpeechServer | speaker1 | `http://speaker1:5008` |
 | SpeechServer | speaker3 | `http://speaker3:5008` |
 | Grafana *(observability profile)* | pi | `http://pi:3000` |

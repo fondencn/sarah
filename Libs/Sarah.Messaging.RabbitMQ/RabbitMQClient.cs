@@ -172,32 +172,44 @@ public class RabbitMQClient : IDisposable
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.ReceivedAsync += async (model, ea) =>
         {
+            T? message;
             try
             {
                 var body = ea.Body.ToArray();
                 var json = Encoding.UTF8.GetString(body);
-                
-                // Deserialize to specific message type
-                var message = JsonSerializer.Deserialize<T>(json);
-                
-                if (message != null)
-                {
-                    await onMessage(message);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to deserialize message from topic {Topic}", topic);
-                }
+                message = JsonSerializer.Deserialize<T>(json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize message from topic {Topic}", topic);
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                return;
+            }
+
+            if (message == null)
+            {
+                _logger.LogWarning("Failed to deserialize message from topic {Topic}", topic);
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                return;
+            }
+
+            try
+            {
+                await onMessage(message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message from topic {Topic}", topic);
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
+                return;
             }
+
+            await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
         };
 
         await _channel.BasicConsumeAsync(
             queue: queueName,
-            autoAck: true,
+            autoAck: false,
             consumer: consumer,
             cancellationToken: cancellationToken);
 

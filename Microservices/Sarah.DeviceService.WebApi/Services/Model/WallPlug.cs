@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
@@ -22,6 +22,7 @@ namespace Sarah.DeviceService.Model
     {
         private bool _isOn;
         private SensorData _meter_kwh = new SensorData(0, "kWh");
+        private bool _hasMeterKwhReading;
         private SensorData _meter_kVAh = new SensorData(0, "kVAh");
         private SensorData _meter_W = new SensorData(0, "W");
         private SensorData _meter_A = new SensorData(0, "A");
@@ -61,7 +62,19 @@ namespace Sarah.DeviceService.Model
         /// <summary>
         /// Meter in Kilowattstunden
         /// </summary>
-        public SensorData Meter_kWh { get => _meter_kwh; protected set { if (_meter_kwh != value) { _meter_kwh = value; _ = _publisher.ReportEvent(this, nameof(Meter_kWh), value?.ToString()); } } }
+        public SensorData Meter_kWh
+        {
+            get => _meter_kwh;
+            protected set
+            {
+                _hasMeterKwhReading = value != null;
+                if (value != null && _meter_kwh != value)
+                {
+                    _meter_kwh = value;
+                    _ = _publisher.ReportEvent(this, nameof(Meter_kWh), value?.ToString());
+                }
+            }
+        }
 
         /// <summary>
         /// Meter in 1000 Volt-Ampère-Stunden
@@ -78,6 +91,8 @@ namespace Sarah.DeviceService.Model
             {
                 float oldVal = _meter_W.Value;
                 float newVal = value.Value;
+
+                _ = _publisher.ReportEnergyMeasured(this, newVal, _hasMeterKwhReading ? _meter_kwh.Value : null);
 
                 if (oldVal != newVal)
                 {

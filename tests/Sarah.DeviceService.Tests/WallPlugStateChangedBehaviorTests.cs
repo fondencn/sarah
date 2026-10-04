@@ -62,6 +62,19 @@ public class WallPlugStateChangedBehaviorTests
         Assert.Equal(DateTime.MinValue, wallPlug.LastChangeToPowerHigh);
     }
 
+    [Fact]
+    public void MeterW_PublishesReportedZeroKwhButLeavesUnreportedReadingNull()
+    {
+        var publisher = new RecordingPublisher();
+        var wallPlug = new TestWallPlug(10, publisher);
+
+        wallPlug.ApplyMeter(5f);
+        wallPlug.ApplyMeterKwh(0f);
+        wallPlug.ApplyMeter(6f);
+
+        Assert.Equal(new double?[] { null, 0 }, publisher.EnergyReadings);
+    }
+
     private sealed class TestWallPlug : WallPlug
     {
         public TestWallPlug(byte nodeId, NetworkElementPublisher publisher)
@@ -78,16 +91,25 @@ public class WallPlugStateChangedBehaviorTests
         public void ApplyIsOn(bool value) => IsOn = value;
 
         public void ApplyMeter(float watts) => Meter_W = new SensorData(watts, "W");
+        public void ApplyMeterKwh(float kwh) => Meter_kWh = new SensorData(kwh, "kWh");
     }
 
     private sealed class RecordingPublisher : NetworkElementPublisher
     {
+        public List<double?> EnergyReadings { get; } = [];
+
         public RecordingPublisher()
             : base(
                 new RabbitMQClient(
                     NullLogger<RabbitMQClient>.Instance,
                     new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build()))
         {
+        }
+
+        public override Task ReportEnergyMeasured(WallPlug wallPlug, double powerW, double? energyKwhTotal)
+        {
+            EnergyReadings.Add(energyKwhTotal);
+            return Task.CompletedTask;
         }
     }
 }

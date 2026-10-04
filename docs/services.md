@@ -14,6 +14,7 @@ Details on every microservice in the Sarah platform: responsibilities, endpoints
 | Rules Service | 5006 | Condition-based automation rules | `rulesdb` |
 | Dashboard Service | 5007 | Dashboard widget persistence | `dashboarddb` |
 | Speech Server | 5008 | Voice recognition & TTS | – |
+| Statistics Service | 5010 | Statistics collection | `statisticsdb` |
 
 ---
 
