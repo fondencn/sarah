@@ -1,6 +1,6 @@
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { EnergyComponent } from './energy.component';
-import { buildStackedBars, EnergyStatisticsService } from '../services/energy-statistics.service';
+import { buildStackedBars, EnergyStatisticsService, EnergyTimeseriesPoint } from '../services/energy-statistics.service';
 
 describe('EnergyComponent', () => {
   let statisticsSpy: jasmine.SpyObj<EnergyStatisticsService>;
@@ -34,6 +34,30 @@ describe('EnergyComponent', () => {
     component.load();
     expect(component.hasError).toBeTrue();
     expect(component.isLoading).toBeFalse();
+  });
+
+  it('ignores chart series from an older range load', () => {
+    const firstDevices = [{ ...devices[0], deviceId: 1 }];
+    const secondDevices = [{ ...devices[0], deviceId: 2 }];
+    const responses: Subject<EnergyTimeseriesPoint[]>[] = [];
+    statisticsSpy.getDevices.and.returnValues(of(firstDevices), of(secondDevices));
+    statisticsSpy.getTimeseries.and.callFake(() => {
+      const response = new Subject<EnergyTimeseriesPoint[]>();
+      responses.push(response);
+      return response;
+    });
+
+    component.load();
+    component.setRange('7d');
+
+    responses[1].next([{ bucketStart: 'new', avgPowerW: 1, maxPowerW: 1, energyKwh: 2 }]);
+    responses[1].complete();
+    expect(component.bars.map(bar => bar.bucketStart)).toEqual(['new']);
+
+    responses[0].next([{ bucketStart: 'old', avgPowerW: 1, maxPowerW: 1, energyKwh: 1 }]);
+    responses[0].complete();
+    expect(component.bars.map(bar => bar.bucketStart)).toEqual(['new']);
+    expect(component.chartDevices.map(device => device.deviceId)).toEqual([2]);
   });
 
   it('sorts devices by energy descending by default and toggles', () => {

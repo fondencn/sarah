@@ -41,6 +41,7 @@ export class EnergyComponent implements OnInit, OnDestroy {
 
   private series = new Map<number, EnergyTimeseriesPoint[]>();
   private liveSubscription: Subscription | null = null;
+  private loadGeneration = 0;
   private currentFrom = new Date();
   private currentTo = new Date();
 
@@ -64,6 +65,7 @@ export class EnergyComponent implements OnInit, OnDestroy {
 
   load(): void {
     const { from, to } = this.computeRange(this.range, new Date());
+    const generation = ++this.loadGeneration;
     this.currentFrom = from;
     this.currentTo = to;
     this.isLoading = true;
@@ -74,32 +76,37 @@ export class EnergyComponent implements OnInit, OnDestroy {
       devices: this.statistics.getDevices(from, to)
     }).subscribe({
       next: ({ summary, devices }) => {
+        if (generation !== this.loadGeneration) { return; }
         this.summary = summary;
         this.devices = devices;
-        this.chartDevices = devices.slice(0, CHART_DEVICE_COUNT);
-        this.loadSeries(from, to);
+        const chartDevices = devices.slice(0, CHART_DEVICE_COUNT);
+        this.chartDevices = chartDevices;
+        this.loadSeries(from, to, chartDevices, generation);
       },
       error: () => {
+        if (generation !== this.loadGeneration) { return; }
         this.isLoading = false;
         this.hasError = true;
       }
     });
   }
 
-  private loadSeries(from: Date, to: Date): void {
-    if (this.chartDevices.length === 0) {
+  private loadSeries(from: Date, to: Date, chartDevices: EnergyDeviceStatistics[], generation: number): void {
+    if (chartDevices.length === 0) {
       this.series = new Map();
       this.bars = [];
       this.isLoading = false;
       return;
     }
-    forkJoin(this.chartDevices.map(d => this.statistics.getTimeseries(d.deviceId, from, to))).subscribe({
+    forkJoin(chartDevices.map(d => this.statistics.getTimeseries(d.deviceId, from, to))).subscribe({
       next: results => {
-        this.series = new Map(this.chartDevices.map((d, i) => [d.deviceId, results[i]] as [number, EnergyTimeseriesPoint[]]));
+        if (generation !== this.loadGeneration) { return; }
+        this.series = new Map(chartDevices.map((d, i) => [d.deviceId, results[i]] as [number, EnergyTimeseriesPoint[]]));
         this.rebuildBars();
         this.isLoading = false;
       },
       error: () => {
+        if (generation !== this.loadGeneration) { return; }
         this.isLoading = false;
         this.hasError = true;
       }
