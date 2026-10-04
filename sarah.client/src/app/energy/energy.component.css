@@ -1,6 +1,6 @@
 .kpi-label { font-size: 0.85rem; color: #6c757d; }
 .kpi-value { font-size: 1.6rem; font-weight: 600; }
-.chart { display: flex; align-items: flex-end; gap: 2px; height: 220px; }
+.chart { display: flex; align-items: flex-end; gap: 2px; height: 220px; overflow-x: auto; }
 .chart-small { height: 120px; }
 .chart-bar { flex: 1 1 0; min-width: 2px; height: 100%; display: flex; align-items: flex-end; }
 .chart-stack { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 2px 2px 0 0; overflow: hidden; }
