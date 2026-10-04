@@ -1,0 +1,117 @@
+<div class="energy container-fluid">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h2 class="mb-0">{{ 'energy.title' | translate }}</h2>
+    <div class="btn-group" role="group">
+      <button *ngFor="let r of ranges" type="button" class="btn btn-outline-primary"
+              [class.active]="range === r.key" (click)="setRange(r.key)">{{ r.label | translate }}</button>
+    </div>
+  </div>
+
+  <div *ngIf="hasError" class="alert alert-danger">{{ 'energy.error' | translate }}</div>
+  <div *ngIf="isLoading" class="energy-skeleton text-muted">{{ 'energy.loading' | translate }}</div>
+
+  <ng-container *ngIf="summary && !hasError">
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-lg-3">
+        <div class="card kpi"><div class="card-body">
+          <div class="kpi-label">{{ 'energy.currentPower' | translate }}
+            <span *ngIf="liveIndicator" class="badge bg-success ms-1">{{ 'energy.live' | translate }}</span></div>
+          <div class="kpi-value">{{ summary.currentPowerW | number:'1.0-0' }} W</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi"><div class="card-body">
+          <div class="kpi-label">{{ 'energy.consumption' | translate }}</div>
+          <div class="kpi-value">{{ summary.totalEnergyKwh | number:'1.0-2' }} kWh</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi"><div class="card-body">
+          <div class="kpi-label">{{ 'energy.cost' | translate }}</div>
+          <div class="kpi-value">{{ summary.estimatedCost | number:'1.2-2' }} €</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi"><div class="card-body">
+          <div class="kpi-label">{{ 'energy.trend' | translate }}</div>
+          <div class="kpi-value" *ngIf="summary.trendPercent !== null"
+               [class.text-danger]="summary.trendPercent > 0" [class.text-success]="summary.trendPercent <= 0">
+            {{ summary.trendPercent > 0 ? '▲' : '▼' }} {{ summary.trendPercent | number:'1.0-1' }} %
+          </div>
+          <div class="kpi-value text-muted" *ngIf="summary.trendPercent === null">–</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div *ngIf="devices.length === 0 && !isLoading" class="alert alert-info">{{ 'energy.noData' | translate }}</div>
+
+    <div class="row g-3" *ngIf="devices.length > 0">
+      <div class="col-12 col-xl-7">
+        <div class="card"><div class="card-body">
+          <h5 class="card-title">{{ 'energy.chartTitle' | translate }}</h5>
+          <div class="chart" role="img" [attr.aria-label]="'energy.chartTitle' | translate">
+            <div class="chart-bar" *ngFor="let bar of bars" [title]="(bar.bucketStart | date:'short') + ': ' + (bar.totalKwh | number:'1.0-3') + ' kWh'">
+              <div class="chart-stack" [style.height.%]="bar.heightPercent">
+                <div *ngFor="let s of bar.segments" class="chart-segment"
+                     [style.height.%]="s.heightPercent" [style.background]="colorOf(s.deviceId)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="legend mt-2">
+            <button *ngFor="let d of chartDevices" type="button" class="legend-item btn btn-sm"
+                    [class.legend-hidden]="hidden.has(d.deviceId)" (click)="toggleDevice(d.deviceId)">
+              <span class="legend-dot" [style.background]="colorOf(d.deviceId)"></span>{{ displayName(d) }}
+            </button>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="col-12 col-xl-5">
+        <div class="card"><div class="card-body">
+          <h5 class="card-title">{{ 'energy.devices' | translate }}</h5>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th class="sortable" (click)="sortBy('deviceName')">{{ 'energy.device' | translate }}</th>
+                  <th class="sortable text-end" (click)="sortBy('currentPowerW')">{{ 'energy.power' | translate }}</th>
+                  <th class="sortable text-end" (click)="sortBy('energyKwh')">kWh</th>
+                  <th>{{ 'energy.share' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let d of sortedDevices" class="device-row" (click)="select(d)" [class.table-active]="selected?.deviceId === d.deviceId">
+                  <td>{{ displayName(d) }}</td>
+                  <td class="text-end">{{ d.currentPowerW | number:'1.0-0' }} W</td>
+                  <td class="text-end">{{ d.energyKwh | number:'1.0-2' }}</td>
+                  <td class="share-cell">
+                    <div class="progress" role="progressbar"><div class="progress-bar" [style.width.%]="d.sharePercent"></div></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card mt-3" *ngIf="selected">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <h5 class="card-title">{{ displayName(selected) }}</h5>
+          <button type="button" class="btn-close" [attr.aria-label]="'energy.close' | translate" (click)="selected = null"></button>
+        </div>
+        <div class="row text-center mb-2">
+          <div class="col">{{ 'energy.avgPower' | translate }}: <strong>{{ selected.avgPowerW | number:'1.0-0' }} W</strong></div>
+          <div class="col">{{ 'energy.maxPower' | translate }}: <strong>{{ selected.maxPowerW | number:'1.0-0' }} W</strong></div>
+          <div class="col">{{ 'energy.consumption' | translate }}: <strong>{{ selected.energyKwh | number:'1.0-2' }} kWh</strong></div>
+        </div>
+        <div class="chart chart-small">
+          <div class="chart-bar" *ngFor="let bar of selectedBars" [title]="(bar.bucketStart | date:'short') + ': ' + (bar.totalKwh | number:'1.0-3') + ' kWh'">
+            <div class="chart-stack" [style.height.%]="bar.heightPercent"><div class="chart-segment" style="height:100%;background:#0d6efd"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

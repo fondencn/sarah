@@ -31,6 +31,7 @@ export const environment = {
     monitoringService: 'http://localhost:5005',  // System monitoring and health checks
     rulesService: 'http://localhost:5006',       // Automation rules engine
     speechServer: 'http://localhost:5008',        // Voice recognition and text-to-speech
-    adminService: 'http://localhost:5009'         // Admin operations
+    adminService: 'http://localhost:5009',         // Admin operations
+    statisticsService: 'http://localhost:5010'      // Energy consumption statistics
   }
 };

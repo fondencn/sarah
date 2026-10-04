@@ -11,6 +11,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
     public class NetworkElementPublisher
     {
         private readonly RabbitMQClient _rabbitMQClient;
+        private readonly EnergyMeasurementThrottle _energyThrottle = new();
 
         public NetworkElementPublisher(RabbitMQClient rabbitMQClient)
         {
@@ -100,6 +101,28 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public async Task ReportSmokeAlarm(NetworkElement element, bool alarmActive)
         {
             var message = new SmokeSensorAlertMessage(element.NodeID, alarmActive);
+            await _rabbitMQClient.PublishAsync(message);
+        }
+
+        /// <summary>
+        /// Publishes a (throttled) energy measurement so the Statistics service can store consumption time series.
+        /// </summary>
+        public virtual async Task ReportEnergyMeasured(WallPlug wallPlug, double powerW, double? energyKwhTotal)
+        {
+            var now = DateTime.UtcNow;
+            if (!_energyThrottle.ShouldPublish(wallPlug.NodeID, powerW, now))
+            {
+                return;
+            }
+
+            var message = new DeviceEnergyMeasuredMessage
+            {
+                DeviceId = wallPlug.NodeID,
+                DeviceName = wallPlug.Name,
+                MeasuredAt = now,
+                PowerW = powerW,
+                EnergyKwhTotal = energyKwhTotal
+            };
             await _rabbitMQClient.PublishAsync(message);
         }
 

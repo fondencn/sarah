@@ -6,7 +6,8 @@
     "rooms": "Rooms",
     "alarms": "Alarms",
     "admin": "Admin",
-    "logout": "Logout"
+    "logout": "Logout",
+    "energy": "Energy"
   },
   "common": {
     "on": "On",
@@ -196,5 +197,30 @@
     "weekdaySun": "Sun",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "energy": {
+    "title": "Energy consumption",
+    "today": "Today",
+    "days7": "7 days",
+    "days30": "30 days",
+    "year": "Year",
+    "currentPower": "Current power",
+    "consumption": "Consumption",
+    "cost": "Estimated cost",
+    "trend": "vs. previous period",
+    "live": "Live",
+    "chartTitle": "Consumption over time",
+    "devices": "Devices",
+    "device": "Device",
+    "power": "Power",
+    "avgPower": "Average",
+    "maxPower": "Peak",
+    "share": "Share",
+    "noData": "No measurements yet.",
+    "loading": "Loading…",
+    "error": "Energy data could not be loaded.",
+    "details": "Details",
+    "close": "Close",
+    "others": "Others"
   }
 }

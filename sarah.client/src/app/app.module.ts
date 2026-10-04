@@ -33,6 +33,7 @@ import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PersonsComponent } from './persons/persons.component';
 import { RoomsComponent } from './rooms/rooms.component';
+import { EnergyComponent } from './energy/energy.component';
 import { EditRoomModalComponent } from './rooms/edit-room-modal/edit-room-modal.component';
 import { EditPersonModalComponent } from './persons/edit-person-modal/edit-person-modal.component';
 import { HomedetailsComponent } from './home/details/homedetails.component';
@@ -60,6 +61,7 @@ import { KernelConversationPanelComponent } from './admin/kernel-conversation-pa
         EditDeviceModalComponent,
         PersonsComponent,
         RoomsComponent,
+        EnergyComponent,
         EditRoomModalComponent,
         EditPersonModalComponent,
         HomedetailsComponent,

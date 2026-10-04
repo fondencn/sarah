@@ -10,6 +10,7 @@ import { PersondetailsComponent } from './home/details/person/persondetails/pers
 import { DevicedetailsComponent } from './home/details/device/devicedetails/devicedetails.component';
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 import { AlarmsComponent } from './alarms/alarms.component';
+import { EnergyComponent } from './energy/energy.component';
 
 const routes: Routes = [
   { path: "home", component: HomeComponent },
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: "persons", component: PersonsComponent },
   { path: "rooms", component: RoomsComponent },
   { path: "alarms", component: AlarmsComponent },
+  { path: "energy", component: EnergyComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }, // redirect to `home`
 ];
 

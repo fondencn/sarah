@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Sarah.API.Business;
 using Sarah.API.BusinessObjects;
 using Sarah.API.Interfaces;
@@ -78,6 +78,8 @@ namespace Sarah.DeviceService.Model
             {
                 float oldVal = _meter_W.Value;
                 float newVal = value.Value;
+
+                _ = _publisher.ReportEnergyMeasured(this, newVal, _meter_kwh != null && _meter_kwh.Value > 0 ? _meter_kwh.Value : null);
 
                 if (oldVal != newVal)
                 {
