@@ -73,9 +73,15 @@
             <table class="table table-sm align-middle">
               <thead>
                 <tr>
-                  <th class="sortable" (click)="sortBy('deviceName')">{{ 'energy.device' | translate }}</th>
-                  <th class="sortable text-end" (click)="sortBy('currentPowerW')">{{ 'energy.power' | translate }}</th>
-                  <th class="sortable text-end" (click)="sortBy('energyKwh')">kWh</th>
+                  <th scope="col" [attr.aria-sort]="sortKey === 'deviceName' ? (sortDescending ? 'descending' : 'ascending') : 'none'">
+                    <button type="button" class="sortable btn btn-link p-0 text-reset text-decoration-none" (click)="sortBy('deviceName')">{{ 'energy.device' | translate }}</button>
+                  </th>
+                  <th scope="col" class="text-end" [attr.aria-sort]="sortKey === 'currentPowerW' ? (sortDescending ? 'descending' : 'ascending') : 'none'">
+                    <button type="button" class="sortable btn btn-link p-0 text-reset text-decoration-none" (click)="sortBy('currentPowerW')">{{ 'energy.power' | translate }}</button>
+                  </th>
+                  <th scope="col" class="text-end" [attr.aria-sort]="sortKey === 'energyKwh' ? (sortDescending ? 'descending' : 'ascending') : 'none'">
+                    <button type="button" class="sortable btn btn-link p-0 text-reset text-decoration-none" (click)="sortBy('energyKwh')">kWh</button>
+                  </th>
                   <th>{{ 'energy.share' | translate }}</th>
                 </tr>
               </thead>
