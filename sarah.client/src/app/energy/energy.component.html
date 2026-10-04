@@ -35,8 +35,8 @@
         <div class="card kpi"><div class="card-body">
           <div class="kpi-label">{{ 'energy.trend' | translate }}</div>
           <div class="kpi-value" *ngIf="summary.trendPercent !== null"
-               [class.text-danger]="summary.trendPercent > 0" [class.text-success]="summary.trendPercent <= 0">
-            {{ summary.trendPercent > 0 ? '▲' : '▼' }} {{ summary.trendPercent | number:'1.0-1' }} %
+               [class.text-danger]="summary.trendPercent > 0" [class.text-success]="summary.trendPercent < 0">
+            {{ summary.trendPercent > 0 ? '▲' : summary.trendPercent < 0 ? '▼' : '–' }} {{ summary.trendPercent | number:'1.0-1' }} %
           </div>
           <div class="kpi-value text-muted" *ngIf="summary.trendPercent === null">–</div>
         </div></div>
