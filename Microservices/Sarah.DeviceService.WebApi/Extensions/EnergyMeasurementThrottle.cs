@@ -9,6 +9,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
     public class EnergyMeasurementThrottle
     {
         private readonly ConcurrentDictionary<int, (DateTime At, double Watts)> _last = new();
+        private readonly ConcurrentDictionary<int, SemaphoreSlim> _publishLocks = new();
 
         public TimeSpan MinInterval { get; }
         public TimeSpan HeartbeatInterval { get; }
@@ -21,24 +22,35 @@ namespace Sarah.DeviceService.WebApi.Extensions
             RelativeChange = relativeChange;
         }
 
-        public bool ShouldPublish(int deviceId, double watts, DateTime now)
+        public async Task<bool> PublishIfRequiredAsync(int deviceId, double watts, DateTime now, Func<Task> publish)
         {
-            while (true)
+            var publishLock = _publishLocks.GetOrAdd(deviceId, _ => new SemaphoreSlim(1, 1));
+            await publishLock.WaitAsync();
+            try
             {
-                if (!_last.TryGetValue(deviceId, out var last))
+                if (_last.TryGetValue(deviceId, out var last))
                 {
-                    if (_last.TryAdd(deviceId, (now, watts))) return true;
-                    continue;
+                    var elapsed = now - last.At;
+                    if (elapsed < MinInterval)
+                    {
+                        return false;
+                    }
+
+                    var baseline = Math.Max(Math.Abs(last.Watts), 1.0);
+                    var changed = Math.Abs(watts - last.Watts) / baseline >= RelativeChange;
+                    if (!changed && elapsed < HeartbeatInterval)
+                    {
+                        return false;
+                    }
                 }
 
-                var elapsed = now - last.At;
-                if (elapsed < MinInterval) return false;
-
-                var baseline = Math.Max(Math.Abs(last.Watts), 1.0);
-                var changed = Math.Abs(watts - last.Watts) / baseline >= RelativeChange;
-                if (!changed && elapsed < HeartbeatInterval) return false;
-
-                if (_last.TryUpdate(deviceId, (now, watts), last)) return true;
+                await publish();
+                _last[deviceId] = (now, watts);
+                return true;
+            }
+            finally
+            {
+                publishLock.Release();
             }
         }
     }

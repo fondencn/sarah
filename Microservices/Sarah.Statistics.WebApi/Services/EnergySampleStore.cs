@@ -1,15 +1,16 @@
 using Sarah.Messaging.RabbitMQ.Messages;
 using Sarah.Statistics.WebApi.Data;
+using Sarah.Statistics.WebApi.Data.Repositories;
 
 namespace Sarah.Statistics.WebApi.Services;
 
 public class EnergySampleStore
 {
-    private readonly StatisticsDbContext _db;
+    private readonly IRepository<EnergySample> _samples;
 
-    public EnergySampleStore(StatisticsDbContext db)
+    public EnergySampleStore(IRepository<EnergySample> samples)
     {
-        _db = db;
+        _samples = samples;
     }
 
     /// <summary>Persists a raw measurement. Invalid values (NaN, infinite, negative power) are rejected.</summary>
@@ -32,7 +33,7 @@ public class EnergySampleStore
             name = name[..200];
         }
 
-        _db.EnergySamples.Add(new EnergySample
+        _samples.Add(new EnergySample
         {
             DeviceId = message.DeviceId,
             DeviceName = name,
@@ -40,7 +41,7 @@ public class EnergySampleStore
             PowerW = message.PowerW,
             EnergyKwhTotal = kwh
         });
-        await _db.SaveChangesAsync(cancellationToken);
+        await _samples.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

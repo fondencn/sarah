@@ -64,6 +64,11 @@ namespace Sarah.Statistics.WebApi.Migrations
                 name: "IX_EnergySamples_DeviceId_Timestamp",
                 table: "EnergySamples",
                 columns: new[] { "DeviceId", "Timestamp" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EnergySamples_Timestamp",
+                table: "EnergySamples",
+                column: "Timestamp");
         }
 
         /// <inheritdoc />

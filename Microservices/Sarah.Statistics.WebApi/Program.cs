@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Sarah.Messaging.RabbitMQ;
 using Sarah.Statistics.WebApi.Data;
+using Sarah.Statistics.WebApi.Data.Repositories;
 using Sarah.Statistics.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,8 @@ builder.Services.AddDbContext<StatisticsDbContext>(options =>
         .ConfigureWarnings(warnings => warnings.Log(
             (RelationalEventId.CommandExecuting, LogLevel.Debug),
             (RelationalEventId.CommandExecuted, LogLevel.Debug))));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Register RabbitMQ client
 builder.Services.AddSingleton(sp =>

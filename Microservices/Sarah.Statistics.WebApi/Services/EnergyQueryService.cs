@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Statistics.WebApi.Data;
+using Sarah.Statistics.WebApi.Data.Repositories;
 
 namespace Sarah.Statistics.WebApi.Services;
 
@@ -8,12 +9,14 @@ public class EnergyQueryService
 {
     public static readonly TimeSpan LiveWindow = TimeSpan.FromMinutes(30);
 
-    private readonly StatisticsDbContext _db;
+    private readonly IRepository<EnergySample> _samples;
+    private readonly IRepository<EnergyAggregate> _aggregates;
     private readonly decimal _pricePerKwh;
 
-    public EnergyQueryService(StatisticsDbContext db, IConfiguration configuration)
+    public EnergyQueryService(IRepository<EnergySample> samples, IRepository<EnergyAggregate> aggregates, IConfiguration configuration)
     {
-        _db = db;
+        _samples = samples;
+        _aggregates = aggregates;
         _pricePerKwh = configuration.GetValue("Statistics:PricePerKwh", 0.35m);
     }
 
@@ -35,7 +38,7 @@ public class EnergyQueryService
     public async Task<List<EnergyLiveDeviceDto>> GetLiveAsync(DateTime now, CancellationToken ct = default)
     {
         var since = now - LiveWindow;
-        var recent = await _db.EnergySamples.Where(s => s.Timestamp >= since).ToListAsync(ct);
+        var recent = await _samples.Query().Where(s => s.Timestamp >= since).ToListAsync(ct);
         return recent
             .GroupBy(s => s.DeviceId)
             .Select(g => g.OrderByDescending(s => s.Timestamp).First())
@@ -46,7 +49,7 @@ public class EnergyQueryService
 
     public async Task<List<EnergyDeviceStatisticsDto>> GetDevicesAsync(DateTime from, DateTime to, EnergyGranularity granularity, DateTime now, CancellationToken ct = default)
     {
-        var aggregates = await _db.EnergyAggregates
+        var aggregates = await _aggregates.Query()
             .Where(a => a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
             .ToListAsync(ct);
         var live = (await GetLiveAsync(now, ct)).ToDictionary(l => l.DeviceId);
@@ -75,7 +78,7 @@ public class EnergyQueryService
 
     public async Task<List<EnergyTimeseriesPointDto>> GetTimeseriesAsync(int deviceId, DateTime from, DateTime to, EnergyGranularity granularity, CancellationToken ct = default)
     {
-        return await _db.EnergyAggregates
+        return await _aggregates.Query()
             .Where(a => a.DeviceId == deviceId && a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
             .OrderBy(a => a.BucketStart)
             .Select(a => new EnergyTimeseriesPointDto { BucketStart = a.BucketStart, AvgPowerW = a.AvgPowerW, MaxPowerW = a.MaxPowerW, EnergyKwh = a.EnergyKwh })
@@ -84,7 +87,7 @@ public class EnergyQueryService
 
     public async Task<EnergySummaryDto> GetSummaryAsync(DateTime from, DateTime to, DateTime now, CancellationToken ct = default)
     {
-        var granularity = to - from <= TimeSpan.FromDays(31) ? EnergyGranularity.Hour : EnergyGranularity.Day;
+        var granularity = ResolveGranularity(from, to, null);
         var span = to - from;
 
         var current = await SumAsync(from, to, granularity, ct);
@@ -107,7 +110,7 @@ public class EnergyQueryService
 
     private async Task<(double Sum, int Devices)> SumAsync(DateTime from, DateTime to, EnergyGranularity granularity, CancellationToken ct)
     {
-        var rows = await _db.EnergyAggregates
+        var rows = await _aggregates.Query()
             .Where(a => a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
             .Select(a => new { a.DeviceId, a.EnergyKwh })
             .ToListAsync(ct);

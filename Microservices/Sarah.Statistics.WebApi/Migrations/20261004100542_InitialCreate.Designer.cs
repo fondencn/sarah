@@ -96,6 +96,8 @@ namespace Sarah.Statistics.WebApi.Migrations
 
                     b.HasIndex("DeviceId", "Timestamp");
 
+                    b.HasIndex("Timestamp");
+
                     b.ToTable("EnergySamples", (string)null);
                 });
 #pragma warning restore 612, 618

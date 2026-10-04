@@ -18,6 +18,7 @@ public class StatisticsDbContext : DbContext
             entity.ToTable("EnergySamples");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.DeviceId, e.Timestamp });
+            entity.HasIndex(e => e.Timestamp);
             entity.Property(e => e.DeviceName).HasMaxLength(200);
         });
 

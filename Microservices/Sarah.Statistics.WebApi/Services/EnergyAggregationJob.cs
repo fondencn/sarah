@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sarah.API.BusinessObjects.DTOs;
 using Sarah.Statistics.WebApi.Data;
+using Sarah.Statistics.WebApi.Data.Repositories;
 
 namespace Sarah.Statistics.WebApi.Services;
 
@@ -9,11 +10,13 @@ public class EnergyAggregationJob
 {
     private static readonly EnergyGranularity[] Granularities = [EnergyGranularity.Quarter, EnergyGranularity.Hour, EnergyGranularity.Day];
 
-    private readonly StatisticsDbContext _db;
+    private readonly IRepository<EnergySample> _samples;
+    private readonly IRepository<EnergyAggregate> _aggregates;
 
-    public EnergyAggregationJob(StatisticsDbContext db)
+    public EnergyAggregationJob(IRepository<EnergySample> samples, IRepository<EnergyAggregate> aggregates)
     {
-        _db = db;
+        _samples = samples;
+        _aggregates = aggregates;
     }
 
     /// <summary>Recomputes all buckets touching the last <paramref name="lookback"/> (aligned to the start of the day).</summary>
@@ -22,7 +25,7 @@ public class EnergyAggregationJob
         var windowStart = EnergyCalculator.BucketStart(now - lookback, EnergyGranularity.Day);
         var loadFrom = windowStart.AddHours(-24);
 
-        var samples = await _db.EnergySamples
+        var samples = await _samples.Query()
             .Where(s => s.Timestamp >= loadFrom)
             .OrderBy(s => s.Timestamp)
             .ToListAsync(ct);
@@ -32,7 +35,7 @@ public class EnergyAggregationJob
             var ordered = deviceSamples.ToList();
             foreach (var granularity in Granularities)
             {
-                var existing = await _db.EnergyAggregates
+                var existing = await _aggregates.Query()
                     .Where(a => a.DeviceId == deviceSamples.Key && a.Granularity == granularity && a.BucketStart >= windowStart)
                     .ToDictionaryAsync(a => a.BucketStart, ct);
 
@@ -56,7 +59,7 @@ public class EnergyAggregationJob
                             Granularity = granularity,
                             BucketStart = bucket.Key
                         };
-                        _db.EnergyAggregates.Add(aggregate);
+                        _aggregates.Add(aggregate);
                     }
 
                     aggregate.DeviceName = name;
@@ -68,16 +71,17 @@ public class EnergyAggregationJob
             }
         }
 
-        await _db.SaveChangesAsync(ct);
+        await _aggregates.SaveChangesAsync(ct);
     }
 
     public async Task ApplyRetentionAsync(DateTime now, int rawRetentionDays, int aggregateRetentionDays, CancellationToken ct = default)
     {
         var rawCutoff = now.AddDays(-rawRetentionDays);
         var aggregateCutoff = now.AddDays(-aggregateRetentionDays);
-        _db.EnergySamples.RemoveRange(_db.EnergySamples.Where(s => s.Timestamp < rawCutoff));
-        _db.EnergyAggregates.RemoveRange(_db.EnergyAggregates.Where(a => a.BucketStart < aggregateCutoff));
-        await _db.SaveChangesAsync(ct);
+        _samples.RemoveRange(_samples.Query().Where(s => s.Timestamp < rawCutoff));
+        _aggregates.RemoveRange(_aggregates.Query().Where(a => a.BucketStart < aggregateCutoff));
+        await _samples.SaveChangesAsync(ct);
+        await _aggregates.SaveChangesAsync(ct);
     }
 }
 
@@ -102,7 +106,9 @@ public class EnergyAggregationService : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var job = new EnergyAggregationJob(scope.ServiceProvider.GetRequiredService<StatisticsDbContext>());
+                var job = new EnergyAggregationJob(
+                    scope.ServiceProvider.GetRequiredService<IRepository<EnergySample>>(),
+                    scope.ServiceProvider.GetRequiredService<IRepository<EnergyAggregate>>());
                 var now = DateTime.UtcNow;
                 await job.AggregateAsync(now, TimeSpan.FromHours(3), stoppingToken);
 

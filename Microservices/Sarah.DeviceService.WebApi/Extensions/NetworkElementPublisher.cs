@@ -110,11 +110,6 @@ namespace Sarah.DeviceService.WebApi.Extensions
         public virtual async Task ReportEnergyMeasured(WallPlug wallPlug, double powerW, double? energyKwhTotal)
         {
             var now = DateTime.UtcNow;
-            if (!_energyThrottle.ShouldPublish(wallPlug.NodeID, powerW, now))
-            {
-                return;
-            }
-
             var message = new DeviceEnergyMeasuredMessage
             {
                 DeviceId = wallPlug.NodeID,
@@ -123,7 +118,11 @@ namespace Sarah.DeviceService.WebApi.Extensions
                 PowerW = powerW,
                 EnergyKwhTotal = energyKwhTotal
             };
-            await _rabbitMQClient.PublishAsync(message);
+            await _energyThrottle.PublishIfRequiredAsync(
+                wallPlug.NodeID,
+                powerW,
+                now,
+                () => _rabbitMQClient.PublishAsync(message));
         }
 
         internal async Task  ReportWallPlugEnabledChanged(WallPlug wallPlug)
