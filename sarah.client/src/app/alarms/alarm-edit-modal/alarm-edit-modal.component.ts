@@ -299,7 +299,7 @@ export class AlarmEditModalComponent {
       const rec: AlarmRecurrence = {
         freq: v.recurrence.freq,
         interval: v.recurrence.interval ?? 1,
-        dtstart: alarmTime,
+        dtstart: `${v.alarmTime}:00`,
         ...(v.recurrence.freq === 'weekly' && v.recurrence.byweekday?.length ? { byweekday: v.recurrence.byweekday } : {}),
         ...(v.recurrence.until && !this.isTemperatureContent ? { until: v.recurrence.until } : {})
       };

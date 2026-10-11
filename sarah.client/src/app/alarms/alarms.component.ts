@@ -141,7 +141,9 @@ export class AlarmsComponent implements OnInit, AfterViewInit {
     if (alarm.hasRecurrence && alarm.serializedRecurrence) {
       try {
         const rec = JSON.parse(alarm.serializedRecurrence) as AlarmRecurrence;
-        rec.dtstart = newStartUtc;
+        const start = dropInfo.event.start!;
+        const pad = (value: number) => String(value).padStart(2, '0');
+        rec.dtstart = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}T${pad(start.getHours())}:${pad(start.getMinutes())}:00`;
         updatedAlarm.serializedRecurrence = JSON.stringify(rec);
       } catch { /* ignore malformed recurrence */ }
     }

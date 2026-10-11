@@ -45,6 +45,7 @@ describe('AlarmEditModalComponent temperature schedules', () => {
   it('saves temperature plans as recurring local-time entries without an end date', () => {
     component.openTemperatureSchedule();
     component.form.patchValue({
+      alarmTime: '2026-10-12T07:30',
       temperature: { roomId: '12', targetTemperature: 21 },
       recurrence: { freq: 'weekly', interval: 1, byweekday: ['mo'], until: '2027-01-01' }
     });
@@ -58,7 +59,8 @@ describe('AlarmEditModalComponent temperature schedules', () => {
     expect(saved.hasRecurrence).toBeTrue();
     expect(JSON.parse(saved.contentJson!).targetTemperature).toBe(21);
     expect(JSON.parse(saved.contentJson!).roomId).toBe(12);
-    expect(JSON.parse(saved.serializedRecurrence!).dtstart).toBe(saved.alarmTime);
+    expect(JSON.parse(saved.serializedRecurrence!).dtstart).toBe('2026-10-12T07:30:00');
+    expect(saved.alarmTime).toBe(new Date('2026-10-12T07:30').toISOString());
     expect(JSON.parse(saved.serializedRecurrence!).until).toBeUndefined();
     expect(component.temperatureTime).toBe('07:30');
   });

@@ -241,7 +241,7 @@ public static class RoomTemperatureScheduleRules
     {
         DateTimeKind.Local => value,
         DateTimeKind.Utc => value.ToLocalTime(),
-        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc).ToLocalTime()
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Local)
     };
 
     private sealed class RecurrenceDefinition
