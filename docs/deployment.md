@@ -313,6 +313,7 @@ Every script asks for explicit user confirmation before deploying to any target 
 | `POSTGRES_PASSWORD` | PostgreSQL password |
 | `ZWAVE_SERIAL_PORT` | Z-Wave USB device path |
 | `OPENWEATHER_API_KEY` | OpenWeatherMap API key used by MonitoringService |
+| `SEMANTIC_KERNEL_MAX_HISTORY_MESSAGES` | Maximum retained conversation messages sent with each kernel prompt (default: `5`; excludes the system prompt and new message) |
 | `PI_HOST` | Hostname for CORS origins |
 | `GRAFANA_ADMIN_USER` | Grafana admin username (default: `admin`) |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana admin password (required when observability profile is active) |

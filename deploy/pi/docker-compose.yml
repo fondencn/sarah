@@ -346,6 +346,7 @@ services:
       - SemanticKernel__AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
       - SemanticKernel__AzureOpenAI__DeploymentName=${AZURE_OPENAI_DEPLOYMENT_NAME}
       - SemanticKernel__AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
+      - SemanticKernel__MaxHistoryMessages=${SEMANTIC_KERNEL_MAX_HISTORY_MESSAGES:-5}
     ports:
       - "5006:8080"
     depends_on:
