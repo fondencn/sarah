@@ -42,3 +42,49 @@ Als Nutzer:in möchte ich wiederkehrende Zieltemperaturen für einzelne Räume p
 ## MoSCoW-Priorität
 
 - **Must:** Wiederkehrende Zeitpläne verwalten, einzelne Zeitpunkte und bestehende Alarm-Schedule-Funktionen nutzen, eine intuitive Oberfläche mit wiederverwendeten Alarm-Schedule-Bedienmustern bereitstellen, den Temperaturbereich durchsetzen, Konflikte verhindern und die Außentemperaturregel wie beschrieben anwenden.
+
+## UI-Wireframe (Entwurf)
+
+### Kalenderübersicht
+
+```text
+Raumtemperatur-Zeitpläne
+
+[Raum: Alle v]                         [+ Zeitplan erstellen]
+
+< Zurück       Kalenderwoche       Weiter >
+Mo             Di             Mi             Do             Fr
+08:00          08:00          08:00          08:00          08:00
+Wohnzimmer     —              Wohnzimmer     —              Wohnzimmer
+21 °C                         21 °C                         21 °C
+
+Eintrag: Wohnzimmer · 21 °C · [Bearbeiten] [Löschen]
+```
+
+### Erstellen / Bearbeiten
+
+```text
+Zeitplan erstellen / bearbeiten
+
+Raum:                 [Raum auswählen v]
+Zieltemperatur:       [___] °C   (8–30 °C)
+Wiederholung:         [Wochentage auswählen]
+Zeitpunkte:           [Kalender / Uhrzeitpunkte auswählen]
+
+[Abbrechen]                                  [Speichern]
+```
+
+### Konflikt- und Validierungshinweise
+
+```text
+Konflikt: Für diesen Raum ist zu dieser wiederkehrenden Ortszeit
+bereits ein Zeitplan vorhanden. Wähle eine andere Zeit oder einen
+anderen Raum.
+
+Ungültige Temperatur: Gib einen Wert von 8 bis 30 °C ein.
+
+Info: Bei einer Außentemperatur ab 20 °C werden geplante Erhöhungen
+unterdrückt; geplante Absenkungen sind davon nicht betroffen.
+Die Unterdrückung in Sommermonaten gilt ebenfalls. Ist die
+Außentemperatur nicht verfügbar, wird der Zeitplan ausgeführt.
+```
