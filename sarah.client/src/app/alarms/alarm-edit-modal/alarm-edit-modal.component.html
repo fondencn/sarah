@@ -110,9 +110,10 @@
                   id="temperatureTarget"
                   class="form-control"
                   formControlName="targetTemperature"
-                  min="5"
+                  min="8"
                   max="30"
                   step="0.5"
+                  [class.is-invalid]="form.get('temperature.targetTemperature')?.invalid && form.get('temperature.targetTemperature')?.touched"
                 >
                 <div class="invalid-feedback">Gib einen Wert von 8 bis 30 °C ein.</div>
               </div>
