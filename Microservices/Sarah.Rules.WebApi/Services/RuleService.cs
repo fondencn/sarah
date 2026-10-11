@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sarah.Rules.WebApi.Data;
 using Sarah.Rules.WebApi.Data.Entities;
 using Sarah.Rules.Services.Kernel;
+using Sarah.Rules.Services.Actions;
 using Sarah.ServiceClients;
 
 namespace Sarah.Rules
@@ -25,6 +26,7 @@ namespace Sarah.Rules
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly SmartHomeKernelService _smartHomeKernel;
         private readonly Sarah.Rules.Services.MessageBasedGridStateProvider _gridStateProvider;
+        private readonly TemperatureScheduleAction _temperatureScheduleAction;
         public IEnumerable<Rule> Rules => this.RuleStores.SelectMany(store => store.Rules);
 
 
@@ -40,13 +42,14 @@ namespace Sarah.Rules
         /// </summary>
         private List<IRuleStore> RuleStores { get; } = new List<IRuleStore>();
 
-        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel, Sarah.Rules.Services.MessageBasedGridStateProvider gridStateProvider) 
+        public RuleService(RabbitMQClient rabbitMQ, ILogger<RuleService> logger, IServiceScopeFactory scopeFactory, SmartHomeKernelService smartHomeKernel, Sarah.Rules.Services.MessageBasedGridStateProvider gridStateProvider, TemperatureScheduleAction temperatureScheduleAction)
         { 
             this._rabbitMQ = rabbitMQ;
             this._logger = logger;
             this._scopeFactory = scopeFactory;
             this._smartHomeKernel = smartHomeKernel;
             this._gridStateProvider = gridStateProvider;
+            this._temperatureScheduleAction = temperatureScheduleAction;
             this.Timers = new TimerEngine(rabbitMQ, logger);
         }
 
@@ -394,6 +397,18 @@ namespace Sarah.Rules
                     message.ContentJson,
                     message.DisplayText ?? string.Empty,
                     message.IsSuppressedBySummer);
+
+                if (message.ContentType == (int)AlarmContentType.TemperatureSchedule)
+                {
+                    if (!message.IsSuppressedBySummer)
+                    {
+                        await _temperatureScheduleAction.ExecuteAsync(message);
+                    }
+
+                    // Temperature schedules are executed directly above. Do not let the
+                    // semantic rule path bypass summer/outdoor suppression or apply them twice.
+                    return;
+                }
 
                 await EvaluateRules(evt);
             }

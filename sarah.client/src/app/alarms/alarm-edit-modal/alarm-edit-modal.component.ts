@@ -37,6 +37,7 @@ export class AlarmEditModalComponent {
   isVisible = false;
   isEditing = false;
   isSaving = false;
+  validationError = "";
   currentAlarmId: number | undefined;
   readonly contentTypes = AlarmContentTypeModel;
   allRooms: RoomDto[] = [];
@@ -85,11 +86,11 @@ export class AlarmEditModalComponent {
       hasRecurrence: [false],
       temperature: this.fb.group({
         roomId: [''],
-        targetTemperature: [21]
+        targetTemperature: [21, [Validators.required, Validators.min(8), Validators.max(30)]]
       }),
       recurrence: this.fb.group({
         freq: ['weekly'],
-        interval: [1, [Validators.min(1)]],
+        interval: [1, [Validators.min(1), Validators.pattern(/^[1-9]\d*$/)]],
         byweekday: [[]],
         until: ['']
       })
@@ -123,9 +124,10 @@ export class AlarmEditModalComponent {
     return this.form.get('recurrence.freq')?.value ?? 'weekly';
   }
 
-  openForCreate(dateStr: string, allDay: boolean): void {
+  openForCreate(dateStr: string, allDay: boolean, contentType = AlarmContentTypeModel.Text): void {
     this.isEditing = false;
     this.currentAlarmId = undefined;
+    this.validationError = "";
 
     // Convert FullCalendar's startStr to local datetime-local format.
     // For all-day slots dateStr is YYYY-MM-DD; default to 08:00 local time.
@@ -139,7 +141,7 @@ export class AlarmEditModalComponent {
     }
 
     this.form.reset({
-      contentType: AlarmContentTypeModel.Text,
+      contentType,
       text: '',
       alarmTime,
       volume: SpeechVolumeModel.NUMBER_1,
@@ -147,9 +149,9 @@ export class AlarmEditModalComponent {
       isActive: true,
       isNurInFerien: false,
       isNichtInFerien: false,
-      hasRecurrence: false,
+      hasRecurrence: contentType === AlarmContentTypeModel.TemperatureSchedule,
       temperature: { roomId: '', targetTemperature: 21 },
-      recurrence: { freq: 'weekly', interval: 1, byweekday: [], until: '' }
+      recurrence: { freq: 'weekly', interval: 1, byweekday: contentType === AlarmContentTypeModel.TemperatureSchedule ? [this.weekdayKey(new Date(alarmTime).getDay())] : [], until: '' }
     });
 
     this.syncValidators();
@@ -157,9 +159,29 @@ export class AlarmEditModalComponent {
     this.isVisible = true;
   }
 
+  openTemperatureSchedule(): void {
+    this.openForCreate(toLocalDatetimeInput(new Date()), false, AlarmContentTypeModel.TemperatureSchedule);
+  }
+
+  get temperatureTime(): string {
+    return String(this.form.get('alarmTime')?.value ?? '').slice(11, 16);
+  }
+
+  setTemperatureTime(time: string): void {
+    const current = String(this.form.get('alarmTime')?.value ?? '');
+    if (time && current.length >= 10) {
+      this.form.get('alarmTime')?.setValue(`${current.slice(0, 10)}T${time}`);
+    }
+  }
+
+  private weekdayKey(day: number): string {
+    return ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'][day];
+  }
+
   openForEdit(alarm: AlarmScheduleEntityModel): void {
     this.isEditing = true;
     this.currentAlarmId = alarm.id;
+    this.validationError = "";
 
     // Convert UTC ISO string from API to local datetime-local format (YYYY-MM-DDTHH:mm).
     const raw = alarm.alarmTime ?? '';
@@ -245,11 +267,24 @@ export class AlarmEditModalComponent {
   }
 
   onContentTypeChanged(): void {
+    if (this.isTemperatureContent) {
+      this.form.get('hasRecurrence')?.setValue(true);
+      const days = this.form.get('recurrence.byweekday')?.value ?? [];
+      if (this.selectedFreq === 'weekly' && days.length === 0) {
+        const alarmTime = String(this.form.get('alarmTime')?.value ?? '');
+        this.form.get('recurrence.byweekday')?.setValue([this.weekdayKey(new Date(alarmTime).getDay())]);
+      }
+    }
+    this.validationError = "";
     this.syncValidators();
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.validationError = "";
     this.isSaving = true;
     const v = this.form.value;
 
@@ -264,9 +299,9 @@ export class AlarmEditModalComponent {
       const rec: AlarmRecurrence = {
         freq: v.recurrence.freq,
         interval: v.recurrence.interval ?? 1,
-        dtstart: alarmTime,
-        ...(v.recurrence.byweekday?.length ? { byweekday: v.recurrence.byweekday } : {}),
-        ...(v.recurrence.until ? { until: v.recurrence.until } : {})
+        dtstart: `${v.alarmTime}:00`,
+        ...(v.recurrence.freq === 'weekly' && v.recurrence.byweekday?.length ? { byweekday: v.recurrence.byweekday } : {}),
+        ...(v.recurrence.until && !this.isTemperatureContent ? { until: v.recurrence.until } : {})
       };
       serializedRecurrence = JSON.stringify(rec);
     }
@@ -310,7 +345,7 @@ export class AlarmEditModalComponent {
       volume,
       targetSpeaker: v.targetSpeaker || null,
       isActive: v.isActive,
-      hasRecurrence: v.hasRecurrence,
+      hasRecurrence: this.isTemperatureContent || v.hasRecurrence,
       serializedRecurrence,
       isNurInFerien: v.isNurInFerien || null,
       isNichtInFerien: v.isNichtInFerien || null,
@@ -347,7 +382,9 @@ export class AlarmEditModalComponent {
   }
 
   private onSaveError(err: unknown): void {
-    console.error('Alarm operation failed:', err);
+    console.error("Alarm operation failed:", err);
+    const response = err as { error?: { message?: string }; message?: string };
+    this.validationError = response?.error?.message ?? response?.message ?? 'Der Zeitplan konnte nicht gespeichert werden.';
     this.isSaving = false;
   }
 
@@ -364,7 +401,7 @@ export class AlarmEditModalComponent {
       targetSpeakerControl?.clearValidators();
       volumeControl?.clearValidators();
       roomIdControl?.setValidators([Validators.required]);
-      targetTemperatureControl?.setValidators([Validators.required]);
+      targetTemperatureControl?.setValidators([Validators.required, Validators.min(8), Validators.max(30)]);
     } else {
       textControl?.setValidators([Validators.required]);
       targetSpeakerControl?.clearValidators();

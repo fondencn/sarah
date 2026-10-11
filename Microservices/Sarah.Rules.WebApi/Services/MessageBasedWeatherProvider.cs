@@ -18,6 +18,7 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
 
     // Local state
     private double _currentOutdoorTemperature = 22.0;
+    private double? _outdoorTemperatureIfAvailable;
     private double? _averageTemperatureNext4Hours;
     private DateTime? _sunrise;
     private DateTime? _sunset;
@@ -29,6 +30,18 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
     {
         _rabbitMQ = rabbitMQ;
         _logger = logger;
+    }
+
+    /// <summary>Latest outdoor temperature, or null until a weather update has arrived.</summary>
+    public double? OutdoorTemperatureIfAvailable
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _outdoorTemperatureIfAvailable;
+            }
+        }
     }
 
     public double CurrentOutdoorTemperature
@@ -119,7 +132,11 @@ public class MessageBasedWeatherProvider : IWeatherProvider, IHostedService
             {
                 lock (_stateLock)
                 {
-                    _currentOutdoorTemperature = msg.CurrentTemperature;
+                    _outdoorTemperatureIfAvailable = msg.CurrentTemperature;
+                    if (msg.CurrentTemperature.HasValue)
+                    {
+                        _currentOutdoorTemperature = msg.CurrentTemperature.Value;
+                    }
                     _averageTemperatureNext4Hours = msg.AverageTemperatureNext4Hours;
                     _sunrise = msg.Sunrise;
                     _sunset = msg.Sunset;

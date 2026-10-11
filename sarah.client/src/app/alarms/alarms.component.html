@@ -1,5 +1,8 @@
 <div class="alarms-container container-fluid mt-4">
-  <h2 class="mb-4">⏰ {{ 'alarms.title' | translate }}</h2>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h2 class="mb-0">⏰ {{ 'alarms.title' | translate }}</h2>
+    <button type="button" class="btn btn-success" (click)="createTemperatureSchedule()">+ Raumtemperatur-Zeitplan erstellen</button>
+  </div>
 
   <div class="calendar-shell position-relative">
     <!-- Calendar -->
