@@ -12,6 +12,7 @@ using Sarah.ServiceDefaults;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Sarah.Rules.Services.Clients;
 using Sarah.Rules.Services.Kernel;
+using Sarah.Rules.Services.Actions;
 using Sarah.Rules.WebApi.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -119,6 +120,7 @@ builder.Services.AddSingleton<SmartHomeKernelService>();
 
 // Add RuleService as Singleton and then again the same instance as IHostedService and IRuleService
 builder.Services.AddSingleton<Sarah.Rules.RuleService>();
+builder.Services.AddSingleton<TemperatureScheduleAction>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 builder.Services.AddSingleton<Sarah.API.Interfaces.Services.IRuleService>(sp => sp.GetRequiredService<Sarah.Rules.RuleService>());
 
