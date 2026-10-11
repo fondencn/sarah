@@ -10,7 +10,8 @@ import deLocale from '@fullcalendar/core/locales/de';
 
 import { RulesClient } from '../services/api/rules-service/api/rules.service';
 import { AlarmScheduleEntityModel } from '../services/api/rules-service/model/alarmScheduleEntity';
-import { AlarmEditModalComponent, AlarmRecurrence } from './alarm-edit-modal/alarm-edit-modal.component';
+import { AlarmContentTypeModel, AlarmEditModalComponent, AlarmRecurrence } from './alarm-edit-modal/alarm-edit-modal.component';
+import { RoomsClient } from '../services/api/room-service/api/rooms.service';
 
 @Component({
   selector: 'app-alarms',
@@ -22,6 +23,7 @@ export class AlarmsComponent implements OnInit, AfterViewInit {
   @ViewChild(FullCalendarComponent) fullCalendar?: FullCalendarComponent;
 
   isLoading = false;
+  private readonly roomNames = new Map<number, string>();
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin, bootstrap5Plugin],
@@ -47,10 +49,18 @@ export class AlarmsComponent implements OnInit, AfterViewInit {
     events: []
   };
 
-  constructor(private rulesClient: RulesClient) {}
+  constructor(private rulesClient: RulesClient, private roomsClient: RoomsClient) {}
 
   ngOnInit(): void {
-    this.loadAlarms();
+    this.roomsClient.apiRoomsGet().subscribe({
+      next: rooms => {
+        rooms.forEach(room => {
+          if (room.id != null) this.roomNames.set(Number(room.id), room.name ?? 'Raum');
+        });
+        this.loadAlarms();
+      },
+      error: () => this.loadAlarms()
+    });
   }
 
   ngAfterViewInit(): void {
@@ -80,10 +90,19 @@ export class AlarmsComponent implements OnInit, AfterViewInit {
   }
 
   private alarmToEvent(alarm: AlarmScheduleEntityModel): EventInput {
-    const color = alarm.isActive ? '#0d6efd' : '#6c757d';
+    const isTemperature = Number(alarm.contentType) === AlarmContentTypeModel.TemperatureSchedule;
+    const color = !alarm.isActive ? '#6c757d' : (isTemperature ? '#198754' : '#0d6efd');
+    let title = alarm.text;
+    if (isTemperature && alarm.contentJson) {
+      try {
+        const content = JSON.parse(alarm.contentJson) as { roomId?: number; targetTemperature?: number };
+        const roomName = content.roomId != null ? this.roomNames.get(content.roomId) : null;
+        title = `${roomName ?? 'Raum'} · ${content.targetTemperature ?? ''} °C`;
+      } catch { /* show the server-provided display text */ }
+    }
     const base: EventInput = {
       id: alarm.id?.toString(),
-      title: alarm.text,
+      title,
       backgroundColor: color,
       borderColor: color,
       extendedProps: { alarm }
@@ -134,6 +153,10 @@ export class AlarmsComponent implements OnInit, AfterViewInit {
         dropInfo.revert();
       }
     });
+  }
+
+  createTemperatureSchedule(): void {
+    this.editModal.openTemperatureSchedule();
   }
 
   onAlarmSaved(): void {

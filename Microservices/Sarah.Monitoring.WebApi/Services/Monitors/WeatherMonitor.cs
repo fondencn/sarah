@@ -117,7 +117,7 @@ namespace Sarah.Monitoring.Monitors
             this.LastUpdate = DateTime.Now;
             await _rabbitMQ.PublishAsync(new WeatherForecastUpdatedMessage
             {
-                CurrentTemperature = CurrentOutdoorTemperature,
+                CurrentTemperature = CurrentWeather?.main?.temp,
                 AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                 Sunrise = GetSunrise(),
                 Sunset = GetSunset(),
@@ -137,7 +137,7 @@ namespace Sarah.Monitoring.Monitors
                 this.LastUpdate = DateTime.Now;
                 await _rabbitMQ.PublishAsync(new WeatherForecastUpdatedMessage
                 {
-                    CurrentTemperature = CurrentOutdoorTemperature,
+                    CurrentTemperature = CurrentWeather?.main?.temp,
                     AverageTemperatureNext4Hours = AverageTemperatureNext4Hours,
                     Sunrise = GetSunrise(),
                     Sunset = GetSunset(),

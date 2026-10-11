@@ -16,7 +16,7 @@
       <!-- Header -->
       <div class="modal-header">
         <h5 class="modal-title" id="alarmEditModalLabel">
-          {{ (isEditing ? 'alarms.editTitle' : 'alarms.newTitle') | translate }}
+          {{ isTemperatureContent ? (isEditing ? 'Raumtemperatur-Zeitplan bearbeiten' : 'Raumtemperatur-Zeitplan erstellen') : ((isEditing ? 'alarms.editTitle' : 'alarms.newTitle') | translate) }}
         </h5>
         <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
       </div>
@@ -39,7 +39,7 @@
           </div>
 
           <!-- Title / Text -->
-          <div class="mb-3">
+          <div class="mb-3" *ngIf="!isTemperatureContent">
             <label for="alarmText" class="form-label fw-semibold">
               {{ isTemperatureContent ? 'Bezeichnung' : ('alarms.labelText' | translate) }}
               <span *ngIf="!isTemperatureContent" class="text-danger">*</span>
@@ -55,17 +55,17 @@
             <div class="invalid-feedback">{{ 'alarms.textRequired' | translate }}</div>
           </div>
 
-          <!-- Date & Time -->
-          <div class="mb-3">
+          <!-- Date & time: temperature plans recur at the selected local wall-clock time -->
+          <div class="mb-3" *ngIf="!isTemperatureContent">
             <label for="alarmTime" class="form-label fw-semibold">{{ 'alarms.labelDateTime' | translate }} <span class="text-danger">*</span></label>
-            <input
-              type="datetime-local"
-              id="alarmTime"
-              class="form-control"
-              formControlName="alarmTime"
-              [class.is-invalid]="form.get('alarmTime')?.invalid && form.get('alarmTime')?.touched"
-            >
+            <input type="datetime-local" id="alarmTime" class="form-control" formControlName="alarmTime"
+              [class.is-invalid]="form.get('alarmTime')?.invalid && form.get('alarmTime')?.touched">
             <div class="invalid-feedback">{{ 'alarms.dateTimeRequired' | translate }}</div>
+          </div>
+          <div class="mb-3" *ngIf="isTemperatureContent">
+            <label for="temperatureTime" class="form-label fw-semibold">Wiederkehrende Ortszeit <span class="text-danger">*</span></label>
+            <input type="time" id="temperatureTime" class="form-control" [value]="temperatureTime"
+              (input)="setTemperatureTime($any($event.target).value)" required>
           </div>
 
           <div class="row">
@@ -92,7 +92,7 @@
 
           <!-- Temperature settings -->
           <div *ngIf="isTemperatureContent" class="card border-success bg-light p-3 mb-3" formGroupName="temperature">
-            <h6 class="card-title mb-3">Temperaturplan</h6>
+            <h6 class="card-title mb-3">Temperaturplan (8–30 °C)</h6>
 
             <div class="row">
               <div class="col-md-6 mb-3">
@@ -114,6 +114,7 @@
                   max="30"
                   step="0.5"
                 >
+                <div class="invalid-feedback">Gib einen Wert von 8 bis 30 °C ein.</div>
               </div>
             </div>
           </div>
@@ -131,7 +132,7 @@
           </div>
 
           <!-- Holiday restrictions -->
-          <div class="mb-3">
+          <div class="mb-3" *ngIf="!isTemperatureContent">
             <label class="form-label fw-semibold">{{ 'alarms.labelHolidayRestriction' | translate }}</label>
             <div class="form-check form-switch mb-1">
               <input
@@ -156,7 +157,7 @@
           </div>
 
           <!-- Recurrence toggle -->
-          <div class="mb-3 form-check form-switch">
+          <div class="mb-3 form-check form-switch" *ngIf="!isTemperatureContent">
             <input
               type="checkbox"
               id="hasRecurrence"
@@ -165,6 +166,12 @@
               role="switch"
             >
             <label class="form-check-label fw-semibold" for="hasRecurrence">{{ 'alarms.recurringEvent' | translate }}</label>
+          </div>
+
+          <p *ngIf="isTemperatureContent" class="small text-muted">Wiederkehrender Zeitplan; es wird kein Zeitraum festgelegt.</p>
+          <div *ngIf="isTemperatureContent" class="alert alert-info small" role="note">
+            Bei mindestens 20 °C Außentemperatur werden nur geplante Erhöhungen unterdrückt; Absenkungen bleiben aktiv.
+            Die Sommermonats-Unterdrückung gilt ebenfalls. Ist die Außentemperatur nicht verfügbar, wird der Zeitplan ausgeführt.
           </div>
 
           <!-- Recurrence settings -->
@@ -212,7 +219,7 @@
             </div>
 
             <!-- End date -->
-            <div class="mb-2">
+            <div class="mb-2" *ngIf="!isTemperatureContent">
               <label for="recurrenceUntil" class="form-label">{{ 'alarms.endDate' | translate }} <span class="text-muted">{{ 'alarms.endDateOptional' | translate }}</span></label>
               <input
                 type="date"
@@ -224,6 +231,7 @@
             </div>
           </div>
 
+          <div *ngIf="validationError" class="alert alert-danger mb-0" role="alert">{{ validationError }}</div>
         </form>
       </div>
 

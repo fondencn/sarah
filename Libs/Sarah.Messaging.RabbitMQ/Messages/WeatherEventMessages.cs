@@ -57,7 +57,7 @@ public class WeatherForecastUpdatedMessage : AbstractMessage
     /// <summary>
     /// Current outdoor temperature in Celsius
     /// </summary>
-    public double CurrentTemperature { get; set; }
+    public double? CurrentTemperature { get; set; }
 
     /// <summary>
     /// Average temperature for next 4 hours in Celsius (null if not available)

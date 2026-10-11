@@ -26,6 +26,7 @@ public class AlarmScheduleService : IDisposable
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AlarmExecutionOptions _executionOptions;
     private readonly SemaphoreSlim _reloadLock = new(1, 1);
+    private readonly SemaphoreSlim _scheduleMutationLock = new(1, 1);
     private readonly ConcurrentDictionary<long, ScheduledAlarm> _scheduledAlarms = new();
     private int _isDisposed;
     private CancellationTokenSource? _updateCancellationTokenSource;
@@ -409,11 +410,28 @@ public class AlarmScheduleService : IDisposable
         if (alarm == null)
             throw new ArgumentNullException(nameof(alarm));
 
-        await WithDbContextAsync(async db =>
+        await _scheduleMutationLock.WaitAsync();
+        try
         {
-            db.AlarmSchedules.Add(alarm);
-            await db.SaveChangesAsync();
-        });
+            await WithDbContextAsync(async db =>
+            {
+                RoomTemperatureScheduleRules.Validate(alarm);
+                var temperatureSchedules = await db.AlarmSchedules
+                    .Where(existing => existing.ContentType == AlarmContentType.TemperatureSchedule)
+                    .ToListAsync();
+                if (RoomTemperatureScheduleRules.HasConflict(alarm, temperatureSchedules))
+                {
+                    throw new AlarmScheduleConflictException(RoomTemperatureScheduleRules.GetConflictMessage());
+                }
+
+                db.AlarmSchedules.Add(alarm);
+                await db.SaveChangesAsync();
+            });
+        }
+        finally
+        {
+            _scheduleMutationLock.Release();
+        }
 
         var safeAlarmText = SanitizeForLog(alarm.GetDisplayText());
 
@@ -439,43 +457,61 @@ public class AlarmScheduleService : IDisposable
     /// </summary>
     public async Task<AlarmScheduleEntity> UpdateAlarmAsync(long id, AlarmScheduleEntity alarm)
     {
-        var existing = await WithDbContextAsync(db => db.AlarmSchedules.FindAsync(id).AsTask());
-        if (existing == null)
-            throw new KeyNotFoundException($"Alarm mit ID {id} nicht gefunden");
-
-        existing.AlarmTime = alarm.AlarmTime;
-        existing.Text = alarm.Text;
-        existing.TargetSpeaker = alarm.TargetSpeaker;
-        existing.IsActive = alarm.IsActive;
-        existing.Volume = alarm.Volume;
-        existing.ContentType = alarm.ContentType;
-        existing.ContentJson = alarm.ContentJson;
-        existing.IsRecurrence = alarm.IsRecurrence;
-        existing.RecurrenceIsEnabled = alarm.RecurrenceIsEnabled;
-        existing.RecurrenceDayOfWeek = alarm.RecurrenceDayOfWeek;
-        existing.RecurrenceTime = alarm.RecurrenceTime;
-        existing.IsNurInFerien = alarm.IsNurInFerien;
-        existing.IsNichtInFerien = alarm.IsNichtInFerien;
-        existing.HasRecurrence = alarm.HasRecurrence;
-        existing.SerializedRecurrence = alarm.SerializedRecurrence;
-
-        await WithDbContextAsync(async db =>
+        AlarmScheduleEntity? existing = null;
+        await _scheduleMutationLock.WaitAsync();
+        try
         {
-            db.AlarmSchedules.Update(existing);
-            await db.SaveChangesAsync();
-        });
+            await WithDbContextAsync(async db =>
+            {
+                existing = await db.AlarmSchedules.FindAsync(id);
+                if (existing == null)
+                {
+                    throw new KeyNotFoundException($"Alarm mit ID {id} nicht gefunden");
+                }
+
+                existing.AlarmTime = alarm.AlarmTime;
+                existing.Text = alarm.Text;
+                existing.TargetSpeaker = alarm.TargetSpeaker;
+                existing.IsActive = alarm.IsActive;
+                existing.Volume = alarm.Volume;
+                existing.ContentType = alarm.ContentType;
+                existing.ContentJson = alarm.ContentJson;
+                existing.IsRecurrence = alarm.IsRecurrence;
+                existing.RecurrenceIsEnabled = alarm.RecurrenceIsEnabled;
+                existing.RecurrenceDayOfWeek = alarm.RecurrenceDayOfWeek;
+                existing.RecurrenceTime = alarm.RecurrenceTime;
+                existing.IsNurInFerien = alarm.IsNurInFerien;
+                existing.IsNichtInFerien = alarm.IsNichtInFerien;
+                existing.HasRecurrence = alarm.HasRecurrence;
+                existing.SerializedRecurrence = alarm.SerializedRecurrence;
+
+                RoomTemperatureScheduleRules.Validate(existing);
+                var temperatureSchedules = await db.AlarmSchedules
+                    .Where(item => item.ContentType == AlarmContentType.TemperatureSchedule && item.Id != id)
+                    .ToListAsync();
+                if (RoomTemperatureScheduleRules.HasConflict(existing, temperatureSchedules, id))
+                {
+                    throw new AlarmScheduleConflictException(RoomTemperatureScheduleRules.GetConflictMessage());
+                }
+
+                db.AlarmSchedules.Update(existing);
+                await db.SaveChangesAsync();
+            });
+        }
+        finally
+        {
+            _scheduleMutationLock.Release();
+        }
+
         _logger.LogInformation("Alarm aktualisiert: {AlarmId}", id);
-        
-        // Notify subscribers of the change
-        await _rabbitMQ.PublishAsync(new AlarmScheduleChangedMessage 
-        { 
-            AlarmScheduleId = id, 
-            Change = AlarmScheduleChangedMessage.ChangeType.Updated 
+        await _rabbitMQ.PublishAsync(new AlarmScheduleChangedMessage
+        {
+            AlarmScheduleId = id,
+            Change = AlarmScheduleChangedMessage.ChangeType.Updated
         });
 
         await RefreshSchedulesAsync();
-        
-        return existing;
+        return existing!;
     }
 
     /// <summary>
@@ -566,6 +602,7 @@ public class AlarmScheduleService : IDisposable
         _updateCancellationTokenSource = null;
         _updateTask = null;
         _reloadLock.Dispose();
+        _scheduleMutationLock.Dispose();
     }
 
     private sealed class ScheduledAlarm : IDisposable

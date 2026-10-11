@@ -235,6 +235,16 @@ public class RulesController : ControllerBase
             var created = await _alarmService.CreateAlarmAsync(alarm);
             return CreatedAtAction(nameof(GetAlarmById), new { id = created.Id }, created);
         }
+        catch (AlarmScheduleValidationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid room temperature schedule");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (AlarmScheduleConflictException ex)
+        {
+            _logger.LogWarning(ex, "Room temperature schedule conflict");
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating alarm");
@@ -260,6 +270,16 @@ public class RulesController : ControllerBase
         {
             _logger.LogWarning(ex, "Alarm not found {AlarmId}", id);
             return NotFound(new { message = ex.Message });
+        }
+        catch (AlarmScheduleValidationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid room temperature schedule");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (AlarmScheduleConflictException ex)
+        {
+            _logger.LogWarning(ex, "Room temperature schedule conflict");
+            return Conflict(new { message = ex.Message });
         }
         catch (Exception ex)
         {
