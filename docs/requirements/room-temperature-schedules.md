@@ -25,7 +25,7 @@ Als Nutzer:in möchte ich wiederkehrende Zieltemperaturen für einzelne Räume p
    **Gegeben** ein Zeitplan wird erstellt oder geändert, **wenn** eine Zieltemperatur eingegeben wird, **dann** werden Werte von 8 °C bis einschließlich 30 °C akzeptiert und Werte außerhalb dieses Bereichs abgewiesen.
 
 4. **Konflikte**  
-   **Gegeben** zwei Zeitpläne, **wenn** sie denselben Raum und mindestens einen gemeinsamen geplanten Zeitpunkt haben, **dann** werden sie als Konflikt erkannt; bei unterschiedlichen Räumen liegt bei gleichem Zeitpunkt kein Konflikt vor.
+   **Gegeben** ein bestehender Zeitplan für einen Raum, **wenn** Nutzer:innen einen wiederkehrenden Zeitplan für denselben Raum erstellen oder bearbeiten und dieser mindestens einen gemeinsamen geplanten Zeitpunkt mit dem bestehenden Zeitplan hat, **dann** wird das Erstellen oder Speichern abgewiesen und eine klare Meldung weist auf den Zeitplankonflikt hin. Bei unterschiedlichen Räumen liegt bei gleichem Zeitpunkt kein Konflikt vor.
 
 5. **Unterdrückung eines Anstiegs**  
    **Gegeben** der geplante Zielwert liegt über der aktuellen Raum-Solltemperatur, **wenn** die Außentemperatur zum geplanten Zeitpunkt mindestens 20 °C beträgt, **dann** wird die Erhöhung nicht ausgeführt.
@@ -41,9 +41,4 @@ Als Nutzer:in möchte ich wiederkehrende Zieltemperaturen für einzelne Räume p
 
 ## MoSCoW-Priorität
 
-- **Must:** Wiederkehrende Zeitpläne verwalten, einzelne Zeitpunkte und bestehende Alarm-Schedule-Funktionen nutzen, Temperaturbereich durchsetzen, Konflikte erkennen und die Außentemperaturregel wie beschrieben anwenden.
-- **Should:** Eine intuitive Oberfläche mit den bestehenden Bedienmustern des Alarm-Schedule-Moduls.
-
-## Offene Fragen
-
-- Soll ein erkannter Konflikt das Speichern verhindern, eine Warnung auslösen oder lediglich angezeigt werden?
+- **Must:** Wiederkehrende Zeitpläne verwalten, einzelne Zeitpunkte und bestehende Alarm-Schedule-Funktionen nutzen, eine intuitive Oberfläche mit wiederverwendeten Alarm-Schedule-Bedienmustern bereitstellen, den Temperaturbereich durchsetzen, Konflikte verhindern und die Außentemperaturregel wie beschrieben anwenden.
