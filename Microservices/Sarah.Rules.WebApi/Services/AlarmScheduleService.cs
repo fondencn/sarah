@@ -640,13 +640,15 @@ public class AlarmScheduleService : IDisposable
             var startLocal = NormalizeLocal(Dtstart);
             var interval = Interval <= 0 ? 1 : Interval;
             var upperBound = Until.HasValue ? NormalizeLocal(Until.Value) : (DateTime?)null;
+            var frequency = (Freq ?? "daily").Trim().ToLowerInvariant();
 
-            if (startLocal > localNow && (upperBound == null || startLocal <= upperBound.Value))
+            if (frequency != "weekly"
+                && startLocal > localNow
+                && (upperBound == null || startLocal <= upperBound.Value))
             {
                 return startLocal;
             }
 
-            var frequency = (Freq ?? "daily").Trim().ToLowerInvariant();
             return frequency switch
             {
                 "weekly" => GetNextWeeklyOccurrenceLocal(startLocal, localNow, interval, upperBound),
@@ -677,10 +679,11 @@ public class AlarmScheduleService : IDisposable
 
             var startDate = startLocal.Date;
             var timeOfDay = startLocal.TimeOfDay;
+            var firstDate = localNow.Date > startDate ? localNow.Date : startDate;
 
             for (var offset = 0; offset < 370; offset++)
             {
-                var candidateDate = localNow.Date.AddDays(offset);
+                var candidateDate = firstDate.AddDays(offset);
                 var candidate = candidateDate.Add(timeOfDay);
                 if (candidate <= localNow)
                 {
