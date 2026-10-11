@@ -5,6 +5,7 @@ using Sarah.API.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 using Sarah.DeviceService.WebApi.Extensions;
 using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -30,6 +31,7 @@ namespace Sarah.DeviceService.Model
         public int Channel { get; }
 
         private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        private static readonly HttpClient _setTemperatureHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
 
         private Task? _updateTask;
         private CancellationTokenSource? _cts;
@@ -128,6 +130,7 @@ namespace Sarah.DeviceService.Model
         /// </summary>
         public override async Task SetTemperature(float temperature)
         {
+            Stopwatch requestTimer = Stopwatch.StartNew();
             try
             {
                 string uri = $"http://{Hostname}/rpc/BluTrv.Call";
@@ -143,8 +146,11 @@ namespace Sarah.DeviceService.Model
                 });
                 using StringContent content = new StringContent(body, Encoding.UTF8, "application/json");
 
-                using HttpResponseMessage response = await _httpClient.PostAsync(uri, content);
+                using HttpResponseMessage response = await _setTemperatureHttpClient.PostAsync(uri, content);
+                requestTimer.Stop();
                 response.EnsureSuccessStatusCode();
+                _logger?.LogInformation("Shelly TRV {NodeId} ({Hostname}, channel {Channel}): SetTemperature HTTP completed in {DurationMs}ms",
+                    NodeID, Hostname, Channel, requestTimer.ElapsedMilliseconds);
 
                 this.TemperatureSetpoint = new SensorData(temperature, "°C");
 
@@ -153,8 +159,9 @@ namespace Sarah.DeviceService.Model
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Shelly TRV {NodeId} ({Hostname}, channel {Channel}): SetTemperature error",
-                    NodeID, Hostname, Channel);
+                requestTimer.Stop();
+                _logger?.LogError(ex, "Shelly TRV {NodeId} ({Hostname}, channel {Channel}): SetTemperature error after {DurationMs}ms",
+                    NodeID, Hostname, Channel, requestTimer.ElapsedMilliseconds);
                 throw;
             }
         }
