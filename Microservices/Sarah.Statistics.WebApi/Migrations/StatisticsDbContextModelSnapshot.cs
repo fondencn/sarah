@@ -36,6 +36,9 @@ namespace Sarah.Statistics.WebApi.Migrations
                     b.Property<DateTime>("BucketStart")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<double>("CoverageHours")
+                        .HasColumnType("double precision");
+
                     b.Property<int>("DeviceId")
                         .HasColumnType("integer");
 

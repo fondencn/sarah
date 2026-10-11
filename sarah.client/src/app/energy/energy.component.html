@@ -86,8 +86,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let d of sortedDevices" class="device-row" (click)="select(d)" [class.table-active]="selected?.deviceId === d.deviceId">
-                  <td>{{ displayName(d) }}</td>
+                <tr *ngFor="let d of sortedDevices" class="device-row" [class.table-active]="selected?.deviceId === d.deviceId">
+                  <td><button type="button" class="device-select btn btn-link p-0 text-reset text-decoration-none" (click)="select(d)" [attr.aria-expanded]="selected?.deviceId === d.deviceId">{{ displayName(d) }}</button></td>
                   <td class="text-end">{{ d.currentPowerW | number:'1.0-0' }} W</td>
                   <td class="text-end">{{ d.energyKwh | number:'1.0-2' }}</td>
                   <td class="share-cell">

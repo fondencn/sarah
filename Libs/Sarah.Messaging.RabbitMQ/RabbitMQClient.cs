@@ -71,7 +71,7 @@ public class RabbitMQClient : IDisposable
     /// <param name="message">The message to publish</param>
     /// <param name="exchange">The exchange name (defaults to message topic)</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task PublishAsync<T>(T message, string? exchange = null, CancellationToken cancellationToken = default) 
+    public async Task PublishAsync<T>(T message, string? exchange = null, CancellationToken cancellationToken = default, bool durable = false)
         where T : AbstractMessage
     {
         await this.ConnectAsync(cancellationToken);
@@ -87,8 +87,8 @@ public class RabbitMQClient : IDisposable
         await _channel.ExchangeDeclareAsync(
             exchange: exchangeName,
             type: ExchangeType.Topic,
-            durable: false,
-            autoDelete: true,
+            durable: durable,
+            autoDelete: !durable,
             arguments: null,
             cancellationToken: cancellationToken);
 
@@ -101,6 +101,7 @@ public class RabbitMQClient : IDisposable
             exchange: exchangeName,
             routingKey: message.Topic,
             mandatory: false,
+            basicProperties: durable ? new BasicProperties { DeliveryMode = DeliveryModes.Persistent } : new BasicProperties(),
             body: body,
             cancellationToken: cancellationToken);
 
@@ -121,9 +122,16 @@ public class RabbitMQClient : IDisposable
         string topic,
         Func<T, Task> onMessage,
         string? exchange = null,
-        CancellationToken cancellationToken = default) 
+        CancellationToken cancellationToken = default,
+        string? stableQueueName = null,
+        bool durable = false)
         where T : AbstractMessage
     {
+        if (durable && string.IsNullOrWhiteSpace(stableQueueName))
+        {
+            throw new ArgumentException("A queue name is required for durable subscriptions.", nameof(stableQueueName));
+        }
+
         if (typeof(T).IsAbstract || typeof(T).IsInterface)
         {
             throw new InvalidOperationException(
@@ -144,17 +152,17 @@ public class RabbitMQClient : IDisposable
         await _channel.ExchangeDeclareAsync(
             exchange: exchangeName,
             type: ExchangeType.Topic,
-            durable: false,
-            autoDelete: true,
+            durable: durable,
+            autoDelete: !durable,
             arguments: null,
             cancellationToken: cancellationToken);
 
-        // Declare a queue (auto-generated name)
+        // Durable subscriptions use a stable queue that survives consumer and broker restarts.
         var queueDeclareResult = await _channel.QueueDeclareAsync(
-            queue: string.Empty,
-            durable: false,
-            exclusive: true,
-            autoDelete: true,
+            queue: stableQueueName ?? string.Empty,
+            durable: durable,
+            exclusive: !durable,
+            autoDelete: !durable,
             arguments: null,
             cancellationToken: cancellationToken);
 

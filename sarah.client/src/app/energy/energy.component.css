@@ -9,7 +9,7 @@
 .legend-item { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid #dee2e6; }
 .legend-hidden { opacity: 0.45; text-decoration: line-through; }
 .legend-dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; display: inline-block; }
-.sortable, .device-row { cursor: pointer; }
+.sortable, .device-select { cursor: pointer; }
 .share-cell { min-width: 70px; }
 .progress { height: 0.6rem; }
 @media (max-width: 575px) { .kpi-value { font-size: 1.2rem; } .chart { height: 160px; } }

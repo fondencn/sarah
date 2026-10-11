@@ -67,6 +67,7 @@ public class EnergyAggregationJob
                     aggregate.MaxPowerW = result.MaxPowerW;
                     aggregate.EnergyKwh = result.EnergyKwh;
                     aggregate.SampleCount = result.SampleCount;
+                    aggregate.CoverageHours = result.CoverageHours;
                 }
             }
         }

@@ -122,7 +122,7 @@ namespace Sarah.DeviceService.WebApi.Extensions
                 wallPlug.NodeID,
                 powerW,
                 now,
-                () => _rabbitMQClient.PublishAsync(message));
+                () => _rabbitMQClient.PublishAsync(message, durable: true));
         }
 
         internal async Task  ReportWallPlugEnabledChanged(WallPlug wallPlug)

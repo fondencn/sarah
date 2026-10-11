@@ -23,4 +23,5 @@ public class EnergyAggregate
     public double MaxPowerW { get; set; }
     public double EnergyKwh { get; set; }
     public int SampleCount { get; set; }
+    public double CoverageHours { get; set; }
 }

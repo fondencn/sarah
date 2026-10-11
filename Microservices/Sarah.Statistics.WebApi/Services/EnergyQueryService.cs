@@ -50,20 +50,25 @@ public class EnergyQueryService
     public async Task<List<EnergyDeviceStatisticsDto>> GetDevicesAsync(DateTime from, DateTime to, EnergyGranularity granularity, DateTime now, CancellationToken ct = default)
     {
         var aggregates = await _aggregates.Query()
-            .Where(a => a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
+            .Where(a => a.Granularity == granularity &&
+                        a.BucketStart >= AlignBucketStart(from, granularity) &&
+                        a.BucketStart < AlignBucketStart(to, granularity))
             .ToListAsync(ct);
         var live = (await GetLiveAsync(now, ct)).ToDictionary(l => l.DeviceId);
 
         var devices = aggregates.GroupBy(a => a.DeviceId).Select(g =>
         {
             var samples = g.Sum(a => a.SampleCount);
+            var weight = g.Sum(a => a.CoverageHours < 0 ? a.SampleCount : a.CoverageHours);
             return new EnergyDeviceStatisticsDto
             {
                 DeviceId = g.Key,
                 DeviceName = g.OrderByDescending(a => a.BucketStart).First().DeviceName,
                 EnergyKwh = g.Sum(a => a.EnergyKwh),
                 MaxPowerW = g.Max(a => a.MaxPowerW),
-                AvgPowerW = samples > 0 ? g.Sum(a => a.AvgPowerW * a.SampleCount) / samples : 0,
+                AvgPowerW = weight > 0
+                    ? g.Sum(a => a.AvgPowerW * (a.CoverageHours < 0 ? a.SampleCount : a.CoverageHours)) / weight
+                    : 0,
                 CurrentPowerW = live.TryGetValue(g.Key, out var l) ? l.PowerW : 0
             };
         }).OrderByDescending(d => d.EnergyKwh).ToList();
@@ -79,7 +84,9 @@ public class EnergyQueryService
     public async Task<List<EnergyTimeseriesPointDto>> GetTimeseriesAsync(int deviceId, DateTime from, DateTime to, EnergyGranularity granularity, CancellationToken ct = default)
     {
         return await _aggregates.Query()
-            .Where(a => a.DeviceId == deviceId && a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
+            .Where(a => a.DeviceId == deviceId && a.Granularity == granularity &&
+                        a.BucketStart >= AlignBucketStart(from, granularity) &&
+                        a.BucketStart < AlignBucketStart(to, granularity))
             .OrderBy(a => a.BucketStart)
             .Select(a => new EnergyTimeseriesPointDto { BucketStart = a.BucketStart, AvgPowerW = a.AvgPowerW, MaxPowerW = a.MaxPowerW, EnergyKwh = a.EnergyKwh })
             .ToListAsync(ct);
@@ -88,10 +95,12 @@ public class EnergyQueryService
     public async Task<EnergySummaryDto> GetSummaryAsync(DateTime from, DateTime to, DateTime now, CancellationToken ct = default)
     {
         var granularity = ResolveGranularity(from, to, null);
-        var span = to - from;
+        var currentFrom = AlignBucketStart(from, granularity);
+        var currentTo = AlignBucketStart(to, granularity);
+        var span = currentTo - currentFrom;
 
-        var current = await SumAsync(from, to, granularity, ct);
-        var previous = await SumAsync(from - span, from, granularity, ct);
+        var current = await SumAsync(currentFrom, currentTo, granularity, ct);
+        var previous = await SumAsync(currentFrom - span, currentFrom, granularity, ct);
         var live = await GetLiveAsync(now, ct);
 
         return new EnergySummaryDto
@@ -111,9 +120,14 @@ public class EnergyQueryService
     private async Task<(double Sum, int Devices)> SumAsync(DateTime from, DateTime to, EnergyGranularity granularity, CancellationToken ct)
     {
         var rows = await _aggregates.Query()
-            .Where(a => a.Granularity == granularity && a.BucketStart >= from && a.BucketStart < to)
+            .Where(a => a.Granularity == granularity &&
+                        a.BucketStart >= AlignBucketStart(from, granularity) &&
+                        a.BucketStart < AlignBucketStart(to, granularity))
             .Select(a => new { a.DeviceId, a.EnergyKwh })
             .ToListAsync(ct);
         return (rows.Sum(r => r.EnergyKwh), rows.Select(r => r.DeviceId).Distinct().Count());
     }
+
+    private static DateTime AlignBucketStart(DateTime timestamp, EnergyGranularity granularity) =>
+        EnergyCalculator.BucketStart(timestamp, granularity);
 }

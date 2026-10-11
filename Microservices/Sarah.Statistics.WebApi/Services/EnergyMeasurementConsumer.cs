@@ -6,6 +6,8 @@ namespace Sarah.Statistics.WebApi.Services;
 /// <summary>Subscribes to energy measurement events and stores them as raw samples.</summary>
 public class EnergyMeasurementConsumer : BackgroundService
 {
+    private const string QueueName = "sarah.statistics.energy-measured";
+
     private readonly RabbitMQClient _rabbitMQ;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EnergyMeasurementConsumer> _logger;
@@ -26,7 +28,9 @@ public class EnergyMeasurementConsumer : BackgroundService
                 await _rabbitMQ.SubscribeAsync<DeviceEnergyMeasuredMessage>(
                     MessageTopics.DeviceEnergyMeasured,
                     OnMessage,
-                    cancellationToken: stoppingToken);
+                    cancellationToken: stoppingToken,
+                    stableQueueName: QueueName,
+                    durable: true);
                 return;
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

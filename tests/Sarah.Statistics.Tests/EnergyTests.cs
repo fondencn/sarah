@@ -38,6 +38,16 @@ public class EnergyTests
         Assert.Equal(1.0, r!.EnergyKwh, 6);
         Assert.Equal(1000, r.AvgPowerW);
         Assert.Equal(3, r.SampleCount);
+        Assert.Equal(1, r.CoverageHours, 6);
+    }
+
+    [Fact]
+    public void Compute_UsesTimeWeightedAveragePower()
+    {
+        var r = EnergyCalculator.Compute(null, [S(0, 100), S(5, 1000), S(60, 1000)]);
+
+        Assert.Equal(962.5, r!.AvgPowerW, 6);
+        Assert.Equal(1, r.CoverageHours, 6);
     }
 
     [Fact]
@@ -98,6 +108,8 @@ public class EnergyTests
 
         var day = db.EnergyAggregates.Single(a => a.Granularity == EnergyGranularity.Day);
         Assert.Equal(1.0, day.EnergyKwh, 6);
+        Assert.Equal(1000, day.AvgPowerW, 6);
+        Assert.Equal(1, day.CoverageHours, 6);
         Assert.Equal(2, db.EnergyAggregates.Count(a => a.Granularity == EnergyGranularity.Hour));
     }
 
@@ -160,6 +172,46 @@ public class EnergyTests
 
         Assert.Equal(5, summary.TotalEnergyKwh);
         Assert.Equal(5, devices.Sum(d => d.EnergyKwh));
+    }
+
+    [Fact]
+    public async Task SummaryAndDeviceQueries_UseMatchingAlignedBucketBoundaries()
+    {
+        using var db = NewDb();
+        var from = T0;
+        var to = from.AddDays(30);
+        db.EnergyAggregates.AddRange(
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Day, BucketStart = from.AddDays(-30).Date, EnergyKwh = 4 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Day, BucketStart = from.AddDays(-1).Date, EnergyKwh = 6 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Day, BucketStart = from.Date, EnergyKwh = 9 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Day, BucketStart = from.AddDays(29).Date, EnergyKwh = 2 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Day, BucketStart = from.AddDays(30).Date, EnergyKwh = 100 });
+        await db.SaveChangesAsync();
+
+        var query = Query(db);
+        var summary = await query.GetSummaryAsync(from, to, to);
+        var devices = await query.GetDevicesAsync(from, to, EnergyGranularity.Day, to);
+        var series = await query.GetTimeseriesAsync(1, from, to, EnergyGranularity.Day);
+
+        Assert.Equal(11, summary.TotalEnergyKwh);
+        Assert.Equal(10, summary.PreviousEnergyKwh);
+        Assert.Equal(11, devices.Sum(d => d.EnergyKwh));
+        Assert.Equal(11, series.Sum(point => point.EnergyKwh));
+    }
+
+    [Fact]
+    public async Task DeviceAveragePower_WeightsAggregatesByCoverageDuration()
+    {
+        using var db = NewDb();
+        db.EnergyAggregates.AddRange(
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Quarter, BucketStart = T0, AvgPowerW = 100, SampleCount = 2, CoverageHours = 0.25 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Quarter, BucketStart = T0.AddMinutes(15), AvgPowerW = 500, SampleCount = 2, CoverageHours = 0.75 },
+            new EnergyAggregate { DeviceId = 1, Granularity = EnergyGranularity.Quarter, BucketStart = T0.AddMinutes(30), AvgPowerW = 900, SampleCount = 100 });
+        await db.SaveChangesAsync();
+
+        var devices = await Query(db).GetDevicesAsync(T0, T0.AddMinutes(45), EnergyGranularity.Quarter, T0);
+
+        Assert.Equal(400, Assert.Single(devices).AvgPowerW, 6);
     }
 
     [Theory]

@@ -3,7 +3,7 @@ using Sarah.Statistics.WebApi.Data;
 
 namespace Sarah.Statistics.WebApi.Services;
 
-public record EnergyBucketResult(double EnergyKwh, double AvgPowerW, double MaxPowerW, int SampleCount);
+public record EnergyBucketResult(double EnergyKwh, double AvgPowerW, double MaxPowerW, int SampleCount, double CoverageHours);
 
 public static class EnergyCalculator
 {
@@ -42,11 +42,20 @@ public static class EnergyCalculator
         }
 
         double energy = 0;
+        double weightedPowerHours = 0;
+        double coverageHours = 0;
         var prev = previous;
         foreach (var current in samples)
         {
             if (prev != null)
             {
+                var dt = current.Timestamp - prev.Timestamp;
+                if (dt > TimeSpan.Zero && dt <= MaxIntegrationGap)
+                {
+                    weightedPowerHours += (prev.PowerW + current.PowerW) / 2.0 * dt.TotalHours;
+                    coverageHours += dt.TotalHours;
+                }
+
                 if (prev.EnergyKwhTotal.HasValue && current.EnergyKwhTotal.HasValue)
                 {
                     var diff = current.EnergyKwhTotal.Value - prev.EnergyKwhTotal.Value;
@@ -54,7 +63,6 @@ public static class EnergyCalculator
                 }
                 else
                 {
-                    var dt = current.Timestamp - prev.Timestamp;
                     if (dt > TimeSpan.Zero && dt <= MaxIntegrationGap)
                     {
                         energy += (prev.PowerW + current.PowerW) / 2.0 * dt.TotalHours / 1000.0;
@@ -64,6 +72,7 @@ public static class EnergyCalculator
             prev = current;
         }
 
-        return new EnergyBucketResult(energy, samples.Average(s => s.PowerW), samples.Max(s => s.PowerW), samples.Count);
+        var averagePower = coverageHours > 0 ? weightedPowerHours / coverageHours : samples.Average(s => s.PowerW);
+        return new EnergyBucketResult(energy, averagePower, samples.Max(s => s.PowerW), samples.Count, coverageHours);
     }
 }
