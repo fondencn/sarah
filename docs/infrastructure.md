@@ -29,6 +29,7 @@ Runs the complete Sarah stack:
 - MonitoringService — port 5005
 - RulesService — port 5006
 - DashboardService — port 5007
+- StatisticsService — port 5010
 
 **Frontend:**
 - Angular app served via nginx — port 8081

@@ -134,6 +134,13 @@ const microservices = [
         description: 'System monitoring and health checks'
     },
     {
+        name: 'statistics-service',
+        port: 5010,
+        title: 'Statistics Service',
+        outputDir: './src/app/services/api/statistics-service',
+        description: 'Energy consumption statistics of devices'
+    },
+    {
         name: 'rules-service',
         port: 5006,
         title: 'Rules Service',

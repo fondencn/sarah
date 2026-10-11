@@ -1,4 +1,4 @@
-﻿var builder = DistributedApplication.CreateBuilder(args);
+var builder = DistributedApplication.CreateBuilder(args);
 
 // Add configuration for Keycloak admin credentials
 var keycloakAdminUser = builder.Configuration["Keycloak:AdminUser"] ?? "admin";
@@ -49,6 +49,7 @@ var postgresMonitoring = postgres.AddDatabase("monitoringdb");
 var postgresRules = postgres.AddDatabase("rulesdb");
 var postgresRooms = postgres.AddDatabase("roomsdb");
 var postgresDashboard = postgres.AddDatabase("dashboarddb");
+var postgresStatistics = postgres.AddDatabase("statisticsdb");
 
 // Add microservices with their dependencies
 var deviceService = builder.AddProject<Projects.Sarah_DeviceService_WebApi>("deviceservice")
@@ -127,6 +128,13 @@ var dashboardService = builder.AddProject<Projects.Sarah_Dashboard_WebApi>("dash
     .WithReference(keycloak)
     .WithReference(deviceService)
     .WithReference(personsService);
+
+var statisticsService = builder.AddProject<Projects.Sarah_Statistics_WebApi>("statisticsservice")
+    .WithHttpEndpoint(port: 5010, name: "http-api")
+    .WithReference(postgresStatistics, "PostgresConnection")
+    .WithReference(keycloak)
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq);
 
 // Add frontend (Angular client)
 var frontend = builder.AddJavaScriptApp("frontend", "../sarah.client")

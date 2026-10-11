@@ -36,6 +36,7 @@ export const environment = {
     monitoringService: 'http://pi:5005',  // System monitoring and health checks
     rulesService: 'http://pi:5006',       // Automation rules engine
     speechServer: 'http://pi:5008',        // Voice recognition and text-to-speech
-    adminService: 'http://pi:5009'         // Admin operations
+    adminService: 'http://pi:5009',         // Admin operations
+    statisticsService: 'http://pi:5010'      // Energy consumption statistics
   }
 };

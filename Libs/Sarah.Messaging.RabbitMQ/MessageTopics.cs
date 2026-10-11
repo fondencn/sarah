@@ -183,4 +183,10 @@ public static class MessageTopics
     /// Published when a door or window is opened, includes info on turned-off heatings.
     /// </summary>
     public const string NetworkEventsDoorOrWindowOpened = "network.events.doororwindow.opened";
+
+    /// <summary>
+    /// Topic for energy measurements (power in W, optional meter reading in kWh) reported by devices.
+    /// Consumed by the Statistics service to build consumption time series.
+    /// </summary>
+    public const string DeviceEnergyMeasured = "device.energy.measured";
 }

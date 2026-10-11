@@ -6,7 +6,8 @@
     "rooms": "Räume",
     "alarms": "Wecker",
     "admin": "Admin",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "energy": "Strom"
   },
   "common": {
     "on": "An",
@@ -196,5 +197,30 @@
     "weekdaySun": "So",
     "save": "Speichern",
     "cancel": "Abbrechen"
+  },
+  "energy": {
+    "title": "Stromverbrauch",
+    "today": "Heute",
+    "days7": "7 Tage",
+    "days30": "30 Tage",
+    "year": "Jahr",
+    "currentPower": "Aktuelle Leistung",
+    "consumption": "Verbrauch",
+    "cost": "Geschätzte Kosten",
+    "trend": "zur Vorperiode",
+    "live": "Live",
+    "chartTitle": "Verbrauch im Zeitverlauf",
+    "devices": "Geräte",
+    "device": "Gerät",
+    "power": "Leistung",
+    "avgPower": "Durchschnitt",
+    "maxPower": "Spitze",
+    "share": "Anteil",
+    "noData": "Noch keine Messwerte.",
+    "loading": "Lädt…",
+    "error": "Stromdaten konnten nicht geladen werden.",
+    "details": "Details",
+    "close": "Schließen",
+    "others": "Weitere"
   }
 }

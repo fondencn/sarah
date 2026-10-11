@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.2" />
 
@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Microservices\Sarah.Persons.WebApi\Sarah.Persons.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Geofences.WebApi\Sarah.Geofences.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.RoomService.WebApi\Sarah.RoomService.WebApi.csproj" />
+    <ProjectReference Include="..\Microservices\Sarah.Statistics.WebApi\Sarah.Statistics.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Monitoring.WebApi\Sarah.Monitoring.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.Rules.WebApi\Sarah.Rules.WebApi.csproj" />
     <ProjectReference Include="..\Microservices\Sarah.SpeechServer.WebApi\Sarah.SpeechServer.WebApi.csproj" />

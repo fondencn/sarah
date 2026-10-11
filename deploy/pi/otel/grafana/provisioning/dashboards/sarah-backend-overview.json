@@ -604,7 +604,7 @@
         "label": "Service",
         "multi": true,
         "name": "service",
-        "query": "label_values(sarah_http_server_request_duration_seconds_count{exported_job=~\"deviceservice|personsservice|geofencesservice|roomservice|monitoringservice|rulesservice|dashboardservice|adminservice\"}, exported_job)",
+        "query": "label_values(sarah_http_server_request_duration_seconds_count{exported_job=~\"deviceservice|personsservice|geofencesservice|roomservice|monitoringservice|rulesservice|dashboardservice|adminservice|statisticsservice\"}, exported_job)",
         "refresh": 2,
         "type": "query"
       }
