@@ -34,6 +34,7 @@ namespace Sarah.Rules
         private TimerEngine Timers { get; } 
 
         private readonly ILogger<RuleService> _logger;
+        private static readonly System.Text.Json.JsonSerializerOptions AlarmContentJsonOptions = CreateAlarmContentJsonOptions();
 
         /// <summary>
         /// Alle Regel-Quellen
@@ -426,9 +427,7 @@ namespace Sarah.Rules
             Sarah.API.BusinessObjects.AlarmContentDto? content;
             try
             {
-                content = System.Text.Json.JsonSerializer.Deserialize<Sarah.API.BusinessObjects.AlarmContentDto>(
-                    message.ContentJson,
-                    new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+                content = DeserializeAlarmContent(message.ContentJson);
             }
             catch (System.Text.Json.JsonException ex)
             {
@@ -480,6 +479,16 @@ namespace Sarah.Rules
             {
                 _logger.LogError(ex, "Failed to execute temperature schedule {AlarmScheduleId}", message.AlarmScheduleId);
             }
+        }
+
+        internal static Sarah.API.BusinessObjects.AlarmContentDto? DeserializeAlarmContent(string contentJson)
+            => System.Text.Json.JsonSerializer.Deserialize<Sarah.API.BusinessObjects.AlarmContentDto>(contentJson, AlarmContentJsonOptions);
+
+        private static System.Text.Json.JsonSerializerOptions CreateAlarmContentJsonOptions()
+        {
+            var options = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
+            return options;
         }
 
         private async Task HandleHolidayStatusChanged(HolidayStatusChangedMessage message)
