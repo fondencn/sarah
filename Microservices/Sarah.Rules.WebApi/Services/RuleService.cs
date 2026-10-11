@@ -467,7 +467,18 @@ namespace Sarah.Rules
                         continue;
                     }
 
-                    await deviceClient.SetThermostatTemperatureAsync(thermostat.Id, (float)targetTemperature);
+                    try
+                    {
+                        await deviceClient.SetThermostatTemperatureAsync(thermostat.Id, (float)targetTemperature);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to apply temperature schedule {AlarmScheduleId} to thermostat {ThermostatId}",
+                            message.AlarmScheduleId,
+                            thermostat.Id);
+                    }
                 }
 
                 if (thermostats.Count == 0)
