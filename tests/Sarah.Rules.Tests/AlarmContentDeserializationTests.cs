@@ -1,5 +1,5 @@
 using Sarah.API.BusinessObjects;
-using Sarah.Rules;
+using Sarah.Rules.Services.Actions;
 
 namespace Sarah.Rules.Tests;
 
@@ -10,7 +10,7 @@ public class AlarmContentDeserializationTests
     {
         const string executionJson = "{\"type\":\"temperatureSchedule\",\"roomId\":12,\"targetTemperature\":21.5}";
 
-        var content = RuleService.DeserializeAlarmContent(executionJson);
+        var content = TemperatureScheduleAction.DeserializeAlarmContent(executionJson);
 
         Assert.NotNull(content);
         Assert.Equal(AlarmContentType.TemperatureSchedule, content.Type);
