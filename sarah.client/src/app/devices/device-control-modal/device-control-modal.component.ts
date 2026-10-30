@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { Modal } from 'bootstrap';
 import { DevicesClient } from '../../services/api/device-service/api/devices.service';
 import { LoggingService } from '../../services/logging.service';
@@ -9,6 +9,7 @@ import { LoggingService } from '../../services/logging.service';
   styleUrls: ['./device-control-modal.component.css']
 })
 export class DeviceControlModalComponent implements OnDestroy {
+  @Output() closed = new EventEmitter<void>();
   private readonly lampOnBrightness = 255;
 
   deviceId: number = 0;
@@ -62,6 +63,7 @@ export class DeviceControlModalComponent implements OnDestroy {
           this.isVisible = false;
           this.stopRefresh();
           this.bootstrapModal = null;
+          this.closed.emit();
         }, { once: true });
         this.startRefresh();
       }

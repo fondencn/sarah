@@ -37,6 +37,8 @@ export class AlarmEditModalComponent {
   isVisible = false;
   isEditing = false;
   isSaving = false;
+  roomSelectionLocked = false;
+  roomScheduleOnly = false;
   validationError = "";
   currentAlarmId: number | undefined;
   readonly contentTypes = AlarmContentTypeModel;
@@ -125,6 +127,7 @@ export class AlarmEditModalComponent {
   }
 
   openForCreate(dateStr: string, allDay: boolean, contentType = AlarmContentTypeModel.Text): void {
+    this.clearRoomContext();
     this.isEditing = false;
     this.currentAlarmId = undefined;
     this.validationError = "";
@@ -163,6 +166,11 @@ export class AlarmEditModalComponent {
     this.openForCreate(toLocalDatetimeInput(new Date()), false, AlarmContentTypeModel.TemperatureSchedule);
   }
 
+  openTemperatureScheduleForRoom(roomId: number): void {
+    this.openTemperatureSchedule();
+    this.applyRoomContext(roomId);
+  }
+
   get temperatureTime(): string {
     return String(this.form.get('alarmTime')?.value ?? '').slice(11, 16);
   }
@@ -178,7 +186,8 @@ export class AlarmEditModalComponent {
     return ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'][day];
   }
 
-  openForEdit(alarm: AlarmScheduleEntityModel): void {
+  openForEdit(alarm: AlarmScheduleEntityModel, lockedRoomId?: number): void {
+    this.clearRoomContext();
     this.isEditing = true;
     this.currentAlarmId = alarm.id;
     this.validationError = "";
@@ -229,6 +238,10 @@ export class AlarmEditModalComponent {
       recurrence
     });
 
+    if (lockedRoomId !== undefined && contentType === AlarmContentTypeModel.TemperatureSchedule) {
+      this.applyRoomContext(lockedRoomId);
+    }
+
     this.syncValidators();
 
     this.isVisible = true;
@@ -236,6 +249,7 @@ export class AlarmEditModalComponent {
 
   close(): void {
     this.isVisible = false;
+    this.clearRoomContext();
   }
 
   isWeekdaySelected(day: string): boolean {
@@ -286,7 +300,9 @@ export class AlarmEditModalComponent {
     }
     this.validationError = "";
     this.isSaving = true;
-    const v = this.form.value;
+    // getRawValue retains the room ID while the room control is disabled on
+    // room-detail pages, ensuring the selected room is sent to the API.
+    const v = this.form.getRawValue();
 
     const contentType = Number(v.contentType ?? AlarmContentTypeModel.Text);
 
@@ -378,6 +394,7 @@ export class AlarmEditModalComponent {
   private onSaveSuccess(): void {
     this.isSaving = false;
     this.isVisible = false;
+    this.clearRoomContext();
     this.alarmSaved.emit();
   }
 
@@ -416,5 +433,19 @@ export class AlarmEditModalComponent {
     roomIdControl?.updateValueAndValidity({ emitEvent: false });
     targetTemperatureControl?.updateValueAndValidity({ emitEvent: false });
     temperatureGroup?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyRoomContext(roomId: number): void {
+    this.roomScheduleOnly = true;
+    this.roomSelectionLocked = true;
+    const roomControl = this.form.get('temperature.roomId');
+    roomControl?.setValue(String(roomId));
+    roomControl?.disable({ emitEvent: false });
+  }
+
+  private clearRoomContext(): void {
+    this.roomScheduleOnly = false;
+    this.roomSelectionLocked = false;
+    this.form?.get('temperature.roomId')?.enable({ emitEvent: false });
   }
 }
