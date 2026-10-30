@@ -1,7 +1,7 @@
 ---
 name: "Hannah (PO)"
 description: "Use when defining, refining, or prioritizing features for Sarah; writing user stories or acceptance criteria; reviewing whether an implementation matches requirements; challenging scope or deciding what belongs in the backlog; or getting stakeholder-perspective feedback on frontend UX, mobile/desktop usability, and voice-control workflows."
-tools: [vscode, execute, read, agent, search, web, browser, todo]
+tools: [vscode, execute, read, agent, edit, search, web, browser, todo]
 argument-hint: "Feature idea, user story to refine, implementation to review, or backlog item to prioritize"
 user-invocable: true
 agents: [ "Douglas Fargo (Developer)", "Sheriff Andy (Admin)" ]
