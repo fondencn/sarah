@@ -95,9 +95,70 @@
     "colRoomId": "Room Id",
     "colRoomName": "Room Name",
     "colActions": "Actions",
+    "details": "Details",
     "noRooms": "No rooms loaded.",
     "modal": {
       "labelName": "Name:"
+    }
+  },
+  "roomDetail": {
+    "back": "Back to rooms",
+    "titleFallback": "Room",
+    "refresh": "Refresh",
+    "loading": "Loading room details…",
+    "retry": "Try again",
+    "devices": {
+      "heading": "Devices",
+      "empty": "No devices are assigned to this room.",
+      "unnamed": "Unnamed device",
+      "unknownType": "Unknown type",
+      "openControl": "Open controls for {{name}}",
+      "statusUnavailable": "Status is currently unavailable.",
+      "lastOpen": "Last opened:",
+      "statusChanged": "Status changed:",
+      "actualTemperature": "Current",
+      "targetTemperature": "Target",
+      "noTemperature": "No temperature data",
+      "noMeasurements": "No measurements",
+      "motionDetected": "Motion detected",
+      "noMotion": "No motion detected",
+      "noStatusFormat": "No status display available.",
+      "openControls": "Open controls"
+    },
+    "schedule": {
+      "heading": "Temperature schedules",
+      "create": "Create schedule",
+      "empty": "There are no temperature schedules for this room yet.",
+      "createEmpty": "Create a schedule",
+      "targetTemperature": "Target temperature:",
+      "active": "Active",
+      "inactive": "Inactive",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete schedule",
+      "deleteConfirmation": "Are you sure you want to delete this schedule?",
+      "recurrence": {
+        "generic": "Recurring",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "weekdays": {
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat",
+        "sunday": "Sun"
+      }
+    },
+    "errors": {
+      "invalidRoomId": "Invalid room ID.",
+      "loadFailed": "Could not load room details. Please try again.",
+      "deleteScheduleFailed": "Could not delete the schedule.",
+      "confirmationFailed": "Could not open the deletion confirmation."
     }
   },
   "alarms": {

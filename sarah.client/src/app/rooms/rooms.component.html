@@ -30,7 +30,7 @@
                 <td>{{ room.name }}</td>
                 <td>
                     <a [routerLink]="roomDetailsLink(room)" class="btn btn-primary btn-sm me-1">
-                        Details
+                        {{ 'rooms.details' | translate }}
                     </a>
                     <button (click)="editRoom(room)" class="btn btn-secondary btn-sm">
                         <img src="assets/icons/edit.svg" alt="Edit" style="width: 16px; height: 16px;">

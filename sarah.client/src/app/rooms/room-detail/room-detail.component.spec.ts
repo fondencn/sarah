@@ -10,6 +10,7 @@ describe('RoomDetailComponent', () => {
   let rulesClient: any;
   let dialogService: any;
   let logger: any;
+  let translate: any;
   let modal: any;
 
   const room = { id: 7, name: 'Kitchen' } as any;
@@ -42,6 +43,14 @@ describe('RoomDetailComponent', () => {
     rulesClient = jasmine.createSpyObj('RulesClient', ['apiRulesAlarmsGet', 'apiRulesAlarmsIdDelete']);
     dialogService = jasmine.createSpyObj('DialogService', ['showConfirmDialog']);
     logger = jasmine.createSpyObj('LoggingService', ['debug', 'info', 'warn', 'error']);
+    translate = {
+      instant: jasmine.createSpy('instant').and.callFake((key: string) => ({
+        'roomDetail.schedule.recurrence.weekly': 'Wöchentlich',
+        'roomDetail.schedule.weekdays.monday': 'Mo',
+        'roomDetail.schedule.weekdays.friday': 'Fr',
+        'roomDetail.schedule.recurrence.generic': 'Wiederkehrend'
+      }[key] ?? key))
+    };
     modal = { show: jasmine.createSpy('show') };
 
     roomsClient.apiRoomsIdGet.and.returnValue(of(room));
@@ -67,7 +76,8 @@ describe('RoomDetailComponent', () => {
       devicesClient,
       rulesClient,
       dialogService,
-      logger
+      logger,
+      translate as any
     );
     component.deviceControlModal = modal;
     component.alarmEditModal = {
@@ -90,14 +100,51 @@ describe('RoomDetailComponent', () => {
     expect(component.isLoading).toBeFalse();
   });
 
-  it('opens the shared control modal and refreshes the room after it closes', () => {
+  it('opens the shared control modal for the selected device', () => {
     component.ngOnInit();
     component.openDeviceControl(component.devices[0]);
     expect(modal.show).toHaveBeenCalledWith(10, 'Heater', 'Heizung');
+  });
 
-    const requestCount = devicesClient.devicesGetAllGETApiDevices.calls.count();
+  it('refreshes only existing device detail requests after control closes, preserving per-device errors', () => {
+    component.ngOnInit();
+    const tileRef = component.devices[0];
+    roomsClient.apiRoomsIdGet.calls.reset();
+    devicesClient.devicesGetAllGETApiDevices.calls.reset();
+    rulesClient.apiRulesAlarmsGet.calls.reset();
+    devicesClient.devicesGetDeviceByIdGETApiDevicesId.calls.reset();
+    devicesClient.devicesGetDeviceByIdGETApiDevicesId.and.callFake((id: number) => {
+      if (id === 11) return throwError(() => new Error('device unavailable'));
+      return of({
+        extendedProperties: [
+          { key: 'Temperature', value: '20.5' },
+          { key: 'TemperatureSetpoint', value: '22' }
+        ]
+      } as any);
+    });
+
     component.onDeviceControlClosed();
-    expect(devicesClient.devicesGetAllGETApiDevices.calls.count()).toBe(requestCount + 1);
+
+    expect(roomsClient.apiRoomsIdGet).not.toHaveBeenCalled();
+    expect(devicesClient.devicesGetAllGETApiDevices).not.toHaveBeenCalled();
+    expect(rulesClient.apiRulesAlarmsGet).not.toHaveBeenCalled();
+    expect(devicesClient.devicesGetDeviceByIdGETApiDevicesId.calls.allArgs().map((args: any[]) => args[0])).toEqual([10, 11]);
+    expect(component.devices[0]).toBe(tileRef);
+    expect(tileRef.status.temperature).toBe(20.5);
+    expect(component.devices[1].statusUnavailable).toBeTrue();
+  });
+
+  it('performs the full page reload after a schedule is saved', () => {
+    component.ngOnInit();
+    roomsClient.apiRoomsIdGet.calls.reset();
+    devicesClient.devicesGetAllGETApiDevices.calls.reset();
+    rulesClient.apiRulesAlarmsGet.calls.reset();
+
+    component.onScheduleSaved();
+
+    expect(roomsClient.apiRoomsIdGet).toHaveBeenCalledWith(7);
+    expect(devicesClient.devicesGetAllGETApiDevices).toHaveBeenCalled();
+    expect(rulesClient.apiRulesAlarmsGet).toHaveBeenCalled();
   });
 
   it('opens create and edit schedule forms with the room locked to this room', () => {
@@ -139,7 +186,7 @@ describe('RoomDetailComponent', () => {
   it('shows a page-level error when room data fails to load', () => {
     roomsClient.apiRoomsIdGet.and.returnValue(throwError(() => new Error('not found')));
     component.ngOnInit();
-    expect(component.errorMessage).toContain('Raumdetails');
+    expect(component.errorMessage).toBe('roomDetail.errors.loadFailed');
     expect(component.isLoading).toBeFalse();
   });
 

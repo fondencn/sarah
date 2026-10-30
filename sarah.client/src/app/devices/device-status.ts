@@ -1,4 +1,6 @@
 import { DeviceDtoModel as DeviceDto } from '../services/api/device-service/model/models';
+import { KnownDeviceTypesModel } from '../services/api/device-service/model/knownDeviceTypes';
+import { AirQualityStateDtoModel } from '../services/api/device-service/model/airQualityStateDto';
 
 export type DeviceStatusCategory = 'lamp' | 'wallplug' | 'doorsensor' | 'thermostat' | 'airquality' | 'motionsensor' | 'unknown';
 
@@ -26,30 +28,32 @@ export interface DeviceStatus {
  * responses retain the original sub-DTO fallback used by the devices table.
  */
 export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): DeviceStatus {
-  const base = device as any;
-  const detailed = detail as any;
-  const props: Array<{ key?: string; value?: string }> =
-    detailed?.extendedProperties ?? base.extendedProperties ?? [];
-  const getProp = (key: string): string | undefined => props.find(p => p.key === key)?.value;
-  const parseNumber = (value: string | number | null | undefined): number | null => {
+  const props = detail?.extendedProperties ?? device.extendedProperties ?? [];
+  const getProp = (key: string): string | undefined =>
+    props.find(property => property.key === key)?.value ?? undefined;
+  const parseNumber = (value: unknown): number | null => {
     if (value === undefined || value === null || value === '') return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   };
   const propNumber = (key: string, fallback: unknown): number | null =>
-    getProp(key) !== undefined ? parseNumber(getProp(key)) : parseNumber(fallback as number | string | null | undefined);
+    getProp(key) !== undefined ? parseNumber(getProp(key)) : parseNumber(fallback);
   const propBoolean = (key: string, fallback: boolean): boolean => {
     const value = getProp(key);
     return value !== undefined ? value.toLowerCase() === 'true' : fallback;
   };
 
-  const lamp = detailed?.lamp ?? base.lamp;
-  const wallPlug = detailed?.wallPlug ?? base.wallPlug;
-  const doorSensor = detailed?.doorSensor ?? base.doorSensor;
-  const thermostat = detailed?.thermostat ?? base.thermostat;
-  const airQuality = detailed?.airQuality ?? base.airQuality;
-  const deviceType = detailed?.deviceType ?? base.deviceType;
+  const lamp = detail?.lamp ?? device.lamp;
+  const wallPlug = detail?.wallPlug ?? device.wallPlug;
+  const doorSensor = detail?.doorSensor ?? device.doorSensor;
+  const thermostat = detail?.thermostat ?? device.thermostat;
+  const airQuality = detail?.airQuality ?? device.airQuality;
+  const deviceType = detail?.deviceType ?? device.deviceType;
   const hasExtendedProperties = props.length > 0;
+  const legacyCo2 = (state: AirQualityStateDtoModel | null | undefined): unknown => {
+    if (!state) return undefined;
+    return 'co2' in state ? state.co2 : state.cO2;
+  };
 
   let category: DeviceStatusCategory = 'unknown';
   if (lamp != null) category = 'lamp';
@@ -58,14 +62,38 @@ export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): D
   else if (thermostat != null) category = 'thermostat';
   else if (airQuality != null) category = 'airquality';
   else if (hasExtendedProperties) {
-    // Device type numbers are stable in the generated API enum. These
-    // fallbacks cover detailed responses whose sub-DTO is omitted.
-    if ([1].includes(Number(deviceType)) && getProp('Presence') !== undefined) category = 'motionsensor';
-    else if ([2, 13].includes(Number(deviceType)) && getProp('IsOpen') !== undefined) category = 'doorsensor';
-    else if ([7, 10, 22].includes(Number(deviceType)) && getProp('TemperatureSetpoint') !== undefined) category = 'thermostat';
-    else if ([15].includes(Number(deviceType)) && getProp('CO2') !== undefined) category = 'airquality';
-    else if ([6, 11, 14, 16, 19].includes(Number(deviceType)) && getProp('IsOn') !== undefined) category = 'wallplug';
-    else if ([8, 9, 12, 20].includes(Number(deviceType)) && getProp('IsOn') !== undefined) category = 'lamp';
+    // Some detailed responses omit the sub-DTO, so fall back to the API's
+    // generated device type enum and known ExtendedProperty keys.
+    switch (deviceType) {
+      case KnownDeviceTypesModel.NUMBER_1:
+        if (getProp('Presence') !== undefined) category = 'motionsensor';
+        break;
+      case KnownDeviceTypesModel.NUMBER_2:
+      case KnownDeviceTypesModel.NUMBER_13:
+        if (getProp('IsOpen') !== undefined) category = 'doorsensor';
+        break;
+      case KnownDeviceTypesModel.NUMBER_7:
+      case KnownDeviceTypesModel.NUMBER_10:
+      case KnownDeviceTypesModel.NUMBER_22:
+        if (getProp('TemperatureSetpoint') !== undefined) category = 'thermostat';
+        break;
+      case KnownDeviceTypesModel.NUMBER_15:
+        if (getProp('CO2') !== undefined) category = 'airquality';
+        break;
+      case KnownDeviceTypesModel.NUMBER_6:
+      case KnownDeviceTypesModel.NUMBER_11:
+      case KnownDeviceTypesModel.NUMBER_14:
+      case KnownDeviceTypesModel.NUMBER_16:
+      case KnownDeviceTypesModel.NUMBER_19:
+        if (getProp('IsOn') !== undefined) category = 'wallplug';
+        break;
+      case KnownDeviceTypesModel.NUMBER_8:
+      case KnownDeviceTypesModel.NUMBER_9:
+      case KnownDeviceTypesModel.NUMBER_12:
+      case KnownDeviceTypesModel.NUMBER_20:
+        if (getProp('IsOn') !== undefined) category = 'lamp';
+        break;
+    }
   }
 
   return {
@@ -80,13 +108,13 @@ export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): D
     brightness: propNumber('Brightness', lamp?.brightness),
     color: getProp('Color') ?? null,
     powerConsumption: propNumber('Meter_W', null),
-    temperature: propNumber('Temperature', thermostat?.temperature ?? airQuality?.temperature),
+    temperature: propNumber('Temperature', null),
     temperatureSetpoint: propNumber('TemperatureSetpoint', thermostat?.temperatureSetpoint),
     battery: propNumber('Battery', null),
     luminance: propNumber('Luminance', null),
     humidity: propNumber('RelativeHumidity', airQuality?.relativeHumidity),
     // Keep the existing devices page's GetAll fallback (`co2`) unchanged.
-    co2: propNumber('CO2', airQuality?.co2),
-    voc: propNumber('VOC', airQuality?.voc ?? airQuality?.volatileOrganicCompounds)
+    co2: propNumber('CO2', legacyCo2(airQuality) ?? airQuality?.cO2),
+    voc: propNumber('VOC', airQuality?.volatileOrganicCompounds)
   };
 }

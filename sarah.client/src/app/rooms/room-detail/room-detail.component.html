@@ -1,29 +1,29 @@
 <main class="container room-detail-container my-4">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
-      <button type="button" class="btn btn-link px-0" (click)="goBack()">← Zurück zu Räumen</button>
-      <h1 class="h2 mb-0">🏠 {{ room?.name || 'Raum' }}</h1>
+      <button type="button" class="btn btn-link px-0" (click)="goBack()">← {{ 'roomDetail.back' | translate }}</button>
+      <h1 class="h2 mb-0">🏠 {{ room?.name || ('roomDetail.titleFallback' | translate) }}</h1>
     </div>
     <button type="button" class="btn btn-outline-primary" (click)="loadRoomData()" [disabled]="isLoading">
-      Aktualisieren
+      {{ 'roomDetail.refresh' | translate }}
     </button>
   </div>
 
   <div *ngIf="isLoading" class="d-flex align-items-center gap-2 py-5" role="status">
     <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
-    <span>Raumdetails werden geladen …</span>
+    <span>{{ 'roomDetail.loading' | translate }}</span>
   </div>
 
   <div *ngIf="!isLoading && errorMessage" class="alert alert-danger" role="alert">
     {{ errorMessage }}
-    <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadRoomData()">Erneut versuchen</button>
+    <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadRoomData()">{{ 'roomDetail.retry' | translate }}</button>
   </div>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
     <section aria-labelledby="room-devices-heading" class="mb-5">
-      <h2 id="room-devices-heading" class="h4 mb-3">Geräte</h2>
+      <h2 id="room-devices-heading" class="h4 mb-3">{{ 'roomDetail.devices.heading' | translate }}</h2>
       <p *ngIf="devices.length === 0" class="text-muted border rounded p-3">
-        Diesem Raum sind keine Geräte zugeordnet.
+        {{ 'roomDetail.devices.empty' | translate }}
       </p>
 
       <div *ngIf="devices.length > 0" class="device-grid">
@@ -32,52 +32,52 @@
           type="button"
           class="card room-device-tile text-start"
           (click)="openDeviceControl(tile)"
-          [attr.aria-label]="'Steuerung öffnen: ' + (tile.device.name || 'Gerät')"
+          [attr.aria-label]="'roomDetail.devices.openControl' | translate:{name: tile.device.name || ('roomDetail.devices.unnamed' | translate)}"
         >
           <div class="card-body">
             <div class="d-flex justify-content-between gap-2 mb-2">
-              <span class="fw-semibold text-break">{{ tile.device.name || 'Gerät' }}</span>
-              <span class="badge bg-light text-dark border text-wrap">{{ tile.device.typeName || 'Unbekannter Typ' }}</span>
+              <span class="fw-semibold text-break">{{ tile.device.name || ('roomDetail.devices.unnamed' | translate) }}</span>
+              <span class="badge bg-light text-dark border text-wrap">{{ tile.device.typeName || ('roomDetail.devices.unknownType' | translate) }}</span>
             </div>
 
-            <div *ngIf="tile.statusUnavailable" class="small text-muted">Zustand derzeit nicht verfügbar.</div>
+            <div *ngIf="tile.statusUnavailable" class="small text-muted">{{ 'roomDetail.devices.statusUnavailable' | translate }}</div>
             <ng-container *ngIf="!tile.statusUnavailable">
               <ng-container [ngSwitch]="tile.status.category">
                 <span *ngSwitchCase="'lamp'" class="badge" [ngClass]="tile.status.isOn ? 'bg-success' : 'bg-secondary'">
-                  {{ tile.status.isOn ? 'An' : 'Aus' }}
+                  {{ (tile.status.isOn ? 'common.on' : 'common.off') | translate }}
                   <span *ngIf="tile.status.brightness !== null"> · {{ tile.status.brightness }} %</span>
                 </span>
                 <div *ngSwitchCase="'wallplug'" class="small">
-                  <span class="badge" [ngClass]="tile.status.isOn ? 'bg-success' : 'bg-secondary'">{{ tile.status.isOn ? 'An' : 'Aus' }}</span>
+                  <span class="badge" [ngClass]="tile.status.isOn ? 'bg-success' : 'bg-secondary'">{{ (tile.status.isOn ? 'common.on' : 'common.off') | translate }}</span>
                   <span *ngIf="tile.status.powerConsumption !== null" class="ms-2">{{ tile.status.powerConsumption | number:'1.0-1' }} W</span>
                 </div>
                 <div *ngSwitchCase="'doorsensor'" class="small">
-                  <span class="badge" [ngClass]="tile.status.doorIsOpen ? 'bg-danger' : 'bg-success'">{{ tile.status.doorIsOpen ? 'Offen' : 'Geschlossen' }}</span>
-                  <span *ngIf="tile.status.lastOpenDurationMinutes !== null" class="ms-2">Letzte Öffnung: {{ tile.status.lastOpenDurationMinutes }} Min.</span>
-                  <span *ngIf="tile.status.lastStateChanged" class="d-block text-muted mt-1">Status geändert: {{ tile.status.lastStateChanged }}</span>
+                  <span class="badge" [ngClass]="tile.status.doorIsOpen ? 'bg-danger' : 'bg-success'">{{ (tile.status.doorIsOpen ? 'common.open' : 'common.closed') | translate }}</span>
+                  <span *ngIf="tile.status.lastOpenDurationMinutes !== null" class="ms-2">{{ 'roomDetail.devices.lastOpen' | translate }} {{ tile.status.lastOpenDurationMinutes }} {{ 'home.minutesAbbr' | translate }}.</span>
+                  <span *ngIf="tile.status.lastStateChanged" class="d-block text-muted mt-1">{{ 'roomDetail.devices.statusChanged' | translate }} {{ tile.status.lastStateChanged }}</span>
                 </div>
                 <div *ngSwitchCase="'thermostat'" class="small">
-                  <span *ngIf="tile.status.temperature !== null">Ist {{ tile.status.temperature | number:'1.1-1' }} °C</span>
-                  <span *ngIf="tile.status.temperatureSetpoint !== null" class="ms-2">Soll {{ tile.status.temperatureSetpoint | number:'1.1-1' }} °C</span>
-                  <span *ngIf="tile.status.temperature === null && tile.status.temperatureSetpoint === null" class="text-muted">Keine Temperaturdaten</span>
+                  <span *ngIf="tile.status.temperature !== null">{{ 'roomDetail.devices.actualTemperature' | translate }} {{ tile.status.temperature | number:'1.1-1' }} °C</span>
+                  <span *ngIf="tile.status.temperatureSetpoint !== null" class="ms-2">{{ 'roomDetail.devices.targetTemperature' | translate }} {{ tile.status.temperatureSetpoint | number:'1.1-1' }} °C</span>
+                  <span *ngIf="tile.status.temperature === null && tile.status.temperatureSetpoint === null" class="text-muted">{{ 'roomDetail.devices.noTemperature' | translate }}</span>
                 </div>
                 <div *ngSwitchCase="'airquality'" class="small status-values">
                   <span *ngIf="tile.status.temperature !== null">🌡️ {{ tile.status.temperature | number:'1.1-1' }} °C</span>
                   <span *ngIf="tile.status.humidity !== null">💧 {{ tile.status.humidity | number:'1.0-1' }} %</span>
                   <span *ngIf="tile.status.co2 !== null">CO₂ {{ tile.status.co2 | number:'1.0-0' }} ppm</span>
                   <span *ngIf="tile.status.voc !== null">VOC {{ tile.status.voc | number:'1.0-0' }} ppb</span>
-                  <span *ngIf="tile.status.temperature === null && tile.status.humidity === null && tile.status.co2 === null && tile.status.voc === null" class="text-muted">Keine Messwerte</span>
+                  <span *ngIf="tile.status.temperature === null && tile.status.humidity === null && tile.status.co2 === null && tile.status.voc === null" class="text-muted">{{ 'roomDetail.devices.noMeasurements' | translate }}</span>
                 </div>
                 <div *ngSwitchCase="'motionsensor'" class="small status-values">
-                  <span>{{ tile.status.presence ? 'Bewegung erkannt' : 'Keine Bewegung' }}</span>
+                  <span>{{ (tile.status.presence ? 'roomDetail.devices.motionDetected' : 'roomDetail.devices.noMotion') | translate }}</span>
                   <span *ngIf="tile.status.temperature !== null">🌡️ {{ tile.status.temperature | number:'1.1-1' }} °C</span>
                   <span *ngIf="tile.status.luminance !== null">{{ tile.status.luminance | number:'1.0-1' }} lx</span>
                   <span *ngIf="tile.status.battery !== null">🔋 {{ tile.status.battery | number:'1.0-0' }} %</span>
                 </div>
-                <span *ngSwitchDefault class="small text-muted">Kein Zustandsformat verfügbar.</span>
+                <span *ngSwitchDefault class="small text-muted">{{ 'roomDetail.devices.noStatusFormat' | translate }}</span>
               </ng-container>
             </ng-container>
-            <div class="small text-primary mt-3">Steuerung öffnen</div>
+            <div class="small text-primary mt-3">{{ 'roomDetail.devices.openControls' | translate }}</div>
           </div>
         </button>
       </div>
@@ -85,31 +85,31 @@
 
     <section aria-labelledby="room-schedules-heading">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 id="room-schedules-heading" class="h4 mb-0">Temperatur-Zeitpläne</h2>
-        <button type="button" class="btn btn-success" (click)="createSchedule()">+ Zeitplan erstellen</button>
+        <h2 id="room-schedules-heading" class="h4 mb-0">{{ 'roomDetail.schedule.heading' | translate }}</h2>
+        <button type="button" class="btn btn-success" (click)="createSchedule()">+ {{ 'roomDetail.schedule.create' | translate }}</button>
       </div>
       <div *ngIf="scheduleError" class="alert alert-danger" role="alert">{{ scheduleError }}</div>
       <p *ngIf="schedules.length === 0" class="text-muted border rounded p-3">
-        Für diesen Raum gibt es noch keine Temperatur-Zeitpläne.
-        <button type="button" class="btn btn-link p-0 ms-1" (click)="createSchedule()">Zeitplan erstellen</button>
+        {{ 'roomDetail.schedule.empty' | translate }}
+        <button type="button" class="btn btn-link p-0 ms-1" (click)="createSchedule()">{{ 'roomDetail.schedule.createEmpty' | translate }}</button>
       </p>
       <div *ngIf="schedules.length > 0" class="schedule-list">
         <article *ngFor="let schedule of schedules" class="card">
           <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div>
               <div class="fw-semibold">
-                Zieltemperatur:
+                {{ 'roomDetail.schedule.targetTemperature' | translate }}
                 <span *ngIf="scheduleTemperature(schedule) !== null">{{ scheduleTemperature(schedule) | number:'1.1-1' }} °C</span>
                 <span *ngIf="scheduleTemperature(schedule) === null">–</span>
               </div>
               <div class="small text-muted">{{ scheduleRepeatLabel(schedule) }}</div>
               <span class="badge mt-1" [ngClass]="schedule.isActive ? 'bg-success' : 'bg-secondary'">
-                {{ schedule.isActive ? 'Aktiv' : 'Inaktiv' }}
+                {{ (schedule.isActive ? 'roomDetail.schedule.active' : 'roomDetail.schedule.inactive') | translate }}
               </span>
             </div>
             <div class="d-flex gap-2">
-              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="editSchedule(schedule)">Bearbeiten</button>
-              <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteSchedule(schedule)">Löschen</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="editSchedule(schedule)">{{ 'roomDetail.schedule.edit' | translate }}</button>
+              <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteSchedule(schedule)">{{ 'roomDetail.schedule.delete' | translate }}</button>
             </div>
           </div>
         </article>

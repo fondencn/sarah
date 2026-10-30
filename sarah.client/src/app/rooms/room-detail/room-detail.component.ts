@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable, of, Subscription } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 import { DeviceDtoModel as DeviceDto } from '../../services/api/device-service/model/models';
 import { DevicesClient } from '../../services/api/device-service/api/devices.service';
@@ -49,7 +50,8 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
     private devicesClient: DevicesClient,
     private rulesClient: RulesClient,
     private dialogService: DialogService,
-    private logger: LoggingService
+    private logger: LoggingService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -68,7 +70,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   loadRoomData(): void {
     if (this.roomId === null) {
       this.isLoading = false;
-      this.errorMessage = 'Ungültige Raum-ID.';
+      this.errorMessage = this.translate.instant('roomDetail.errors.invalidRoomId');
       return;
     }
 
@@ -116,7 +118,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.logger.error('Error loading room details:', error);
-        this.errorMessage = 'Die Raumdetails konnten nicht geladen werden. Bitte versuche es erneut.';
+        this.errorMessage = this.translate.instant('roomDetail.errors.loadFailed');
         this.isLoading = false;
       },
       complete: () => this.isLoading = false
@@ -138,8 +140,30 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   }
 
   onDeviceControlClosed(): void {
-    // Load only the affected room data again after the control dialog closes.
-    this.loadRoomData();
+    this.refreshDeviceStatuses();
+  }
+
+  private refreshDeviceStatuses(): void {
+    if (this.devices.length === 0) return;
+
+    const refreshedDetails = this.devices.map(tile =>
+      this.devicesClient.devicesGetDeviceByIdGETApiDevicesId(tile.device.id as number).pipe(
+        map(detail => ({ tile, detail })),
+        catchError(error => {
+          this.logger.warn(`Unable to refresh status for device ${tile.device.id}:`, error);
+          return of({ tile, detail: null });
+        })
+      )
+    );
+
+    forkJoin(refreshedDetails).subscribe(results => {
+      results.forEach(({ tile, detail }) => {
+        tile.detail = detail;
+        tile.status = getDeviceStatus(tile.device, detail);
+        tile.statusUnavailable = detail === null;
+      });
+      this.devices = [...this.devices];
+    });
   }
 
   createSchedule(): void {
@@ -156,7 +180,10 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
 
   deleteSchedule(schedule: AlarmScheduleEntityModel): void {
     if (schedule.id == null) return;
-    this.dialogService.showConfirmDialog('Möchtest du diesen Zeitplan wirklich löschen?', 'Zeitplan löschen')
+    this.dialogService.showConfirmDialog(
+      this.translate.instant('roomDetail.schedule.deleteConfirmation'),
+      this.translate.instant('roomDetail.schedule.deleteTitle')
+    )
       .then(confirmed => {
         if (!confirmed) return;
         this.rulesClient.apiRulesAlarmsIdDelete(schedule.id as number).subscribe({
@@ -166,13 +193,13 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
           },
           error: error => {
             this.logger.error('Error deleting temperature schedule:', error);
-            this.scheduleError = 'Der Zeitplan konnte nicht gelöscht werden.';
+            this.scheduleError = this.translate.instant('roomDetail.errors.deleteScheduleFailed');
           }
         });
       })
       .catch(error => {
         this.logger.error('Error confirming schedule deletion:', error);
-        this.scheduleError = 'Die Löschbestätigung konnte nicht geöffnet werden.';
+        this.scheduleError = this.translate.instant('roomDetail.errors.confirmationFailed');
       });
   }
 
@@ -192,16 +219,28 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
       recurrence = schedule.serializedRecurrence ? JSON.parse(schedule.serializedRecurrence) as AlarmRecurrence : null;
     } catch { /* show a generic recurrence label below */ }
 
-    if (!recurrence) return `Wiederkehrend${time ? ` · ${time}` : ''}`;
+    if (!recurrence) {
+      const label = this.translate.instant('roomDetail.schedule.recurrence.generic');
+      return `${label}${time ? ` · ${time}` : ''}`;
+    }
     const frequency: Record<string, string> = {
-      daily: 'Täglich',
-      weekly: 'Wöchentlich',
-      monthly: 'Monatlich',
-      yearly: 'Jährlich'
+      daily: 'daily',
+      weekly: 'weekly',
+      monthly: 'monthly',
+      yearly: 'yearly'
     };
-    const days: Record<string, string> = { mo: 'Mo', tu: 'Di', we: 'Mi', th: 'Do', fr: 'Fr', sa: 'Sa', su: 'So' };
-    const weekdays = recurrence.byweekday?.map(day => days[day]).filter(Boolean);
-    const repeat = `${frequency[recurrence.freq] ?? 'Wiederkehrend'}${weekdays?.length ? ` · ${weekdays.join(', ')}` : ''}`;
+    const days: Record<string, string> = {
+      mo: 'monday', tu: 'tuesday', we: 'wednesday', th: 'thursday',
+      fr: 'friday', sa: 'saturday', su: 'sunday'
+    };
+    const recurrenceKey = frequency[recurrence.freq];
+    const repeatLabel = recurrenceKey
+      ? this.translate.instant(`roomDetail.schedule.recurrence.${recurrenceKey}`)
+      : this.translate.instant('roomDetail.schedule.recurrence.generic');
+    const weekdays = recurrence.byweekday?.map(day => days[day])
+      .filter((day): day is string => !!day)
+      .map(day => this.translate.instant(`roomDetail.schedule.weekdays.${day}`));
+    const repeat = `${repeatLabel}${weekdays?.length ? ` · ${weekdays.join(', ')}` : ''}`;
     return `${repeat}${time ? ` · ${time}` : ''}`;
   }
 
