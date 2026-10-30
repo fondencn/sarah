@@ -54,6 +54,11 @@ export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): D
     if (!state) return undefined;
     return 'co2' in state ? state.co2 : state.cO2;
   };
+  const legacyTemperature = (state: unknown): number | undefined => {
+    if (typeof state !== 'object' || state === null || !('temperature' in state)) return undefined;
+    const temperature = state.temperature;
+    return typeof temperature === 'number' && Number.isFinite(temperature) ? temperature : undefined;
+  };
 
   let category: DeviceStatusCategory = 'unknown';
   if (lamp != null) category = 'lamp';
@@ -108,7 +113,7 @@ export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): D
     brightness: propNumber('Brightness', lamp?.brightness),
     color: getProp('Color') ?? null,
     powerConsumption: propNumber('Meter_W', null),
-    temperature: propNumber('Temperature', null),
+    temperature: propNumber('Temperature', legacyTemperature(thermostat) ?? legacyTemperature(airQuality)),
     temperatureSetpoint: propNumber('TemperatureSetpoint', thermostat?.temperatureSetpoint),
     battery: propNumber('Battery', null),
     luminance: propNumber('Luminance', null),

@@ -41,6 +41,23 @@ describe('getDeviceStatus', () => {
     expect(status.battery).toBe(87);
   });
 
+  it('preserves legacy list temperature fallbacks for thermostats and air-quality devices', () => {
+    const thermostatStatus = getDeviceStatus({
+      thermostat: { temperature: 19.5, temperatureSetpoint: 21 }
+    } as any);
+    const airQualityStatus = getDeviceStatus({
+      airQuality: { temperature: 22.25, cO2: 640 }
+    } as any);
+    const detailedStatus = getDeviceStatus(
+      { thermostat: { temperature: 19.5 } } as any,
+      { extendedProperties: [{ key: 'Temperature', value: '20.75' }] } as any
+    );
+
+    expect(thermostatStatus.temperature).toBe(19.5);
+    expect(airQualityStatus.temperature).toBe(22.25);
+    expect(detailedStatus.temperature).toBe(20.75);
+  });
+
   it('reads lamp, power, door and sensor state properties', () => {
     const lamp = getDeviceStatus({ deviceType: 8 } as any, {
       extendedProperties: [
