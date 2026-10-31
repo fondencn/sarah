@@ -16,5 +16,6 @@ export interface RoomDtoModel {
     createdAt?: string;
     updatedAt?: string | null;
     isFavourite?: boolean;
+    sortOrder?: number;
 }
 

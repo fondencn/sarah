@@ -8,4 +8,5 @@ public class RoomDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsFavourite { get; set; }
+    public int SortOrder { get; set; }
 }

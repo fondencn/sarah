@@ -27,78 +27,43 @@ public class RoomsControllerTests
     }
 
     [Fact]
-    public async Task UpdateOrderPersistsFullRequestedOrder()
+    public async Task GetAllExposesSortOrder()
     {
-        await using var dbContext = CreateDbContext(
-            new RoomEntity { Id = 1, Name = "One", SortOrder = 0 },
-            new RoomEntity { Id = 2, Name = "Two", SortOrder = 1 },
-            new RoomEntity { Id = 3, Name = "Three", SortOrder = 2 });
+        await using var dbContext = CreateDbContext(new RoomEntity { Id = 1, Name = "One", SortOrder = 4 });
         var controller = CreateController(dbContext);
 
-        var result = await controller.UpdateOrder([3, 1, 2], CancellationToken.None);
-        var orderedResult = await controller.GetAll(CancellationToken.None);
-        var rooms = Assert.IsType<OkObjectResult>(orderedResult).Value as IEnumerable<RoomDto>;
+        var result = await controller.GetAll(CancellationToken.None);
 
-        Assert.IsType<NoContentResult>(result);
-        Assert.NotNull(rooms);
-        Assert.Equal(new long[] { 3, 1, 2 }, rooms.Select(room => room.Id));
+        var rooms = Assert.IsType<OkObjectResult>(result).Value as IEnumerable<RoomDto>;
+        Assert.Equal(4, Assert.Single(rooms!).SortOrder);
     }
 
     [Fact]
-    public async Task LastSuccessfulOrderWriteWins()
+    public async Task UpdatePersistsSortOrderAndAffectsListOrder()
     {
         await using var dbContext = CreateDbContext(
             new RoomEntity { Id = 1, Name = "One", SortOrder = 0 },
             new RoomEntity { Id = 2, Name = "Two", SortOrder = 1 });
         var controller = CreateController(dbContext);
 
-        await controller.UpdateOrder([2, 1], CancellationToken.None);
-        await controller.UpdateOrder([1, 2], CancellationToken.None);
-        var orderedResult = await controller.GetAll(CancellationToken.None);
-        var rooms = Assert.IsType<OkObjectResult>(orderedResult).Value as IEnumerable<RoomDto>;
+        var result = await controller.Update(1, new RoomDto { Id = 1, Name = "One", SortOrder = 5 }, CancellationToken.None);
+        var listResult = await controller.GetAll(CancellationToken.None);
+        var rooms = Assert.IsType<OkObjectResult>(listResult).Value as IEnumerable<RoomDto>;
 
-        Assert.NotNull(rooms);
-        Assert.Equal(new long[] { 1, 2 }, rooms.Select(room => room.Id));
+        Assert.Equal(5, ((RoomDto)Assert.IsType<OkObjectResult>(result).Value!).SortOrder);
+        Assert.Equal(new long[] { 2, 1 }, rooms!.Select(room => room.Id));
     }
 
     [Fact]
-    public async Task UpdateOrderAcceptsEmptyRoomList()
+    public async Task CreateAppendsRoomAtEndOfOrder()
     {
-        await using var dbContext = CreateDbContext();
+        await using var dbContext = CreateDbContext(new RoomEntity { Id = 1, Name = "One", SortOrder = 3 });
         var controller = CreateController(dbContext);
 
-        var result = await controller.UpdateOrder([], CancellationToken.None);
+        var result = await controller.Create(new RoomDto { Name = "New" }, CancellationToken.None);
 
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
-    public async Task UpdateOrderAcceptsSingleRoom()
-    {
-        await using var dbContext = CreateDbContext(new RoomEntity { Id = 9, Name = "Only room", SortOrder = 0 });
-        var controller = CreateController(dbContext);
-
-        var result = await controller.UpdateOrder([9], CancellationToken.None);
-
-        Assert.IsType<NoContentResult>(result);
-        Assert.Equal(0, await dbContext.Rooms.Select(room => room.SortOrder).SingleAsync());
-    }
-
-    [Theory]
-    [InlineData(new long[] { 1, 1 })]
-    [InlineData(new long[] { 1 })]
-    [InlineData(new long[] { 1, 99 })]
-    public async Task UpdateOrderRejectsDuplicatesMissingOrUnknownRooms(long[] ids)
-    {
-        await using var dbContext = CreateDbContext(
-            new RoomEntity { Id = 1, Name = "One", SortOrder = 0 },
-            new RoomEntity { Id = 2, Name = "Two", SortOrder = 1 });
-        var controller = CreateController(dbContext);
-
-        var result = await controller.UpdateOrder(ids, CancellationToken.None);
-
-        Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(new[] { 0, 1 }, await dbContext.Rooms.OrderBy(room => room.Id).Select(room => room.SortOrder).ToArrayAsync());
+        var created = Assert.IsType<RoomDto>(Assert.IsType<CreatedAtActionResult>(result).Value);
+        Assert.Equal(4, created.SortOrder);
     }
 
     private static ApplicationDbContext CreateDbContext(params RoomEntity[] rooms)

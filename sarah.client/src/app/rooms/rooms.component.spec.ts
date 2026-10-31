@@ -7,7 +7,6 @@ import { DialogService } from '../services/dialog.service';
 import { LoggingService } from '../services/logging.service';
 import { EventEmitter } from '@angular/core';
 import { DashboardItemTypeDto } from '../models/api-types';
-import { RoomOrderingService } from './room-ordering.service';
 
 describe('RoomsComponent', () => {
   let component: RoomsComponent;
@@ -15,7 +14,6 @@ describe('RoomsComponent', () => {
   let dashboardServiceSpy: jasmine.SpyObj<DashboardRuntimeService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
   let loggerSpy: jasmine.SpyObj<LoggingService>;
-  let roomOrderingServiceSpy: jasmine.SpyObj<RoomOrderingService>;
 
   const mockRooms = [
     { id: 1, name: 'Kitchen' },
@@ -38,8 +36,7 @@ describe('RoomsComponent', () => {
     dialogServiceSpy = jasmine.createSpyObj('DialogService', ['showDialog', 'showConfirmDialog']);
     (dialogServiceSpy as any).dialogClosed = new EventEmitter();
     loggerSpy = jasmine.createSpyObj('LoggingService', ['debug', 'info', 'warn', 'error']);
-    roomOrderingServiceSpy = jasmine.createSpyObj('RoomOrderingService', ['saveOrder']);
-    roomOrderingServiceSpy.saveOrder.and.returnValue(of(undefined));
+    roomsServiceSpy.apiRoomsIdPut.and.callFake(((id: number, room: any) => of(room)) as any);
 
     roomsServiceSpy.apiRoomsGet.and.returnValue(of(mockRooms.slice()) as any);
     dashboardServiceSpy.apiDashboardGet.and.returnValue(of(mockDashboardItems));
@@ -50,8 +47,7 @@ describe('RoomsComponent', () => {
         { provide: RoomsClient, useValue: roomsServiceSpy },
         { provide: DashboardRuntimeService, useValue: dashboardServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy },
-        { provide: LoggingService, useValue: loggerSpy },
-        { provide: RoomOrderingService, useValue: roomOrderingServiceSpy }
+        { provide: LoggingService, useValue: loggerSpy }
       ]
     });
 
@@ -87,14 +83,24 @@ describe('RoomsComponent', () => {
   });
 
   describe("onRoomDrop()", () => {
-    it("saves the reordered room IDs after a drag", () => {
-      component.rooms = mockRooms.slice();
+    it("assigns sortOrder by position and saves the rooms that changed", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
 
       component.onRoomDrop({ previousIndex: 0, currentIndex: 2 } as any);
 
-      expect(component.rooms.map(room => room.id)).toEqual([2, 3, 1]);
-      expect(roomOrderingServiceSpy.saveOrder).toHaveBeenCalledWith([2, 3, 1]);
+      expect(component.rooms.map(room => [room.id, room.sortOrder])).toEqual([[2, 0], [3, 1], [1, 2]]);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(3);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledWith(1, jasmine.objectContaining({ sortOrder: 2 }));
       expect(component.isSavingOrder).toBeFalse();
+    });
+
+    it("only saves rooms whose sortOrder changed", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.onRoomDrop({ previousIndex: 0, currentIndex: 1 } as any);
+
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(2);
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalledWith(3, jasmine.anything());
     });
 
     it("does not save when fewer than two rooms are available", () => {
@@ -102,12 +108,12 @@ describe('RoomsComponent', () => {
 
       component.onRoomDrop({ previousIndex: 0, currentIndex: 0 } as any);
 
-      expect(roomOrderingServiceSpy.saveOrder).not.toHaveBeenCalled();
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalled();
     });
 
-    it("restores the last saved order and displays an error when saving fails", () => {
-      component.retrieveRooms();
-      roomOrderingServiceSpy.saveOrder.and.returnValue(throwError(() => new Error("request failed")));
+    it("restores the previous order and displays an error when saving fails", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+      roomsServiceSpy.apiRoomsIdPut.and.returnValue(throwError(() => new Error("request failed")));
 
       component.onRoomDrop({ previousIndex: 0, currentIndex: 2 } as any);
 

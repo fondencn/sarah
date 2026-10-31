@@ -8,7 +8,6 @@ import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
 import { LoggingService } from '../services/logging.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { RoomOrderingService } from './room-ordering.service';
 
 @Component({
   selector: 'app-rooms',
@@ -17,7 +16,7 @@ import { RoomOrderingService } from './room-ordering.service';
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService, private roomOrderingService: RoomOrderingService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
 
   readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
@@ -26,7 +25,6 @@ export class RoomsComponent implements OnInit,OnDestroy {
   isLoading: boolean = false;
   isSavingOrder = false;
   orderSaveError: string | null = null;
-  private lastSavedRoomIds: number[] = [];
   @ViewChild(EditRoomModalComponent) editRoomModal!: EditRoomModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
@@ -70,7 +68,6 @@ export class RoomsComponent implements OnInit,OnDestroy {
     }).subscribe({
       next: ({ rooms, dashboardItems }) => {
         this.rooms = rooms;
-        this.lastSavedRoomIds = this.rooms.map(room => room.id as number);
         this.orderSaveError = null;
         this.pinnedRoomIds = new Set(
           dashboardItems
@@ -94,29 +91,30 @@ export class RoomsComponent implements OnInit,OnDestroy {
       return;
     }
 
-    moveItemInArray(this.rooms, event.previousIndex, event.currentIndex);
+    const previousRooms = this.rooms.slice();
+    const reordered = this.rooms.slice();
+    moveItemInArray(reordered, event.previousIndex, event.currentIndex);
+    const updatedRooms = reordered.map((room, index) => ({ ...room, sortOrder: index }));
+    const changedRooms = updatedRooms.filter((room, index) => reordered[index].sortOrder !== room.sortOrder);
+
+    this.rooms = updatedRooms;
     this.orderSaveError = null;
     this.isSavingOrder = true;
-    const requestedOrder = this.rooms.map(room => room.id as number);
 
-    this.roomOrderingService.saveOrder(requestedOrder).subscribe({
-      next: () => {
-        this.lastSavedRoomIds = requestedOrder;
+    forkJoin(changedRooms.map(room => this.roomsService.apiRoomsIdPut(room.id as number, room))).subscribe({
+      complete: () => {
+        this.isSavingOrder = false;
       },
       error: (error) => {
-        const savedIds = new Set(this.lastSavedRoomIds);
-        const roomsById = new Map(this.rooms.map(room => [room.id as number, room]));
-        const restoredRooms = this.lastSavedRoomIds
-          .map(id => roomsById.get(id))
-          .filter((room): room is RoomDto => room !== undefined);
-        const roomsAddedAfterSnapshot = this.rooms.filter(room => !savedIds.has(room.id as number));
-        this.rooms = [...restoredRooms, ...roomsAddedAfterSnapshot];
+        this.rooms = previousRooms;
         this.orderSaveError = "Room order could not be saved. Your previous order has been restored.";
         this.isSavingOrder = false;
         this.logger.error(this.orderSaveError, error);
-      },
-      complete: () => {
-        this.isSavingOrder = false;
+        // Some updates may have succeeded, so resync with the server state.
+        this.roomsService.apiRoomsGet().subscribe({
+          next: rooms => this.rooms = rooms,
+          error: reloadError => this.logger.error('Error fetching rooms:', reloadError)
+        });
       }
     });
   }
@@ -132,7 +130,6 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
           next: () => {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
-            this.lastSavedRoomIds = this.lastSavedRoomIds.filter(id => id !== room.id);
           },
           error: (error) => {
             this.logger.error('Error deleting room:', error);

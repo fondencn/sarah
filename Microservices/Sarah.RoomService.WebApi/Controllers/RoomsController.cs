@@ -44,53 +44,14 @@ public class RoomsController : ControllerBase
                 Description = r.Description,
                 CreatedAt = r.CreatedAt,
                 UpdatedAt = r.UpdatedAt,
-                IsFavourite = r.IsFavourite
+                IsFavourite = r.IsFavourite,
+                SortOrder = r.SortOrder
             });
             return Ok(roomDtos);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving rooms");
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-    /// <summary>
-    /// Save the manual room order. The complete room ID list must be supplied.
-    /// </summary>
-    [HttpPut("order")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateOrder([FromBody] long[]? roomIds, CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (roomIds == null || roomIds.Distinct().Count() != roomIds.Length)
-            {
-                return BadRequest("Room order must contain each room exactly once");
-            }
-
-            var rooms = await _dbContext.Rooms.ToListAsync(cancellationToken);
-            var roomById = rooms.ToDictionary(room => room.Id);
-            if (roomIds.Length != rooms.Count || roomIds.Any(id => !roomById.ContainsKey(id)))
-            {
-                return BadRequest("Room order must contain each room exactly once");
-            }
-
-            for (var index = 0; index < roomIds.Length; index++)
-            {
-                var room = roomById[roomIds[index]];
-                room.SortOrder = index;
-                _dbContext.Entry(room).Property(r => r.SortOrder).IsModified = true;
-            }
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving room order");
             return StatusCode(500, "Internal server error");
         }
     }
@@ -119,7 +80,8 @@ public class RoomsController : ControllerBase
                 Description = room.Description,
                 CreatedAt = room.CreatedAt,
                 UpdatedAt = room.UpdatedAt,
-                IsFavourite = room.IsFavourite
+                IsFavourite = room.IsFavourite,
+                SortOrder = room.SortOrder
             };
             return Ok(roomDto);
         }
@@ -164,7 +126,8 @@ public class RoomsController : ControllerBase
                 Description = createdRoom.Description,
                 CreatedAt = createdRoom.CreatedAt,
                 UpdatedAt = createdRoom.UpdatedAt,
-                IsFavourite = createdRoom.IsFavourite
+                IsFavourite = createdRoom.IsFavourite,
+                SortOrder = createdRoom.SortOrder
             };
 
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
@@ -203,6 +166,7 @@ public class RoomsController : ControllerBase
             room.Description = roomDto.Description;
             room.UpdatedAt = DateTime.UtcNow;
             room.IsFavourite = roomDto.IsFavourite;
+            room.SortOrder = roomDto.SortOrder;
 
             await _repository.UpdateAsync(room, cancellationToken);
 
@@ -213,7 +177,8 @@ public class RoomsController : ControllerBase
                 Description = room.Description,
                 CreatedAt = room.CreatedAt,
                 UpdatedAt = room.UpdatedAt,
-                IsFavourite = room.IsFavourite
+                IsFavourite = room.IsFavourite,
+                SortOrder = room.SortOrder
             };
 
             return Ok(result);
