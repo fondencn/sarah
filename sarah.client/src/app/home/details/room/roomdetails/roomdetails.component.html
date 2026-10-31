@@ -9,6 +9,19 @@
         <p class="card-text"><strong>ID:</strong> {{ roomDetails.id }}</p>
         <p class="card-text"><strong>Name:</strong> {{ roomDetails.name }}</p>
         <p class="card-text"><strong>isFavourite:</strong> {{ roomDetails.isFavourite }}</p>
+        <hr>
+        <h5 class="card-title">Temperatur-Zeitpläne</h5>
+        <p *ngIf="temperatureSchedulesLoading" class="text-muted mb-0">Temperatur-Zeitpläne werden geladen...</p>
+        <p *ngIf="temperatureSchedulesError" class="text-danger mb-0">Temperatur-Zeitpläne konnten nicht geladen werden.</p>
+        <ul *ngIf="!temperatureSchedulesLoading && !temperatureSchedulesError && temperatureSchedules.length" class="list-group">
+          <li *ngFor="let schedule of temperatureSchedules" class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ getScheduleTime(schedule) }}</span>
+            <span>{{ schedule.content?.targetTemperature ?? "—" }} °C</span>
+          </li>
+        </ul>
+        <p *ngIf="!temperatureSchedulesLoading && !temperatureSchedulesError && !temperatureSchedules.length" class="text-muted mb-0">
+          Für diesen Raum sind keine Temperatur-Zeitpläne vorhanden.
+        </p>
         <!-- Add more room-specific details here -->
       </div>
       <div class="card-footer text-muted">
