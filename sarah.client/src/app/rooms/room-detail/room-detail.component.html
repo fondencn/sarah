@@ -45,7 +45,7 @@
               <ng-container [ngSwitch]="tile.status.category">
                 <span *ngSwitchCase="'lamp'" class="badge" [ngClass]="tile.status.isOn ? 'bg-success' : 'bg-secondary'">
                   {{ (tile.status.isOn ? 'common.on' : 'common.off') | translate }}
-                  <span *ngIf="tile.status.brightness !== null"> · {{ tile.status.brightness }} %</span>
+                  <span *ngIf="tile.status.brightness !== null"> · {{ tile.status.brightness / 255 * 100 | number:'1.0-0' }} %</span>
                 </span>
                 <div *ngSwitchCase="'wallplug'" class="small">
                   <span class="badge" [ngClass]="tile.status.isOn ? 'bg-success' : 'bg-secondary'">{{ (tile.status.isOn ? 'common.on' : 'common.off') | translate }}</span>
