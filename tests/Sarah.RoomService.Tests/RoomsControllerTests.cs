@@ -55,12 +55,12 @@ public class RoomsControllerTests
     }
 
     [Fact]
-    public async Task CreateAppendsRoomAtEndOfOrder()
+    public async Task CreateUsesSortOrderFromDto()
     {
         await using var dbContext = CreateDbContext(new RoomEntity { Id = 1, Name = "One", SortOrder = 3 });
         var controller = CreateController(dbContext);
 
-        var result = await controller.Create(new RoomDto { Name = "New" }, CancellationToken.None);
+        var result = await controller.Create(new RoomDto { Name = "New", SortOrder = 4 }, CancellationToken.None);
 
         var created = Assert.IsType<RoomDto>(Assert.IsType<CreatedAtActionResult>(result).Value);
         Assert.Equal(4, created.SortOrder);

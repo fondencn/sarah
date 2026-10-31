@@ -1,6 +1,6 @@
 <div class="container mt-4">
     <h2 class="mb-4">🏠 {{ 'rooms.title' | translate }}</h2>
-    <button (click)="retrieveRooms()" class="btn btn-primary m-4">
+    <button (click)="retrieveRooms()" [disabled]="isSavingOrder" class="btn btn-primary m-4">
         <img src="assets/icons/refresh.svg" alt="Refresh" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
         {{ 'common.refresh' | translate }}
     </button>
@@ -28,11 +28,19 @@
             </tr>
         </thead>
         <tbody cdkDropList [cdkDropListData]="rooms" [cdkDropListDisabled]="rooms.length < 2 || isSavingOrder" (cdkDropListDropped)="onRoomDrop($event)">
-            <tr *ngFor="let room of rooms; trackBy: trackByRoomId" cdkDrag [cdkDragDisabled]="rooms.length < 2 || isSavingOrder">
+            <tr *ngFor="let room of rooms; let i = index; trackBy: trackByRoomId" cdkDrag [cdkDragDisabled]="rooms.length < 2 || isSavingOrder">
                 <td>
                     <span *ngIf="rooms.length > 1" cdkDragHandle class="me-2 text-muted" title="Drag to reorder rooms" aria-label="Drag to reorder rooms" style="cursor: grab;">
                         <i class="bi bi-grip-vertical"></i>
                     </span>
+                    <ng-container *ngIf="rooms.length > 1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 me-1" (click)="moveRoom(i, i - 1)" [disabled]="i === 0 || isSavingOrder" title="Move up" aria-label="Move up">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 me-1" (click)="moveRoom(i, i + 1)" [disabled]="i === rooms.length - 1 || isSavingOrder" title="Move down" aria-label="Move down">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    </ng-container>
                     {{ room.id }}
                 </td>
                 <td>{{ room.name }}</td>
@@ -43,7 +51,7 @@
                     <button (click)="editRoom(room)" class="btn btn-secondary btn-sm">
                         <img src="assets/icons/edit.svg" alt="Edit" style="width: 16px; height: 16px;">
                     </button>
-                    <button (click)="deleteRoom(room)" class="btn btn-danger btn-sm">
+                    <button (click)="deleteRoom(room)" [disabled]="isSavingOrder" class="btn btn-danger btn-sm">
                         <img src="assets/icons/delete.svg" alt="Delete" style="width: 16px; height: 16px;">
                     </button>
                     <app-pin-to-dashboard-button

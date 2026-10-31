@@ -16,7 +16,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService, private roomOrderingService: RoomOrderingService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
 
   readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
@@ -61,6 +61,9 @@ export class RoomsComponent implements OnInit,OnDestroy {
 
 
   public retrieveRooms(): void {
+    if (this.isSavingOrder) {
+      return;
+    }
     this.isLoading = true;
     forkJoin({
       rooms: this.roomsService.apiRoomsGet(),
@@ -87,13 +90,18 @@ export class RoomsComponent implements OnInit,OnDestroy {
 
 
   public onRoomDrop(event: CdkDragDrop<RoomDto[]>): void {
-    if (this.rooms.length < 2 || this.isSavingOrder || event.previousIndex === event.currentIndex) {
+    this.moveRoom(event.previousIndex, event.currentIndex);
+  }
+
+  public moveRoom(previousIndex: number, currentIndex: number): void {
+    if (this.rooms.length < 2 || this.isSavingOrder || previousIndex === currentIndex
+      || currentIndex < 0 || currentIndex >= this.rooms.length) {
       return;
     }
 
     const previousRooms = this.rooms.slice();
     const reordered = this.rooms.slice();
-    moveItemInArray(reordered, event.previousIndex, event.currentIndex);
+    moveItemInArray(reordered, previousIndex, currentIndex);
     const updatedRooms = reordered.map((room, index) => ({ ...room, sortOrder: index }));
     const changedRooms = updatedRooms.filter((room, index) => reordered[index].sortOrder !== room.sortOrder);
 
@@ -124,13 +132,15 @@ export class RoomsComponent implements OnInit,OnDestroy {
   }
 
   public deleteRoom(room: RoomDto) {
+    if (this.isSavingOrder) {
+      return;
+    }
     this.dialogService.showConfirmDialog('Are you sure you want to delete this room?', 'Confirm Deletion')
     .then((result: boolean) => {
       if (result) {
         this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
           next: () => {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
-            this.lastSavedRoomIds = this.lastSavedRoomIds.filter(id => id !== room.id);
           },
           error: (error) => {
             this.logger.error('Error deleting room:', error);
@@ -180,6 +190,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
   public onRoomAdded(success: boolean) {
     if (success) {
       let addedRoom: RoomDto = this.editRoomModal.dataContext as RoomDto;
+      addedRoom.sortOrder = this.rooms.reduce((max, room) => Math.max(max, room.sortOrder ?? -1), -1) + 1;
       this.roomsService.apiRoomsPost(addedRoom).subscribe({
         next: (response: RoomDto) => {
           this.rooms.push(response);

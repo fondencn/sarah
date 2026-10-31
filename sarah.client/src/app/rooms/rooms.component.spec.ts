@@ -7,7 +7,6 @@ import { DialogService } from '../services/dialog.service';
 import { LoggingService } from '../services/logging.service';
 import { EventEmitter } from '@angular/core';
 import { DashboardItemTypeDto } from '../models/api-types';
-import { RoomOrderingService } from './room-ordering.service';
 
 describe('RoomsComponent', () => {
   let component: RoomsComponent;
@@ -15,7 +14,6 @@ describe('RoomsComponent', () => {
   let dashboardServiceSpy: jasmine.SpyObj<DashboardRuntimeService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
   let loggerSpy: jasmine.SpyObj<LoggingService>;
-  let roomOrderingServiceSpy: jasmine.SpyObj<RoomOrderingService>;
 
   const mockRooms = [
     { id: 1, name: 'Kitchen' },
@@ -49,8 +47,7 @@ describe('RoomsComponent', () => {
         { provide: RoomsClient, useValue: roomsServiceSpy },
         { provide: DashboardRuntimeService, useValue: dashboardServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy },
-        { provide: LoggingService, useValue: loggerSpy },
-        { provide: RoomOrderingService, useValue: roomOrderingServiceSpy }
+        { provide: LoggingService, useValue: loggerSpy }
       ]
     });
 
@@ -104,6 +101,23 @@ describe('RoomsComponent', () => {
 
       expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(2);
       expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalledWith(3, jasmine.anything());
+    });
+
+    it("moveRoom moves a room one position up and saves", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.moveRoom(2, 1);
+
+      expect(component.rooms.map(room => room.id)).toEqual([1, 3, 2]);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(2);
+    });
+
+    it("moveRoom ignores out-of-range targets", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.moveRoom(0, -1);
+
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalled();
     });
 
     it("does not save when fewer than two rooms are available", () => {
