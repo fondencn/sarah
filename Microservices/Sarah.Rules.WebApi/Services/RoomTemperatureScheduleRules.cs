@@ -121,13 +121,21 @@ public static class RoomTemperatureScheduleRules
         try
         {
             using var document = JsonDocument.Parse(schedule.SerializedRecurrence);
-            if (!document.RootElement.TryGetProperty("dtstart", out var dtstartElement)
-                || dtstartElement.ValueKind != JsonValueKind.String)
+            JsonElement? dtstartElement = null;
+            foreach (var property in document.RootElement.EnumerateObject())
+            {
+                if (string.Equals(property.Name, "dtstart", StringComparison.OrdinalIgnoreCase))
+                {
+                    dtstartElement = property.Value;
+                }
+            }
+
+            if (dtstartElement is null || dtstartElement.Value.ValueKind != JsonValueKind.String)
             {
                 return false;
             }
 
-            var dtstart = dtstartElement.GetString();
+            var dtstart = dtstartElement.Value.GetString();
             var match = dtstart is null
                 ? null
                 : Regex.Match(dtstart, @"^\d{4}-\d{2}-\d{2}T(?<clock>\d{2}:\d{2}(?::\d{2}(?:\.\d{1,7})?)?)(?:Z|[+-]\d{2}:?\d{2})?$");

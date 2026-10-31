@@ -85,6 +85,20 @@ public class RoomTemperatureScheduleRulesTests
         Assert.True(RoomTemperatureScheduleRules.HasConflict(sameStoredTimeWithOffset, [existing]));
     }
 
+    [Theory]
+    [InlineData("Dtstart")]
+    [InlineData("DTSTART")]
+    public void HasConflict_RejectsSameStoredTimeWithCaseInsensitiveDtstart(string propertyName)
+    {
+        var existing = CreateSchedule(1, 10, 21, "weekly", ["mo"], "2026-10-12T07:00:00Z");
+        existing.SerializedRecurrence = existing.SerializedRecurrence!.Replace("\"dtstart\"", $"\"{propertyName}\"");
+        var candidate = CreateSchedule(2, 10, 22, "weekly", ["tu"], "2026-10-13T07:00:00Z");
+
+        RoomTemperatureScheduleRules.Validate(existing);
+
+        Assert.True(RoomTemperatureScheduleRules.HasConflict(candidate, [existing]));
+    }
+
     [Fact]
     public void GetConflictMessage_ExplainsRoomAndTimeRestriction()
     {
