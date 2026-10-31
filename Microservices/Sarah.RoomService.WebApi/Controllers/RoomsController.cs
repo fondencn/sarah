@@ -80,7 +80,9 @@ public class RoomsController : ControllerBase
 
             for (var index = 0; index < roomIds.Length; index++)
             {
-                roomById[roomIds[index]].SortOrder = index;
+                var room = roomById[roomIds[index]];
+                room.SortOrder = index;
+                _dbContext.Entry(room).Property(r => r.SortOrder).IsModified = true;
             }
 
             await _dbContext.SaveChangesAsync(cancellationToken);
