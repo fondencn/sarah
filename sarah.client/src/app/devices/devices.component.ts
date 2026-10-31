@@ -9,6 +9,7 @@ import { DeviceControlModalComponent } from './device-control-modal/device-contr
 import { forkJoin, Subscription } from 'rxjs';
 import { DEVICE_TYPE_UNKNOWN } from '../models/device-type-constants';
 import { LoggingService } from '../services/logging.service';
+import { getDeviceStatus } from './device-status';
 
 
 type SortColumn = 'id' | 'nodeId' | 'name' | 'typeName' | 'info' | 'state';
@@ -287,12 +288,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * so the Status column switch does not depend on backend string names.
    */
   public getStatusCategory(device: DeviceDto): string {
-    if ((device as any).lamp !== null && (device as any).lamp !== undefined) return 'lamp';
-    if ((device as any).wallPlug !== null && (device as any).wallPlug !== undefined) return 'wallplug';
-    if ((device as any).doorSensor !== null && (device as any).doorSensor !== undefined) return 'doorsensor';
-    if ((device as any).thermostat !== null && (device as any).thermostat !== undefined) return 'thermostat';
-    if ((device as any).airQuality !== null && (device as any).airQuality !== undefined) return 'airquality';
-    return 'unknown';
+    return getDeviceStatus(device).category;
   }
 
   /**
@@ -300,14 +296,14 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * The backend returns a `lamp` property that is not part of the generated TypeScript type.
    */
   public getLampIsOn(device: DeviceDto): boolean {
-    return ((device as any).lamp?.brightness ?? 0) > 0;
+    return getDeviceStatus(device).isOn;
   }
 
   /**
    * Returns the wallplug on/off state from the GetAll sub-DTO payload.
    */
   public getWallplugIsOn(device: DeviceDto): boolean {
-    return (device as any).wallPlug?.isOn === true;
+    return getDeviceStatus(device).isOn;
   }
 
   /**
@@ -315,23 +311,21 @@ export class DevicesComponent implements OnInit, OnDestroy {
    * DoorSensorState enum: 0=Unbekannt, 1=Offen, 2=Geschlossen
    */
   public getDoorIsOpen(device: DeviceDto): boolean {
-    return (device as any).doorSensor?.state === 1;
+    return getDeviceStatus(device).doorIsOpen;
   }
 
   /**
    * Returns the thermostat setpoint from the GetAll sub-DTO payload.
    */
   public getThermostatSetpoint(device: DeviceDto): number | null {
-    const val = (device as any).thermostat?.temperatureSetpoint;
-    return typeof val === 'number' ? val : null;
+    return getDeviceStatus(device).temperatureSetpoint;
   }
 
   /**
    * Returns the CO2 value from the GetAll air quality sub-DTO payload.
    */
   public getAirQualityCO2(device: DeviceDto): number | null {
-    const val = (device as any).airQuality?.co2;
-    return typeof val === 'number' ? val : null;
+    return getDeviceStatus(device).co2;
   }
 
 }

@@ -95,9 +95,70 @@
     "colRoomId": "Raum-ID",
     "colRoomName": "Raumname",
     "colActions": "Aktionen",
+    "details": "Details",
     "noRooms": "Keine Räume geladen.",
     "modal": {
       "labelName": "Name:"
+    }
+  },
+  "roomDetail": {
+    "back": "Zurück zu Räumen",
+    "titleFallback": "Raum",
+    "refresh": "Aktualisieren",
+    "loading": "Raumdetails werden geladen …",
+    "retry": "Erneut versuchen",
+    "devices": {
+      "heading": "Geräte",
+      "empty": "Diesem Raum sind keine Geräte zugeordnet.",
+      "unnamed": "Unbenanntes Gerät",
+      "unknownType": "Unbekannter Typ",
+      "openControl": "Steuerung für {{name}} öffnen",
+      "statusUnavailable": "Zustand derzeit nicht verfügbar.",
+      "lastOpen": "Letzte Öffnung:",
+      "statusChanged": "Status geändert:",
+      "actualTemperature": "Ist",
+      "targetTemperature": "Soll",
+      "noTemperature": "Keine Temperaturdaten",
+      "noMeasurements": "Keine Messwerte",
+      "motionDetected": "Bewegung erkannt",
+      "noMotion": "Keine Bewegung",
+      "noStatusFormat": "Kein Zustandsformat verfügbar.",
+      "openControls": "Steuerung öffnen"
+    },
+    "schedule": {
+      "heading": "Temperatur-Zeitpläne",
+      "create": "Zeitplan erstellen",
+      "empty": "Für diesen Raum gibt es noch keine Temperatur-Zeitpläne.",
+      "createEmpty": "Zeitplan erstellen",
+      "targetTemperature": "Zieltemperatur:",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "deleteTitle": "Zeitplan löschen",
+      "deleteConfirmation": "Möchtest du diesen Zeitplan wirklich löschen?",
+      "recurrence": {
+        "generic": "Wiederkehrend",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "monthly": "Monatlich",
+        "yearly": "Jährlich"
+      },
+      "weekdays": {
+        "monday": "Mo",
+        "tuesday": "Di",
+        "wednesday": "Mi",
+        "thursday": "Do",
+        "friday": "Fr",
+        "saturday": "Sa",
+        "sunday": "So"
+      }
+    },
+    "errors": {
+      "invalidRoomId": "Ungültige Raum-ID.",
+      "loadFailed": "Die Raumdetails konnten nicht geladen werden. Bitte versuche es erneut.",
+      "deleteScheduleFailed": "Der Zeitplan konnte nicht gelöscht werden.",
+      "confirmationFailed": "Die Löschbestätigung konnte nicht geöffnet werden."
     }
   },
   "alarms": {

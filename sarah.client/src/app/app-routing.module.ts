@@ -11,6 +11,7 @@ import { DevicedetailsComponent } from './home/details/device/devicedetails/devi
 import { RoomdetailsComponent } from './home/details/room/roomdetails/roomdetails.component';
 import { AlarmsComponent } from './alarms/alarms.component';
 import { EnergyComponent } from './energy/energy.component';
+import { RoomDetailComponent } from './rooms/room-detail/room-detail.component';
 
 const routes: Routes = [
   { path: "home", component: HomeComponent },
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: "devices", component: DevicesComponent },
   { path: "persons", component: PersonsComponent },
   { path: "rooms", component: RoomsComponent },
+  { path: "rooms/:id", component: RoomDetailComponent },
   { path: "alarms", component: AlarmsComponent },
   { path: "energy", component: EnergyComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }, // redirect to `home`

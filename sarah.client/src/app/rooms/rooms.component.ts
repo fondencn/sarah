@@ -162,6 +162,10 @@ export class RoomsComponent implements OnInit,OnDestroy {
     });
   }
 
+  public roomDetailsLink(room: RoomDto): (string | number)[] {
+    return ['/rooms', room.id as number];
+  }
+
   pinnedRoomIds: Set<number> = new Set<number>();
 
   public pinToDashboard(room: RoomDto) {
@@ -193,4 +197,3 @@ export class RoomsComponent implements OnInit,OnDestroy {
     }
   }
 }
-

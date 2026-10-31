@@ -109,5 +109,9 @@ describe('RoomsComponent', () => {
 
       expect(dashboardServiceSpy.apiDashboardPost).not.toHaveBeenCalled();
     });
+
+    it('builds the room detail route for the Details action', () => {
+      expect(component.roomDetailsLink(mockRooms[0])).toEqual(['/rooms', 1]);
+    });
   });
 });
