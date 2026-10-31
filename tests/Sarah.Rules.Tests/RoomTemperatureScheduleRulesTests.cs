@@ -51,7 +51,7 @@ public class RoomTemperatureScheduleRulesTests
     public void HasConflict_RejectsSharedWeeklyOccurrenceForSameRoomAndTime()
     {
         var existing = CreateSchedule(1, 10, 21, "weekly", ["mo"], "2026-10-12T07:00:00Z");
-        var candidate = CreateSchedule(2, 10, 22, "daily", [], "2026-10-12T07:00:00Z");
+        var candidate = CreateSchedule(2, 10, 22, "daily", [], "2026-10-12T09:00:00+02:00");
 
         Assert.True(RoomTemperatureScheduleRules.HasConflict(candidate, [existing]));
     }
@@ -68,12 +68,30 @@ public class RoomTemperatureScheduleRulesTests
     }
 
     [Fact]
-    public void HasConflict_AllowsDisjointWeeklyDays()
+    public void HasConflict_RejectsSameStoredTimeEvenForDisjointWeeklyDays()
     {
         var existing = CreateSchedule(1, 10, 21, "weekly", ["mo"], "2026-10-12T07:00:00Z");
         var candidate = CreateSchedule(2, 10, 22, "weekly", ["tu"], "2026-10-13T07:00:00Z");
 
-        Assert.False(RoomTemperatureScheduleRules.HasConflict(candidate, [existing]));
+        Assert.True(RoomTemperatureScheduleRules.HasConflict(candidate, [existing]));
+    }
+
+    [Fact]
+    public void HasConflict_ComparesStoredClockWithoutTimezoneConversion()
+    {
+        var existing = CreateSchedule(1, 10, 21, "weekly", ["mo"], "2026-10-12T07:00:00");
+        var sameStoredTimeWithOffset = CreateSchedule(2, 10, 22, "weekly", ["tu"], "2026-10-13T07:00:00+05:00");
+
+        Assert.True(RoomTemperatureScheduleRules.HasConflict(sameStoredTimeWithOffset, [existing]));
+    }
+
+    [Fact]
+    public void GetConflictMessage_ExplainsRoomAndTimeRestriction()
+    {
+        var message = RoomTemperatureScheduleRules.GetConflictMessage();
+
+        Assert.Contains("Raum", message);
+        Assert.Contains("Uhrzeit", message);
     }
 
     [Fact]

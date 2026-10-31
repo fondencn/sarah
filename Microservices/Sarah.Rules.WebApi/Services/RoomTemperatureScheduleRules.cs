@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Sarah.API.BusinessObjects;
 using Sarah.Rules.Data.Entities;
 
@@ -12,7 +14,7 @@ public sealed class AlarmScheduleConflictException(string message) : Exception(m
 public static class RoomTemperatureScheduleRules
 {
     private const string ConflictMessage =
-        "Für diesen Raum ist zu dieser wiederkehrenden Ortszeit bereits ein Zeitplan vorhanden. Wähle eine andere Zeit oder einen anderen Raum.";
+        "Für diesen Raum gibt es bereits einen Temperatur-Zeitplan zu dieser Uhrzeit. Wähle eine andere Uhrzeit oder einen anderen Raum.";
     private const string TemperatureMessage = "Gib eine Zieltemperatur von 8 bis 30 °C ein.";
     private const string RecurrenceMessage = "Raumtemperatur-Zeitpläne müssen wiederkehrend sein.";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -74,8 +76,19 @@ public static class RoomTemperatureScheduleRules
         {
             if (existing.Id == excludedScheduleId
                 || existing.ContentType != AlarmContentType.TemperatureSchedule
-                || existing.Content?.RoomId != roomId
-                || !existing.HasRecurrence)
+                || existing.Content?.RoomId != roomId)
+            {
+                continue;
+            }
+
+            if (TryGetStoredClockTime(candidate, out var candidateClockTime)
+                && TryGetStoredClockTime(existing, out var existingClockTime)
+                && candidateClockTime == existingClockTime)
+            {
+                return true;
+            }
+
+            if (!existing.HasRecurrence)
             {
                 continue;
             }
@@ -96,6 +109,44 @@ public static class RoomTemperatureScheduleRules
     }
 
     public static string GetConflictMessage() => ConflictMessage;
+
+    private static bool TryGetStoredClockTime(AlarmScheduleEntity schedule, out TimeSpan clockTime)
+    {
+        clockTime = default;
+        if (string.IsNullOrWhiteSpace(schedule.SerializedRecurrence))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(schedule.SerializedRecurrence);
+            if (!document.RootElement.TryGetProperty("dtstart", out var dtstartElement)
+                || dtstartElement.ValueKind != JsonValueKind.String)
+            {
+                return false;
+            }
+
+            var dtstart = dtstartElement.GetString();
+            var match = dtstart is null
+                ? null
+                : Regex.Match(dtstart, @"^\d{4}-\d{2}-\d{2}T(?<clock>\d{2}:\d{2}(?::\d{2}(?:\.\d{1,7})?)?)(?:Z|[+-]\d{2}:?\d{2})?$");
+            if (match is null || !match.Success
+                || !TimeSpan.TryParse(match.Groups["clock"].Value, CultureInfo.InvariantCulture, out clockTime)
+                || clockTime < TimeSpan.Zero
+                || clockTime >= TimeSpan.FromDays(1))
+            {
+                clockTime = default;
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
     public static bool ShouldApplyTarget(double targetTemperature, double? currentSetpoint, double? outdoorTemperature)
     {
