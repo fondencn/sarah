@@ -30,6 +30,10 @@ public class RoomEntity
     [Column]
     public DateTime? UpdatedAt { get; set; }
 
+    [Display(Name = "Position")]
+    [Column]
+    public int SortOrder { get; set; }
+
     [Display(Name = "Favorit")]
     [Column]
     public bool IsFavourite { get; set; }

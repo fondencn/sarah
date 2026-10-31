@@ -7,6 +7,8 @@ import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.compon
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
 import { LoggingService } from '../services/logging.service';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { RoomOrderingService } from './room-ordering.service';
 
 @Component({
   selector: 'app-rooms',
@@ -15,13 +17,16 @@ import { LoggingService } from '../services/logging.service';
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService, private roomOrderingService: RoomOrderingService) { }
 
   readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
 
   rooms: RoomDto[] = [];
   isLoading: boolean = false;
+  isSavingOrder = false;
+  orderSaveError: string | null = null;
+  private lastSavedRoomIds: number[] = [];
   @ViewChild(EditRoomModalComponent) editRoomModal!: EditRoomModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
@@ -65,6 +70,8 @@ export class RoomsComponent implements OnInit,OnDestroy {
     }).subscribe({
       next: ({ rooms, dashboardItems }) => {
         this.rooms = rooms;
+        this.lastSavedRoomIds = this.rooms.map(room => room.id as number);
+        this.orderSaveError = null;
         this.pinnedRoomIds = new Set(
           dashboardItems
             .filter(item => item.itemType === DashboardItemTypeDto.NUMBER_2)
@@ -82,6 +89,42 @@ export class RoomsComponent implements OnInit,OnDestroy {
   }
 
 
+  public onRoomDrop(event: CdkDragDrop<RoomDto[]>): void {
+    if (this.rooms.length < 2 || this.isSavingOrder || event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    moveItemInArray(this.rooms, event.previousIndex, event.currentIndex);
+    this.orderSaveError = null;
+    this.isSavingOrder = true;
+    const requestedOrder = this.rooms.map(room => room.id as number);
+
+    this.roomOrderingService.saveOrder(requestedOrder).subscribe({
+      next: () => {
+        this.lastSavedRoomIds = requestedOrder;
+      },
+      error: (error) => {
+        const savedIds = new Set(this.lastSavedRoomIds);
+        const roomsById = new Map(this.rooms.map(room => [room.id as number, room]));
+        const restoredRooms = this.lastSavedRoomIds
+          .map(id => roomsById.get(id))
+          .filter((room): room is RoomDto => room !== undefined);
+        const roomsAddedAfterSnapshot = this.rooms.filter(room => !savedIds.has(room.id as number));
+        this.rooms = [...restoredRooms, ...roomsAddedAfterSnapshot];
+        this.orderSaveError = "Room order could not be saved. Your previous order has been restored.";
+        this.isSavingOrder = false;
+        this.logger.error(this.orderSaveError, error);
+      },
+      complete: () => {
+        this.isSavingOrder = false;
+      }
+    });
+  }
+
+  public trackByRoomId(index: number, room: RoomDto): number {
+    return room.id ?? index;
+  }
+
   public deleteRoom(room: RoomDto) {
     this.dialogService.showConfirmDialog('Are you sure you want to delete this room?', 'Confirm Deletion')
     .then((result: boolean) => {
@@ -89,6 +132,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
           next: () => {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
+            this.lastSavedRoomIds = this.rooms.map(currentRoom => currentRoom.id as number);
           },
           error: (error) => {
             this.logger.error('Error deleting room:', error);

@@ -16,6 +16,9 @@
         <span class="sr-only">{{ 'common.loading' | translate }}</span>
     </div>
 
+    <div *ngIf="isSavingOrder" class="text-muted mb-2" role="status">Saving room order…</div>
+    <div *ngIf="orderSaveError" class="alert alert-danger" role="alert">{{ orderSaveError }}</div>
+
     <table *ngIf="!isLoading && rooms.length > 0; else noRooms" class="table table-striped table-bordered table-hover">
         <thead class="thead-dark">
             <tr>
@@ -24,9 +27,14 @@
                 <th>{{ 'rooms.colActions' | translate }}</th>
             </tr>
         </thead>
-        <tbody>
-            <tr *ngFor="let room of rooms">
-                <td>{{ room.id }}</td>
+        <tbody cdkDropList [cdkDropListData]="rooms" [cdkDropListDisabled]="rooms.length < 2 || isSavingOrder" (cdkDropListDropped)="onRoomDrop($event)">
+            <tr *ngFor="let room of rooms; trackBy: trackByRoomId" cdkDrag [cdkDragDisabled]="rooms.length < 2 || isSavingOrder">
+                <td>
+                    <span *ngIf="rooms.length > 1" cdkDragHandle class="me-2 text-muted" title="Drag to reorder rooms" aria-label="Drag to reorder rooms" style="cursor: grab;">
+                        <i class="bi bi-grip-vertical"></i>
+                    </span>
+                    {{ room.id }}
+                </td>
                 <td>{{ room.name }}</td>
                 <td>
                     <button (click)="editRoom(room)" class="btn btn-secondary btn-sm">
