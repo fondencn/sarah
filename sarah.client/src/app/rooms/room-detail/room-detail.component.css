@@ -1,0 +1,45 @@
+.room-detail-container {
+  max-width: 1100px;
+}
+
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 1rem;
+}
+
+.room-device-tile {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(0, 0, 0, .125);
+  color: inherit;
+  background: #fff;
+}
+
+.room-device-tile:hover,
+.room-device-tile:focus-visible {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 .15rem rgba(var(--bs-primary-rgb), .15);
+}
+
+.status-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+}
+
+.schedule-list {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (max-width: 575.98px) {
+  .room-detail-container {
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+
+  .schedule-list .card-body {
+    align-items: flex-start !important;
+  }
+}

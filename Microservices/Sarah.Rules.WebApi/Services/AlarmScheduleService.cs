@@ -178,6 +178,8 @@ public class AlarmScheduleService : IDisposable
         }
     }
 
+    private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromDays(1);
+
     private void ScheduleAlarm(AlarmScheduleEntity alarm)
     {
         var nextTriggerLocal = GetNextTriggerLocal(alarm, DateTime.Now);
@@ -199,7 +201,31 @@ public class AlarmScheduleService : IDisposable
             dueTime = TimeSpan.FromSeconds(1);
         }
 
-        var timer = new Timer(async _ => await HandleAlarmFiredAsync(alarm.Id), null, dueTime, Timeout.InfiniteTimeSpan);
+        // Timer supports at most ~49.7 days; for later triggers wake up early and reschedule.
+        var isIntermediateWakeUp = dueTime > MaxTimerDueTime;
+        if (isIntermediateWakeUp)
+        {
+            dueTime = MaxTimerDueTime;
+        }
+
+        var timer = new Timer(
+            async _ =>
+            {
+                if (isIntermediateWakeUp)
+                {
+                    if (Volatile.Read(ref _isDisposed) == 0)
+                    {
+                        await RefreshSchedulesAsync();
+                    }
+
+                    return;
+                }
+
+                await HandleAlarmFiredAsync(alarm.Id);
+            },
+            null,
+            dueTime,
+            Timeout.InfiniteTimeSpan);
         _scheduledAlarms[alarm.Id] = new ScheduledAlarm(timer, nextTriggerLocal.Value);
 
         _logger.LogDebug("Scheduled alarm {AlarmId} for {Trigger:O}", alarm.Id, nextTriggerLocal.Value);

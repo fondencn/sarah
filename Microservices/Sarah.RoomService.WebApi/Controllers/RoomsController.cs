@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sarah.RoomService.WebApi.Data;
 using Sarah.RoomService.WebApi.Data.Entities;
 using Sarah.RoomService.WebApi.Data.Repositories;
 using Sarah.RoomService.WebApi.DTOs;
@@ -12,11 +14,13 @@ namespace Sarah.RoomService.WebApi.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly IRepository<RoomEntity> _repository;
+    private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<RoomsController> _logger;
 
-    public RoomsController(IRepository<RoomEntity> repository, ILogger<RoomsController> logger)
+    public RoomsController(IRepository<RoomEntity> repository, ApplicationDbContext dbContext, ILogger<RoomsController> logger)
     {
         _repository = repository;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -30,7 +34,9 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            var rooms = await _repository.GetAllAsync(cancellationToken);
+            var rooms = (await _repository.GetAllAsync(cancellationToken))
+                .OrderBy(r => r.SortOrder)
+                .ThenBy(r => r.Id);
             var roomDtos = rooms.Select(r => new RoomDto
             {
                 Id = r.Id,
@@ -38,7 +44,8 @@ public class RoomsController : ControllerBase
                 Description = r.Description,
                 CreatedAt = r.CreatedAt,
                 UpdatedAt = r.UpdatedAt,
-                IsFavourite = r.IsFavourite
+                IsFavourite = r.IsFavourite,
+                SortOrder = r.SortOrder
             });
             return Ok(roomDtos);
         }
@@ -73,7 +80,8 @@ public class RoomsController : ControllerBase
                 Description = room.Description,
                 CreatedAt = room.CreatedAt,
                 UpdatedAt = room.UpdatedAt,
-                IsFavourite = room.IsFavourite
+                IsFavourite = room.IsFavourite,
+                SortOrder = room.SortOrder
             };
             return Ok(roomDto);
         }
@@ -105,7 +113,8 @@ public class RoomsController : ControllerBase
                 Name = roomDto.Name,
                 Description = roomDto.Description,
                 CreatedAt = DateTime.UtcNow,
-                IsFavourite = roomDto.IsFavourite
+                IsFavourite = roomDto.IsFavourite,
+                SortOrder = roomDto.SortOrder
             };
 
             var createdRoom = await _repository.AddAsync(room, cancellationToken);
@@ -117,7 +126,8 @@ public class RoomsController : ControllerBase
                 Description = createdRoom.Description,
                 CreatedAt = createdRoom.CreatedAt,
                 UpdatedAt = createdRoom.UpdatedAt,
-                IsFavourite = createdRoom.IsFavourite
+                IsFavourite = createdRoom.IsFavourite,
+                SortOrder = createdRoom.SortOrder
             };
 
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
@@ -156,6 +166,7 @@ public class RoomsController : ControllerBase
             room.Description = roomDto.Description;
             room.UpdatedAt = DateTime.UtcNow;
             room.IsFavourite = roomDto.IsFavourite;
+            room.SortOrder = roomDto.SortOrder;
 
             await _repository.UpdateAsync(room, cancellationToken);
 
@@ -166,7 +177,8 @@ public class RoomsController : ControllerBase
                 Description = room.Description,
                 CreatedAt = room.CreatedAt,
                 UpdatedAt = room.UpdatedAt,
-                IsFavourite = room.IsFavourite
+                IsFavourite = room.IsFavourite,
+                SortOrder = room.SortOrder
             };
 
             return Ok(result);

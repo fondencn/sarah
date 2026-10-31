@@ -26,7 +26,7 @@
         <form [formGroup]="form" novalidate>
 
           <!-- Alarm type -->
-          <div class="mb-3">
+          <div class="mb-3" *ngIf="!roomScheduleOnly">
             <label for="contentType" class="form-label fw-semibold">Alarmtyp <span class="text-danger">*</span></label>
             <select
               id="contentType"
@@ -97,7 +97,7 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="temperatureRoomId" class="form-label fw-semibold">Raum <span class="text-danger">*</span></label>
-                <select id="temperatureRoomId" class="form-select" formControlName="roomId">
+                <select id="temperatureRoomId" class="form-select" formControlName="roomId" [disabled]="roomSelectionLocked">
                   <option value="">Bitte Raum auswählen</option>
                   <option *ngFor="let room of allRooms" [value]="room.id">{{ room.name }}</option>
                 </select>
@@ -239,7 +239,7 @@
       <!-- Footer -->
       <div class="modal-footer">
         <button
-          *ngIf="isEditing"
+          *ngIf="isEditing && !roomScheduleOnly"
           type="button"
           class="btn btn-danger me-auto"
           (click)="delete()"

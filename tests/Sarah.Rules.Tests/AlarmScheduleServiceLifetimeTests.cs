@@ -64,6 +64,31 @@ public class AlarmScheduleServiceLifetimeTests
         Assert.Equal("active", active[0].Text);
     }
 
+    [Fact]
+    public async Task RefreshSchedulesAsync_WithTriggerBeyondTimerLimit_DoesNotThrow()
+    {
+        using var provider = BuildServiceProvider();
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.AlarmSchedules.Add(new AlarmScheduleEntity
+            {
+                AlarmTime = DateTime.Now.AddDays(240),
+                Text = "far future",
+                IsActive = true
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var service = CreateService(provider);
+        var refreshMethod = typeof(AlarmScheduleService).GetMethod(
+            "RefreshSchedulesAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        await (Task)refreshMethod!.Invoke(service, null)!;
+        service.Dispose();
+    }
+
     private static ServiceProvider BuildServiceProvider()
     {
         var databaseRoot = new InMemoryDatabaseRoot();

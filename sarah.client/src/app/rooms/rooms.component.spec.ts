@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { RoomsComponent } from './rooms.component';
 import { RoomsClient } from '../services/api/room-service/api/rooms.service';
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
@@ -36,8 +36,9 @@ describe('RoomsComponent', () => {
     dialogServiceSpy = jasmine.createSpyObj('DialogService', ['showDialog', 'showConfirmDialog']);
     (dialogServiceSpy as any).dialogClosed = new EventEmitter();
     loggerSpy = jasmine.createSpyObj('LoggingService', ['debug', 'info', 'warn', 'error']);
+    roomsServiceSpy.apiRoomsIdPut.and.callFake(((id: number, room: any) => of(room)) as any);
 
-    roomsServiceSpy.apiRoomsGet.and.returnValue(of(mockRooms) as any);
+    roomsServiceSpy.apiRoomsGet.and.returnValue(of(mockRooms.slice()) as any);
     dashboardServiceSpy.apiDashboardGet.and.returnValue(of(mockDashboardItems));
 
     TestBed.configureTestingModule({
@@ -81,6 +82,65 @@ describe('RoomsComponent', () => {
     });
   });
 
+  describe("onRoomDrop()", () => {
+    it("assigns sortOrder by position and saves the rooms that changed", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.onRoomDrop({ previousIndex: 0, currentIndex: 2 } as any);
+
+      expect(component.rooms.map(room => [room.id, room.sortOrder])).toEqual([[2, 0], [3, 1], [1, 2]]);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(3);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledWith(1, jasmine.objectContaining({ sortOrder: 2 }));
+      expect(component.isSavingOrder).toBeFalse();
+    });
+
+    it("only saves rooms whose sortOrder changed", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.onRoomDrop({ previousIndex: 0, currentIndex: 1 } as any);
+
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(2);
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalledWith(3, jasmine.anything());
+    });
+
+    it("moveRoom moves a room one position up and saves", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.moveRoom(2, 1);
+
+      expect(component.rooms.map(room => room.id)).toEqual([1, 3, 2]);
+      expect(roomsServiceSpy.apiRoomsIdPut).toHaveBeenCalledTimes(2);
+    });
+
+    it("moveRoom ignores out-of-range targets", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+
+      component.moveRoom(0, -1);
+
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalled();
+    });
+
+    it("does not save when fewer than two rooms are available", () => {
+      component.rooms = [mockRooms[0]];
+
+      component.onRoomDrop({ previousIndex: 0, currentIndex: 0 } as any);
+
+      expect(roomsServiceSpy.apiRoomsIdPut).not.toHaveBeenCalled();
+    });
+
+    it("restores the previous order and displays an error when saving fails", () => {
+      component.rooms = mockRooms.map((room, index) => ({ ...room, sortOrder: index }));
+      roomsServiceSpy.apiRoomsIdPut.and.returnValue(throwError(() => new Error("request failed")));
+
+      component.onRoomDrop({ previousIndex: 0, currentIndex: 2 } as any);
+
+      expect(component.rooms.map(room => room.id)).toEqual([1, 2, 3]);
+      expect(component.orderSaveError).toContain("previous order has been restored");
+      expect(loggerSpy.error).toHaveBeenCalled();
+      expect(component.isSavingOrder).toBeFalse();
+    });
+  });
+
   describe('pinToDashboard()', () => {
     it('calls delete when the room is already pinned', () => {
       component.pinnedRoomIds.add(1);
@@ -108,6 +168,10 @@ describe('RoomsComponent', () => {
       component.pinToDashboard(mockRooms[0]);
 
       expect(dashboardServiceSpy.apiDashboardPost).not.toHaveBeenCalled();
+    });
+
+    it('builds the room detail route for the Details action', () => {
+      expect(component.roomDetailsLink(mockRooms[0])).toEqual(['/rooms', 1]);
     });
   });
 });

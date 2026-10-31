@@ -7,6 +7,7 @@ import { EditRoomModalComponent } from './edit-room-modal/edit-room-modal.compon
 import { DashboardRuntimeService } from '../services/dashboard-runtime.service';
 import { CreateDashboardItemDto, DashboardItemTypeDto } from '../models/api-types';
 import { LoggingService } from '../services/logging.service';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-rooms',
@@ -22,6 +23,8 @@ export class RoomsComponent implements OnInit,OnDestroy {
 
   rooms: RoomDto[] = [];
   isLoading: boolean = false;
+  isSavingOrder = false;
+  orderSaveError: string | null = null;
   @ViewChild(EditRoomModalComponent) editRoomModal!: EditRoomModalComponent;
   private dialogClosedSubscription: Subscription | null = null;
 
@@ -58,6 +61,9 @@ export class RoomsComponent implements OnInit,OnDestroy {
 
 
   public retrieveRooms(): void {
+    if (this.isSavingOrder) {
+      return;
+    }
     this.isLoading = true;
     forkJoin({
       rooms: this.roomsService.apiRoomsGet(),
@@ -65,6 +71,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
     }).subscribe({
       next: ({ rooms, dashboardItems }) => {
         this.rooms = rooms;
+        this.orderSaveError = null;
         this.pinnedRoomIds = new Set(
           dashboardItems
             .filter(item => item.itemType === DashboardItemTypeDto.NUMBER_2)
@@ -82,7 +89,52 @@ export class RoomsComponent implements OnInit,OnDestroy {
   }
 
 
+  public onRoomDrop(event: CdkDragDrop<RoomDto[]>): void {
+    this.moveRoom(event.previousIndex, event.currentIndex);
+  }
+
+  public moveRoom(previousIndex: number, currentIndex: number): void {
+    if (this.rooms.length < 2 || this.isSavingOrder || previousIndex === currentIndex
+      || currentIndex < 0 || currentIndex >= this.rooms.length) {
+      return;
+    }
+
+    const previousRooms = this.rooms.slice();
+    const reordered = this.rooms.slice();
+    moveItemInArray(reordered, previousIndex, currentIndex);
+    const updatedRooms = reordered.map((room, index) => ({ ...room, sortOrder: index }));
+    const changedRooms = updatedRooms.filter((room, index) => reordered[index].sortOrder !== room.sortOrder);
+
+    this.rooms = updatedRooms;
+    this.orderSaveError = null;
+    this.isSavingOrder = true;
+
+    forkJoin(changedRooms.map(room => this.roomsService.apiRoomsIdPut(room.id as number, room))).subscribe({
+      complete: () => {
+        this.isSavingOrder = false;
+      },
+      error: (error) => {
+        this.rooms = previousRooms;
+        this.orderSaveError = "Room order could not be saved. Your previous order has been restored.";
+        this.isSavingOrder = false;
+        this.logger.error(this.orderSaveError, error);
+        // Some updates may have succeeded, so resync with the server state.
+        this.roomsService.apiRoomsGet().subscribe({
+          next: rooms => this.rooms = rooms,
+          error: reloadError => this.logger.error('Error fetching rooms:', reloadError)
+        });
+      }
+    });
+  }
+
+  public trackByRoomId(index: number, room: RoomDto): number {
+    return room.id ?? index;
+  }
+
   public deleteRoom(room: RoomDto) {
+    if (this.isSavingOrder) {
+      return;
+    }
     this.dialogService.showConfirmDialog('Are you sure you want to delete this room?', 'Confirm Deletion')
     .then((result: boolean) => {
       if (result) {
@@ -138,6 +190,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
   public onRoomAdded(success: boolean) {
     if (success) {
       let addedRoom: RoomDto = this.editRoomModal.dataContext as RoomDto;
+      addedRoom.sortOrder = this.rooms.reduce((max, room) => Math.max(max, room.sortOrder ?? -1), -1) + 1;
       this.roomsService.apiRoomsPost(addedRoom).subscribe({
         next: (response: RoomDto) => {
           this.rooms.push(response);
@@ -160,6 +213,10 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.logger.error('Error setting favourite state:', error);
       }
     });
+  }
+
+  public roomDetailsLink(room: RoomDto): (string | number)[] {
+    return ['/rooms', room.id as number];
   }
 
   pinnedRoomIds: Set<number> = new Set<number>();
@@ -193,4 +250,3 @@ export class RoomsComponent implements OnInit,OnDestroy {
     }
   }
 }
-
