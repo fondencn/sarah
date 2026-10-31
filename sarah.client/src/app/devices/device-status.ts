@@ -65,6 +65,7 @@ export function getDeviceStatus(device: DeviceDto, detail?: DeviceDto | null): D
   else if (wallPlug != null) category = 'wallplug';
   else if (doorSensor != null) category = 'doorsensor';
   else if (thermostat != null) category = 'thermostat';
+  else if (deviceType === KnownDeviceTypesModel.NUMBER_1 && getProp('Presence') !== undefined) category = 'motionsensor';
   else if (airQuality != null) category = 'airquality';
   else if (hasExtendedProperties) {
     // Some detailed responses omit the sub-DTO, so fall back to the API's
