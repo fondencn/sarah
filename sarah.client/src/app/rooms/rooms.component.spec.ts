@@ -7,6 +7,7 @@ import { DialogService } from '../services/dialog.service';
 import { LoggingService } from '../services/logging.service';
 import { EventEmitter } from '@angular/core';
 import { DashboardItemTypeDto } from '../models/api-types';
+import { RoomOrderingService } from './room-ordering.service';
 
 describe('RoomsComponent', () => {
   let component: RoomsComponent;
@@ -14,6 +15,7 @@ describe('RoomsComponent', () => {
   let dashboardServiceSpy: jasmine.SpyObj<DashboardRuntimeService>;
   let dialogServiceSpy: jasmine.SpyObj<DialogService>;
   let loggerSpy: jasmine.SpyObj<LoggingService>;
+  let roomOrderingServiceSpy: jasmine.SpyObj<RoomOrderingService>;
 
   const mockRooms = [
     { id: 1, name: 'Kitchen' },
@@ -47,7 +49,8 @@ describe('RoomsComponent', () => {
         { provide: RoomsClient, useValue: roomsServiceSpy },
         { provide: DashboardRuntimeService, useValue: dashboardServiceSpy },
         { provide: DialogService, useValue: dialogServiceSpy },
-        { provide: LoggingService, useValue: loggerSpy }
+        { provide: LoggingService, useValue: loggerSpy },
+        { provide: RoomOrderingService, useValue: roomOrderingServiceSpy }
       ]
     });
 

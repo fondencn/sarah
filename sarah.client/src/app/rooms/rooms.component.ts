@@ -16,7 +16,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 })
 export class RoomsComponent implements OnInit,OnDestroy {
 
-  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService) { }
+  constructor(private roomsService: RoomsClient, private dialogService: DialogService, private dashboardService: DashboardRuntimeService, private logger: LoggingService, private roomOrderingService: RoomOrderingService) { }
 
   readonly ITEM_TYPE_ROOM: DashboardItemTypeDto = DashboardItemTypeDto.NUMBER_2;
 
@@ -130,6 +130,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
           next: () => {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
+            this.lastSavedRoomIds = this.lastSavedRoomIds.filter(id => id !== room.id);
           },
           error: (error) => {
             this.logger.error('Error deleting room:', error);
