@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sarah.RoomService.WebApi.Data;
 using Sarah.RoomService.WebApi.Data.Entities;
 using Sarah.RoomService.WebApi.Data.Repositories;
 using Sarah.RoomService.WebApi.DTOs;
@@ -12,11 +14,13 @@ namespace Sarah.RoomService.WebApi.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly IRepository<RoomEntity> _repository;
+    private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<RoomsController> _logger;
 
-    public RoomsController(IRepository<RoomEntity> repository, ILogger<RoomsController> logger)
+    public RoomsController(IRepository<RoomEntity> repository, ApplicationDbContext dbContext, ILogger<RoomsController> logger)
     {
         _repository = repository;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -30,7 +34,9 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            var rooms = await _repository.GetAllAsync(cancellationToken);
+            var rooms = (await _repository.GetAllAsync(cancellationToken))
+                .OrderBy(r => r.SortOrder)
+                .ThenBy(r => r.Id);
             var roomDtos = rooms.Select(r => new RoomDto
             {
                 Id = r.Id,
@@ -45,6 +51,44 @@ public class RoomsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving rooms");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    /// <summary>
+    /// Save the manual room order. The complete room ID list must be supplied.
+    /// </summary>
+    [HttpPut("order")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateOrder([FromBody] long[]? roomIds, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (roomIds == null || roomIds.Distinct().Count() != roomIds.Length)
+            {
+                return BadRequest("Room order must contain each room exactly once");
+            }
+
+            var rooms = await _dbContext.Rooms.ToListAsync(cancellationToken);
+            var roomById = rooms.ToDictionary(room => room.Id);
+            if (roomIds.Length != rooms.Count || roomIds.Any(id => !roomById.ContainsKey(id)))
+            {
+                return BadRequest("Room order must contain each room exactly once");
+            }
+
+            for (var index = 0; index < roomIds.Length; index++)
+            {
+                roomById[roomIds[index]].SortOrder = index;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving room order");
             return StatusCode(500, "Internal server error");
         }
     }
@@ -105,7 +149,8 @@ public class RoomsController : ControllerBase
                 Name = roomDto.Name,
                 Description = roomDto.Description,
                 CreatedAt = DateTime.UtcNow,
-                IsFavourite = roomDto.IsFavourite
+                IsFavourite = roomDto.IsFavourite,
+                SortOrder = (await _dbContext.Rooms.Select(r => (int?)r.SortOrder).MaxAsync(cancellationToken) ?? -1) + 1
             };
 
             var createdRoom = await _repository.AddAsync(room, cancellationToken);
