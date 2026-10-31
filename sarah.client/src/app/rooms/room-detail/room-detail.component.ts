@@ -98,7 +98,11 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
           )
         );
 
-        return forkJoin(deviceRequests).pipe(
+        const deviceDetails$ = deviceRequests.length > 0
+          ? forkJoin(deviceRequests)
+          : of<{ device: DeviceDto; detail: DeviceDto | null }[]>([]);
+
+        return deviceDetails$.pipe(
           map(deviceDetails => ({
             devices: deviceDetails.map(({ device, detail }) => ({
               device,
