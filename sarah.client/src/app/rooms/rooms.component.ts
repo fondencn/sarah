@@ -132,7 +132,7 @@ export class RoomsComponent implements OnInit,OnDestroy {
         this.roomsService.apiRoomsIdDelete(room.id as number).subscribe({
           next: () => {
             this.rooms = this.rooms.filter(d => d.id !== room.id);
-            this.lastSavedRoomIds = this.rooms.map(currentRoom => currentRoom.id as number);
+            this.lastSavedRoomIds = this.lastSavedRoomIds.filter(id => id !== room.id);
           },
           error: (error) => {
             this.logger.error('Error deleting room:', error);
