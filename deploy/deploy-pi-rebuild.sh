@@ -53,6 +53,10 @@ ok()   { echo -e "\033[1;32m✓\033[0m $*"; }
 
 confirm() {
   local msg="${1:-Continue?}"
+  if [[ "${ASSUME_YES:-0}" == "1" ]]; then
+    log "${msg} [auto-yes]"
+    return 0
+  fi
   read -rp "$msg [y/N] " answer
   [[ "$answer" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
 }
