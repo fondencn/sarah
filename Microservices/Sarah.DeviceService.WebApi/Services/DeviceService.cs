@@ -199,7 +199,7 @@ namespace Sarah.DeviceService
         /// </summary>
         /// <returns>Task</returns>
         /// <summary>
-        /// Right after opening the serial port the controller can answer with a CAN frame; retry a few times before giving up.
+        /// Right after opening the serial port the controller can answer with a CAN frame or fail to acknowledge; retry a few times before giving up.
         /// </summary>
         private async Task<NodeCollection> GetNodesWithRetry(ZWaveController controller)
         {
@@ -210,9 +210,9 @@ namespace Sarah.DeviceService
                 {
                     return await controller.GetNodes();
                 }
-                catch (ZWave.Channel.Protocol.CanResponseException ex) when (attempt < maxAttempts)
+                catch (Exception ex) when ((ex is ZWave.Channel.Protocol.CanResponseException or ZWave.Channel.Protocol.TransmissionException) && attempt < maxAttempts)
                 {
-                    _logger.LogWarning(ex, "Controller answered with CAN while reading nodes (attempt {Attempt}/{Max}), retrying...", attempt, maxAttempts);
+                    _logger.LogWarning(ex, "Controller failed while reading nodes (CAN/no acknowledge) (attempt {Attempt}/{Max}), retrying...", attempt, maxAttempts);
                     await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
                 }
             }
