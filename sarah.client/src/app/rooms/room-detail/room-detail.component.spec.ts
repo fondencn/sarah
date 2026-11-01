@@ -100,6 +100,20 @@ describe('RoomDetailComponent', () => {
     expect(component.isLoading).toBeFalse();
   });
 
+  it('sorts room schedules by hour and minute', () => {
+    const mk = (id: number, hour: number, minute: number) => ({
+      id,
+      contentType: AlarmContentTypeModel.TemperatureSchedule,
+      contentJson: JSON.stringify({ roomId: 7 }),
+      alarmTime: new Date(2026, 9, 30, hour, minute).toISOString()
+    });
+    rulesClient.apiRulesAlarmsGet.and.returnValue(of([mk(1, 18, 0), mk(2, 6, 45), mk(3, 6, 30)]));
+
+    component.ngOnInit();
+
+    expect(component.schedules.map(schedule => schedule.id)).toEqual([3, 2, 1]);
+  });
+
   it('opens the shared control modal for the selected device', () => {
     component.ngOnInit();
     component.openDeviceControl(component.devices[0]);

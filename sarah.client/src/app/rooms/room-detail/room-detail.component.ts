@@ -112,6 +112,7 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
             })),
             schedules: (Array.isArray(alarms) ? alarms : [])
               .filter((alarm: AlarmScheduleEntityModel) => this.isScheduleForRoom(alarm, this.roomId as number))
+              .sort((a, b) => this.minutesOfDay(a) - this.minutesOfDay(b))
           }))
         );
       })
@@ -127,6 +128,11 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
       },
       complete: () => this.isLoading = false
     });
+  }
+
+  private minutesOfDay(alarm: AlarmScheduleEntityModel): number {
+    const date = new Date(alarm.alarmTime);
+    return isNaN(date.getTime()) ? Number.MAX_SAFE_INTEGER : date.getHours() * 60 + date.getMinutes();
   }
 
   private isScheduleForRoom(alarm: AlarmScheduleEntityModel, roomId: number): boolean {
