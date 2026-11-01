@@ -15,6 +15,7 @@ import { HomeComponent } from './home/home.component';
 import { OAuthModule } from 'angular-oauth2-oidc';
 import { FormsModule } from '@angular/forms';
 import { DevicesClient } from './services/api/device-service/api/devices.service';
+import { ZWaveDiagnosticsClient } from './services/api/device-service/api/zWaveDiagnostics.service';
 import { PersonsClient } from './services/api/persons-service/api/persons.service';
 import { RoomsClient } from './services/api/room-service/api/rooms.service';
 import { RulesClient } from './services/api/rules-service/api/rules.service';
@@ -128,6 +129,7 @@ import { KernelConversationPanelComponent } from './admin/kernel-conversation-pa
         // Configure base paths per service — each generated service is providedIn:'root' but
         // shares a single BASE_PATH token, so we override with per-service factory providers.
         { provide: DevicesClient, useFactory: (http: HttpClient) => new DevicesClient(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
+        { provide: ZWaveDiagnosticsClient, useFactory: (http: HttpClient) => new ZWaveDiagnosticsClient(http, environment.api.deviceService, undefined!), deps: [HttpClient] },
         { provide: PersonsClient, useFactory: (http: HttpClient) => new PersonsClient(http, environment.api.personsService, undefined!), deps: [HttpClient] },
         { provide: RoomsClient, useFactory: (http: HttpClient) => new RoomsClient(http, environment.api.roomService, undefined!), deps: [HttpClient] },
         { provide: RulesClient, useFactory: (http: HttpClient) => new RulesClient(http, environment.api.rulesService, undefined!), deps: [HttpClient] },
