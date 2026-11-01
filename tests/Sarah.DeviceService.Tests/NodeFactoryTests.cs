@@ -32,6 +32,16 @@ public class NodeFactoryTests
         Assert.IsType<ZWaveWallPlug>(result);
     }
 
+    [Theory]
+    [InlineData(10, true)]  // mapped element
+    [InlineData(11, true)]  // defect elements count as known
+    [InlineData(6, false)]  // explicitly mapped to UnknownElement
+    [InlineData(200, false)] // not mapped at all
+    public void IsKnownNodeId_ReflectsMapping(byte nodeId, bool expected)
+    {
+        Assert.Equal(expected, CreateFactory().IsKnownNodeId(nodeId));
+    }
+
     private static NodeFactory CreateFactory()
     {
         var configuration = new ConfigurationBuilder()

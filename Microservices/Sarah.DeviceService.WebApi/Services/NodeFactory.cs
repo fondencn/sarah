@@ -188,6 +188,9 @@ namespace Sarah.DeviceService.WebApi.Services
             {249, "eui-a840419c1182b044" },
         };
 
+        public bool IsKnownNodeId(byte nodeId) =>
+            _knownNodes.TryGetValue(nodeId, out var type) && type != typeof(UnknownElement);
+
         public NetworkElement? CreateByNodeId(byte nodeId)
         {
             NetworkElement? el;

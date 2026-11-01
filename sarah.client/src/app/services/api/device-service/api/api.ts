@@ -4,4 +4,7 @@ export * from './animations.serviceInterface';
 export * from './devices.service';
 import { DevicesClient } from './devices.service';
 export * from './devices.serviceInterface';
-export const APIS = [AnimationsClient, DevicesClient];
+export * from './zWaveDiagnostics.service';
+import { ZWaveDiagnosticsClient } from './zWaveDiagnostics.service';
+export * from './zWaveDiagnostics.serviceInterface';
+export const APIS = [AnimationsClient, DevicesClient, ZWaveDiagnosticsClient];

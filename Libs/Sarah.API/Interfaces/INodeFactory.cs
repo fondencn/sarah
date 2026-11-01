@@ -7,5 +7,7 @@ namespace Sarah.API.Interfaces
     {
         public NetworkElement? CreateByNodeId(byte nodeId);
         public IEnumerable<byte> GetNonZwaveNodeIds();
+        /// <summary>True if the node id is mapped to a concrete element type (defect elements count as known, UnknownElement does not).</summary>
+        public bool IsKnownNodeId(byte nodeId);
     }
 }

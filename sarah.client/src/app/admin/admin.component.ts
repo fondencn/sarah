@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-type AdminTab = 'kernelConversation' | 'promptRules';
+type AdminTab = 'kernelConversation' | 'promptRules' | 'zwave';
 
 @Component({
   selector: 'app-admin',

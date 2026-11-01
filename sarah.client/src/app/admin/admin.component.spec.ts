@@ -30,8 +30,8 @@ describe('AdminComponent', () => {
   });
 
   it('should switch active tab', () => {
-    component.setActiveTab('kernelConversation');
+    component.setActiveTab('zwave');
 
-    expect(component.activeTab).toBe('kernelConversation');
+    expect(component.activeTab).toBe('zwave');
   });
 });

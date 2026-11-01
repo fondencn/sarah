@@ -45,6 +45,8 @@ namespace Sarah.DeviceService
         private ZWaveController? Controller { get; set; }
         private NodeCollection? Nodes { get; set; }
 
+        internal ZWaveController? ZWaveControllerInternal => Controller;
+
         public string StatusMessage { get; private set; } = "";
 
 
@@ -196,6 +198,26 @@ namespace Sarah.DeviceService
         /// Aktualisiert die interne Liste der verbundenen ZWave-Knoten
         /// </summary>
         /// <returns>Task</returns>
+        /// <summary>
+        /// Right after opening the serial port the controller can answer with a CAN frame or fail to acknowledge; retry a few times before giving up.
+        /// </summary>
+        private async Task<NodeCollection> GetNodesWithRetry(ZWaveController controller)
+        {
+            const int maxAttempts = 4;
+            for (int attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    return await controller.GetNodes();
+                }
+                catch (Exception ex) when ((ex is ZWave.Channel.Protocol.CanResponseException or ZWave.Channel.Protocol.TransmissionException) && attempt < maxAttempts)
+                {
+                    _logger.LogWarning(ex, "Controller failed while reading nodes (CAN/no acknowledge) (attempt {Attempt}/{Max}), retrying...", attempt, maxAttempts);
+                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+                }
+            }
+        }
+
         private async Task UpdateNodeList()
         {
             _logger.LogInformation("Updating NodeList...");
@@ -203,7 +225,7 @@ namespace Sarah.DeviceService
             // get the included nodes
             if (this.Controller != null)
             {
-                this.Nodes = await this.Controller.GetNodes();
+                this.Nodes = await GetNodesWithRetry(this.Controller);
             }
 
             List<NetworkElement> networkElements = new List<NetworkElement>();

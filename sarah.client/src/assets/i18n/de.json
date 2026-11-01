@@ -195,7 +195,8 @@
     "title": "Admin",
     "tabs": {
       "kernelConversation": "Kernel-Konversation",
-      "promptRules": "Prompt-Regeln"
+      "promptRules": "Prompt-Regeln",
+      "zwave": "ZWave"
     }
   },
   "kernelConversation": {
@@ -217,6 +218,57 @@
     "colTimestamp": "Zeitpunkt",
     "colRole": "Rolle",
     "colContent": "Inhalt"
+  },
+  "zwaveDiagnostics": {
+    "title": "ZWave-Diagnose",
+    "refresh": "Aktualisieren",
+    "description": "Aktuell dem ZWave-Controller bekannte Knoten, ihre Nachbarn sowie Inklusions-/Exklusionssteuerung.",
+    "controllerUnavailable": "Auf dem Device-Service ist kein ZWave-Controller verfügbar.",
+    "loading": "Knoten werden abgefragt… (schlafende Geräte können einige Sekunden brauchen)",
+    "empty": "Keine Knoten gefunden.",
+    "colNode": "Knoten",
+    "colStatus": "Status",
+    "colType": "Typ",
+    "colNeighbors": "Nachbarn",
+    "unknownBadge": "Der NodeFactory unbekannt",
+    "associations": "Assoziationen",
+    "noGroups": "Keine Assoziationsgruppen.",
+    "group": "Gruppe",
+    "lifeline": "Lifeline",
+    "maxNodes": "max. Knoten",
+    "nodesPlaceholder": "Knoten-IDs, kommagetrennt (z. B. 1, 5)",
+    "save": "Speichern",
+    "status": {
+      "alive": "Erreichbar",
+      "sleeping": "Schlafend",
+      "failed": "Ausgefallen",
+      "unreachable": "Nicht erreichbar"
+    },
+    "mode": {
+      "title": "Controller-Modus",
+      "startInclusion": "Inklusion starten",
+      "startExclusion": "Exklusion starten",
+      "stop": "Stoppen",
+      "inclusionActive": "Inklusion aktiv",
+      "exclusionActive": "Exklusion aktiv",
+      "idle": "Inaktiv",
+      "lastIncluded": "Letztes Ereignis: Knoten {{nodeId}} hinzugefügt",
+      "lastExcluded": "Letztes Ereignis: Knoten {{nodeId}} entfernt"
+    },
+    "errors": {
+      "loadNodes": "ZWave-Knoten konnten nicht geladen werden",
+      "loadAssociations": "Assoziationsgruppen konnten nicht geladen werden",
+      "saveAssociation": "Assoziationsgruppe konnte nicht gespeichert werden",
+      "modeAction": "Inklusions-/Exklusionsmodus konnte nicht geändert werden",
+      "invalidNodeIds": "Bitte Knoten-IDs zwischen 1 und 232, durch Komma getrennt, eingeben",
+      "loadParameters": "Geräteparameter konnten nicht gelesen werden (schlafende Geräte zuerst aufwecken)",
+      "saveParameter": "Geräteparameter konnte nicht geschrieben werden",
+      "invalidParameterValue": "Parameterwerte müssen ganze Zahlen zwischen 0 und 255 sein"
+    },
+    "parameters": "Parameter",
+    "loadingParameters": "Parameter werden gelesen… (schlafende Geräte ggf. per Tastendruck aufwecken)",
+    "noProvider": "Für diesen Gerätetyp sind keine Parameter definiert.",
+    "noParameters": "Keine Parameter verfügbar."
   },
   "promptRulesManager": {
     "title": "Prompt-Regeln verwalten",
