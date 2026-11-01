@@ -45,6 +45,8 @@ namespace Sarah.DeviceService
         private ZWaveController? Controller { get; set; }
         private NodeCollection? Nodes { get; set; }
 
+        internal ZWaveController? ZWaveControllerInternal => Controller;
+
         public string StatusMessage { get; private set; } = "";
 
 

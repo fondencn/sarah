@@ -43,6 +43,12 @@ builder.Services.AddSingleton<Sarah.DeviceService.DeviceService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Sarah.DeviceService.DeviceService>());
 builder.Services.AddSingleton<IDeviceService>(sp => sp.GetRequiredService<Sarah.DeviceService.DeviceService>());
 
+builder.Services.AddSingleton<IZWaveDiagnosticsService>(sp => new ZWaveDiagnosticsService(
+    sp.GetRequiredService<Sarah.DeviceService.DeviceService>(),
+    sp.GetRequiredService<INodeFactory>(),
+    sp.GetRequiredService<IServiceScopeFactory>(),
+    sp.GetRequiredService<ILogger<ZWaveDiagnosticsService>>()));
+
 // Add services to the container.
 builder.Services.AddControllers();
 
