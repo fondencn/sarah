@@ -326,6 +326,18 @@ deploy() {
   log "Ensuring PostgreSQL databases exist (re-running init-databases.sh)..."
   remote "cd ${DEPLOY_DIR} && docker compose exec -T postgres bash /docker-entrypoint-initdb.d/init-databases.sh"
 
+  # The ZWave serial stick must be fully released by the old container before the new one opens it,
+  # otherwise the controller answers with CAN and the service crashes on first start.
+  local svc
+  for svc in "${SELECTED_SERVICES[@]}"; do
+    if [[ "$svc" == "deviceservice" ]]; then
+      log "Stopping deviceservice so the ZWave serial port is released before recreate..."
+      remote "cd ${DEPLOY_DIR} && docker compose stop deviceservice"
+      remote "for i in \$(seq 1 20); do if [ -z \"\$(fuser /dev/ttyACM0 2>/dev/null; lsof /dev/ttyACM0 2>/dev/null)\" ]; then break; fi; sleep 1; done; sleep 5"
+      break
+    fi
+  done
+
   log "Starting selected app services on ${PI_HOST}..."
   remote "cd ${DEPLOY_DIR} && docker compose up -d ${SELECTED_SERVICES[*]}"
 
