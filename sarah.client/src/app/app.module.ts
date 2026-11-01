@@ -51,6 +51,7 @@ import { ToastContainerComponent } from './shared/toast/toast-container.componen
 import { ThermostatDialComponent } from './home/thermostat-dial/thermostat-dial.component';
 import { PromptRulesManagerComponent } from './admin/prompt-rules-manager/prompt-rules-manager.component';
 import { DeviceControlModalComponent } from './devices/device-control-modal/device-control-modal.component';
+import { ZWaveDiagnosticsComponent } from './admin/zwave-diagnostics/zwave-diagnostics.component';
 import { KernelConversationPanelComponent } from './admin/kernel-conversation-panel/kernel-conversation-panel.component';
 
 @NgModule({ declarations: [
@@ -79,6 +80,7 @@ import { KernelConversationPanelComponent } from './admin/kernel-conversation-pa
         ThermostatDialComponent,
         PromptRulesManagerComponent,
         KernelConversationPanelComponent,
+        ZWaveDiagnosticsComponent,
         DeviceControlModalComponent
     ],
     bootstrap: [AppComponent], 

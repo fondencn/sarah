@@ -12,7 +12,6 @@
 export interface WallPlugStateDtoModel { 
     isOn?: boolean;
     lastChangeToPowerLow?: string;
-    lastIncreasePower?: string;
-    lastDecreasePower?: string;
+    lastChangeToPowerHigh?: string;
 }
 

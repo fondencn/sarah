@@ -1,0 +1,157 @@
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>📡 {{ 'zwaveDiagnostics.title' | translate }}</strong>
+    <button class="btn btn-sm btn-outline-secondary" (click)="loadNodes()" [disabled]="loadingNodes">
+      {{ 'zwaveDiagnostics.refresh' | translate }}
+    </button>
+  </div>
+
+  <div class="card-body">
+    <p class="text-muted small mb-3">{{ 'zwaveDiagnostics.description' | translate }}</p>
+
+    <div *ngIf="controllerUnavailable" class="alert alert-warning">
+      {{ 'zwaveDiagnostics.controllerUnavailable' | translate }}
+    </div>
+
+    <div class="border rounded p-3 mb-4" *ngIf="!controllerUnavailable">
+      <h6 class="mb-3">{{ 'zwaveDiagnostics.mode.title' | translate }}</h6>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button class="btn btn-sm btn-success" (click)="startInclusion()" [disabled]="modeBusy || isInclusion">
+          {{ 'zwaveDiagnostics.mode.startInclusion' | translate }}
+        </button>
+        <button class="btn btn-sm btn-warning" (click)="startExclusion()" [disabled]="modeBusy || isExclusion">
+          {{ 'zwaveDiagnostics.mode.startExclusion' | translate }}
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="stopMode()" [disabled]="modeBusy || !modeActive">
+          {{ 'zwaveDiagnostics.mode.stop' | translate }}
+        </button>
+        <span *ngIf="isInclusion" class="badge bg-success">
+          {{ 'zwaveDiagnostics.mode.inclusionActive' | translate }} ({{ secondsLeft }}s)
+        </span>
+        <span *ngIf="isExclusion" class="badge bg-warning text-dark">
+          {{ 'zwaveDiagnostics.mode.exclusionActive' | translate }} ({{ secondsLeft }}s)
+        </span>
+        <span *ngIf="!modeActive" class="badge bg-secondary">{{ 'zwaveDiagnostics.mode.idle' | translate }}</span>
+      </div>
+      <div class="small mt-2" *ngIf="modeStatus?.lastEvent as event">
+        {{ (event.isNodeAdded ? 'zwaveDiagnostics.mode.lastIncluded' : 'zwaveDiagnostics.mode.lastExcluded') | translate: { nodeId: event.nodeId } }}
+        <span *ngIf="event.isNodeAdded && !event.isKnown" class="badge bg-warning text-dark ms-1">
+          {{ 'zwaveDiagnostics.unknownBadge' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <div *ngIf="loadingNodes" class="text-center p-3">
+      <span class="spinner-border spinner-border-sm" role="status"></span>
+      {{ 'zwaveDiagnostics.loading' | translate }}
+    </div>
+
+    <div *ngIf="!loadingNodes && !controllerUnavailable && nodes.length === 0" class="text-center p-3 text-muted">
+      {{ 'zwaveDiagnostics.empty' | translate }}
+    </div>
+
+    <div class="table-responsive" *ngIf="nodes.length > 0">
+      <table class="table table-sm table-hover align-middle">
+        <thead>
+          <tr>
+            <th>{{ 'zwaveDiagnostics.colNode' | translate }}</th>
+            <th>{{ 'zwaveDiagnostics.colStatus' | translate }}</th>
+            <th>{{ 'zwaveDiagnostics.colType' | translate }}</th>
+            <th>{{ 'zwaveDiagnostics.colNeighbors' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let node of nodes">
+            <tr [class.table-warning]="!node.isKnown">
+              <td><strong>{{ node.nodeId }}</strong></td>
+              <td>
+                <span class="badge" [ngClass]="statusBadgeClass(node.status)">
+                  {{ 'zwaveDiagnostics.status.' + statusKey(node.status) | translate }}
+                </span>
+                <span *ngIf="node.error" class="text-danger small ms-1" [title]="node.error">⚠</span>
+              </td>
+              <td>
+                <span *ngIf="node.isKnown">{{ node.elementType || '-' }}</span>
+                <span *ngIf="!node.isKnown" class="badge bg-warning text-dark">{{ 'zwaveDiagnostics.unknownBadge' | translate }}</span>
+                <div class="text-muted small" *ngIf="node.genericType">{{ node.genericType }}<span *ngIf="node.specificType"> / {{ node.specificType }}</span></div>
+              </td>
+              <td>{{ node.neighbors?.length ? node.neighbors?.join(', ') : '-' }}</td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-secondary me-1"
+                        *ngIf="node.isKnown"
+                        (click)="openParameters(node)">
+                  {{ 'zwaveDiagnostics.parameters' | translate }}
+                </button>
+                <button class="btn btn-sm btn-outline-primary"
+                        *ngIf="node.isKnown"
+                        (click)="openAssociations(node)">
+                  {{ 'zwaveDiagnostics.associations' | translate }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="parameterNodeId === node.nodeId">
+              <td colspan="5" class="bg-light">
+                <div *ngIf="loadingParameters" class="p-2">
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                  {{ 'zwaveDiagnostics.loadingParameters' | translate }}
+                </div>
+                <div *ngIf="!loadingParameters && !parametersHaveProvider" class="text-muted p-2">
+                  {{ 'zwaveDiagnostics.noProvider' | translate }}
+                </div>
+                <div *ngIf="!loadingParameters && parametersHaveProvider && parameters.length === 0" class="text-muted p-2">
+                  {{ 'zwaveDiagnostics.noParameters' | translate }}
+                </div>
+                <div class="small text-muted mb-2" *ngIf="parameters.length > 0">{{ parameterDeviceType }}</div>
+                <div class="row g-2 align-items-center mb-2" *ngFor="let parameter of parameters">
+                  <div class="col-12 col-md-5">
+                    <strong>#{{ parameter.id }}</strong> {{ parameter.name }}
+                    <span class="text-muted small">({{ parameter.size }} B)</span>
+                  </div>
+                  <div class="col-8 col-md-5">
+                    <input class="form-control form-control-sm"
+                           type="number" min="0" max="255" step="1"
+                           [(ngModel)]="parameter.value" />
+                  </div>
+                  <div class="col-4 col-md-2">
+                    <button class="btn btn-sm btn-primary w-100" (click)="saveParameter(parameter)" [disabled]="parameter.saving">
+                      {{ 'zwaveDiagnostics.save' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="associationNodeId === node.nodeId">
+              <td colspan="5" class="bg-light">
+                <div *ngIf="loadingAssociations" class="p-2">
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                </div>
+                <div *ngIf="!loadingAssociations && associationGroups.length === 0" class="text-muted p-2">
+                  {{ 'zwaveDiagnostics.noGroups' | translate }}
+                </div>
+                <div class="row g-2 align-items-center mb-2" *ngFor="let group of associationGroups">
+                  <div class="col-12 col-md-3">
+                    <strong>{{ 'zwaveDiagnostics.group' | translate }} {{ group.groupId }}</strong>
+                    <span class="badge bg-primary ms-1" *ngIf="group.groupId === 1">{{ 'zwaveDiagnostics.lifeline' | translate }}</span>
+                    <div class="text-muted small">{{ 'zwaveDiagnostics.maxNodes' | translate }}: {{ group.maxNodesSupported }}</div>
+                  </div>
+                  <div class="col-8 col-md-7">
+                    <input class="form-control form-control-sm"
+                           type="text"
+                           [(ngModel)]="group.nodesInput"
+                           [placeholder]="'zwaveDiagnostics.nodesPlaceholder' | translate" />
+                  </div>
+                  <div class="col-4 col-md-2">
+                    <button class="btn btn-sm btn-primary w-100" (click)="saveAssociationGroup(group)" [disabled]="group.saving">
+                      {{ 'zwaveDiagnostics.save' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -195,7 +195,8 @@
     "title": "Admin",
     "tabs": {
       "kernelConversation": "Kernel Conversation",
-      "promptRules": "Prompt Rules"
+      "promptRules": "Prompt Rules",
+      "zwave": "ZWave"
     }
   },
   "kernelConversation": {
@@ -217,6 +218,57 @@
     "colTimestamp": "Time",
     "colRole": "Role",
     "colContent": "Content"
+  },
+  "zwaveDiagnostics": {
+    "title": "ZWave Diagnostics",
+    "refresh": "Refresh",
+    "description": "Nodes currently known to the ZWave controller, their neighbors, and inclusion/exclusion control.",
+    "controllerUnavailable": "No ZWave controller is available on the device service.",
+    "loading": "Querying nodes… (sleeping devices can take a few seconds)",
+    "empty": "No nodes found.",
+    "colNode": "Node",
+    "colStatus": "Status",
+    "colType": "Type",
+    "colNeighbors": "Neighbors",
+    "unknownBadge": "Unknown to NodeFactory",
+    "associations": "Associations",
+    "noGroups": "No association groups.",
+    "group": "Group",
+    "lifeline": "Lifeline",
+    "maxNodes": "max nodes",
+    "nodesPlaceholder": "Node ids, comma separated (e.g. 1, 5)",
+    "save": "Save",
+    "status": {
+      "alive": "Alive",
+      "sleeping": "Sleeping",
+      "failed": "Failed",
+      "unreachable": "Unreachable"
+    },
+    "mode": {
+      "title": "Controller mode",
+      "startInclusion": "Start inclusion",
+      "startExclusion": "Start exclusion",
+      "stop": "Stop",
+      "inclusionActive": "Inclusion active",
+      "exclusionActive": "Exclusion active",
+      "idle": "Idle",
+      "lastIncluded": "Last event: node {{nodeId}} included",
+      "lastExcluded": "Last event: node {{nodeId}} excluded"
+    },
+    "errors": {
+      "loadNodes": "Failed to load ZWave nodes",
+      "loadAssociations": "Failed to load association groups",
+      "saveAssociation": "Failed to save association group",
+      "modeAction": "Failed to change inclusion/exclusion mode",
+      "invalidNodeIds": "Please enter node ids between 1 and 232, separated by commas",
+      "loadParameters": "Failed to read device parameters (wake up sleeping devices first)",
+      "saveParameter": "Failed to write device parameter",
+      "invalidParameterValue": "Parameter values must be whole numbers between 0 and 255"
+    },
+    "parameters": "Parameters",
+    "loadingParameters": "Reading parameters… (sleeping devices may need to be woken up)",
+    "noProvider": "No parameter definitions exist for this device type.",
+    "noParameters": "No parameters available."
   },
   "promptRulesManager": {
     "title": "Manage Prompt Rules",

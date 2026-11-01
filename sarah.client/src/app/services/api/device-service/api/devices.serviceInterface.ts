@@ -222,6 +222,18 @@ export interface DevicesClientInterface {
     /**
      * 
      * 
+     */
+    devicesGetOpenDoorsGETApiDevicesOpenDoors(extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
+     */
+    devicesGetOpenDoorsGETDevicesOpenDoors(extraHttpRequestParams?: any): Observable<{}>;
+
+    /**
+     * 
+     * 
      * @param roomId 
      */
     devicesGetRoomAverageTemperatureGETApiDevicesRoomRoomIdAvgtemperature(roomId: number, extraHttpRequestParams?: any): Observable<{}>;
